@@ -28,12 +28,12 @@ import org.apache.commons.io.IOUtils;
 import org.pegdown.LinkRenderer;
 import org.pegdown.ParsingTimeoutException;
 import org.pegdown.PegDownProcessor;
+import org.pegdown.ToHtmlSerializer;
 import org.pegdown.ast.RootNode;
 
 import com.gitblit.Constants;
 import com.gitblit.IStoredSettings;
 import com.gitblit.Keys;
-import com.gitblit.wicket.MarkupProcessor.WorkaroundHtmlSerializer;
 
 /**
  * Utility methods for transforming raw markdown text to html.
@@ -80,7 +80,7 @@ public class MarkdownUtils {
 		try {
 			PegDownProcessor pd = new PegDownProcessor(ALL & ~SMARTYPANTS & ~ANCHORLINKS);
 			RootNode astRoot = pd.parseMarkdown(markdown.toCharArray());
-			return new WorkaroundHtmlSerializer(linkRenderer == null ? new LinkRenderer() : linkRenderer).toHtml(astRoot);
+			return new ToHtmlSerializer(linkRenderer == null ? new LinkRenderer() : linkRenderer).toHtml(astRoot);
 		} catch (ParsingTimeoutException e) {
 			return null;
 		}
@@ -119,7 +119,8 @@ public class MarkdownUtils {
 	 * @param repositoryName
 	 * @return html
 	 */
-	public static String transformGFM(IStoredSettings settings, String input, String repositoryName) {
+	public static String transformGFM(IStoredSettings settings, String input,
+			String repositoryName) {
 		String text = input;
 
 		// strikethrough
