@@ -28,11 +28,11 @@ import org.apache.commons.io.IOUtils;
 import org.pegdown.LinkRenderer;
 import org.pegdown.ParsingTimeoutException;
 import org.pegdown.PegDownProcessor;
+import org.pegdown.ToHtmlSerializer;
 import org.pegdown.ast.RootNode;
 
 import com.gitblit.IStoredSettings;
 import com.gitblit.Keys;
-import com.gitblit.wicket.MarkupProcessor.WorkaroundHtmlSerializer;
 
 /**
  * Utility methods for transforming raw markdown text to html.
@@ -79,8 +79,8 @@ public class MarkdownUtils {
 		try {
 			final PegDownProcessor pd = new PegDownProcessor(ALL & ~SMARTYPANTS & ~ANCHORLINKS);
 			final RootNode astRoot = pd.parseMarkdown(markdown.toCharArray());
-			return new WorkaroundHtmlSerializer(linkRenderer == null ? new LinkRenderer()
-					: linkRenderer).toHtml(astRoot);
+			return new ToHtmlSerializer(linkRenderer == null ? new LinkRenderer() : linkRenderer)
+					.toHtml(astRoot);
 		}
 		catch (final ParsingTimeoutException e) {
 			return null;
@@ -121,7 +121,8 @@ public class MarkdownUtils {
 	 * @param repositoryName
 	 * @return html
 	 */
-	public static String transformGFM(IStoredSettings settings, String input, String repositoryName) {
+	public static String transformGFM(IStoredSettings settings, String input,
+			String repositoryName) {
 		String text = input;
 
 		// strikethrough
@@ -151,8 +152,8 @@ public class MarkdownUtils {
 
 		// link commit shas
 		final int shaLen = settings.getInteger(Keys.web.shortCommitIdLength, 6);
-		final String commitPattern = MessageFormat.format(
-				"\\s([A-Fa-f0-9]'{'{0}'}')([A-Fa-f0-9]'{'{1}'}')", shaLen, 40 - shaLen);
+		final String commitPattern = MessageFormat
+				.format("\\s([A-Fa-f0-9]'{'{0}'}')([A-Fa-f0-9]'{'{1}'}')", shaLen, 40 - shaLen);
 		final String commitReplacement = String.format(" [`$1`](%1$s/commit?r=%2$s&h=$1$2)",
 				canonicalUrl, repositoryName);
 		text = text.replaceAll(commitPattern, commitReplacement);
