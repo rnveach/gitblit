@@ -98,7 +98,7 @@ public class RpcUtils {
 	 * @return
 	 */
 	public static String asLink(String remoteURL, RpcRequest req, String name) {
-		if (remoteURL.length() > 0 && remoteURL.charAt(remoteURL.length() - 1) == '/') {
+		if ((remoteURL.length() > 0) && (remoteURL.charAt(remoteURL.length() - 1) == '/')) {
 			remoteURL = remoteURL.substring(0, remoteURL.length() - 1);
 		}
 		if (req == null) {
@@ -119,11 +119,12 @@ public class RpcUtils {
 	 */
 	public static int getProtocolVersion(String serverUrl, String account, char[] password)
 			throws IOException {
-		String url = asLink(serverUrl, RpcRequest.GET_PROTOCOL);
+		final String url = asLink(serverUrl, RpcRequest.GET_PROTOCOL);
 		int protocol = 1;
 		try {
 			protocol = JsonUtils.retrieveJson(url, Integer.class, account, password);
-		} catch (UnknownRequestException e) {
+		}
+		catch (final UnknownRequestException e) {
 			// v0.7.0 (protocol 1) did not have this request type
 		}
 		return protocol;
@@ -141,8 +142,8 @@ public class RpcUtils {
 	 */
 	public static Map<String, RepositoryModel> getRepositories(String serverUrl, String account,
 			char[] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORIES);
-		Map<String, RepositoryModel> models = JsonUtils.retrieveJson(url, REPOSITORIES_TYPE,
+		final String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORIES);
+		final Map<String, RepositoryModel> models = JsonUtils.retrieveJson(url, REPOSITORIES_TYPE,
 				account, password);
 		return models;
 	}
@@ -158,9 +159,10 @@ public class RpcUtils {
 	 */
 	public static List<UserModel> getUsers(String serverUrl, String account, char[] password)
 			throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_USERS);
-		Collection<UserModel> models = JsonUtils.retrieveJson(url, USERS_TYPE, account, password);
-		List<UserModel> list = new ArrayList<UserModel>(models);
+		final String url = asLink(serverUrl, RpcRequest.LIST_USERS);
+		final Collection<UserModel> models = JsonUtils.retrieveJson(url, USERS_TYPE, account,
+				password);
+		final List<UserModel> list = new ArrayList<UserModel>(models);
 		return list;
 	}
 
@@ -176,9 +178,10 @@ public class RpcUtils {
 	 */
 	public static List<TeamModel> getTeams(String serverUrl, String account, char[] password)
 			throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_TEAMS);
-		Collection<TeamModel> models = JsonUtils.retrieveJson(url, TEAMS_TYPE, account, password);
-		List<TeamModel> list = new ArrayList<TeamModel>(models);
+		final String url = asLink(serverUrl, RpcRequest.LIST_TEAMS);
+		final Collection<TeamModel> models = JsonUtils.retrieveJson(url, TEAMS_TYPE, account,
+				password);
+		final List<TeamModel> list = new ArrayList<TeamModel>(models);
 		return list;
 	}
 
@@ -203,21 +206,21 @@ public class RpcUtils {
 
 	}
 
-    /**
-     * Create a fork of a repository.
-     *
-     * @param repository
+	/**
+	 * Create a fork of a repository.
+	 *
+	 * @param repository
+	 * 
+	 * @return true if the action succeeded
+	 * @throws IOException
+	 */
+	public static boolean forkRepository(RepositoryModel repository, String serverUrl,
+			String account, char[] password) throws IOException {
+		return doAction(RpcRequest.FORK_REPOSITORY, repository.name, null, serverUrl, account,
+				password);
+	}
 
-     * @return true if the action succeeded
-     * @throws IOException
-     */
-    public static boolean forkRepository(RepositoryModel repository, String serverUrl,
-                                        String account, char[] password) throws IOException {
-        return doAction(RpcRequest.FORK_REPOSITORY, repository.name, null, serverUrl, account, password);
-    }
-
-
-    /**
+	/**
 	 * Send a revised version of the repository model to the Gitblit server.
 	 *
 	 * @param repository
@@ -259,10 +262,9 @@ public class RpcUtils {
 	 * @return true if the action succeeded
 	 * @throws IOException
 	 */
-	public static boolean clearRepositoryCache(String serverUrl, String account,
-			char[] password) throws IOException {
-		return doAction(RpcRequest.CLEAR_REPOSITORY_CACHE, null, null, serverUrl, account,
-				password);
+	public static boolean clearRepositoryCache(String serverUrl, String account, char[] password)
+			throws IOException {
+		return doAction(RpcRequest.CLEAR_REPOSITORY_CACHE, null, null, serverUrl, account, password);
 	}
 
 	/**
@@ -274,10 +276,9 @@ public class RpcUtils {
 	 * @return true if the action succeeded
 	 * @throws IOException
 	 */
-	public static boolean reindexTickets(String serverUrl, String account,
-			char[] password) throws IOException {
-		return doAction(RpcRequest.REINDEX_TICKETS, null, null, serverUrl, account,
-				password);
+	public static boolean reindexTickets(String serverUrl, String account, char[] password)
+			throws IOException {
+		return doAction(RpcRequest.REINDEX_TICKETS, null, null, serverUrl, account, password);
 	}
 
 	/**
@@ -290,10 +291,10 @@ public class RpcUtils {
 	 * @return true if the action succeeded
 	 * @throws IOException
 	 */
-	public static boolean reindexTickets(String serverUrl, String repositoryName,
-			String account, char[] password) throws IOException {
-		return doAction(RpcRequest.REINDEX_TICKETS, repositoryName, null, serverUrl,
-				account, password);
+	public static boolean reindexTickets(String serverUrl, String repositoryName, String account,
+			char[] password) throws IOException {
+		return doAction(RpcRequest.REINDEX_TICKETS, repositoryName, null, serverUrl, account,
+				password);
 	}
 
 	/**
@@ -344,8 +345,8 @@ public class RpcUtils {
 	}
 
 	/**
-	 * Tries to get the specified gitblit user account from the remote gitblit instance.
-	 * If the username is null or empty, the current user is returned.
+	 * Tries to get the specified gitblit user account from the remote gitblit
+	 * instance. If the username is null or empty, the current user is returned.
 	 *
 	 * @param username
 	 * @param serverUrl
@@ -354,10 +355,10 @@ public class RpcUtils {
 	 * @return a UserModel or null
 	 * @throws IOException
 	 */
-	public static UserModel getUser(String username, String serverUrl, String account, char[] password)
-			throws IOException {
-		String url = asLink(serverUrl, RpcRequest.GET_USER);
-		UserModel model = JsonUtils.retrieveJson(url, UserModel.class, account, password);
+	public static UserModel getUser(String username, String serverUrl, String account,
+			char[] password) throws IOException {
+		final String url = asLink(serverUrl, RpcRequest.GET_USER);
+		final UserModel model = JsonUtils.retrieveJson(url, UserModel.class, account, password);
 		return model;
 	}
 
@@ -420,13 +421,14 @@ public class RpcUtils {
 	 */
 	public static List<String> getRepositoryMembers(RepositoryModel repository, String serverUrl,
 			String account, char[] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORY_MEMBERS, repository.name);
-		Collection<String> list = JsonUtils.retrieveJson(url, NAMES_TYPE, account, password);
+		final String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORY_MEMBERS, repository.name);
+		final Collection<String> list = JsonUtils.retrieveJson(url, NAMES_TYPE, account, password);
 		return new ArrayList<String>(list);
 	}
 
 	/**
-	 * Retrieves the list of user access permissions for the specified repository.
+	 * Retrieves the list of user access permissions for the specified
+	 * repository.
 	 *
 	 * @param repository
 	 * @param serverUrl
@@ -435,10 +437,13 @@ public class RpcUtils {
 	 * @return list of User-AccessPermission tuples
 	 * @throws IOException
 	 */
-	public static List<RegistrantAccessPermission> getRepositoryMemberPermissions(RepositoryModel repository,
-			String serverUrl, String account, char [] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORY_MEMBER_PERMISSIONS, repository.name);
-		Collection<RegistrantAccessPermission> list = JsonUtils.retrieveJson(url, REGISTRANT_PERMISSIONS_TYPE, account, password);
+	public static List<RegistrantAccessPermission> getRepositoryMemberPermissions(
+			RepositoryModel repository, String serverUrl, String account, char[] password)
+			throws IOException {
+		final String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORY_MEMBER_PERMISSIONS,
+				repository.name);
+		final Collection<RegistrantAccessPermission> list = JsonUtils.retrieveJson(url,
+				REGISTRANT_PERMISSIONS_TYPE, account, password);
 		return new ArrayList<RegistrantAccessPermission>(list);
 	}
 
@@ -454,10 +459,10 @@ public class RpcUtils {
 	 * @throws IOException
 	 */
 	public static boolean setRepositoryMemberPermissions(RepositoryModel repository,
-			List<RegistrantAccessPermission> permissions, String serverUrl, String account, char[] password)
-			throws IOException {
-		return doAction(RpcRequest.SET_REPOSITORY_MEMBER_PERMISSIONS, repository.name, permissions, serverUrl,
-				account, password);
+			List<RegistrantAccessPermission> permissions, String serverUrl, String account,
+			char[] password) throws IOException {
+		return doAction(RpcRequest.SET_REPOSITORY_MEMBER_PERMISSIONS, repository.name, permissions,
+				serverUrl, account, password);
 	}
 
 	/**
@@ -472,13 +477,14 @@ public class RpcUtils {
 	 */
 	public static List<String> getRepositoryTeams(RepositoryModel repository, String serverUrl,
 			String account, char[] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORY_TEAMS, repository.name);
-		Collection<String> list = JsonUtils.retrieveJson(url, NAMES_TYPE, account, password);
+		final String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORY_TEAMS, repository.name);
+		final Collection<String> list = JsonUtils.retrieveJson(url, NAMES_TYPE, account, password);
 		return new ArrayList<String>(list);
 	}
 
 	/**
-	 * Retrieves the list of team access permissions for the specified repository.
+	 * Retrieves the list of team access permissions for the specified
+	 * repository.
 	 *
 	 * @param repository
 	 * @param serverUrl
@@ -487,10 +493,13 @@ public class RpcUtils {
 	 * @return list of Team-AccessPermission tuples
 	 * @throws IOException
 	 */
-	public static List<RegistrantAccessPermission> getRepositoryTeamPermissions(RepositoryModel repository,
-			String serverUrl, String account, char [] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORY_TEAM_PERMISSIONS, repository.name);
-		Collection<RegistrantAccessPermission> list = JsonUtils.retrieveJson(url, REGISTRANT_PERMISSIONS_TYPE, account, password);
+	public static List<RegistrantAccessPermission> getRepositoryTeamPermissions(
+			RepositoryModel repository, String serverUrl, String account, char[] password)
+			throws IOException {
+		final String url = asLink(serverUrl, RpcRequest.LIST_REPOSITORY_TEAM_PERMISSIONS,
+				repository.name);
+		final Collection<RegistrantAccessPermission> list = JsonUtils.retrieveJson(url,
+				REGISTRANT_PERMISSIONS_TYPE, account, password);
 		return new ArrayList<RegistrantAccessPermission>(list);
 	}
 
@@ -506,10 +515,10 @@ public class RpcUtils {
 	 * @throws IOException
 	 */
 	public static boolean setRepositoryTeamPermissions(RepositoryModel repository,
-			List<RegistrantAccessPermission> permissions, String serverUrl, String account, char[] password)
-			throws IOException {
-		return doAction(RpcRequest.SET_REPOSITORY_TEAM_PERMISSIONS, repository.name, permissions, serverUrl,
-				account, password);
+			List<RegistrantAccessPermission> permissions, String serverUrl, String account,
+			char[] password) throws IOException {
+		return doAction(RpcRequest.SET_REPOSITORY_TEAM_PERMISSIONS, repository.name, permissions,
+				serverUrl, account, password);
 	}
 
 	/**
@@ -524,10 +533,10 @@ public class RpcUtils {
 	 */
 	public static List<FederationModel> getFederationRegistrations(String serverUrl,
 			String account, char[] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_FEDERATION_REGISTRATIONS);
-		Collection<FederationModel> registrations = JsonUtils.retrieveJson(url, REGISTRATIONS_TYPE,
-				account, password);
-		List<FederationModel> list = new ArrayList<FederationModel>(registrations);
+		final String url = asLink(serverUrl, RpcRequest.LIST_FEDERATION_REGISTRATIONS);
+		final Collection<FederationModel> registrations = JsonUtils.retrieveJson(url,
+				REGISTRATIONS_TYPE, account, password);
+		final List<FederationModel> list = new ArrayList<FederationModel>(registrations);
 		return list;
 	}
 
@@ -543,10 +552,10 @@ public class RpcUtils {
 	 */
 	public static List<FederationModel> getFederationResultRegistrations(String serverUrl,
 			String account, char[] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_FEDERATION_RESULTS);
-		Collection<FederationModel> registrations = JsonUtils.retrieveJson(url, REGISTRATIONS_TYPE,
-				account, password);
-		List<FederationModel> list = new ArrayList<FederationModel>(registrations);
+		final String url = asLink(serverUrl, RpcRequest.LIST_FEDERATION_RESULTS);
+		final Collection<FederationModel> registrations = JsonUtils.retrieveJson(url,
+				REGISTRATIONS_TYPE, account, password);
+		final List<FederationModel> list = new ArrayList<FederationModel>(registrations);
 		return list;
 	}
 
@@ -561,10 +570,10 @@ public class RpcUtils {
 	 */
 	public static List<FederationProposal> getFederationProposals(String serverUrl, String account,
 			char[] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_FEDERATION_PROPOSALS);
-		Collection<FederationProposal> proposals = JsonUtils.retrieveJson(url, PROPOSALS_TYPE,
-				account, password);
-		List<FederationProposal> list = new ArrayList<FederationProposal>(proposals);
+		final String url = asLink(serverUrl, RpcRequest.LIST_FEDERATION_PROPOSALS);
+		final Collection<FederationProposal> proposals = JsonUtils.retrieveJson(url,
+				PROPOSALS_TYPE, account, password);
+		final List<FederationProposal> list = new ArrayList<FederationProposal>(proposals);
 		return list;
 	}
 
@@ -579,9 +588,10 @@ public class RpcUtils {
 	 */
 	public static List<FederationSet> getFederationSets(String serverUrl, String account,
 			char[] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_FEDERATION_SETS);
-		Collection<FederationSet> sets = JsonUtils.retrieveJson(url, SETS_TYPE, account, password);
-		List<FederationSet> list = new ArrayList<FederationSet>(sets);
+		final String url = asLink(serverUrl, RpcRequest.LIST_FEDERATION_SETS);
+		final Collection<FederationSet> sets = JsonUtils.retrieveJson(url, SETS_TYPE, account,
+				password);
+		final List<FederationSet> list = new ArrayList<FederationSet>(sets);
 		return list;
 	}
 
@@ -596,8 +606,8 @@ public class RpcUtils {
 	 */
 	public static ServerSettings getSettings(String serverUrl, String account, char[] password)
 			throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_SETTINGS);
-		ServerSettings settings = JsonUtils.retrieveJson(url, ServerSettings.class, account,
+		final String url = asLink(serverUrl, RpcRequest.LIST_SETTINGS);
+		final ServerSettings settings = JsonUtils.retrieveJson(url, ServerSettings.class, account,
 				password);
 		return settings;
 	}
@@ -630,8 +640,9 @@ public class RpcUtils {
 	 */
 	public static ServerStatus getStatus(String serverUrl, String account, char[] password)
 			throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_STATUS);
-		ServerStatus status = JsonUtils.retrieveJson(url, ServerStatus.class, account, password);
+		final String url = asLink(serverUrl, RpcRequest.LIST_STATUS);
+		final ServerStatus status = JsonUtils.retrieveJson(url, ServerStatus.class, account,
+				password);
 		return status;
 	}
 
@@ -647,8 +658,8 @@ public class RpcUtils {
 	 */
 	public static Map<String, Collection<String>> getBranches(String serverUrl, String account,
 			char[] password) throws IOException {
-		String url = asLink(serverUrl, RpcRequest.LIST_BRANCHES);
-		Map<String, Collection<String>> branches = JsonUtils.retrieveJson(url, BRANCHES_TYPE,
+		final String url = asLink(serverUrl, RpcRequest.LIST_BRANCHES);
+		final Map<String, Collection<String>> branches = JsonUtils.retrieveJson(url, BRANCHES_TYPE,
 				account, password);
 		return branches;
 	}
@@ -664,11 +675,12 @@ public class RpcUtils {
 	 */
 	public static List<FeedModel> getBranchFeeds(String serverUrl, String account, char[] password)
 			throws IOException {
-		List<FeedModel> feeds = new ArrayList<FeedModel>();
-		Map<String, Collection<String>> allBranches = getBranches(serverUrl, account, password);
-		for (Map.Entry<String, Collection<String>> entry : allBranches.entrySet()) {
-			for (String branch : entry.getValue()) {
-				FeedModel feed = new FeedModel();
+		final List<FeedModel> feeds = new ArrayList<FeedModel>();
+		final Map<String, Collection<String>> allBranches = getBranches(serverUrl, account,
+				password);
+		for (final Map.Entry<String, Collection<String>> entry : allBranches.entrySet()) {
+			for (final String branch : entry.getValue()) {
+				final FeedModel feed = new FeedModel();
 				feed.repository = entry.getKey();
 				feed.branch = branch;
 				feeds.add(feed);
@@ -692,9 +704,9 @@ public class RpcUtils {
 	 */
 	protected static boolean doAction(RpcRequest request, String name, Object object,
 			String serverUrl, String account, char[] password) throws IOException {
-		String url = asLink(serverUrl, request, name);
-		String json = JsonUtils.toJsonString(object);
-		int resultCode = JsonUtils.sendJsonString(url, json, account, password);
+		final String url = asLink(serverUrl, request, name);
+		final String json = JsonUtils.toJsonString(object);
+		final int resultCode = JsonUtils.sendJsonString(url, json, account, password);
 		return resultCode == 200;
 	}
 }

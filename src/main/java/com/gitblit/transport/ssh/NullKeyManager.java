@@ -38,7 +38,7 @@ public class NullKeyManager extends IPublicKeyManager {
 
 	@Override
 	public NullKeyManager start() {
-		log.info(toString());
+		this.log.info(toString());
 		return this;
 	}
 

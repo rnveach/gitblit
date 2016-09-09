@@ -25,9 +25,9 @@ public class ObjectCacheTest extends GitblitUnitTest {
 
 	@Test
 	public void testCache() throws Exception {
-		ObjectCache<String> cache = new ObjectCache<String>();
+		final ObjectCache<String> cache = new ObjectCache<String>();
 		cache.updateObject("test", "alpha");
-		Date date = cache.getDate("test");
+		final Date date = cache.getDate("test");
 		assertTrue("cache date is not working!", cache.hasCurrent("test", date));
 		// The cache is time-based (msecs) so we insert this artificial sleep to
 		// ensure that time (msecs) advances. The ObjectCache class is suitable

@@ -62,9 +62,9 @@ public class FederationTests extends GitblitUnitTest {
 	@Test
 	public void testProposal() throws Exception {
 		// create dummy repository data
-		Map<String, RepositoryModel> repositories = new HashMap<String, RepositoryModel>();
+		final Map<String, RepositoryModel> repositories = new HashMap<String, RepositoryModel>();
 		for (int i = 0; i < 5; i++) {
-			RepositoryModel model = new RepositoryModel();
+			final RepositoryModel model = new RepositoryModel();
 			model.accessRestriction = AccessRestrictionType.VIEW;
 			model.description = "cloneable repository " + i;
 			model.lastChange = new Date();
@@ -75,37 +75,40 @@ public class FederationTests extends GitblitUnitTest {
 			repositories.put(model.name, model);
 		}
 
-		FederationProposal proposal = new FederationProposal("http://testurl", FederationToken.ALL,
-				"testtoken", repositories);
+		final FederationProposal proposal = new FederationProposal("http://testurl",
+				FederationToken.ALL, "testtoken", repositories);
 
 		// propose federation
-		assertEquals("proposal refused", FederationUtils.propose(url, proposal),
+		assertEquals("proposal refused", FederationUtils.propose(this.url, proposal),
 				FederationProposalResult.NO_PROPOSALS);
 	}
 
 	@Test
 	public void testJsonRepositories() throws Exception {
-		String requrl = FederationUtils.asLink(url, token, FederationRequest.PULL_REPOSITORIES);
-		String json = JsonUtils.retrieveJsonString(requrl, null, null);
+		final String requrl = FederationUtils.asLink(this.url, this.token,
+				FederationRequest.PULL_REPOSITORIES);
+		final String json = JsonUtils.retrieveJsonString(requrl, null, null);
 		assertNotNull(json);
 	}
 
 	@Test
 	public void testJsonUsers() throws Exception {
-		String requrl = FederationUtils.asLink(url, token, FederationRequest.PULL_USERS);
-		String json = JsonUtils.retrieveJsonString(requrl, null, null);
+		final String requrl = FederationUtils.asLink(this.url, this.token,
+				FederationRequest.PULL_USERS);
+		final String json = JsonUtils.retrieveJsonString(requrl, null, null);
 		assertNotNull(json);
 	}
 
 	@Test
 	public void testJsonTeams() throws Exception {
-		String requrl = FederationUtils.asLink(url, token, FederationRequest.PULL_TEAMS);
-		String json = JsonUtils.retrieveJsonString(requrl, null, null);
+		final String requrl = FederationUtils.asLink(this.url, this.token,
+				FederationRequest.PULL_TEAMS);
+		final String json = JsonUtils.retrieveJsonString(requrl, null, null);
 		assertNotNull(json);
 	}
 
 	private FederationModel getRegistration() {
-		FederationModel model = new FederationModel("localhost");
+		final FederationModel model = new FederationModel("localhost");
 		model.url = this.url;
 		model.token = this.token;
 		return model;
@@ -113,8 +116,8 @@ public class FederationTests extends GitblitUnitTest {
 
 	@Test
 	public void testPullRepositories() throws Exception {
-		Map<String, RepositoryModel> repos = FederationUtils.getRepositories(getRegistration(),
-				false);
+		final Map<String, RepositoryModel> repos = FederationUtils.getRepositories(
+				getRegistration(), false);
 		assertNotNull(repos);
 		assertTrue(repos.size() > 0);
 	}
@@ -128,12 +131,13 @@ public class FederationTests extends GitblitUnitTest {
 
 		UserModel newUser = new UserModel("test");
 		newUser.password = "whocares";
-		assertTrue(RpcUtils.createUser(newUser, url, account, password.toCharArray()));
+		assertTrue(RpcUtils
+				.createUser(newUser, this.url, this.account, this.password.toCharArray()));
 
-		TeamModel team = new TeamModel("testteam");
+		final TeamModel team = new TeamModel("testteam");
 		team.addUser("test");
 		team.addRepositoryPermission("helloworld.git");
-		assertTrue(RpcUtils.createTeam(team, url, account, password.toCharArray()));
+		assertTrue(RpcUtils.createTeam(team, this.url, this.account, this.password.toCharArray()));
 
 		users = FederationUtils.getUsers(getRegistration());
 		assertNotNull(users);
@@ -142,27 +146,28 @@ public class FederationTests extends GitblitUnitTest {
 		newUser = users.get(0);
 		assertTrue(newUser.isTeamMember("testteam"));
 
-		assertTrue(RpcUtils.deleteUser(newUser, url, account, password.toCharArray()));
-		assertTrue(RpcUtils.deleteTeam(team, url, account, password.toCharArray()));
+		assertTrue(RpcUtils
+				.deleteUser(newUser, this.url, this.account, this.password.toCharArray()));
+		assertTrue(RpcUtils.deleteTeam(team, this.url, this.account, this.password.toCharArray()));
 	}
 
 	@Test
 	public void testPullTeams() throws Exception {
-		TeamModel team = new TeamModel("testteam");
+		final TeamModel team = new TeamModel("testteam");
 		team.addUser("test");
 		team.addRepositoryPermission("helloworld.git");
-		assertTrue(RpcUtils.createTeam(team, url, account, password.toCharArray()));
+		assertTrue(RpcUtils.createTeam(team, this.url, this.account, this.password.toCharArray()));
 
-		List<TeamModel> teams = FederationUtils.getTeams(getRegistration());
+		final List<TeamModel> teams = FederationUtils.getTeams(getRegistration());
 		assertNotNull(teams);
 		assertTrue(teams.size() > 0);
 
-		assertTrue(RpcUtils.deleteTeam(team, url, account, password.toCharArray()));
+		assertTrue(RpcUtils.deleteTeam(team, this.url, this.account, this.password.toCharArray()));
 	}
 
 	@Test
 	public void testPullScripts() throws Exception {
-		Map<String, String> scripts = FederationUtils.getScripts(getRegistration());
+		final Map<String, String> scripts = FederationUtils.getScripts(getRegistration());
 		assertNotNull(scripts);
 		assertTrue(scripts.keySet().contains("sendmail"));
 	}

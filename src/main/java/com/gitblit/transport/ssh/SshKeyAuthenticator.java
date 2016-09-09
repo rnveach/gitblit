@@ -47,22 +47,22 @@ public class SshKeyAuthenticator implements PublickeyAuthenticator {
 
 	@Override
 	public boolean authenticate(String username, PublicKey suppliedKey, ServerSession session) {
-		SshDaemonClient client = session.getAttribute(SshDaemonClient.KEY);
+		final SshDaemonClient client = session.getAttribute(SshDaemonClient.KEY);
 		Preconditions.checkState(client.getUser() == null);
 		username = username.toLowerCase(Locale.US);
-		List<SshKey> keys = keyManager.getKeys(username);
+		final List<SshKey> keys = this.keyManager.getKeys(username);
 		if (keys.isEmpty()) {
-			log.info("{} has not added any public keys for ssh authentication", username);
+			this.log.info("{} has not added any public keys for ssh authentication", username);
 			return false;
 		}
 
-		SshKey pk = new SshKey(suppliedKey);
-		log.debug("auth supplied {}", pk.getFingerprint());
+		final SshKey pk = new SshKey(suppliedKey);
+		this.log.debug("auth supplied {}", pk.getFingerprint());
 
-		for (SshKey key : keys) {
-			log.debug("auth compare to {}", key.getFingerprint());
+		for (final SshKey key : keys) {
+			this.log.debug("auth compare to {}", key.getFingerprint());
 			if (key.getPublicKey().equals(suppliedKey)) {
-				UserModel user = authManager.authenticate(username, key);
+				final UserModel user = this.authManager.authenticate(username, key);
 				if (user != null) {
 					client.setUser(user);
 					client.setKey(key);
@@ -71,7 +71,7 @@ public class SshKeyAuthenticator implements PublickeyAuthenticator {
 			}
 		}
 
-		log.warn("could not authenticate {} for SSH using the supplied public key", username);
+		this.log.warn("could not authenticate {} for SSH using the supplied public key", username);
 		return false;
 	}
 }

@@ -46,7 +46,7 @@ public interface IUserService {
 	 *
 	 * @param model
 	 * @return cookie value
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	String getCookie(UserModel model);
 
@@ -55,7 +55,7 @@ public interface IUserService {
 	 *
 	 * @param cookie
 	 * @return a user object or null
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	UserModel getUserModel(char[] cookie);
 
@@ -64,7 +64,7 @@ public interface IUserService {
 	 *
 	 * @param username
 	 * @return a user object or null
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	UserModel getUserModel(String username);
 
@@ -73,14 +73,15 @@ public interface IUserService {
 	 *
 	 * @param model
 	 * @return true if update is successful
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	boolean updateUserModel(UserModel model);
 
 	/**
 	 * Updates/writes all specified user objects.
 	 *
-	 * @param models a list of user models
+	 * @param models
+	 *            a list of user models
 	 * @return true if update is successful
 	 * @since 1.2.0
 	 */
@@ -95,7 +96,7 @@ public interface IUserService {
 	 * @param model
 	 *            the user object to use for username
 	 * @return true if update is successful
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	boolean updateUserModel(String username, UserModel model);
 
@@ -104,7 +105,7 @@ public interface IUserService {
 	 *
 	 * @param model
 	 * @return true if successful
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	boolean deleteUserModel(UserModel model);
 
@@ -113,7 +114,7 @@ public interface IUserService {
 	 *
 	 * @param username
 	 * @return true if successful
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	boolean deleteUser(String username);
 
@@ -121,7 +122,7 @@ public interface IUserService {
 	 * Returns the list of all users available to the login service.
 	 *
 	 * @return list of all usernames
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	List<String> getAllUsernames();
 
@@ -181,7 +182,8 @@ public interface IUserService {
 	/**
 	 * Updates/writes all specified team objects.
 	 *
-	 * @param models a list of team models
+	 * @param models
+	 *            a list of team models
 	 * @return true if update is successful
 	 * @since 1.2.0
 	 */
@@ -235,7 +237,7 @@ public interface IUserService {
 	 * @param oldRole
 	 * @param newRole
 	 * @return true if successful
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	boolean renameRepositoryRole(String oldRole, String newRole);
 
@@ -244,7 +246,7 @@ public interface IUserService {
 	 *
 	 * @param role
 	 * @return true if successful
- 	 * @since 0.5.0
+	 * @since 0.5.0
 	 */
 	boolean deleteRepositoryRole(String role);
 

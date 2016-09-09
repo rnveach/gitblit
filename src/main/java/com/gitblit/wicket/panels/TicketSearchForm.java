@@ -45,13 +45,13 @@ public class TicketSearchForm extends SessionlessForm<Void> implements Serializa
 		this.repositoryName = repositoryName;
 		this.searchBoxModel = new Model<String>(text == null ? "" : text);
 
-		TextField<String> searchBox = new TextField<String>("ticketSearchBox", searchBoxModel);
+		final TextField<String> searchBox = new TextField<String>("ticketSearchBox",
+				this.searchBoxModel);
 		add(searchBox);
 	}
 
 	@Override
-	protected
-	void onInitialize() {
+	protected void onInitialize() {
 		super.onInitialize();
 		WicketUtils.setHtmlTooltip(get("ticketSearchBox"),
 				MessageFormat.format(getString("gb.searchTicketsTooltip"), ""));
@@ -60,19 +60,19 @@ public class TicketSearchForm extends SessionlessForm<Void> implements Serializa
 
 	@Override
 	public void onSubmit() {
-		String searchString = searchBoxModel.getObject();
+		final String searchString = this.searchBoxModel.getObject();
 		if (StringUtils.isEmpty(searchString)) {
 			// redirect to self to avoid wicket page update bug
-			String absoluteUrl = getAbsoluteUrl();
+			final String absoluteUrl = getAbsoluteUrl();
 			getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
 			return;
 		}
 
 		// use an absolute url to workaround Wicket-Tomcat problems with
 		// mounted url parameters (issue-111)
-		PageParameters params = WicketUtils.newRepositoryParameter(repositoryName);
+		final PageParameters params = WicketUtils.newRepositoryParameter(this.repositoryName);
 		params.add("s", searchString);
-		String absoluteUrl = getAbsoluteUrl(pageClass, params);
+		final String absoluteUrl = getAbsoluteUrl(this.pageClass, params);
 		getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
 	}
 }

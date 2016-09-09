@@ -110,25 +110,32 @@ public abstract class RootPage extends BasePage {
 
 			@Override
 			public void renderHead(IHeaderResponse response) {
-				StringBuilder buffer = new StringBuilder();
+				final StringBuilder buffer = new StringBuilder();
 				buffer.append("<style type=\"text/css\">\n");
 				buffer.append(".navbar-inner {\n");
-				final String headerBackground = app().settings().getString(Keys.web.headerBackgroundColor, null);
+				final String headerBackground = app().settings().getString(
+						Keys.web.headerBackgroundColor, null);
 				if (!StringUtils.isEmpty(headerBackground)) {
-					buffer.append(MessageFormat.format("background-color: {0};\n", headerBackground));
+					buffer.append(MessageFormat
+							.format("background-color: {0};\n", headerBackground));
 				}
-				final String headerBorder = app().settings().getString(Keys.web.headerBorderColor, null);
+				final String headerBorder = app().settings().getString(Keys.web.headerBorderColor,
+						null);
 				if (!StringUtils.isEmpty(headerBorder)) {
-					buffer.append(MessageFormat.format("border-bottom: 1px solid {0} !important;\n", headerBorder));
+					buffer.append(MessageFormat.format(
+							"border-bottom: 1px solid {0} !important;\n", headerBorder));
 				}
 				buffer.append("}\n");
-				final String headerBorderFocus = app().settings().getString(Keys.web.headerBorderFocusColor, null);
+				final String headerBorderFocus = app().settings().getString(
+						Keys.web.headerBorderFocusColor, null);
 				if (!StringUtils.isEmpty(headerBorderFocus)) {
 					buffer.append(".navbar ul li:focus, .navbar .active {\n");
-					buffer.append(MessageFormat.format("border-bottom: 4px solid {0};\n", headerBorderFocus));
+					buffer.append(MessageFormat.format("border-bottom: 4px solid {0};\n",
+							headerBorderFocus));
 					buffer.append("}\n");
 				}
-				final String headerForeground = app().settings().getString(Keys.web.headerForegroundColor, null);
+				final String headerForeground = app().settings().getString(
+						Keys.web.headerForegroundColor, null);
 				if (!StringUtils.isEmpty(headerForeground)) {
 					buffer.append(".navbar ul.nav li a {\n");
 					buffer.append(MessageFormat.format("color: {0};\n", headerForeground));
@@ -137,7 +144,8 @@ public abstract class RootPage extends BasePage {
 					buffer.append(MessageFormat.format("color: {0};\n", headerForeground));
 					buffer.append("}\n");
 				}
-				final String headerHover = app().settings().getString(Keys.web.headerHoverColor, null);
+				final String headerHover = app().settings().getString(Keys.web.headerHoverColor,
+						null);
 				if (!StringUtils.isEmpty(headerHover)) {
 					buffer.append(".navbar ul.nav li a:hover {\n");
 					buffer.append(MessageFormat.format("color: {0} !important;\n", headerHover));
@@ -145,22 +153,25 @@ public abstract class RootPage extends BasePage {
 				}
 				buffer.append("</style>\n");
 				response.renderString(buffer.toString());
-				}
-			}));
+			}
+		}));
 
-		boolean authenticateView = app().settings().getBoolean(Keys.web.authenticateViewPages, false);
-		boolean authenticateAdmin = app().settings().getBoolean(Keys.web.authenticateAdminPages, true);
-		boolean allowAdmin = app().settings().getBoolean(Keys.web.allowAdministration, true);
-		boolean allowLucene = app().settings().getBoolean(Keys.web.allowLuceneIndexing, true);
-		boolean displayUserPanel = app().settings().getBoolean(Keys.web.displayUserPanel, true);
-		boolean isLoggedIn = GitBlitWebSession.get().isLoggedIn();
+		final boolean authenticateView = app().settings().getBoolean(
+				Keys.web.authenticateViewPages, false);
+		final boolean authenticateAdmin = app().settings().getBoolean(
+				Keys.web.authenticateAdminPages, true);
+		final boolean allowAdmin = app().settings().getBoolean(Keys.web.allowAdministration, true);
+		final boolean allowLucene = app().settings().getBoolean(Keys.web.allowLuceneIndexing, true);
+		final boolean displayUserPanel = app().settings().getBoolean(Keys.web.displayUserPanel,
+				true);
+		final boolean isLoggedIn = GitBlitWebSession.get().isLoggedIn();
 
 		if (authenticateAdmin) {
-			showAdmin = allowAdmin && GitBlitWebSession.get().canAdmin();
+			this.showAdmin = allowAdmin && GitBlitWebSession.get().canAdmin();
 			// authentication requires state and session
 			setStatelessHint(false);
 		} else {
-			showAdmin = allowAdmin;
+			this.showAdmin = allowAdmin;
 			if (authenticateView) {
 				// authentication requires state and session
 				setStatelessHint(false);
@@ -172,10 +183,12 @@ public abstract class RootPage extends BasePage {
 
 		if (displayUserPanel && (authenticateView || authenticateAdmin)) {
 			if (isLoggedIn) {
-				UserMenu userFragment = new UserMenu("userPanel", "userMenuFragment", RootPage.this);
+				final UserMenu userFragment = new UserMenu("userPanel", "userMenuFragment",
+						RootPage.this);
 				add(userFragment);
 			} else {
-				LoginForm loginForm = new LoginForm("userPanel", "loginFormFragment", RootPage.this);
+				final LoginForm loginForm = new LoginForm("userPanel", "loginFormFragment",
+						RootPage.this);
 				add(loginForm);
 			}
 		} else {
@@ -183,23 +196,24 @@ public abstract class RootPage extends BasePage {
 		}
 
 		// navigation links
-		List<NavLink> navLinks = new ArrayList<NavLink>();
+		final List<NavLink> navLinks = new ArrayList<NavLink>();
 		if (!authenticateView || (authenticateView && isLoggedIn)) {
 			UserModel user = UserModel.ANONYMOUS;
 			if (isLoggedIn) {
 				user = GitBlitWebSession.get().getUser();
 			}
 
-			navLinks.add(new PageNavLink(isLoggedIn ? "gb.myDashboard" : "gb.dashboard", MyDashboardPage.class,
-					getRootPageParameters()));
+			navLinks.add(new PageNavLink(isLoggedIn ? "gb.myDashboard" : "gb.dashboard",
+					MyDashboardPage.class, getRootPageParameters()));
 			if (isLoggedIn && app().tickets().isReady()) {
 				navLinks.add(new PageNavLink("gb.myTickets", MyTicketsPage.class));
 			}
 			navLinks.add(new PageNavLink("gb.repositories", RepositoriesPage.class,
 					getRootPageParameters()));
-			
-			navLinks.add(new PageNavLink("gb.filestore", FilestorePage.class, getRootPageParameters()));
-				
+
+			navLinks.add(new PageNavLink("gb.filestore", FilestorePage.class,
+					getRootPageParameters()));
+
 			navLinks.add(new PageNavLink("gb.activity", ActivityPage.class, getRootPageParameters()));
 			if (allowLucene) {
 				navLinks.add(new PageNavLink("gb.search", LuceneSearchPage.class));
@@ -210,21 +224,23 @@ public abstract class RootPage extends BasePage {
 			}
 
 			// add nav link extensions
-			List<NavLinkExtension> extensions = app().plugins().getExtensions(NavLinkExtension.class);
-			for (NavLinkExtension ext : extensions) {
+			final List<NavLinkExtension> extensions = app().plugins().getExtensions(
+					NavLinkExtension.class);
+			for (final NavLinkExtension ext : extensions) {
 				navLinks.addAll(ext.getNavLinks(user));
 			}
 		}
 
-		NavigationPanel navPanel = new NavigationPanel("navPanel", getRootNavPageClass(), navLinks);
+		final NavigationPanel navPanel = new NavigationPanel("navPanel", getRootNavPageClass(),
+				navLinks);
 		add(navPanel);
 
 		// display an error message cached from a redirect
-		String cachedMessage = GitBlitWebSession.get().clearErrorMessage();
+		final String cachedMessage = GitBlitWebSession.get().clearErrorMessage();
 		if (!StringUtils.isEmpty(cachedMessage)) {
 			error(cachedMessage);
-		} else if (showAdmin) {
-			int pendingProposals = app().federation().getPendingFederationProposals().size();
+		} else if (this.showAdmin) {
+			final int pendingProposals = app().federation().getPendingFederationProposals().size();
 			if (pendingProposals == 1) {
 				info(getString("gb.OneProposalToReview"));
 			} else if (pendingProposals > 1) {
@@ -242,9 +258,9 @@ public abstract class RootPage extends BasePage {
 
 	private PageParameters getRootPageParameters() {
 		if (reusePageParameters()) {
-			PageParameters pp = getPageParameters();
+			final PageParameters pp = getPageParameters();
 			if (pp != null) {
-				PageParameters params = new PageParameters(pp);
+				final PageParameters params = new PageParameters(pp);
 				// remove named project parameter
 				params.remove("p");
 
@@ -256,7 +272,8 @@ public abstract class RootPage extends BasePage {
 
 				// remove days back parameter if it is the default value
 				if (params.containsKey("db")
-						&& params.getInt("db") == app().settings().getInteger(Keys.web.activityDuration, 7)) {
+						&& (params.getInt("db") == app().settings().getInteger(
+								Keys.web.activityDuration, 7))) {
 					params.remove("db");
 				}
 				return params;
@@ -275,7 +292,7 @@ public abstract class RootPage extends BasePage {
 			HttpServletResponse response = ((WebResponse) getResponse()).getHttpServletResponse();
 
 			// Set the user into the session
-			GitBlitWebSession session = GitBlitWebSession.get();
+			final GitBlitWebSession session = GitBlitWebSession.get();
 
 			// issue 62: fix session fixation vulnerability
 			session.replaceSession();
@@ -283,13 +300,14 @@ public abstract class RootPage extends BasePage {
 
 			request = ((WebRequest) getRequest()).getHttpServletRequest();
 			response = ((WebResponse) getResponse()).getHttpServletResponse();
-			request.getSession().setAttribute(Constants.ATTRIB_AUTHTYPE, AuthenticationType.CREDENTIALS);
+			request.getSession().setAttribute(Constants.ATTRIB_AUTHTYPE,
+					AuthenticationType.CREDENTIALS);
 
 			// Set Cookie
 			app().authentication().setCookie(request, response, user);
 
 			if (!session.continueRequest()) {
-				PageParameters params = getPageParameters();
+				final PageParameters params = getPageParameters();
 				if (params == null) {
 					// redirect to this page
 					redirectTo(getClass());
@@ -304,13 +322,14 @@ public abstract class RootPage extends BasePage {
 	}
 
 	protected List<RepositoryModel> getRepositoryModels() {
-		if (repositoryModels.isEmpty()) {
+		if (this.repositoryModels.isEmpty()) {
 			final UserModel user = GitBlitWebSession.get().getUser();
-			List<RepositoryModel> repositories = app().repositories().getRepositoryModels(user);
-			repositoryModels.addAll(repositories);
-			Collections.sort(repositoryModels);
+			final List<RepositoryModel> repositories = app().repositories().getRepositoryModels(
+					user);
+			this.repositoryModels.addAll(repositories);
+			Collections.sort(this.repositoryModels);
 		}
-		return repositoryModels;
+		return this.repositoryModels;
 	}
 
 	protected void addDropDownMenus(List<NavLink> navLinks) {
@@ -319,14 +338,14 @@ public abstract class RootPage extends BasePage {
 
 	protected List<com.gitblit.models.Menu.MenuItem> getRepositoryFilterItems(PageParameters params) {
 		final UserModel user = GitBlitWebSession.get().getUser();
-		Set<MenuItem> filters = new LinkedHashSet<MenuItem>();
-		List<RepositoryModel> repositories = getRepositoryModels();
+		final Set<MenuItem> filters = new LinkedHashSet<MenuItem>();
+		final List<RepositoryModel> repositories = getRepositoryModels();
 
 		// accessible repositories by federation set
-		Map<String, AtomicInteger> setMap = new HashMap<String, AtomicInteger>();
-		for (RepositoryModel repository : repositories) {
-			for (String set : repository.federationSets) {
-				String key = set.toLowerCase();
+		final Map<String, AtomicInteger> setMap = new HashMap<String, AtomicInteger>();
+		for (final RepositoryModel repository : repositories) {
+			for (final String set : repository.federationSets) {
+				final String key = set.toLowerCase();
 				if (setMap.containsKey(key)) {
 					setMap.get(key).incrementAndGet();
 				} else {
@@ -335,9 +354,9 @@ public abstract class RootPage extends BasePage {
 			}
 		}
 		if (setMap.size() > 0) {
-			List<String> sets = new ArrayList<String>(setMap.keySet());
+			final List<String> sets = new ArrayList<String>(setMap.keySet());
 			Collections.sort(sets);
-			for (String set : sets) {
+			for (final String set : sets) {
 				filters.add(new ToggleMenuItem(MessageFormat.format("{0} ({1})", set,
 						setMap.get(set).get()), "set", set, params));
 			}
@@ -346,10 +365,10 @@ public abstract class RootPage extends BasePage {
 		}
 
 		// user's team memberships
-		if (user != null && user.teams.size() > 0) {
-			List<TeamModel> teams = new ArrayList<TeamModel>(user.teams);
+		if ((user != null) && (user.teams.size() > 0)) {
+			final List<TeamModel> teams = new ArrayList<TeamModel>(user.teams);
 			Collections.sort(teams);
-			for (TeamModel team : teams) {
+			for (final TeamModel team : teams) {
 				filters.add(new ToggleMenuItem(MessageFormat.format("{0} ({1})", team.name,
 						team.repositories.size()), "team", team.name, params));
 			}
@@ -358,11 +377,11 @@ public abstract class RootPage extends BasePage {
 		}
 
 		// custom filters
-		String customFilters = app().settings().getString(Keys.web.customFilters, null);
+		final String customFilters = app().settings().getString(Keys.web.customFilters, null);
 		if (!StringUtils.isEmpty(customFilters)) {
 			boolean addedExpression = false;
-			List<String> expressions = StringUtils.getStringsFromValue(customFilters, "!!!");
-			for (String expression : expressions) {
+			final List<String> expressions = StringUtils.getStringsFromValue(customFilters, "!!!");
+			for (final String expression : expressions) {
 				if (!StringUtils.isEmpty(expression)) {
 					addedExpression = true;
 					filters.add(new ToggleMenuItem(null, "x", expression, params));
@@ -379,7 +398,7 @@ public abstract class RootPage extends BasePage {
 	protected List<MenuItem> getTimeFilterItems(PageParameters params) {
 		// days back choices - additive parameters
 		int daysBack = app().settings().getInteger(Keys.web.activityDuration, 7);
-		int maxDaysBack = app().settings().getInteger(Keys.web.activityDurationMaximum, 30);
+		final int maxDaysBack = app().settings().getInteger(Keys.web.activityDurationMaximum, 30);
 		if (daysBack < 1) {
 			daysBack = 7;
 		}
@@ -394,22 +413,24 @@ public abstract class RootPage extends BasePage {
 		}
 
 		if (!clonedParams.containsKey("db")) {
-			clonedParams.put("db",  daysBack);
+			clonedParams.put("db", daysBack);
 		}
 
-		List<MenuItem> items = new ArrayList<MenuItem>();
-		Set<Integer> choicesSet = new TreeSet<Integer>(app().settings().getIntegers(Keys.web.activityDurationChoices));
+		final List<MenuItem> items = new ArrayList<MenuItem>();
+		final Set<Integer> choicesSet = new TreeSet<Integer>(app().settings().getIntegers(
+				Keys.web.activityDurationChoices));
 		if (choicesSet.isEmpty()) {
-			 choicesSet.addAll(Arrays.asList(1, 3, 7, 14, 21, 28));
+			choicesSet.addAll(Arrays.asList(1, 3, 7, 14, 21, 28));
 		}
-		List<Integer> choices = new ArrayList<Integer>(choicesSet);
+		final List<Integer> choices = new ArrayList<Integer>(choicesSet);
 		Collections.sort(choices);
-		String lastDaysPattern = getString("gb.lastNDays");
-		for (Integer db : choices) {
+		final String lastDaysPattern = getString("gb.lastNDays");
+		for (final Integer db : choices) {
 			if (db == 1) {
-				items.add(new ParameterMenuItem(getString("gb.time.today"), "db", db.toString(), clonedParams));
+				items.add(new ParameterMenuItem(getString("gb.time.today"), "db", db.toString(),
+						clonedParams));
 			} else {
-				String txt = MessageFormat.format(lastDaysPattern, db);
+				final String txt = MessageFormat.format(lastDaysPattern, db);
 				items.add(new ParameterMenuItem(txt, "db", db.toString(), clonedParams));
 			}
 		}
@@ -424,26 +445,26 @@ public abstract class RootPage extends BasePage {
 
 		boolean hasParameter = false;
 		String projectName = WicketUtils.getProjectName(params);
-		String userName = WicketUtils.getUsername(params);
+		final String userName = WicketUtils.getUsername(params);
 		if (StringUtils.isEmpty(projectName)) {
 			if (!StringUtils.isEmpty(userName)) {
 				projectName = ModelUtils.getPersonalPath(userName);
 			}
 		}
-		String repositoryName = WicketUtils.getRepositoryName(params);
-		String set = WicketUtils.getSet(params);
-		String regex = WicketUtils.getRegEx(params);
-		String team = WicketUtils.getTeam(params);
+		final String repositoryName = WicketUtils.getRepositoryName(params);
+		final String set = WicketUtils.getSet(params);
+		final String regex = WicketUtils.getRegEx(params);
+		final String team = WicketUtils.getTeam(params);
 		int daysBack = params.getInt("db", 0);
-		int maxDaysBack = app().settings().getInteger(Keys.web.activityDurationMaximum, 30);
+		final int maxDaysBack = app().settings().getInteger(Keys.web.activityDurationMaximum, 30);
 
-		List<RepositoryModel> availableModels = getRepositoryModels();
+		final List<RepositoryModel> availableModels = getRepositoryModels();
 		Set<RepositoryModel> models = new HashSet<RepositoryModel>();
 
 		if (!StringUtils.isEmpty(repositoryName)) {
 			// try named repository
 			hasParameter = true;
-			for (RepositoryModel model : availableModels) {
+			for (final RepositoryModel model : availableModels) {
 				if (model.name.equalsIgnoreCase(repositoryName)) {
 					models.add(model);
 					break;
@@ -454,17 +475,18 @@ public abstract class RootPage extends BasePage {
 		if (!StringUtils.isEmpty(projectName)) {
 			// try named project
 			hasParameter = true;
-			if (projectName.equalsIgnoreCase(app().settings().getString(Keys.web.repositoryRootGroupName, "main"))) {
+			if (projectName.equalsIgnoreCase(app().settings().getString(
+					Keys.web.repositoryRootGroupName, "main"))) {
 				// root project/group
-				for (RepositoryModel model : availableModels) {
+				for (final RepositoryModel model : availableModels) {
 					if (model.name.indexOf('/') == -1) {
 						models.add(model);
 					}
 				}
 			} else {
 				// named project/group
-				String group = projectName.toLowerCase() + "/";
-				for (RepositoryModel model : availableModels) {
+				final String group = projectName.toLowerCase() + "/";
+				for (final RepositoryModel model : availableModels) {
 					if (model.name.toLowerCase().startsWith(group)) {
 						models.add(model);
 					}
@@ -475,8 +497,8 @@ public abstract class RootPage extends BasePage {
 		if (!StringUtils.isEmpty(regex)) {
 			// filter the repositories by the regex
 			hasParameter = true;
-			Pattern pattern = Pattern.compile(regex);
-			for (RepositoryModel model : availableModels) {
+			final Pattern pattern = Pattern.compile(regex);
+			for (final RepositoryModel model : availableModels) {
 				if (pattern.matcher(model.name).find()) {
 					models.add(model);
 				}
@@ -486,9 +508,9 @@ public abstract class RootPage extends BasePage {
 		if (!StringUtils.isEmpty(set)) {
 			// filter the repositories by the specified sets
 			hasParameter = true;
-			List<String> sets = StringUtils.getStringsFromValue(set, ",");
-			for (RepositoryModel model : availableModels) {
-				for (String curr : sets) {
+			final List<String> sets = StringUtils.getStringsFromValue(set, ",");
+			for (final RepositoryModel model : availableModels) {
+				for (final String curr : sets) {
 					if (model.federationSets.contains(curr)) {
 						models.add(model);
 					}
@@ -499,20 +521,20 @@ public abstract class RootPage extends BasePage {
 		if (!StringUtils.isEmpty(team)) {
 			// filter the repositories by the specified teams
 			hasParameter = true;
-			List<String> teams = StringUtils.getStringsFromValue(team, ",");
+			final List<String> teams = StringUtils.getStringsFromValue(team, ",");
 
 			// need TeamModels first
-			List<TeamModel> teamModels = new ArrayList<TeamModel>();
-			for (String name : teams) {
-				TeamModel teamModel = app().users().getTeamModel(name);
+			final List<TeamModel> teamModels = new ArrayList<TeamModel>();
+			for (final String name : teams) {
+				final TeamModel teamModel = app().users().getTeamModel(name);
 				if (teamModel != null) {
 					teamModels.add(teamModel);
 				}
 			}
 
 			// brute-force our way through finding the matching models
-			for (RepositoryModel repositoryModel : availableModels) {
-				for (TeamModel teamModel : teamModels) {
+			for (final RepositoryModel repositoryModel : availableModels) {
+				for (final TeamModel teamModel : teamModels) {
 					if (teamModel.hasRepositoryPermission(repositoryModel.name)) {
 						models.add(repositoryModel);
 					}
@@ -526,18 +548,18 @@ public abstract class RootPage extends BasePage {
 
 		// time-filter the list
 		if (daysBack > 0) {
-			if (maxDaysBack > 0 && daysBack > maxDaysBack) {
+			if ((maxDaysBack > 0) && (daysBack > maxDaysBack)) {
 				daysBack = maxDaysBack;
 			}
-			Calendar cal = Calendar.getInstance();
+			final Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.HOUR_OF_DAY, 0);
 			cal.set(Calendar.MINUTE, 0);
 			cal.set(Calendar.SECOND, 0);
 			cal.set(Calendar.MILLISECOND, 0);
 			cal.add(Calendar.DATE, -1 * daysBack);
-			Date threshold = cal.getTime();
-			Set<RepositoryModel> timeFiltered = new HashSet<RepositoryModel>();
-			for (RepositoryModel model : models) {
+			final Date threshold = cal.getTime();
+			final Set<RepositoryModel> timeFiltered = new HashSet<RepositoryModel>();
+			for (final RepositoryModel model : models) {
 				if (model.lastChange.after(threshold)) {
 					timeFiltered.add(model);
 				}
@@ -545,7 +567,7 @@ public abstract class RootPage extends BasePage {
 			models = timeFiltered;
 		}
 
-		List<RepositoryModel> list = new ArrayList<RepositoryModel>(models);
+		final List<RepositoryModel> list = new ArrayList<RepositoryModel>(models);
 		Collections.sort(list);
 		return list;
 	}
@@ -560,18 +582,21 @@ public abstract class RootPage extends BasePage {
 			super(id, markupId, markupProvider);
 			setRenderBodyOnly(true);
 
-			SessionlessForm<Void> loginForm = new SessionlessForm<Void>("loginForm", RootPage.this.getClass(), getPageParameters()) {
+			final SessionlessForm<Void> loginForm = new SessionlessForm<Void>("loginForm",
+					RootPage.this.getClass(), getPageParameters()) {
 
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void onSubmit() {
-					String username = RootPage.this.username.getObject();
-					char[] password = RootPage.this.password.getObject().toCharArray();
+					final String username = RootPage.this.username.getObject();
+					final char[] password = RootPage.this.password.getObject().toCharArray();
 
-					HttpServletRequest request = ((WebRequest)RequestCycle.get().getRequest()).getHttpServletRequest();
+					final HttpServletRequest request = ((WebRequest) RequestCycle.get()
+							.getRequest()).getHttpServletRequest();
 
-					UserModel user = app().authentication().authenticate(username, password, request.getRemoteAddr());
+					UserModel user = app().authentication().authenticate(username, password,
+							request.getRemoteAddr());
 					if (user == null) {
 						error(getString("gb.invalidUsernameOrPassword"));
 					} else if (user.username.equals(Constants.FEDERATION_USER)) {
@@ -584,10 +609,12 @@ public abstract class RootPage extends BasePage {
 					}
 				}
 			};
-			TextField<String> unameField = new TextField<String>("username", username);
+			final TextField<String> unameField = new TextField<String>("username",
+					RootPage.this.username);
 			WicketUtils.setInputPlaceholder(unameField, markupProvider.getString("gb.username"));
 			loginForm.add(unameField);
-			NonTrimmedPasswordTextField pwField = new NonTrimmedPasswordTextField("password", password);
+			final NonTrimmedPasswordTextField pwField = new NonTrimmedPasswordTextField("password",
+					RootPage.this.password);
 			WicketUtils.setInputPlaceholder(pwField, markupProvider.getString("gb.password"));
 			loginForm.add(pwField);
 			add(loginForm);
@@ -610,12 +637,14 @@ public abstract class RootPage extends BasePage {
 		protected void onInitialize() {
 			super.onInitialize();
 
-			GitBlitWebSession session = GitBlitWebSession.get();
-			UserModel user = session.getUser();
-			boolean editCredentials = app().authentication().supportsCredentialChanges(user);
-			HttpServletRequest request = ((WebRequest) getRequest()).getHttpServletRequest();
-			AuthenticationType authenticationType = (AuthenticationType) request.getAttribute(Constants.ATTRIB_AUTHTYPE);
-			boolean standardLogin = (null != authenticationType) ? authenticationType.isStandard() : true;
+			final GitBlitWebSession session = GitBlitWebSession.get();
+			final UserModel user = session.getUser();
+			final boolean editCredentials = app().authentication().supportsCredentialChanges(user);
+			final HttpServletRequest request = ((WebRequest) getRequest()).getHttpServletRequest();
+			final AuthenticationType authenticationType = (AuthenticationType) request
+					.getAttribute(Constants.ATTRIB_AUTHTYPE);
+			final boolean standardLogin = (null != authenticationType) ? authenticationType
+					.isStandard() : true;
 
 			if (app().settings().getBoolean(Keys.web.allowGravatar, true)) {
 				add(new AvatarImage("username", user, "navbarGravatar", 20, false));
@@ -623,27 +652,29 @@ public abstract class RootPage extends BasePage {
 				add(new Label("username", user.getDisplayName()));
 			}
 
-			List<MenuItem> standardItems = new ArrayList<MenuItem>();
+			final List<MenuItem> standardItems = new ArrayList<MenuItem>();
 			standardItems.add(new MenuDivider());
 			if (user.canAdmin() || user.canCreate()) {
-				standardItems.add(new PageLinkMenuItem("gb.newRepository", app().getNewRepositoryPage()));
+				standardItems.add(new PageLinkMenuItem("gb.newRepository", app()
+						.getNewRepositoryPage()));
 			}
-			standardItems.add(new PageLinkMenuItem("gb.myProfile", UserPage.class,
-					WicketUtils.newUsernameParameter(user.username)));
+			standardItems.add(new PageLinkMenuItem("gb.myProfile", UserPage.class, WicketUtils
+					.newUsernameParameter(user.username)));
 			if (editCredentials) {
-				standardItems.add(new PageLinkMenuItem("gb.changePassword", ChangePasswordPage.class));
+				standardItems.add(new PageLinkMenuItem("gb.changePassword",
+						ChangePasswordPage.class));
 			}
 			standardItems.add(new MenuDivider());
 			add(newSubmenu("standardMenu", user.getDisplayName(), standardItems));
 
-			if (showAdmin) {
+			if (RootPage.this.showAdmin) {
 				// admin menu
-				List<MenuItem> adminItems = new ArrayList<MenuItem>();
+				final List<MenuItem> adminItems = new ArrayList<MenuItem>();
 				adminItems.add(new MenuDivider());
 				adminItems.add(new PageLinkMenuItem("gb.users", UsersPage.class));
 				adminItems.add(new PageLinkMenuItem("gb.teams", TeamsPage.class));
 
-				boolean showRegistrations = app().federation().canFederate()
+				final boolean showRegistrations = app().federation().canFederate()
 						&& app().settings().getBoolean(Keys.web.showFederationRegistrations, false);
 				if (showRegistrations) {
 					adminItems.add(new PageLinkMenuItem("gb.federation", FederationPage.class));
@@ -656,10 +687,11 @@ public abstract class RootPage extends BasePage {
 			}
 
 			// plugin extension items
-			List<MenuItem> extensionItems = new ArrayList<MenuItem>();
-			List<UserMenuExtension> extensions = app().plugins().getExtensions(UserMenuExtension.class);
-			for (UserMenuExtension ext : extensions) {
-				List<MenuItem> items = ext.getMenuItems(user);
+			final List<MenuItem> extensionItems = new ArrayList<MenuItem>();
+			final List<UserMenuExtension> extensions = app().plugins().getExtensions(
+					UserMenuExtension.class);
+			for (final UserMenuExtension ext : extensions) {
+				final List<MenuItem> items = ext.getMenuItems(user);
 				extensionItems.addAll(items);
 			}
 
@@ -673,12 +705,12 @@ public abstract class RootPage extends BasePage {
 				extensionItems.add(new MenuDivider());
 			}
 
-			add(new BookmarkablePageLink<Void>("logout",
-					LogoutPage.class).setVisible(standardLogin));
+			add(new BookmarkablePageLink<Void>("logout", LogoutPage.class)
+					.setVisible(standardLogin));
 		}
 
 		/**
-		 * Creates a submenu.  This is not actually submenu because we're using
+		 * Creates a submenu. This is not actually submenu because we're using
 		 * an older Twitter Bootstrap which is pre-submenu.
 		 *
 		 * @param wicketId
@@ -687,10 +719,11 @@ public abstract class RootPage extends BasePage {
 		 * @return a submenu fragment
 		 */
 		private Fragment newSubmenu(String wicketId, String submenuTitle, List<MenuItem> menuItems) {
-			Fragment submenu = new Fragment(wicketId, "submenuFragment", this);
+			final Fragment submenu = new Fragment(wicketId, "submenuFragment", this);
 			submenu.add(new Label("submenuTitle", submenuTitle).setRenderBodyOnly(true));
-			ListDataProvider<MenuItem> menuItemsDp = new ListDataProvider<MenuItem>(menuItems);
-			DataView<MenuItem> submenuItems = new DataView<MenuItem>("submenuItem", menuItemsDp) {
+			final ListDataProvider<MenuItem> menuItemsDp = new ListDataProvider<MenuItem>(menuItems);
+			final DataView<MenuItem> submenuItems = new DataView<MenuItem>("submenuItem",
+					menuItemsDp) {
 				private static final long serialVersionUID = 1L;
 
 				@Override
@@ -700,16 +733,18 @@ public abstract class RootPage extends BasePage {
 					try {
 						// try to lookup translation
 						name = getString(name);
-					} catch (Exception e) {
+					}
+					catch (final Exception e) {
 					}
 					if (item instanceof PageLinkMenuItem) {
 						// link to another Wicket page
-						PageLinkMenuItem pageLink = (PageLinkMenuItem) item;
-						menuItem.add(new LinkPanel("submenuLink", null, null, name, pageLink.getPageClass(),
-								pageLink.getPageParameters(), false).setRenderBodyOnly(true));
+						final PageLinkMenuItem pageLink = (PageLinkMenuItem) item;
+						menuItem.add(new LinkPanel("submenuLink", null, null, name, pageLink
+								.getPageClass(), pageLink.getPageParameters(), false)
+								.setRenderBodyOnly(true));
 					} else if (item instanceof ExternalLinkMenuItem) {
 						// link to a specified href
-						ExternalLinkMenuItem extLink = (ExternalLinkMenuItem) item;
+						final ExternalLinkMenuItem extLink = (ExternalLinkMenuItem) item;
 						menuItem.add(new LinkPanel("submenuLink", null, name, extLink.getHref(),
 								extLink.openInNewWindow()).setRenderBodyOnly(true));
 					} else if (item instanceof MenuDivider) {

@@ -52,9 +52,9 @@ public class OverviewPage extends RepositoryPage {
 	public OverviewPage(PageParameters params) {
 		super(params);
 
-		int numberRefs = app().settings().getInteger(Keys.web.summaryRefsCount, 5);
+		final int numberRefs = app().settings().getInteger(Keys.web.summaryRefsCount, 5);
 
-		Repository r = getRepository();
+		final Repository r = getRepository();
 		final RepositoryModel model = getRepositoryModel();
 		UserModel user = GitBlitWebSession.get().getUser();
 		if (user == null) {
@@ -63,7 +63,8 @@ public class OverviewPage extends RepositoryPage {
 
 		List<Metric> metrics = null;
 		Metric metricsTotal = null;
-		if (!model.skipSummaryMetrics && app().settings().getBoolean(Keys.web.generateActivityGraph, true)) {
+		if (!model.skipSummaryMetrics
+				&& app().settings().getBoolean(Keys.web.generateActivityGraph, true)) {
 			metrics = app().repositories().getRepositoryDefaultMetrics(model, r);
 			metricsTotal = metrics.remove(0);
 		}
@@ -75,25 +76,28 @@ public class OverviewPage extends RepositoryPage {
 
 		// owner links
 		final List<String> owners = new ArrayList<String>(getRepositoryModel().owners);
-		ListDataProvider<String> ownersDp = new ListDataProvider<String>(owners);
-		DataView<String> ownersView = new DataView<String>("repositoryOwners", ownersDp) {
+		final ListDataProvider<String> ownersDp = new ListDataProvider<String>(owners);
+		final DataView<String> ownersView = new DataView<String>("repositoryOwners", ownersDp) {
 			private static final long serialVersionUID = 1L;
 			int counter = 0;
+
 			@Override
 			public void populateItem(final Item<String> item) {
-				String ownername = item.getModelObject();
-				UserModel ownerModel = app().users().getUserModel(ownername);
+				final String ownername = item.getModelObject();
+				final UserModel ownerModel = app().users().getUserModel(ownername);
 				if (ownerModel != null) {
-					item.add(new LinkPanel("owner", null, ownerModel.getDisplayName(), UserPage.class,
-							WicketUtils.newUsernameParameter(ownerModel.username)).setRenderBodyOnly(true));
+					item.add(new LinkPanel("owner", null, ownerModel.getDisplayName(),
+							UserPage.class, WicketUtils.newUsernameParameter(ownerModel.username))
+							.setRenderBodyOnly(true));
 				} else {
-					Label owner = new Label("owner", ownername);
+					final Label owner = new Label("owner", ownername);
 					WicketUtils.setCssStyle(owner, "text-decoration: line-through;");
-					WicketUtils.setHtmlTooltip(owner,  MessageFormat.format(getString("gb.failedToFindAccount"), ownername));
+					WicketUtils.setHtmlTooltip(owner,
+							MessageFormat.format(getString("gb.failedToFindAccount"), ownername));
 					item.add(owner);
 				}
-				counter++;
-				item.add(new Label("comma", ",").setVisible(counter < owners.size()));
+				this.counter++;
+				item.add(new Label("comma", ",").setVisible(this.counter < owners.size()));
 				item.setRenderBodyOnly(true);
 			}
 		};
@@ -107,20 +111,22 @@ public class OverviewPage extends RepositoryPage {
 		if (metricsTotal == null) {
 			add(new Label("branchStats", ""));
 		} else {
-			add(new Label("branchStats",
-					MessageFormat.format(getString("gb.branchStats"), metricsTotal.count,
-							metricsTotal.tag, getTimeUtils().duration(metricsTotal.duration))));
+			add(new Label("branchStats", MessageFormat.format(getString("gb.branchStats"),
+					metricsTotal.count, metricsTotal.tag,
+					getTimeUtils().duration(metricsTotal.duration))));
 		}
 		add(new BookmarkablePageLink<Void>("metrics", MetricsPage.class,
-				WicketUtils.newRepositoryParameter(repositoryName)));
+				WicketUtils.newRepositoryParameter(this.repositoryName)));
 
 		add(new RepositoryUrlPanel("repositoryUrlPanel", false, user, model));
 
-		int reflogCount = app().settings().getInteger(Keys.web.overviewReflogCount, 5);
-		ReflogPanel reflog = new ReflogPanel("reflogPanel", getRepositoryModel(), r, reflogCount, 0);
+		final int reflogCount = app().settings().getInteger(Keys.web.overviewReflogCount, 5);
+		final ReflogPanel reflog = new ReflogPanel("reflogPanel", getRepositoryModel(), r,
+				reflogCount, 0);
 		add(reflog);
-		add(new TagsPanel("tagsPanel", repositoryName, r, numberRefs).hideIfEmpty());
-		add(new BranchesPanel("branchesPanel", getRepositoryModel(), r, numberRefs, false).hideIfEmpty());
+		add(new TagsPanel("tagsPanel", this.repositoryName, r, numberRefs).hideIfEmpty());
+		add(new BranchesPanel("branchesPanel", getRepositoryModel(), r, numberRefs, false)
+				.hideIfEmpty());
 
 		// Display an activity line graph
 		insertActivityGraph(metrics);
@@ -135,12 +141,12 @@ public class OverviewPage extends RepositoryPage {
 		if ((metrics != null) && (metrics.size() > 0)
 				&& app().settings().getBoolean(Keys.web.generateActivityGraph, true)) {
 
-			Charts charts = new Flotr2Charts();
-			
+			final Charts charts = new Flotr2Charts();
+
 			// daily line chart
-			Chart chart = charts.createLineChart("chartDaily", "", "unit",
+			final Chart chart = charts.createLineChart("chartDaily", "", "unit",
 					getString("gb.commits"));
-			for (Metric metric : metrics) {
+			for (final Metric metric : metrics) {
 				chart.addValue(metric.name, metric.count);
 			}
 			chart.setWidth(375);

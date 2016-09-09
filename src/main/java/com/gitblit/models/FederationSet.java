@@ -53,6 +53,6 @@ public class FederationSet implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Federation Set (" + name + ")";
+		return "Federation Set (" + this.name + ")";
 	}
 }

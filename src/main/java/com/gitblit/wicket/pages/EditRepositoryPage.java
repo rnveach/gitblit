@@ -97,16 +97,18 @@ public class EditRepositoryPage extends RootSubPage {
 	public EditRepositoryPage() {
 		// create constructor
 		super();
-		isCreate = true;
-		RepositoryModel model = new RepositoryModel();
-		String restriction = app().settings().getString(Keys.git.defaultAccessRestriction, "PUSH");
+		this.isCreate = true;
+		final RepositoryModel model = new RepositoryModel();
+		final String restriction = app().settings().getString(Keys.git.defaultAccessRestriction,
+				"PUSH");
 		model.accessRestriction = AccessRestrictionType.fromName(restriction);
-		String authorization = app().settings().getString(Keys.git.defaultAuthorizationControl, null);
+		final String authorization = app().settings()
+				.getString(Keys.git.defaultAuthorizationControl, null);
 		model.authorizationControl = AuthorizationControl.fromName(authorization);
 
-		GitBlitWebSession session = GitBlitWebSession.get();
-		UserModel user = session.getUser();
-		if (user != null && user.canCreate() && !user.canAdmin()) {
+		final GitBlitWebSession session = GitBlitWebSession.get();
+		final UserModel user = session.getUser();
+		if ((user != null) && user.canCreate() && !user.canAdmin()) {
 			// personal create permissions, inject personal repository path
 			model.name = user.getPersonalPath() + "/";
 			model.projectPath = user.getPersonalPath();
@@ -124,9 +126,9 @@ public class EditRepositoryPage extends RootSubPage {
 	public EditRepositoryPage(PageParameters params) {
 		// edit constructor
 		super(params);
-		isCreate = false;
-		String name = WicketUtils.getRepositoryName(params);
-		RepositoryModel model = app().repositories().getRepositoryModel(name);
+		this.isCreate = false;
+		final String name = WicketUtils.getRepositoryName(params);
+		final RepositoryModel model = app().repositories().getRepositoryModel(name);
 		setupPage(model);
 		setStatelessHint(false);
 		setOutputMarkupId(true);
@@ -146,167 +148,183 @@ public class EditRepositoryPage extends RootSubPage {
 		this.repositoryModel = model;
 
 		// ensure this user can create or edit this repository
-		checkPermissions(repositoryModel);
+		checkPermissions(this.repositoryModel);
 
-		List<String> indexedBranches = new ArrayList<String>();
-		List<String> federationSets = new ArrayList<String>();
+		final List<String> indexedBranches = new ArrayList<String>();
+		final List<String> federationSets = new ArrayList<String>();
 		final List<RegistrantAccessPermission> repositoryUsers = new ArrayList<RegistrantAccessPermission>();
 		final List<RegistrantAccessPermission> repositoryTeams = new ArrayList<RegistrantAccessPermission>();
-		List<String> preReceiveScripts = new ArrayList<String>();
-		List<String> postReceiveScripts = new ArrayList<String>();
+		final List<String> preReceiveScripts = new ArrayList<String>();
+		final List<String> postReceiveScripts = new ArrayList<String>();
 
-		GitBlitWebSession session = GitBlitWebSession.get();
+		final GitBlitWebSession session = GitBlitWebSession.get();
 		final UserModel user = session.getUser() == null ? UserModel.ANONYMOUS : session.getUser();
-		final boolean allowEditName = isCreate || isAdmin || repositoryModel.isUsersPersonalRepository(user.username);
+		final boolean allowEditName = this.isCreate || this.isAdmin
+				|| this.repositoryModel.isUsersPersonalRepository(user.username);
 
-		if (isCreate) {
+		if (this.isCreate) {
 			if (user.canAdmin()) {
 				super.setupPage(getString("gb.newRepository"), "");
 			} else {
 				super.setupPage(getString("gb.newRepository"), user.getDisplayName());
 			}
 		} else {
-			super.setupPage(getString("gb.edit"), repositoryModel.name);
-			repositoryUsers.addAll(app().repositories().getUserAccessPermissions(repositoryModel));
-			repositoryTeams.addAll(app().repositories().getTeamAccessPermissions(repositoryModel));
+			super.setupPage(getString("gb.edit"), this.repositoryModel.name);
+			repositoryUsers
+					.addAll(app().repositories().getUserAccessPermissions(this.repositoryModel));
+			repositoryTeams
+					.addAll(app().repositories().getTeamAccessPermissions(this.repositoryModel));
 			Collections.sort(repositoryUsers);
 			Collections.sort(repositoryTeams);
 
-			federationSets.addAll(repositoryModel.federationSets);
-			if (!ArrayUtils.isEmpty(repositoryModel.indexedBranches)) {
-				indexedBranches.addAll(repositoryModel.indexedBranches);
+			federationSets.addAll(this.repositoryModel.federationSets);
+			if (!ArrayUtils.isEmpty(this.repositoryModel.indexedBranches)) {
+				indexedBranches.addAll(this.repositoryModel.indexedBranches);
 			}
 		}
 
-		final String oldName = repositoryModel.name;
+		final String oldName = this.repositoryModel.name;
 
 		final RegistrantPermissionsPanel usersPalette = new RegistrantPermissionsPanel("users",
-				RegistrantType.USER, app().users().getAllUsernames(), repositoryUsers, getAccessPermissions());
+				RegistrantType.USER, app().users().getAllUsernames(), repositoryUsers,
+				getAccessPermissions());
 		final RegistrantPermissionsPanel teamsPalette = new RegistrantPermissionsPanel("teams",
-				RegistrantType.TEAM, app().users().getAllTeamNames(), repositoryTeams, getAccessPermissions());
+				RegistrantType.TEAM, app().users().getAllTeamNames(), repositoryTeams,
+				getAccessPermissions());
 
 		// owners palette
-		List<UserChoice> owners = new ArrayList<UserChoice>();
-		List<UserChoice> persons = new ArrayList<UserChoice>();
-		for (String owner : repositoryModel.owners) {
-			UserModel o = app().users().getUserModel(owner);
+		final List<UserChoice> owners = new ArrayList<UserChoice>();
+		final List<UserChoice> persons = new ArrayList<UserChoice>();
+		for (final String owner : this.repositoryModel.owners) {
+			final UserModel o = app().users().getUserModel(owner);
 			if (o != null) {
 				owners.add(new UserChoice(o.getDisplayName(), o.username, o.emailAddress));
 			} else {
-				UserChoice userChoice = new UserChoice(owner);
+				final UserChoice userChoice = new UserChoice(owner);
 				owners.add(userChoice);
 				persons.add(userChoice);
 			}
 		}
 
-		for (String person : app().users().getAllUsernames()) {
-			UserModel o = app().users().getUserModel(person);
+		for (final String person : app().users().getAllUsernames()) {
+			final UserModel o = app().users().getUserModel(person);
 			if (o != null) {
 				persons.add(new UserChoice(o.getDisplayName(), o.username, o.emailAddress));
 			} else {
 				persons.add(new UserChoice(person));
 			}
 		}
-		final Palette<UserChoice> ownersPalette = new Palette<UserChoice>("owners", new ListModel<UserChoice>(owners), new CollectionModel<UserChoice>(
-		      persons), new ChoiceRenderer<UserChoice>(null, "userId"), 12, false);
+		final Palette<UserChoice> ownersPalette = new Palette<UserChoice>("owners",
+				new ListModel<UserChoice>(owners), new CollectionModel<UserChoice>(persons),
+				new ChoiceRenderer<UserChoice>(null, "userId"), 12, false);
 
 		// indexed local branches palette
-		List<String> allLocalBranches = new ArrayList<String>();
+		final List<String> allLocalBranches = new ArrayList<String>();
 		allLocalBranches.add(Constants.DEFAULT_BRANCH);
-		allLocalBranches.addAll(repositoryModel.getLocalBranches());
-		boolean luceneEnabled = app().settings().getBoolean(Keys.web.allowLuceneIndexing, true);
-		final Palette<String> indexedBranchesPalette = new Palette<String>("indexedBranches", new ListModel<String>(
-				indexedBranches), new CollectionModel<String>(allLocalBranches),
-				new StringChoiceRenderer(), 8, false);
+		allLocalBranches.addAll(this.repositoryModel.getLocalBranches());
+		final boolean luceneEnabled = app().settings().getBoolean(Keys.web.allowLuceneIndexing,
+				true);
+		final Palette<String> indexedBranchesPalette = new Palette<String>("indexedBranches",
+				new ListModel<String>(indexedBranches),
+				new CollectionModel<String>(allLocalBranches), new StringChoiceRenderer(), 8,
+				false);
 		indexedBranchesPalette.setEnabled(luceneEnabled);
 
 		// federation sets palette
-		List<String> sets = app().settings().getStrings(Keys.federation.sets);
+		final List<String> sets = app().settings().getStrings(Keys.federation.sets);
 		final Palette<String> federationSetsPalette = new Palette<String>("federationSets",
 				new ListModel<String>(federationSets), new CollectionModel<String>(sets),
 				new StringChoiceRenderer(), 8, false);
 
 		// pre-receive palette
-		if (!ArrayUtils.isEmpty(repositoryModel.preReceiveScripts)) {
-			preReceiveScripts.addAll(repositoryModel.preReceiveScripts);
+		if (!ArrayUtils.isEmpty(this.repositoryModel.preReceiveScripts)) {
+			preReceiveScripts.addAll(this.repositoryModel.preReceiveScripts);
 		}
 		final Palette<String> preReceivePalette = new Palette<String>("preReceiveScripts",
-				new ListModel<String>(preReceiveScripts), new CollectionModel<String>(app().repositories()
-						.getPreReceiveScriptsUnused(repositoryModel)),
+				new ListModel<String>(preReceiveScripts),
+				new CollectionModel<String>(
+						app().repositories().getPreReceiveScriptsUnused(this.repositoryModel)),
 				new StringChoiceRenderer(), 12, true);
 
 		// post-receive palette
-		if (!ArrayUtils.isEmpty(repositoryModel.postReceiveScripts)) {
-			postReceiveScripts.addAll(repositoryModel.postReceiveScripts);
+		if (!ArrayUtils.isEmpty(this.repositoryModel.postReceiveScripts)) {
+			postReceiveScripts.addAll(this.repositoryModel.postReceiveScripts);
 		}
 		final Palette<String> postReceivePalette = new Palette<String>("postReceiveScripts",
-				new ListModel<String>(postReceiveScripts), new CollectionModel<String>(app().repositories()
-						.getPostReceiveScriptsUnused(repositoryModel)),
+				new ListModel<String>(postReceiveScripts),
+				new CollectionModel<String>(
+						app().repositories().getPostReceiveScriptsUnused(this.repositoryModel)),
 				new StringChoiceRenderer(), 12, true);
 
 		// custom fields
-		final Map<String, String> customFieldsMap = app().settings().getMap(Keys.groovy.customFields);
-		List<String> customKeys = new ArrayList<String>(customFieldsMap.keySet());
-		final ListView<String> customFieldsListView = new ListView<String>("customFieldsListView", customKeys) {
+		final Map<String, String> customFieldsMap = app().settings()
+				.getMap(Keys.groovy.customFields);
+		final List<String> customKeys = new ArrayList<String>(customFieldsMap.keySet());
+		final ListView<String> customFieldsListView = new ListView<String>("customFieldsListView",
+				customKeys) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			protected void populateItem(ListItem<String> item) {
-				String key = item.getModelObject();
+				final String key = item.getModelObject();
 				item.add(new Label("customFieldLabel", customFieldsMap.get(key)));
 
 				String value = "";
-				if (repositoryModel.customFields != null && repositoryModel.customFields.containsKey(key)) {
-					value = repositoryModel.customFields.get(key);
+				if ((EditRepositoryPage.this.repositoryModel.customFields != null)
+						&& EditRepositoryPage.this.repositoryModel.customFields.containsKey(key)) {
+					value = EditRepositoryPage.this.repositoryModel.customFields.get(key);
 				}
-				TextField<String> field = new TextField<String>("customFieldValue", new Model<String>(value));
+				final TextField<String> field = new TextField<String>("customFieldValue",
+						new Model<String>(value));
 				item.add(field);
 			}
 		};
 		customFieldsListView.setReuseItems(true);
 
-		CompoundPropertyModel<RepositoryModel> rModel = new CompoundPropertyModel<RepositoryModel>(
-				repositoryModel);
-		Form<RepositoryModel> form = new Form<RepositoryModel>("editForm", rModel) {
+		final CompoundPropertyModel<RepositoryModel> rModel = new CompoundPropertyModel<RepositoryModel>(
+				this.repositoryModel);
+		final Form<RepositoryModel> form = new Form<RepositoryModel>("editForm", rModel) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			protected void onSubmit() {
 				try {
-					if (!namePanel.updateModel(repositoryModel)) {
+					if (!EditRepositoryPage.this.namePanel
+							.updateModel(EditRepositoryPage.this.repositoryModel)) {
 						return;
 					}
 
 					// confirm access restriction selection
-					if (repositoryModel.accessRestriction == null) {
+					if (EditRepositoryPage.this.repositoryModel.accessRestriction == null) {
 						error(getString("gb.selectAccessRestriction"));
 						return;
 					}
 
 					// confirm federation strategy selection
-					if (repositoryModel.federationStrategy == null) {
+					if (EditRepositoryPage.this.repositoryModel.federationStrategy == null) {
 						error(getString("gb.selectFederationStrategy"));
 						return;
 					}
 
 					// save federation set preferences
-					if (repositoryModel.federationStrategy.exceeds(FederationStrategy.EXCLUDE)) {
-						repositoryModel.federationSets.clear();
-						Iterator<String> sets = federationSetsPalette.getSelectedChoices();
+					if (EditRepositoryPage.this.repositoryModel.federationStrategy
+							.exceeds(FederationStrategy.EXCLUDE)) {
+						EditRepositoryPage.this.repositoryModel.federationSets.clear();
+						final Iterator<String> sets = federationSetsPalette.getSelectedChoices();
 						while (sets.hasNext()) {
-							repositoryModel.federationSets.add(sets.next());
+							EditRepositoryPage.this.repositoryModel.federationSets.add(sets.next());
 						}
 					}
 
 					// set author metric exclusions
-					String ax = metricAuthorExclusions.getObject();
+					final String ax = EditRepositoryPage.this.metricAuthorExclusions.getObject();
 					if (StringUtils.isEmpty(ax)) {
-						repositoryModel.metricAuthorExclusions = new ArrayList<String>();
+						EditRepositoryPage.this.repositoryModel.metricAuthorExclusions = new ArrayList<String>();
 					} else {
-						Set<String> list = new HashSet<String>();
-						for (String exclusion : StringUtils.getStringsFromValue(ax,  " ")) {
+						final Set<String> list = new HashSet<String>();
+						for (final String exclusion : StringUtils.getStringsFromValue(ax, " ")) {
 							if (StringUtils.isEmpty(exclusion)) {
 								continue;
 							}
@@ -316,89 +334,102 @@ public class EditRepositoryPage extends RootSubPage {
 								list.add(exclusion);
 							}
 						}
-						repositoryModel.metricAuthorExclusions = new ArrayList<String>(list);
+						EditRepositoryPage.this.repositoryModel.metricAuthorExclusions = new ArrayList<String>(
+								list);
 					}
 
 					// set mailing lists
-					String ml = mailingLists.getObject();
+					final String ml = EditRepositoryPage.this.mailingLists.getObject();
 					if (StringUtils.isEmpty(ml)) {
-						repositoryModel.mailingLists = new ArrayList<String>();
+						EditRepositoryPage.this.repositoryModel.mailingLists = new ArrayList<String>();
 					} else {
-						Set<String> list = new HashSet<String>();
-						for (String address : ml.split("(,|\\s)")) {
+						final Set<String> list = new HashSet<String>();
+						for (final String address : ml.split("(,|\\s)")) {
 							if (StringUtils.isEmpty(address)) {
 								continue;
 							}
 							list.add(address.toLowerCase());
 						}
-						repositoryModel.mailingLists = new ArrayList<String>(list);
+						EditRepositoryPage.this.repositoryModel.mailingLists = new ArrayList<String>(
+								list);
 					}
 
 					// indexed branches
-					List<String> indexedBranches = new ArrayList<String>();
-					Iterator<String> branches = indexedBranchesPalette.getSelectedChoices();
+					final List<String> indexedBranches = new ArrayList<String>();
+					final Iterator<String> branches = indexedBranchesPalette.getSelectedChoices();
 					while (branches.hasNext()) {
 						indexedBranches.add(branches.next());
 					}
-					repositoryModel.indexedBranches = indexedBranches;
+					EditRepositoryPage.this.repositoryModel.indexedBranches = indexedBranches;
 
 					// owners
-					repositoryModel.owners.clear();
-					Iterator<UserChoice> owners = ownersPalette.getSelectedChoices();
+					EditRepositoryPage.this.repositoryModel.owners.clear();
+					final Iterator<UserChoice> owners = ownersPalette.getSelectedChoices();
 					while (owners.hasNext()) {
-						repositoryModel.addOwner(owners.next().getUserId());
+						EditRepositoryPage.this.repositoryModel.addOwner(owners.next().getUserId());
 					}
 
 					// pre-receive scripts
-					List<String> preReceiveScripts = new ArrayList<String>();
-					Iterator<String> pres = preReceivePalette.getSelectedChoices();
+					final List<String> preReceiveScripts = new ArrayList<String>();
+					final Iterator<String> pres = preReceivePalette.getSelectedChoices();
 					while (pres.hasNext()) {
 						preReceiveScripts.add(pres.next());
 					}
-					repositoryModel.preReceiveScripts = preReceiveScripts;
+					EditRepositoryPage.this.repositoryModel.preReceiveScripts = preReceiveScripts;
 
 					// post-receive scripts
-					List<String> postReceiveScripts = new ArrayList<String>();
-					Iterator<String> post = postReceivePalette.getSelectedChoices();
+					final List<String> postReceiveScripts = new ArrayList<String>();
+					final Iterator<String> post = postReceivePalette.getSelectedChoices();
 					while (post.hasNext()) {
 						postReceiveScripts.add(post.next());
 					}
-					repositoryModel.postReceiveScripts = postReceiveScripts;
+					EditRepositoryPage.this.repositoryModel.postReceiveScripts = postReceiveScripts;
 
 					// custom fields
-					repositoryModel.customFields = new LinkedHashMap<String, String>();
+					EditRepositoryPage.this.repositoryModel.customFields = new LinkedHashMap<String, String>();
 					for (int i = 0; i < customFieldsListView.size(); i++) {
-						ListItem<String> child = (ListItem<String>) customFieldsListView.get(i);
-						String key = child.getModelObject();
+						@SuppressWarnings("unchecked")
+						final ListItem<String> child = (ListItem<String>) customFieldsListView
+								.get(i);
+						final String key = child.getModelObject();
 
-						TextField<String> field = (TextField<String>) child.get("customFieldValue");
-						String value = field.getValue();
+						@SuppressWarnings("unchecked")
+						final TextField<String> field = (TextField<String>) child
+								.get("customFieldValue");
+						final String value = field.getValue();
 
-						repositoryModel.customFields.put(key, value);
+						EditRepositoryPage.this.repositoryModel.customFields.put(key, value);
 					}
 
 					// save the repository
-					app().gitblit().updateRepositoryModel(oldName, repositoryModel, isCreate);
+					app().gitblit().updateRepositoryModel(oldName,
+							EditRepositoryPage.this.repositoryModel,
+							EditRepositoryPage.this.isCreate);
 
 					// repository access permissions
-					if (repositoryModel.accessRestriction.exceeds(AccessRestrictionType.NONE)) {
-						app().gitblit().setUserAccessPermissions(repositoryModel, repositoryUsers);
-						app().gitblit().setTeamAccessPermissions(repositoryModel, repositoryTeams);
+					if (EditRepositoryPage.this.repositoryModel.accessRestriction
+							.exceeds(AccessRestrictionType.NONE)) {
+						app().gitblit().setUserAccessPermissions(
+								EditRepositoryPage.this.repositoryModel, repositoryUsers);
+						app().gitblit().setTeamAccessPermissions(
+								EditRepositoryPage.this.repositoryModel, repositoryTeams);
 					}
-				} catch (GitBlitException e) {
+				}
+				catch (final GitBlitException e) {
 					error(e.getMessage());
 					return;
 				}
 				setRedirect(false);
-				setResponsePage(SummaryPage.class, WicketUtils.newRepositoryParameter(repositoryModel.name));
+				setResponsePage(SummaryPage.class, WicketUtils
+						.newRepositoryParameter(EditRepositoryPage.this.repositoryModel.name));
 			}
 		};
 
 		// Determine available refs & branches
-		List<String> availableRefs = new ArrayList<String>();
-		List<String> availableBranches = new ArrayList<String>();
-		if (!ArrayUtils.isEmpty(repositoryModel.availableRefs)) {
-			for (String ref : repositoryModel.availableRefs) {
+		final List<String> availableRefs = new ArrayList<String>();
+		final List<String> availableBranches = new ArrayList<String>();
+		if (!ArrayUtils.isEmpty(this.repositoryModel.availableRefs)) {
+			for (final String ref : this.repositoryModel.availableRefs) {
 				if (!ref.startsWith(Constants.R_TICKET)) {
 					availableRefs.add(ref);
 					if (ref.startsWith(Constants.R_HEADS)) {
@@ -411,23 +442,19 @@ public class EditRepositoryPage extends RootSubPage {
 		// do not let the browser pre-populate these fields
 		form.add(new SimpleAttributeModifier("autocomplete", "off"));
 
-
 		//
 		//
 		// GENERAL
 		//
-		namePanel = new RepositoryNamePanel("namePanel", repositoryModel);
-		namePanel.setEditable(allowEditName);
-		form.add(namePanel);
+		this.namePanel = new RepositoryNamePanel("namePanel", this.repositoryModel);
+		this.namePanel.setEditable(allowEditName);
+		form.add(this.namePanel);
 
 		// XXX AccessPolicyPanel is defined later.
 
-		form.add(new ChoiceOption<String>("head",
-				getString("gb.headRef"),
+		form.add(new ChoiceOption<String>("head", getString("gb.headRef"),
 				getString("gb.headRefDescription"),
-				new PropertyModel<String>(repositoryModel, "HEAD"),
-				availableRefs));
-
+				new PropertyModel<String>(this.repositoryModel, "HEAD"), availableRefs));
 
 		//
 		// PERMISSIONS
@@ -439,81 +466,75 @@ public class EditRepositoryPage extends RootSubPage {
 		//
 		// TICKETS
 		//
-		form.add(new BooleanOption("acceptNewPatchsets",
-				getString("gb.acceptNewPatchsets"),
+		form.add(new BooleanOption("acceptNewPatchsets", getString("gb.acceptNewPatchsets"),
 				getString("gb.acceptNewPatchsetsDescription"),
-				new PropertyModel<Boolean>(repositoryModel, "acceptNewPatchsets")));
+				new PropertyModel<Boolean>(this.repositoryModel, "acceptNewPatchsets")));
 
-		form.add(new BooleanOption("acceptNewTickets",
-				getString("gb.acceptNewTickets"),
+		form.add(new BooleanOption("acceptNewTickets", getString("gb.acceptNewTickets"),
 				getString("gb.acceptNewTicketsDescription"),
-				new PropertyModel<Boolean>(repositoryModel, "acceptNewTickets")));
+				new PropertyModel<Boolean>(this.repositoryModel, "acceptNewTickets")));
 
-		form.add(new BooleanOption("requireApproval",
-				getString("gb.requireApproval"),
+		form.add(new BooleanOption("requireApproval", getString("gb.requireApproval"),
 				getString("gb.requireApprovalDescription"),
-				new PropertyModel<Boolean>(repositoryModel, "requireApproval")));
+				new PropertyModel<Boolean>(this.repositoryModel, "requireApproval")));
 
-		form.add(new ChoiceOption<String>("mergeTo",
-				getString("gb.mergeTo"),
+		form.add(new ChoiceOption<String>("mergeTo", getString("gb.mergeTo"),
 				getString("gb.mergeToDescription"),
-				new PropertyModel<String>(repositoryModel, "mergeTo"),
-				availableBranches));
-		form.add(new ChoiceOption<MergeType>("mergeType",
-				getString("gb.mergeType"),
+				new PropertyModel<String>(this.repositoryModel, "mergeTo"), availableBranches));
+		form.add(new ChoiceOption<MergeType>("mergeType", getString("gb.mergeType"),
 				getString("gb.mergeTypeDescription"),
-				new PropertyModel<MergeType>(repositoryModel, "mergeType"),
+				new PropertyModel<MergeType>(this.repositoryModel, "mergeType"),
 				Arrays.asList(MergeType.values())));
 
 		//
 		// RECEIVE
 		//
-		form.add(new BooleanOption("isFrozen",
-				getString("gb.isFrozen"),
+		form.add(new BooleanOption("isFrozen", getString("gb.isFrozen"),
 				getString("gb.isFrozenDescription"),
-				new PropertyModel<Boolean>(repositoryModel, "isFrozen")));
+				new PropertyModel<Boolean>(this.repositoryModel, "isFrozen")));
 
-		form.add(new BooleanOption("incrementalPushTags",
-				getString("gb.enableIncrementalPushTags"),
+		form.add(new BooleanOption("incrementalPushTags", getString("gb.enableIncrementalPushTags"),
 				getString("gb.useIncrementalPushTagsDescription"),
-				new PropertyModel<Boolean>(repositoryModel, "useIncrementalPushTags")));
+				new PropertyModel<Boolean>(this.repositoryModel, "useIncrementalPushTags")));
 
-		final CheckBox verifyCommitter = new CheckBox("checkbox", new PropertyModel<Boolean>(repositoryModel, "verifyCommitter"));
+		final CheckBox verifyCommitter = new CheckBox("checkbox",
+				new PropertyModel<Boolean>(this.repositoryModel, "verifyCommitter"));
 		verifyCommitter.setOutputMarkupId(true);
-		form.add(new BooleanOption("verifyCommitter",
-				getString("gb.verifyCommitter"),
-				getString("gb.verifyCommitterDescription") + "<br/>" + getString("gb.verifyCommitterNote"),
+		form.add(new BooleanOption("verifyCommitter", getString("gb.verifyCommitter"),
+				getString("gb.verifyCommitterDescription") + "<br/>"
+						+ getString("gb.verifyCommitterNote"),
 				verifyCommitter).setIsHtmlDescription(true));
 
 		form.add(preReceivePalette);
-		form.add(new BulletListPanel("inheritedPreReceive", getString("gb.inherited"), app().repositories()
-				.getPreReceiveScriptsInherited(repositoryModel)));
+		form.add(new BulletListPanel("inheritedPreReceive", getString("gb.inherited"),
+				app().repositories().getPreReceiveScriptsInherited(this.repositoryModel)));
 		form.add(postReceivePalette);
-		form.add(new BulletListPanel("inheritedPostReceive", getString("gb.inherited"), app().repositories()
-				.getPostReceiveScriptsInherited(repositoryModel)));
+		form.add(new BulletListPanel("inheritedPostReceive", getString("gb.inherited"),
+				app().repositories().getPostReceiveScriptsInherited(this.repositoryModel)));
 
-		WebMarkupContainer customFieldsSection = new WebMarkupContainer("customFieldsSection");
+		final WebMarkupContainer customFieldsSection = new WebMarkupContainer(
+				"customFieldsSection");
 		customFieldsSection.add(customFieldsListView);
-		form.add(customFieldsSection.setVisible(!app().settings().getString(Keys.groovy.customFields, "").isEmpty()));
+		form.add(customFieldsSection
+				.setVisible(!app().settings().getString(Keys.groovy.customFields, "").isEmpty()));
 
 		//
 		// FEDERATION
 		//
-		List<FederationStrategy> federationStrategies = new ArrayList<FederationStrategy>(
+		final List<FederationStrategy> federationStrategies = new ArrayList<FederationStrategy>(
 				Arrays.asList(FederationStrategy.values()));
-		// federation strategies - remove ORIGIN choice if this repository has no origin.
-		if (StringUtils.isEmpty(repositoryModel.origin)) {
+		// federation strategies - remove ORIGIN choice if this repository has
+		// no origin.
+		if (StringUtils.isEmpty(this.repositoryModel.origin)) {
 			federationStrategies.remove(FederationStrategy.FEDERATE_ORIGIN);
 		}
 
 		form.add(new ChoiceOption<FederationStrategy>("federationStrategy",
-				getString("gb.federationStrategy"),
-				getString("gb.federationStrategyDescription"),
-				new DropDownChoice<FederationStrategy>(
-						"choice",
-						new PropertyModel<FederationStrategy>(repositoryModel, "federationStrategy"),
-						federationStrategies,
-						new FederationTypeRenderer())));
+				getString("gb.federationStrategy"), getString("gb.federationStrategyDescription"),
+				new DropDownChoice<FederationStrategy>("choice",
+						new PropertyModel<FederationStrategy>(this.repositoryModel,
+								"federationStrategy"),
+						federationStrategies, new FederationTypeRenderer())));
 
 		form.add(federationSetsPalette);
 
@@ -525,89 +546,78 @@ public class EditRepositoryPage extends RootSubPage {
 		//
 		// GARBAGE COLLECTION
 		//
-		boolean gcEnabled = app().settings().getBoolean(Keys.git.enableGarbageCollection, false);
-		int defaultGcPeriod = app().settings().getInteger(Keys.git.defaultGarbageCollectionPeriod, 7);
-		if (repositoryModel.gcPeriod == 0) {
-			repositoryModel.gcPeriod = defaultGcPeriod;
+		final boolean gcEnabled = app().settings().getBoolean(Keys.git.enableGarbageCollection,
+				false);
+		final int defaultGcPeriod = app().settings()
+				.getInteger(Keys.git.defaultGarbageCollectionPeriod, 7);
+		if (this.repositoryModel.gcPeriod == 0) {
+			this.repositoryModel.gcPeriod = defaultGcPeriod;
 		}
-		List<Integer> gcPeriods = Arrays.asList(1, 2, 3, 4, 5, 7, 10, 14 );
-		form.add(new ChoiceOption<Integer>("gcPeriod",
-				getString("gb.gcPeriod"),
+		final List<Integer> gcPeriods = Arrays.asList(1, 2, 3, 4, 5, 7, 10, 14);
+		form.add(new ChoiceOption<Integer>("gcPeriod", getString("gb.gcPeriod"),
 				getString("gb.gcPeriodDescription"),
 				new DropDownChoice<Integer>("choice",
-						new PropertyModel<Integer>(repositoryModel, "gcPeriod"),
-						gcPeriods,
+						new PropertyModel<Integer>(this.repositoryModel, "gcPeriod"), gcPeriods,
 						new GCPeriodRenderer())).setEnabled(gcEnabled));
 
-		form.add(new TextOption("gcThreshold",
-				getString("gb.gcThreshold"),
-				getString("gb.gcThresholdDescription"),
-				"span1",
-				new PropertyModel<String>(repositoryModel, "gcThreshold")).setEnabled(gcEnabled));
+		form.add(new TextOption("gcThreshold", getString("gb.gcThreshold"),
+				getString("gb.gcThresholdDescription"), "span1",
+				new PropertyModel<String>(this.repositoryModel, "gcThreshold"))
+						.setEnabled(gcEnabled));
 
 		//
 		// MISCELLANEOUS
 		//
 
-		form.add(new TextOption("origin",
-				getString("gb.origin"),
-				getString("gb.originDescription"),
-				"span6",
-				new PropertyModel<String>(repositoryModel, "origin")).setEnabled(false));
+		form.add(new TextOption("origin", getString("gb.origin"), getString("gb.originDescription"),
+				"span6", new PropertyModel<String>(this.repositoryModel, "origin"))
+						.setEnabled(false));
 
-		form.add(new BooleanOption("showRemoteBranches",
-				getString("gb.showRemoteBranches"),
+		form.add(new BooleanOption("showRemoteBranches", getString("gb.showRemoteBranches"),
 				getString("gb.showRemoteBranchesDescription"),
-				new PropertyModel<Boolean>(repositoryModel, "showRemoteBranches")));
+				new PropertyModel<Boolean>(this.repositoryModel, "showRemoteBranches")));
 
-		form.add(new BooleanOption("skipSizeCalculation",
-				getString("gb.skipSizeCalculation"),
+		form.add(new BooleanOption("skipSizeCalculation", getString("gb.skipSizeCalculation"),
 				getString("gb.skipSizeCalculationDescription"),
-				new PropertyModel<Boolean>(repositoryModel, "skipSizeCalculation")));
+				new PropertyModel<Boolean>(this.repositoryModel, "skipSizeCalculation")));
 
-		form.add(new BooleanOption("skipSummaryMetrics",
-				getString("gb.skipSummaryMetrics"),
+		form.add(new BooleanOption("skipSummaryMetrics", getString("gb.skipSummaryMetrics"),
 				getString("gb.skipSummaryMetricsDescription"),
-				new PropertyModel<Boolean>(repositoryModel, "skipSummaryMetrics")));
+				new PropertyModel<Boolean>(this.repositoryModel, "skipSummaryMetrics")));
 
-		List<Integer> maxActivityCommits  = Arrays.asList(-1, 0, 25, 50, 75, 100, 150, 200, 250, 500);
-		form.add(new ChoiceOption<Integer>("maxActivityCommits",
-				getString("gb.maxActivityCommits"),
+		final List<Integer> maxActivityCommits = Arrays.asList(-1, 0, 25, 50, 75, 100, 150, 200,
+				250, 500);
+		form.add(new ChoiceOption<Integer>("maxActivityCommits", getString("gb.maxActivityCommits"),
 				getString("gb.maxActivityCommitsDescription"),
 				new DropDownChoice<Integer>("choice",
-						new PropertyModel<Integer>(repositoryModel, "maxActivityCommits"),
-						maxActivityCommits,
-						new MaxActivityCommitsRenderer())));
+						new PropertyModel<Integer>(this.repositoryModel, "maxActivityCommits"),
+						maxActivityCommits, new MaxActivityCommitsRenderer())));
 
-		List<CommitMessageRenderer> renderers = Arrays.asList(CommitMessageRenderer.values());
+		final List<CommitMessageRenderer> renderers = Arrays.asList(CommitMessageRenderer.values());
 		form.add(new ChoiceOption<CommitMessageRenderer>("commitMessageRenderer",
 				getString("gb.commitMessageRenderer"),
 				getString("gb.commitMessageRendererDescription"),
 				new DropDownChoice<CommitMessageRenderer>("choice",
-						new PropertyModel<CommitMessageRenderer>(repositoryModel, "commitMessageRenderer"),
+						new PropertyModel<CommitMessageRenderer>(this.repositoryModel,
+								"commitMessageRenderer"),
 						renderers)));
 
-		metricAuthorExclusions = new Model<String>(ArrayUtils.isEmpty(repositoryModel.metricAuthorExclusions) ? ""
-				: StringUtils.flattenStrings(repositoryModel.metricAuthorExclusions, " "));
+		this.metricAuthorExclusions = new Model<String>(
+				ArrayUtils.isEmpty(this.repositoryModel.metricAuthorExclusions) ? ""
+						: StringUtils.flattenStrings(this.repositoryModel.metricAuthorExclusions,
+								" "));
 
-		form.add(new TextOption("metricAuthorExclusions",
-				getString("gb.metricAuthorExclusions"),
-				getString("gb.metricAuthorExclusions"),
-				"span6",
-				metricAuthorExclusions));
+		form.add(new TextOption("metricAuthorExclusions", getString("gb.metricAuthorExclusions"),
+				getString("gb.metricAuthorExclusions"), "span6", this.metricAuthorExclusions));
 
-		mailingLists = new Model<String>(ArrayUtils.isEmpty(repositoryModel.mailingLists) ? ""
-				: StringUtils.flattenStrings(repositoryModel.mailingLists, " "));
+		this.mailingLists = new Model<String>(ArrayUtils.isEmpty(this.repositoryModel.mailingLists)
+				? "" : StringUtils.flattenStrings(this.repositoryModel.mailingLists, " "));
 
-		form.add(new TextOption("mailingLists",
-				getString("gb.mailingLists"),
-				getString("gb.mailingLists"),
-				"span6",
-				mailingLists));
-
+		form.add(new TextOption("mailingLists", getString("gb.mailingLists"),
+				getString("gb.mailingLists"), "span6", this.mailingLists));
 
 		// initial enable/disable of permission controls
-		if (repositoryModel.accessRestriction.equals(AccessRestrictionType.NONE)) {
+		if (this.repositoryModel.accessRestriction.equals(AccessRestrictionType.NONE)) {
 			// anonymous everything, disable all controls
 			usersPalette.setEnabled(false);
 			teamsPalette.setEnabled(false);
@@ -617,7 +627,8 @@ public class EditRepositoryPage extends RootSubPage {
 			// enable authorization controls
 			verifyCommitter.setEnabled(true);
 
-			boolean allowFineGrainedControls = repositoryModel.authorizationControl.equals(AuthorizationControl.NAMED);
+			final boolean allowFineGrainedControls = this.repositoryModel.authorizationControl
+					.equals(AuthorizationControl.NAMED);
 			usersPalette.setEnabled(allowFineGrainedControls);
 			teamsPalette.setEnabled(allowFineGrainedControls);
 		}
@@ -625,23 +636,27 @@ public class EditRepositoryPage extends RootSubPage {
 		//
 		// ACCESS POLICY PANEL (GENERAL)
 		//
-		AjaxFormChoiceComponentUpdatingBehavior callback = new AjaxFormChoiceComponentUpdatingBehavior() {
+		final AjaxFormChoiceComponentUpdatingBehavior callback = new AjaxFormChoiceComponentUpdatingBehavior() {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			protected void onUpdate(AjaxRequestTarget target) {
-				accessPolicyPanel.updateModel(repositoryModel);
+				EditRepositoryPage.this.accessPolicyPanel
+						.updateModel(EditRepositoryPage.this.repositoryModel);
 
-				boolean allowAuthorizationControl = repositoryModel.accessRestriction.exceeds(AccessRestrictionType.NONE);
+				final boolean allowAuthorizationControl = EditRepositoryPage.this.repositoryModel.accessRestriction
+						.exceeds(AccessRestrictionType.NONE);
 				verifyCommitter.setEnabled(allowAuthorizationControl);
 
-				boolean allowFineGrainedControls = allowAuthorizationControl && repositoryModel.authorizationControl.equals(AuthorizationControl.NAMED);
+				final boolean allowFineGrainedControls = allowAuthorizationControl
+						&& EditRepositoryPage.this.repositoryModel.authorizationControl
+								.equals(AuthorizationControl.NAMED);
 				usersPalette.setEnabled(allowFineGrainedControls);
 				teamsPalette.setEnabled(allowFineGrainedControls);
 
 				if (allowFineGrainedControls) {
-					repositoryModel.authorizationControl = AuthorizationControl.NAMED;
+					EditRepositoryPage.this.repositoryModel.authorizationControl = AuthorizationControl.NAMED;
 				}
 
 				target.addComponent(verifyCommitter);
@@ -650,66 +665,75 @@ public class EditRepositoryPage extends RootSubPage {
 			}
 		};
 
-		accessPolicyPanel = new AccessPolicyPanel("accessPolicyPanel", repositoryModel, callback);
-		form.add(accessPolicyPanel);
-
+		this.accessPolicyPanel = new AccessPolicyPanel("accessPolicyPanel", this.repositoryModel,
+				callback);
+		form.add(this.accessPolicyPanel);
 
 		//
 		// FORM CONTROLS
 		//
 		form.add(new Button("save"));
-		Button cancel = new Button("cancel") {
+		final Button cancel = new Button("cancel") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onSubmit() {
-				if (isCreate) {
+				if (EditRepositoryPage.this.isCreate) {
 					setResponsePage(RepositoriesPage.class);
 				} else {
-					setResponsePage(SummaryPage.class, WicketUtils.newRepositoryParameter(repositoryModel.name));
+					setResponsePage(SummaryPage.class, WicketUtils
+							.newRepositoryParameter(EditRepositoryPage.this.repositoryModel.name));
 				}
 			}
 		};
 		cancel.setDefaultFormProcessing(false);
 		form.add(cancel);
 
-		// the user can delete if deletions are allowed AND the user is an admin or the personal owner
+		// the user can delete if deletions are allowed AND the user is an admin
+		// or the personal owner
 		// assigned ownership is not sufficient to allow deletion
-		boolean canDelete = !isCreate && app().repositories().canDelete(repositoryModel)
-				&& (user.canAdmin() || user.isMyPersonalRepository(repositoryModel.name));
+		final boolean canDelete = !this.isCreate
+				&& app().repositories().canDelete(this.repositoryModel)
+				&& (user.canAdmin() || user.isMyPersonalRepository(this.repositoryModel.name));
 
-		Link<Void> delete = new Link<Void>("delete") {
+		final Link<Void> delete = new Link<Void>("delete") {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onClick() {
-				RepositoryModel latestModel = app().repositories().getRepositoryModel(repositoryModel.name);
-				boolean canDelete = app().repositories().canDelete(latestModel);
+				final RepositoryModel latestModel = app().repositories()
+						.getRepositoryModel(EditRepositoryPage.this.repositoryModel.name);
+				final boolean canDelete = app().repositories().canDelete(latestModel);
 				if (canDelete) {
 					if (app().gitblit().deleteRepositoryModel(latestModel)) {
 						info(MessageFormat.format(getString("gb.repositoryDeleted"), latestModel));
 						if (latestModel.isPersonalRepository()) {
 							// redirect to user's profile page
-							String prefix = app().settings().getString(Keys.git.userRepositoryPrefix, "~");
-							String username = latestModel.projectPath.substring(prefix.length());
-							setResponsePage(UserPage.class, WicketUtils.newUsernameParameter(username));
+							final String prefix = app().settings()
+									.getString(Keys.git.userRepositoryPrefix, "~");
+							final String username = latestModel.projectPath
+									.substring(prefix.length());
+							setResponsePage(UserPage.class,
+									WicketUtils.newUsernameParameter(username));
 						} else {
 							// redirect to server repositories page
 							setResponsePage(RepositoriesPage.class);
 						}
 					} else {
-						error(MessageFormat.format(getString("gb.repositoryDeleteFailed"), latestModel));
+						error(MessageFormat.format(getString("gb.repositoryDeleteFailed"),
+								latestModel));
 					}
 				} else {
-					error(MessageFormat.format(getString("gb.repositoryDeleteFailed"), latestModel));
+					error(MessageFormat.format(getString("gb.repositoryDeleteFailed"),
+							latestModel));
 				}
 			}
 		};
 
 		if (canDelete) {
-			delete.add(new JavascriptEventConfirmation("onclick", MessageFormat.format(
-				getString("gb.deleteRepository"), repositoryModel)));
+			delete.add(new JavascriptEventConfirmation("onclick",
+					MessageFormat.format(getString("gb.deleteRepository"), this.repositoryModel)));
 		}
 		form.add(delete.setVisible(canDelete));
 
@@ -724,11 +748,12 @@ public class EditRepositoryPage extends RootSubPage {
 	 * Repository Owners should be able to edit their repository.
 	 */
 	private void checkPermissions(RepositoryModel model) {
-		boolean authenticateAdmin = app().settings().getBoolean(Keys.web.authenticateAdminPages, true);
-		boolean allowAdmin = app().settings().getBoolean(Keys.web.allowAdministration, true);
+		final boolean authenticateAdmin = app().settings()
+				.getBoolean(Keys.web.authenticateAdminPages, true);
+		final boolean allowAdmin = app().settings().getBoolean(Keys.web.allowAdministration, true);
 
-		GitBlitWebSession session = GitBlitWebSession.get();
-		UserModel user = session.getUser();
+		final GitBlitWebSession session = GitBlitWebSession.get();
+		final UserModel user = session.getUser();
 
 		if (allowAdmin) {
 			if (authenticateAdmin) {
@@ -736,7 +761,7 @@ public class EditRepositoryPage extends RootSubPage {
 					// No Login Available
 					error(getString("gb.errorAdminLoginRequired"), true);
 				}
-				if (isCreate) {
+				if (this.isCreate) {
 					// Create Repository
 					if (!user.canCreate() && !user.canAdmin()) {
 						// Only administrators or permitted users may create
@@ -746,7 +771,7 @@ public class EditRepositoryPage extends RootSubPage {
 					// Edit Repository
 					if (user.canAdmin()) {
 						// Admins can edit everything
-						isAdmin = true;
+						this.isAdmin = true;
 						return;
 					} else {
 						if (!model.isOwner(user.username)) {
@@ -762,7 +787,6 @@ public class EditRepositoryPage extends RootSubPage {
 		}
 	}
 
-
 	private class FederationTypeRenderer implements IChoiceRenderer<FederationStrategy> {
 
 		private static final long serialVersionUID = 1L;
@@ -770,12 +794,12 @@ public class EditRepositoryPage extends RootSubPage {
 		private final Map<FederationStrategy, String> map;
 
 		public FederationTypeRenderer() {
-			map = getFederationTypes();
+			this.map = getFederationTypes();
 		}
 
 		@Override
 		public String getDisplayValue(FederationStrategy type) {
-			return map.get(type);
+			return this.map.get(type);
 		}
 
 		@Override

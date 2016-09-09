@@ -47,7 +47,7 @@ public abstract class ListCommand<T> extends SshCommand {
 	protected abstract List<T> getItems() throws UnloggedFailure;
 
 	protected void validateOutputFormat() throws UnloggedFailure {
-		if (tabbed && json) {
+		if (this.tabbed && this.json) {
 			throw new UnloggedFailure(1, "Please specify --tabbed OR --json, not both!");
 		}
 	}
@@ -56,10 +56,10 @@ public abstract class ListCommand<T> extends SshCommand {
 	public void run() throws UnloggedFailure {
 		validateOutputFormat();
 
-		List<T> list = getItems();
-		if (tabbed) {
+		final List<T> list = getItems();
+		if (this.tabbed) {
 			asTabbed(list);
-		} else if (json) {
+		} else if (this.json) {
 			asJSON(list);
 		} else {
 			asTable(list);
@@ -71,22 +71,22 @@ public abstract class ListCommand<T> extends SshCommand {
 	protected abstract void asTabbed(List<T> list);
 
 	protected void outTabbed(Object... values) {
-		StringBuilder pattern = new StringBuilder();
+		final StringBuilder pattern = new StringBuilder();
 		for (int i = 0; i < values.length; i++) {
 			pattern.append("%s\t");
 		}
 		pattern.setLength(pattern.length() - 1);
-		stdout.println(String.format(pattern.toString(), values));
+		this.stdout.println(String.format(pattern.toString(), values));
 	}
 
 	protected void asJSON(List<T> list) {
-		stdout.println(JsonUtils.toJsonString(list));
+		this.stdout.println(JsonUtils.toJsonString(list));
 	}
 
 	protected String formatDate(Date date) {
-		if (df == null) {
-			df = new SimpleDateFormat("yyyy-MM-dd");
+		if (this.df == null) {
+			this.df = new SimpleDateFormat("yyyy-MM-dd");
 		}
-		return df.format(date);
+		return this.df.format(date);
 	}
 }

@@ -38,28 +38,28 @@ public class ServerSettings implements Serializable {
 	public List<String> pushScripts;
 
 	public ServerSettings() {
-		settings = new TreeMap<String, SettingModel>();
+		this.settings = new TreeMap<String, SettingModel>();
 	}
 
 	public List<String> getKeys() {
-		return new ArrayList<String>(settings.keySet());
+		return new ArrayList<String>(this.settings.keySet());
 	}
 
 	public void add(SettingModel setting) {
 		if (setting != null) {
-			settings.put(setting.name, setting);
+			this.settings.put(setting.name, setting);
 		}
 	}
 
 	public SettingModel get(String key) {
-		return settings.get(key);
+		return this.settings.get(key);
 	}
 
 	public boolean hasKey(String key) {
-		return settings.containsKey(key);
+		return this.settings.containsKey(key);
 	}
 
 	public SettingModel remove(String key) {
-		return settings.remove(key);
+		return this.settings.remove(key);
 	}
 }

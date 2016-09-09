@@ -36,7 +36,9 @@ public class RegistrantPermissionsTableModel extends AbstractTableModel {
 	List<RegistrantAccessPermission> permissions;
 
 	enum Columns {
-		Registrant, Type, Permission;
+		Registrant,
+		Type,
+		Permission;
 
 		@Override
 		public String toString() {
@@ -58,7 +60,7 @@ public class RegistrantPermissionsTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return permissions.size();
+		return this.permissions.size();
 	}
 
 	@Override
@@ -68,7 +70,7 @@ public class RegistrantPermissionsTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Registrant:
 			return Translation.get("gb.name");
@@ -101,19 +103,20 @@ public class RegistrantPermissionsTableModel extends AbstractTableModel {
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
 		if (columnIndex == Columns.Permission.ordinal()) {
 			// in order for the permission to be editable it must be
-			// explicitly defined on the object.  regex permissions are inherited
+			// explicitly defined on the object. regex permissions are inherited
 			// and therefore can not be directly manipulated unless the current
-			// object is the source of the regex (i.e. a user or team with explicit
+			// object is the source of the regex (i.e. a user or team with
+			// explicit
 			// regex definition)
-			return permissions.get(rowIndex).mutable;
+			return this.permissions.get(rowIndex).mutable;
 		}
 		return false;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		RegistrantAccessPermission rp = permissions.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final RegistrantAccessPermission rp = this.permissions.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Registrant:
 			return rp.registrant;
@@ -127,7 +130,7 @@ public class RegistrantPermissionsTableModel extends AbstractTableModel {
 
 	@Override
 	public void setValueAt(Object o, int rowIndex, int columnIndex) {
-		RegistrantAccessPermission rp = permissions.get(rowIndex);
+		final RegistrantAccessPermission rp = this.permissions.get(rowIndex);
 		if (columnIndex == Columns.Permission.ordinal()) {
 			rp.permission = (AccessPermission) o;
 		}

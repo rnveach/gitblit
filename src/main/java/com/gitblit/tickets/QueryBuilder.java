@@ -49,32 +49,32 @@ public class QueryBuilder {
 	}
 
 	public boolean containsField(String field) {
-		return sb.toString().contains(field + ":");
+		return this.sb.toString().contains(field + ":");
 	}
 
 	/**
-	 * Creates a new AND subquery.  Make sure to call endSubquery to
-	 * get return *this* query.
+	 * Creates a new AND subquery. Make sure to call endSubquery to get return
+	 * *this* query.
 	 *
 	 * e.g. field:something AND (subquery)
 	 *
 	 * @return a subquery
 	 */
 	public QueryBuilder andSubquery() {
-		sb.append(" AND (");
+		this.sb.append(" AND (");
 		return new QueryBuilder(this);
 	}
 
 	/**
-	 * Creates a new OR subquery.  Make sure to call endSubquery to
-	 * get return *this* query.
+	 * Creates a new OR subquery. Make sure to call endSubquery to get return
+	 * *this* query.
 	 *
 	 * e.g. field:something OR (subquery)
 	 *
 	 * @return a subquery
 	 */
 	public QueryBuilder orSubquery() {
-		sb.append(" OR (");
+		this.sb.append(" OR (");
 		return new QueryBuilder(this);
 	}
 
@@ -84,11 +84,11 @@ public class QueryBuilder {
 	 * @return the parent query
 	 */
 	public QueryBuilder endSubquery() {
-		this.q = sb.toString().trim();
-		if (q.length() > 0) {
-			parent.sb.append(q).append(')');
+		this.q = this.sb.toString().trim();
+		if (this.q.length() > 0) {
+			this.parent.sb.append(this.q).append(')');
 		}
-		return parent;
+		return this.parent;
 	}
 
 	/**
@@ -124,14 +124,14 @@ public class QueryBuilder {
 	/**
 	 * Nest this query as a subquery.
 	 *
-	 * e.g. field:something AND field2:something else
-	 * ==>  (field:something AND field2:something else)
+	 * e.g. field:something AND field2:something else ==> (field:something AND
+	 * field2:something else)
 	 *
 	 * @return this query nested as a subquery
 	 */
 	public QueryBuilder toSubquery() {
-		if (opCount > 1) {
-			sb.insert(0, '(').append(')');
+		if (this.opCount > 1) {
+			this.sb.insert(0, '(').append(')');
 		}
 		return this;
 	}
@@ -156,25 +156,25 @@ public class QueryBuilder {
 	 * @return the query
 	 */
 	public QueryBuilder remove(String condition) {
-		int start = sb.indexOf(condition);
+		final int start = this.sb.indexOf(condition);
 		if (start == 0) {
 			// strip first condition
-			sb.replace(0, condition.length(), "");
+			this.sb.replace(0, condition.length(), "");
 		} else if (start > 1) {
 			// locate condition in query
-			int space1 = sb.lastIndexOf(" ", start - 1);
-			int space0 = sb.lastIndexOf(" ", space1 - 1);
-			if (space0 > -1 && space1 > -1) {
-				String conjunction = sb.substring(space0,  space1).trim();
+			final int space1 = this.sb.lastIndexOf(" ", start - 1);
+			final int space0 = this.sb.lastIndexOf(" ", space1 - 1);
+			if ((space0 > -1) && (space1 > -1)) {
+				final String conjunction = this.sb.substring(space0, space1).trim();
 				if ("OR".equals(conjunction) || "AND".equals(conjunction)) {
 					// remove the conjunction
-					sb.replace(space0, start + condition.length(), "");
+					this.sb.replace(space0, start + condition.length(), "");
 				} else {
 					// unknown conjunction
-					sb.replace(start, start + condition.length(), "");
+					this.sb.replace(start, start + condition.length(), "");
 				}
 			} else {
-				sb.replace(start, start + condition.length(), "");
+				this.sb.replace(start, start + condition.length(), "");
 			}
 		}
 		return this;
@@ -186,43 +186,43 @@ public class QueryBuilder {
 	 * @return the generated query
 	 */
 	public String build() {
-		if (parent != null) {
+		if (this.parent != null) {
 			throw new IllegalAccessError("You can not build a subquery! endSubquery() instead!");
 		}
-		this.q = sb.toString().trim();
+		this.q = this.sb.toString().trim();
 
 		// cleanup paranthesis
-		while (q.contains("()")) {
-			q = q.replace("()", "");
+		while (this.q.contains("()")) {
+			this.q = this.q.replace("()", "");
 		}
-		if (q.length() > 0) {
-			if (q.charAt(0) == '(' && q.charAt(q.length() - 1) == ')') {
+		if (this.q.length() > 0) {
+			if ((this.q.charAt(0) == '(') && (this.q.charAt(this.q.length() - 1) == ')')) {
 				// query is wrapped by unnecessary paranthesis
-				q = q.substring(1, q.length() - 1);
+				this.q = this.q.substring(1, this.q.length() - 1);
 			}
 		}
-		if (q.startsWith("AND ")) {
-			q = q.substring(3).trim();
+		if (this.q.startsWith("AND ")) {
+			this.q = this.q.substring(3).trim();
 		}
-		if (q.startsWith("OR ")) {
-			q = q.substring(2).trim();
+		if (this.q.startsWith("OR ")) {
+			this.q = this.q.substring(2).trim();
 		}
-		return q;
+		return this.q;
 	}
 
 	private QueryBuilder op(String condition, String op) {
-		opCount++;
+		this.opCount++;
 		if (!StringUtils.isEmpty(condition)) {
-			if (sb.length() != 0) {
-				sb.append(op);
+			if (this.sb.length() != 0) {
+				this.sb.append(op);
 			}
-			sb.append(condition);
+			this.sb.append(condition);
 		}
 		return this;
 	}
 
 	@Override
 	public String toString() {
-		return sb.toString().trim();
+		return this.sb.toString().trim();
 	}
 }

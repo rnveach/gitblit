@@ -49,7 +49,8 @@ public class TicketResponsible implements Serializable, Comparable<TicketRespons
 
 	@Override
 	public String toString() {
-		return displayname + (StringUtils.isEmpty(username) ? "" : (" (" + username + ")"));
+		return this.displayname
+				+ (StringUtils.isEmpty(this.username) ? "" : (" (" + this.username + ")"));
 	}
 
 	@Override

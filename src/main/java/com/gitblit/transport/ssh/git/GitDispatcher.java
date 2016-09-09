@@ -26,7 +26,7 @@ import com.gitblit.transport.ssh.commands.CommandMetaData;
 import com.gitblit.transport.ssh.commands.DispatchCommand;
 import com.gitblit.transport.ssh.commands.SshCommandContext;
 
-@CommandMetaData(name = "git", description="Git repository commands")
+@CommandMetaData(name = "git", description = "Git repository commands")
 public class GitDispatcher extends DispatchCommand {
 
 	protected RepositoryResolver<SshDaemonClient> repositoryResolver;
@@ -37,19 +37,19 @@ public class GitDispatcher extends DispatchCommand {
 	public void setContext(SshCommandContext context) {
 		super.setContext(context);
 
-		IGitblit gitblit = context.getGitblit();
-		repositoryResolver = new RepositoryResolver<SshDaemonClient>(gitblit);
-		uploadPackFactory = new GitblitUploadPackFactory<SshDaemonClient>(gitblit);
-		receivePackFactory = new GitblitReceivePackFactory<SshDaemonClient>(gitblit);
+		final IGitblit gitblit = context.getGitblit();
+		this.repositoryResolver = new RepositoryResolver<SshDaemonClient>(gitblit);
+		this.uploadPackFactory = new GitblitUploadPackFactory<SshDaemonClient>(gitblit);
+		this.receivePackFactory = new GitblitReceivePackFactory<SshDaemonClient>(gitblit);
 	}
 
 	@Override
 	public void destroy() {
 		super.destroy();
 
-		repositoryResolver = null;
-		receivePackFactory = null;
-		uploadPackFactory = null;
+		this.repositoryResolver = null;
+		this.receivePackFactory = null;
+		this.uploadPackFactory = null;
 	}
 
 	@Override
@@ -63,9 +63,9 @@ public class GitDispatcher extends DispatchCommand {
 	protected void provideStateTo(final BaseCommand cmd) {
 		super.provideStateTo(cmd);
 
-		BaseGitCommand a = (BaseGitCommand) cmd;
-		a.setRepositoryResolver(repositoryResolver);
-		a.setUploadPackFactory(uploadPackFactory);
-		a.setReceivePackFactory(receivePackFactory);
+		final BaseGitCommand a = (BaseGitCommand) cmd;
+		a.setRepositoryResolver(this.repositoryResolver);
+		a.setUploadPackFactory(this.uploadPackFactory);
+		a.setReceivePackFactory(this.receivePackFactory);
 	}
 }

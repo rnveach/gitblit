@@ -39,10 +39,10 @@ public class Metric implements Serializable, Comparable<Metric> {
 
 	@Override
 	public int compareTo(Metric o) {
-		if (count > o.count) {
+		if (this.count > o.count) {
 			return -1;
 		}
-		if (count < o.count) {
+		if (this.count < o.count) {
 			return 1;
 		}
 		return 0;

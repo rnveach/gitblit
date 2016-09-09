@@ -36,7 +36,9 @@ public class FeedsTableModel extends AbstractTableModel {
 	List<FeedModel> list;
 
 	enum Columns {
-		Subscribed, Repository, Branch;
+		Subscribed,
+		Repository,
+		Branch;
 
 		@Override
 		public String toString() {
@@ -55,7 +57,7 @@ public class FeedsTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return list.size();
+		return this.list.size();
 	}
 
 	@Override
@@ -65,12 +67,14 @@ public class FeedsTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Repository:
 			return Translation.get("gb.repository");
 		case Branch:
 			return Translation.get("gb.branch");
+		case Subscribed:
+			break;
 		}
 		return "";
 	}
@@ -84,28 +88,34 @@ public class FeedsTableModel extends AbstractTableModel {
 	 */
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		Columns col = Columns.values()[columnIndex];
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Subscribed:
 			return Boolean.class;
+		case Branch:
+		case Repository:
+			break;
 		}
 		return String.class;
 	}
 
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		Columns col = Columns.values()[columnIndex];
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Subscribed:
 			return true;
+		case Branch:
+		case Repository:
+			break;
 		}
 		return false;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		FeedModel model = list.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final FeedModel model = this.list.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Repository:
 			return model.repository;
@@ -118,6 +128,6 @@ public class FeedsTableModel extends AbstractTableModel {
 	}
 
 	public FeedModel get(int modelRow) {
-		return list.get(modelRow);
+		return this.list.get(modelRow);
 	}
 }

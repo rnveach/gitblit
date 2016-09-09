@@ -15,15 +15,15 @@ import com.gitblit.servlet.GitblitContext;
 public class GitBlitServer4UITests extends GitBlitServer {
 
 	public static void main(String... args) {
-		GitBlitServer4UITests server = new GitBlitServer4UITests();
+		final GitBlitServer4UITests server = new GitBlitServer4UITests();
 
 		// filter out the baseFolder parameter
-		List<String> filtered = new ArrayList<String>();
+		final List<String> filtered = new ArrayList<String>();
 		String folder = "data";
 		for (int i = 0; i < args.length; i++) {
-			String arg = args[i];
+			final String arg = args[i];
 			if (arg.equals("--baseFolder")) {
-				if (i + 1 == args.length) {
+				if ((i + 1) == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
 					System.exit(-1);
 				} else if (args[i + 1] != ".") {
@@ -36,15 +36,16 @@ public class GitBlitServer4UITests extends GitBlitServer {
 		}
 
 		Params.baseFolder = folder;
-		Params params = new Params();
-		CmdLineParser parser = new CmdLineParser(params);
+		final Params params = new Params();
+		final CmdLineParser parser = new CmdLineParser(params);
 		try {
 			parser.parseArgument(filtered);
 			if (params.help) {
-				server.usage(parser, null);
+				GitBlitServer.usage(parser, null);
 			}
-		} catch (CmdLineException t) {
-			server.usage(parser, t);
+		}
+		catch (final CmdLineException t) {
+			GitBlitServer.usage(parser, t);
 		}
 
 		if (params.stop) {

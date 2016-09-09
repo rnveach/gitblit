@@ -40,19 +40,16 @@ import freemarker.template.TemplateException;
 
 /**
  * This class allows FreeMarker to be used as a Wicket preprocessor or as a
- * snippet injector for something like a CMS.  There are some cases where Wicket
- * is not flexible enough to generate content, especially when you need to generate
- * hybrid HTML/JS content outside the scope of Wicket.
+ * snippet injector for something like a CMS. There are some cases where Wicket
+ * is not flexible enough to generate content, especially when you need to
+ * generate hybrid HTML/JS content outside the scope of Wicket.
  *
  * @author James Moger
  *
  */
 @SuppressWarnings("unchecked")
-public class FreemarkerPanel extends Panel
-		implements
-			IMarkupResourceStreamProvider,
-			IMarkupCacheKeyProvider
-{
+public class FreemarkerPanel extends Panel implements IMarkupResourceStreamProvider,
+		IMarkupCacheKeyProvider {
 	private static final long serialVersionUID = 1L;
 
 	private final String template;
@@ -61,7 +58,6 @@ public class FreemarkerPanel extends Panel
 	private boolean throwFreemarkerExceptions;
 	private transient String stackTraceAsString;
 	private transient String evaluatedTemplate;
-
 
 	/**
 	 * Construct.
@@ -73,8 +69,7 @@ public class FreemarkerPanel extends Panel
 	 * @param values
 	 *            values map that can be substituted by Freemarker.
 	 */
-	public FreemarkerPanel(final String id, String template, final Map<String, Object> values)
-	{
+	public FreemarkerPanel(final String id, String template, final Map<String, Object> values) {
 		this(id, template, Model.ofMap(values));
 	}
 
@@ -88,8 +83,8 @@ public class FreemarkerPanel extends Panel
 	 * @param model
 	 *            Model with variables that can be substituted by Freemarker.
 	 */
-	public FreemarkerPanel(final String id, final String template, final IModel< ? extends Map<String, Object>> model)
-	{
+	public FreemarkerPanel(final String id, final String template,
+			final IModel<? extends Map<String, Object>> model) {
 		super(id, model);
 		this.template = template;
 	}
@@ -99,16 +94,15 @@ public class FreemarkerPanel extends Panel
 	 *
 	 * @return the Freemarker template
 	 */
-	private Template getTemplate()
-	{
-		if (StringUtils.isEmpty(template))
-		{
+	private Template getTemplate() {
+		if (StringUtils.isEmpty(this.template)) {
 			throw new IllegalArgumentException("Template not specified!");
 		}
 
 		try {
-			return Freemarker.getTemplate(template);
-		} catch (IOException e) {
+			return Freemarker.getTemplate(this.template);
+		}
+		catch (final IOException e) {
 			onException(e);
 		}
 
@@ -120,35 +114,27 @@ public class FreemarkerPanel extends Panel
 	 *      MarkupStream, org.apache.wicket.markup.ComponentTag)
 	 */
 	@Override
-	protected void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag)
-	{
-		if (!Strings.isEmpty(stackTraceAsString))
-		{
+	protected void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag) {
+		if (!Strings.isEmpty(this.stackTraceAsString)) {
 			// TODO: only display the Freemarker error/stacktrace in development
 			// mode?
-			replaceComponentTagBody(markupStream, openTag, Strings
-					.toMultilineMarkup(stackTraceAsString));
-		}
-		else if (!parseGeneratedMarkup)
-		{
+			replaceComponentTagBody(markupStream, openTag,
+					Strings.toMultilineMarkup(this.stackTraceAsString));
+		} else if (!this.parseGeneratedMarkup) {
 			// check that no components have been added in case the generated
 			// markup should not be
 			// parsed
-			if (size() > 0)
-			{
+			if (size() > 0) {
 				throw new WicketRuntimeException(
 						"Components cannot be added if the generated markup should not be parsed.");
 			}
 
-			if (evaluatedTemplate == null)
-			{
+			if (this.evaluatedTemplate == null) {
 				// initialize evaluatedTemplate
 				getMarkupResourceStream(null, null);
 			}
-			replaceComponentTagBody(markupStream, openTag, evaluatedTemplate);
-		}
-		else
-		{
+			replaceComponentTagBody(markupStream, openTag, this.evaluatedTemplate);
+		} else {
 			super.onComponentTagBody(markupStream, openTag);
 		}
 	}
@@ -163,15 +149,11 @@ public class FreemarkerPanel extends Panel
 	 * @param openTag
 	 *            the open tag
 	 */
-	private void onException(final Exception exception)
-	{
-		if (!throwFreemarkerExceptions)
-		{
+	private void onException(final Exception exception) {
+		if (!this.throwFreemarkerExceptions) {
 			// print the exception on the panel
-			stackTraceAsString = Strings.toString(exception);
-		}
-		else
-		{
+			this.stackTraceAsString = Strings.toString(exception);
+		} else {
 			// rethrow the exception
 			throw new WicketRuntimeException(exception);
 		}
@@ -182,8 +164,7 @@ public class FreemarkerPanel extends Panel
 	 *
 	 * @return whether to escape HTML characters. The default value is false.
 	 */
-	public void setEscapeHtml(boolean value)
-	{
+	public void setEscapeHtml(boolean value) {
 		this.escapeHtml = value;
 	}
 
@@ -194,73 +175,71 @@ public class FreemarkerPanel extends Panel
 	 *            used to read the template
 	 * @return the result of evaluating the velocity template
 	 */
-	private String evaluateFreemarkerTemplate(Template template)
-	{
-		if (evaluatedTemplate == null)
-		{
+	private String evaluateFreemarkerTemplate(Template template) {
+		if (this.evaluatedTemplate == null) {
 			// Get model as a map
-			final Map<String, Object> map = (Map<String, Object>)getDefaultModelObject();
+			final Map<String, Object> map = (Map<String, Object>) getDefaultModelObject();
 
 			// create a writer for capturing the Velocity output
-			StringWriter writer = new StringWriter();
+			final StringWriter writer = new StringWriter();
 
 			// string to be used as the template name for log messages in case
 			// of error
-			try
-			{
-				// execute the Freemarker script and capture the output in writer
+			try {
+				// execute the Freemarker script and capture the output in
+				// writer
 				Freemarker.evaluate(template, map, writer);
 
 				// replace the tag's body the Freemarker output
-				evaluatedTemplate = writer.toString();
+				this.evaluatedTemplate = writer.toString();
 
-				if (escapeHtml)
-				{
+				if (this.escapeHtml) {
 					// encode the result in order to get valid html output that
 					// does not break the rest of the page
-					evaluatedTemplate = Strings.escapeMarkup(evaluatedTemplate).toString();
+					this.evaluatedTemplate = Strings.escapeMarkup(this.evaluatedTemplate)
+							.toString();
 				}
-				return evaluatedTemplate;
+				return this.evaluatedTemplate;
 			}
-			catch (IOException e)
-			{
+			catch (final IOException e) {
 				onException(e);
 			}
-			catch (TemplateException e)
-			{
+			catch (final TemplateException e) {
 				onException(e);
 			}
 			return null;
 		}
-		return evaluatedTemplate;
+		return this.evaluatedTemplate;
 	}
 
 	/**
 	 * Gets whether to parse the resulting Wicket markup.
 	 *
-	 * @return whether to parse the resulting Wicket markup. The default is false.
+	 * @return whether to parse the resulting Wicket markup. The default is
+	 *         false.
 	 */
-	public void setParseGeneratedMarkup(boolean value)
-	{
+	public void setParseGeneratedMarkup(boolean value) {
 		this.parseGeneratedMarkup = value;
 	}
 
 	/**
-	 * Whether any Freemarker exception should be trapped and displayed on the panel (false) or thrown
-	 * up to be handled by the exception mechanism of Wicket (true). The default is false, which
-	 * traps and displays any exception without having consequences for the other components on the
+	 * Whether any Freemarker exception should be trapped and displayed on the
+	 * panel (false) or thrown up to be handled by the exception mechanism of
+	 * Wicket (true). The default is false, which traps and displays any
+	 * exception without having consequences for the other components on the
 	 * page.
 	 * <p>
-	 * Trapping these exceptions without disturbing the other components is especially useful in CMS
-	 * like applications, where 'normal' users are allowed to do basic scripting. On errors, you
-	 * want them to be able to have them correct them while the rest of the application keeps on
+	 * Trapping these exceptions without disturbing the other components is
+	 * especially useful in CMS like applications, where 'normal' users are
+	 * allowed to do basic scripting. On errors, you want them to be able to
+	 * have them correct them while the rest of the application keeps on
 	 * working.
 	 * </p>
 	 *
-	 * @return Whether any Freemarker exceptions should be thrown or trapped. The default is false.
+	 * @return Whether any Freemarker exceptions should be thrown or trapped.
+	 *         The default is false.
 	 */
-	public void setThrowFreemarkerExceptions(boolean value)
-	{
+	public void setThrowFreemarkerExceptions(boolean value) {
 		this.throwFreemarkerExceptions = value;
 	}
 
@@ -270,16 +249,15 @@ public class FreemarkerPanel extends Panel
 	 */
 	@Override
 	public final IResourceStream getMarkupResourceStream(MarkupContainer container,
-			Class< ? > containerClass)
-	{
-		Template template = getTemplate();
-		if (template == null)
-		{
-			throw new WicketRuntimeException("could not find Freemarker template for panel: " + this);
+			Class<?> containerClass) {
+		final Template template = getTemplate();
+		if (template == null) {
+			throw new WicketRuntimeException("could not find Freemarker template for panel: "
+					+ this);
 		}
 
 		// evaluate the template and return a new StringResourceStream
-		StringBuffer sb = new StringBuffer();
+		final StringBuffer sb = new StringBuffer();
 		sb.append("<wicket:panel>");
 		sb.append(evaluateFreemarkerTemplate(template));
 		sb.append("</wicket:panel>");
@@ -291,8 +269,7 @@ public class FreemarkerPanel extends Panel
 	 *      MarkupContainer, java.lang.Class)
 	 */
 	@Override
-	public final String getCacheKey(MarkupContainer container, Class< ? > containerClass)
-	{
+	public final String getCacheKey(MarkupContainer container, Class<?> containerClass) {
 		// don't cache the evaluated template
 		return null;
 	}
@@ -301,10 +278,9 @@ public class FreemarkerPanel extends Panel
 	 * @see org.apache.wicket.Component#onDetach()
 	 */
 	@Override
-	protected void onDetach()
-	{
+	protected void onDetach() {
 		super.onDetach();
-		stackTraceAsString = null;
-		evaluatedTemplate = null;
+		this.stackTraceAsString = null;
+		this.evaluatedTemplate = null;
 	}
 }

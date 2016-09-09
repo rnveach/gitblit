@@ -53,7 +53,7 @@ public class Utils {
 	public final static String DATE_FORMAT = "yyyy-MM-dd";
 
 	public static JTable newTable(TableModel model, String datePattern) {
-		JTable table = new JTable(model);
+		final JTable table = new JTable(model);
 		table.setRowHeight(table.getFont().getSize() + 8);
 		table.setCellSelectionEnabled(false);
 		table.setRowSelectionAllowed(true);
@@ -70,9 +70,9 @@ public class Utils {
 	}
 
 	public static JPanel newFieldPanel(String label, Component c, String trailingLabel) {
-		JLabel jlabel = new JLabel(label);
+		final JLabel jlabel = new JLabel(label);
 		jlabel.setPreferredSize(new Dimension(Utils.LABEL_WIDTH, 20));
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		final JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		panel.add(jlabel);
 		panel.add(c);
 		if (!StringUtils.isEmpty(trailingLabel)) {
@@ -82,16 +82,17 @@ public class Utils {
 	}
 
 	public static void showException(Component c, Throwable t) {
-		StringWriter writer = new StringWriter();
+		final StringWriter writer = new StringWriter();
 		t.printStackTrace(new PrintWriter(writer));
-		String stacktrace = writer.toString();
+		final String stacktrace = writer.toString();
 		try {
 			writer.close();
-		} catch (Throwable x) {
 		}
-		JTextArea textArea = new JTextArea(stacktrace);
+		catch (final Throwable x) {
+		}
+		final JTextArea textArea = new JTextArea(stacktrace);
 		textArea.setFont(new Font("monospaced", Font.PLAIN, 11));
-		JScrollPane jsp = new JScrollPane(textArea);
+		final JScrollPane jsp = new JScrollPane(textArea);
 		jsp.setPreferredSize(new Dimension(800, 400));
 		JOptionPane.showMessageDialog(c, jsp, Translation.get("gb.error"),
 				JOptionPane.ERROR_MESSAGE);
@@ -108,8 +109,8 @@ public class Utils {
 	// widest cell in the column. margin pixels are added to the left and right
 	// (resulting in an additional width of 2*margin pixels).
 	private static void packColumn(JTable table, int vColIndex, int margin) {
-		DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-		TableColumn col = colModel.getColumn(vColIndex);
+		final DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+		final TableColumn col = colModel.getColumn(vColIndex);
 		int width = 0;
 
 		// Get width of column header

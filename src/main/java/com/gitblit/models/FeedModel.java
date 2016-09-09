@@ -38,40 +38,41 @@ public class FeedModel implements Serializable, Comparable<FeedModel> {
 
 	public FeedModel() {
 		this("");
-		subscribed = false;
+		this.subscribed = false;
 	}
 
 	public FeedModel(String definition) {
-		subscribed = true;
-		lastRefreshDate = new Date(0);
-		currentRefreshDate = new Date(0);
+		this.subscribed = true;
+		this.lastRefreshDate = new Date(0);
+		this.currentRefreshDate = new Date(0);
 
-		String[] fields = definition.split(":");
-		repository = fields[0];
+		final String[] fields = definition.split(":");
+		this.repository = fields[0];
 		if (fields.length > 1) {
-			branch = fields[1];
+			this.branch = fields[1];
 		}
 	}
 
 	@Override
 	public String toString() {
-		if (StringUtils.isEmpty(branch)) {
-			return repository;
+		if (StringUtils.isEmpty(this.branch)) {
+			return this.repository;
 		}
-		return repository + ":" + branch;
+		return this.repository + ":" + this.branch;
 	}
 
 	@Override
 	public int compareTo(FeedModel o) {
-		int repositoryCompare = StringUtils.compareRepositoryNames(repository, o.repository);
+		final int repositoryCompare = StringUtils.compareRepositoryNames(this.repository,
+				o.repository);
 		if (repositoryCompare == 0) {
 			// same repository
-			if (StringUtils.isEmpty(branch)) {
+			if (StringUtils.isEmpty(this.branch)) {
 				return 1;
 			} else if (StringUtils.isEmpty(o.branch)) {
 				return -1;
 			}
-			return branch.compareTo(o.branch);
+			return this.branch.compareTo(o.branch);
 		}
 		return repositoryCompare;
 	}

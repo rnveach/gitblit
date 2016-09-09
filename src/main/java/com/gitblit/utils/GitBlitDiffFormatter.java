@@ -42,7 +42,8 @@ import com.gitblit.utils.DiffUtils.DiffStat;
 import com.gitblit.wicket.GitBlitWebApp;
 
 /**
- * Generates an html snippet of a diff in Gitblit's style, tracks changed paths, and calculates diff stats.
+ * Generates an html snippet of a diff in Gitblit's style, tracks changed paths,
+ * and calculates diff stats.
  *
  * @author James Moger
  * @author Tom <tw201207@gmail.com>
@@ -54,24 +55,28 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 	private static final Pattern trailingWhitespace = Pattern.compile("(\\s+?)\r?\n?$");
 
 	/**
-	 * gitblit.properties key for the per-file limit on the number of diff lines.
+	 * gitblit.properties key for the per-file limit on the number of diff
+	 * lines.
 	 */
 	private static final String DIFF_LIMIT_PER_FILE_KEY = "web.maxDiffLinesPerFile";
 
 	/**
-	 * gitblit.properties key for the global limit on the number of diff lines in a commitdiff.
+	 * gitblit.properties key for the global limit on the number of diff lines
+	 * in a commitdiff.
 	 */
 	private static final String GLOBAL_DIFF_LIMIT_KEY = "web.maxDiffLines";
 
 	/**
-	 * Diffs with more lines are not shown in commitdiffs. (Similar to what GitHub does.) Can be reduced
-	 * (but not increased) through gitblit.properties key {@link #DIFF_LIMIT_PER_FILE_KEY}.
+	 * Diffs with more lines are not shown in commitdiffs. (Similar to what
+	 * GitHub does.) Can be reduced (but not increased) through
+	 * gitblit.properties key {@link #DIFF_LIMIT_PER_FILE_KEY}.
 	 */
 	private static final int DIFF_LIMIT_PER_FILE = 4000;
 
 	/**
-	 * Global diff limit. Commitdiffs with more lines are truncated. Can be reduced (but not increased)
-	 * through gitblit.properties key {@link #GLOBAL_DIFF_LIMIT_KEY}.
+	 * Global diff limit. Commitdiffs with more lines are truncated. Can be
+	 * reduced (but not increased) through gitblit.properties key
+	 * {@link #GLOBAL_DIFF_LIMIT_KEY}.
 	 */
 	private static final int GLOBAL_DIFF_LIMIT = 20000;
 
@@ -86,31 +91,39 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 	private int left, right;
 
 	/**
-	 * If a single file diff in a commitdiff produces more than this number of lines, we don't display
-	 * the diff. First, it's too taxing on the browser: it'll spend an awful lot of time applying the
-	 * CSS rules (despite my having optimized them). And second, no human can read a diff with thousands
-	 * of lines and make sense of it.
+	 * If a single file diff in a commitdiff produces more than this number of
+	 * lines, we don't display the diff. First, it's too taxing on the browser:
+	 * it'll spend an awful lot of time applying the CSS rules (despite my
+	 * having optimized them). And second, no human can read a diff with
+	 * thousands of lines and make sense of it.
 	 * <p>
-	 * Set to {@link #DIFF_LIMIT_PER_FILE} for commitdiffs, and to -1 (switches off the limit) for
-	 * single-file diffs.
+	 * Set to {@link #DIFF_LIMIT_PER_FILE} for commitdiffs, and to -1 (switches
+	 * off the limit) for single-file diffs.
 	 * </p>
 	 */
 	private final int maxDiffLinesPerFile;
 
 	/**
-	 * Global limit on the number of diff lines. Set to {@link #GLOBAL_DIFF_LIMIT} for commitdiffs, and
-	 * to -1 (switched off the limit) for single-file diffs.
+	 * Global limit on the number of diff lines. Set to
+	 * {@link #GLOBAL_DIFF_LIMIT} for commitdiffs, and to -1 (switched off the
+	 * limit) for single-file diffs.
 	 */
 	private final int globalDiffLimit;
 
-	/** Number of lines for the current file diff. Set to zero when a new DiffEntry is started. */
+	/**
+	 * Number of lines for the current file diff. Set to zero when a new
+	 * DiffEntry is started.
+	 */
 	private int nofLinesCurrent;
 	/**
-	 * Position in the stream when we try to write the first line. Used to rewind when we detect that
-	 * the diff is too large.
+	 * Position in the stream when we try to write the first line. Used to
+	 * rewind when we detect that the diff is too large.
 	 */
 	private int startCurrent;
-	/** Flag set to true when we rewind. Reset to false when we start a new DiffEntry. */
+	/**
+	 * Flag set to true when we rewind. Reset to false when we start a new
+	 * DiffEntry.
+	 */
 	private boolean isOff;
 	/** The current diff entry. */
 	private DiffEntry entry;
@@ -119,7 +132,10 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 
 	/** Total number of lines written before the current diff entry. */
 	private int totalNofLinesPrevious;
-	/** Running total of the number of diff lines written. Updated until we exceed the global limit. */
+	/**
+	 * Running total of the number of diff lines written. Updated until we
+	 * exceed the global limit.
+	 */
 	private int totalNofLinesCurrent;
 	/** Stream position to reset to if we decided to truncate the commitdiff. */
 	private int truncateTo;
@@ -128,12 +144,14 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 	/** If {@link #truncated}, contains all entries skipped. */
 	private final List<DiffEntry> skipped = new ArrayList<DiffEntry>();
 
-	private int tabLength;
+	private final int tabLength;
 
 	/**
-	 * A {@link ResettableByteArrayOutputStream} that intercept the "Binary files differ" message produced
-	 * by the super implementation. Unfortunately the super implementation has far too many things private;
-	 * otherwise we'd just have re-implemented {@link GitBlitDiffFormatter#format(DiffEntry) format(DiffEntry)}
+	 * A {@link ResettableByteArrayOutputStream} that intercept the
+	 * "Binary files differ" message produced by the super implementation.
+	 * Unfortunately the super implementation has far too many things private;
+	 * otherwise we'd just have re-implemented
+	 * {@link GitBlitDiffFormatter#format(DiffEntry) format(DiffEntry)}
 	 * completely without ever calling the super implementation.
 	 */
 	private static class DiffOutputStream extends ResettableByteArrayOutputStream {
@@ -149,13 +167,15 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 		}
 
 		@Override
-		public void write(byte[] b, int offset, int length) {
-			if (binaryDiffHandler != null
-					&& RawParseUtils.decode(Arrays.copyOfRange(b, offset, offset + length)).contains(BINARY_DIFFERENCE))
-			{
-				String binaryDiff = binaryDiffHandler.renderBinaryDiff(formatter.entry);
+		public synchronized void write(byte[] b, int offset, int length) {
+			if ((this.binaryDiffHandler != null)
+					&& RawParseUtils.decode(Arrays.copyOfRange(b, offset, offset + length))
+							.contains(BINARY_DIFFERENCE)) {
+				final String binaryDiff = this.binaryDiffHandler
+						.renderBinaryDiff(this.formatter.entry);
 				if (binaryDiff != null) {
-					byte[] bb = ("<tr><td colspan='4' align='center'>" + binaryDiff + "</td></tr>").getBytes(StandardCharsets.UTF_8);
+					final byte[] bb = ("<tr><td colspan='4' align='center'>" + binaryDiff + "</td></tr>")
+							.getBytes(StandardCharsets.UTF_8);
 					super.write(bb, 0, bb.length);
 					return;
 				}
@@ -165,35 +185,40 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 
 	}
 
-	public GitBlitDiffFormatter(String commitId, Repository repository, String path, BinaryDiffHandler handler, int tabLength) {
+	public GitBlitDiffFormatter(String commitId, Repository repository, String path,
+			BinaryDiffHandler handler, int tabLength) {
 		super(new DiffOutputStream());
 		this.os = (DiffOutputStream) getOutputStream();
 		this.os.setFormatter(this, handler);
 		this.diffStat = new DiffStat(commitId, repository);
 		this.tabLength = tabLength;
-		// If we have a full commitdiff, install maxima to avoid generating a super-long diff listing that
+		// If we have a full commitdiff, install maxima to avoid generating a
+		// super-long diff listing that
 		// will only tax the browser too much.
-		maxDiffLinesPerFile = path != null ? -1 : getLimit(DIFF_LIMIT_PER_FILE_KEY, 500, DIFF_LIMIT_PER_FILE);
-		globalDiffLimit = path != null ? -1 : getLimit(GLOBAL_DIFF_LIMIT_KEY, 1000, GLOBAL_DIFF_LIMIT);
+		this.maxDiffLinesPerFile = path != null ? -1 : getLimit(DIFF_LIMIT_PER_FILE_KEY, 500,
+				DIFF_LIMIT_PER_FILE);
+		this.globalDiffLimit = path != null ? -1 : getLimit(GLOBAL_DIFF_LIMIT_KEY, 1000,
+				GLOBAL_DIFF_LIMIT);
 	}
 
 	/**
 	 * Determines a limit to use for HTML diff output.
 	 *
 	 * @param key
-	 *            to use to read the value from the GitBlit settings, if available.
+	 *            to use to read the value from the GitBlit settings, if
+	 *            available.
 	 * @param minimum
 	 *            minimum value to enforce
 	 * @param maximum
 	 *            maximum (and default) value to enforce
 	 * @return the limit
 	 */
-	private int getLimit(String key, int minimum, int maximum) {
+	private static int getLimit(String key, int minimum, int maximum) {
 		if (Application.exists()) {
-			Application application = Application.get();
+			final Application application = Application.get();
 			if (application instanceof GitBlitWebApp) {
-				GitBlitWebApp webApp = (GitBlitWebApp) application;
-				int configValue = webApp.settings().getInteger(key, maximum);
+				final GitBlitWebApp webApp = (GitBlitWebApp) application;
+				final int configValue = webApp.settings().getInteger(key, maximum);
 				if (configValue < minimum) {
 					return minimum;
 				} else if (configValue < maximum) {
@@ -205,7 +230,8 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 	}
 
 	/**
-	 * Returns a localized message string, if there is a localization; otherwise the given default value.
+	 * Returns a localized message string, if there is a localization; otherwise
+	 * the given default value.
 	 *
 	 * @param key
 	 *            message key for the message
@@ -213,11 +239,12 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 	 *            to use if no localization for the message can be found
 	 * @return the possibly localized message
 	 */
-	private String getMsg(String key, String defaultValue) {
+	private static String getMsg(String key, String defaultValue) {
 		if (Application.exists()) {
-			Localizer localizer = Application.get().getResourceSettings().getLocalizer();
+			final Localizer localizer = Application.get().getResourceSettings().getLocalizer();
 			if (localizer != null) {
-				// Use getStringIgnoreSettings because we don't want exceptions here if the key is missing!
+				// Use getStringIgnoreSettings because we don't want exceptions
+				// here if the key is missing!
 				return localizer.getStringIgnoreSettings(key, null, null, defaultValue);
 			}
 		}
@@ -226,22 +253,22 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 
 	@Override
 	public void format(DiffEntry ent) throws IOException {
-		currentPath = diffStat.addPath(ent);
-		nofLinesCurrent = 0;
-		isOff = false;
-		entry = ent;
-		if (!truncated) {
-			totalNofLinesPrevious = totalNofLinesCurrent;
-			if (globalDiffLimit > 0 && totalNofLinesPrevious > globalDiffLimit) {
-				truncated = true;
-				isOff = true;
+		this.currentPath = this.diffStat.addPath(ent);
+		this.nofLinesCurrent = 0;
+		this.isOff = false;
+		this.entry = ent;
+		if (!this.truncated) {
+			this.totalNofLinesPrevious = this.totalNofLinesCurrent;
+			if ((this.globalDiffLimit > 0) && (this.totalNofLinesPrevious > this.globalDiffLimit)) {
+				this.truncated = true;
+				this.isOff = true;
 			}
-			truncateTo = os.size();
+			this.truncateTo = this.os.size();
 		} else {
-			isOff = true;
+			this.isOff = true;
 		}
-		if (truncated) {
-			skipped.add(ent);
+		if (this.truncated) {
+			this.skipped.add(ent);
 		} else {
 			// Produce a header here and now
 			String path;
@@ -253,23 +280,27 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 				path = ent.getNewPath();
 				id = ent.getNewId().name();
 			}
-			StringBuilder sb = new StringBuilder(MessageFormat.format("<div class='header'><div class=\"diffHeader\" id=\"n{0}\"><i class=\"icon-file\"></i> ", id));
+			final StringBuilder sb = new StringBuilder(
+					MessageFormat
+							.format("<div class='header'><div class=\"diffHeader\" id=\"n{0}\"><i class=\"icon-file\"></i> ",
+									id));
 			sb.append(StringUtils.escapeForHtml(path, false)).append("</div></div>");
 			sb.append("<div class=\"diff\"><table cellpadding='0'><tbody>\n");
-			os.write(sb.toString().getBytes());
+			this.os.write(sb.toString().getBytes());
 		}
-		// Keep formatting, but if off, don't produce anything anymore. We just keep on counting.
+		// Keep formatting, but if off, don't produce anything anymore. We just
+		// keep on counting.
 		super.format(ent);
-		if (!truncated) {
+		if (!this.truncated) {
 			// Close the table
-			os.write("</tbody></table></div>\n".getBytes());
+			this.os.write("</tbody></table></div>\n".getBytes());
 		}
 	}
 
 	@Override
 	public void flush() throws IOException {
-		if (truncated) {
-			os.resetTo(truncateTo);
+		if (this.truncated) {
+			this.os.resetTo(this.truncateTo);
 		}
 		super.flush();
 	}
@@ -278,40 +309,49 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 	 * Rewind and issue a message that the diff is too large.
 	 */
 	private void reset() {
-		if (!isOff) {
-			os.resetTo(startCurrent);
+		if (!this.isOff) {
+			this.os.resetTo(this.startCurrent);
 			writeFullWidthLine(getMsg("gb.diffFileDiffTooLarge", "Diff too large"));
-			totalNofLinesCurrent = totalNofLinesPrevious;
-			isOff = true;
+			this.totalNofLinesCurrent = this.totalNofLinesPrevious;
+			this.isOff = true;
 		}
 	}
 
 	/**
-	 * Writes an initial table row containing information about added/removed/renamed/copied files. In case
-	 * of a deletion, we also suppress generating the diff; it's not interesting. (All lines removed.)
+	 * Writes an initial table row containing information about
+	 * added/removed/renamed/copied files. In case of a deletion, we also
+	 * suppress generating the diff; it's not interesting. (All lines removed.)
 	 */
 	private void handleChange() {
-		// XXX Would be nice if we could generate blob links for the cases handled here. Alas, we lack the repo
-		// name, and cannot reliably determine it here. We could get the .git directory of a Repository, if we
-		// passed in the repo, and then take the name of the parent directory, but that'd fail for repos nested
-		// in GitBlit projects. And we don't know if the repo is inside a project or is a top-level repo.
+		// XXX Would be nice if we could generate blob links for the cases
+		// handled here. Alas, we lack the repo
+		// name, and cannot reliably determine it here. We could get the .git
+		// directory of a Repository, if we
+		// passed in the repo, and then take the name of the parent directory,
+		// but that'd fail for repos nested
+		// in GitBlit projects. And we don't know if the repo is inside a
+		// project or is a top-level repo.
 		//
-		// That's certainly solvable (just pass along more information), but would require a larger rewrite than
+		// That's certainly solvable (just pass along more information), but
+		// would require a larger rewrite than
 		// I'm prepared to do now.
 		String message;
-		switch (entry.getChangeType()) {
+		switch (this.entry.getChangeType()) {
 		case ADD:
 			message = getMsg("gb.diffNewFile", "New file");
 			break;
 		case DELETE:
 			message = getMsg("gb.diffDeletedFile", "File was deleted");
-			isOff = true;
+			this.isOff = true;
 			break;
 		case RENAME:
-			message = MessageFormat.format(getMsg("gb.diffRenamedFile", "File was renamed from {0}"), entry.getOldPath());
+			message = MessageFormat.format(
+					getMsg("gb.diffRenamedFile", "File was renamed from {0}"),
+					this.entry.getOldPath());
 			break;
 		case COPY:
-			message = MessageFormat.format(getMsg("gb.diffCopiedFile", "File was copied from {0}"), entry.getOldPath());
+			message = MessageFormat.format(getMsg("gb.diffCopiedFile", "File was copied from {0}"),
+					this.entry.getOldPath());
 			break;
 		default:
 			return;
@@ -333,35 +373,36 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 	 * @throws IOException
 	 */
 	@Override
-	protected void writeHunkHeader(int aStartLine, int aEndLine, int bStartLine, int bEndLine) throws IOException {
-		if (nofLinesCurrent++ == 0) {
+	protected void writeHunkHeader(int aStartLine, int aEndLine, int bStartLine, int bEndLine)
+			throws IOException {
+		if (this.nofLinesCurrent++ == 0) {
 			handleChange();
-			startCurrent = os.size();
+			this.startCurrent = this.os.size();
 		}
-		if (!isOff) {
-			totalNofLinesCurrent++;
-			if (nofLinesCurrent > maxDiffLinesPerFile && maxDiffLinesPerFile > 0) {
+		if (!this.isOff) {
+			this.totalNofLinesCurrent++;
+			if ((this.nofLinesCurrent > this.maxDiffLinesPerFile) && (this.maxDiffLinesPerFile > 0)) {
 				reset();
 			} else {
-				os.write("<tr><th class='diff-line' data-lineno='..'></th><th class='diff-line' data-lineno='..'></th><th class='diff-state'></th><td class='hunk_header'>"
+				this.os.write("<tr><th class='diff-line' data-lineno='..'></th><th class='diff-line' data-lineno='..'></th><th class='diff-state'></th><td class='hunk_header'>"
 						.getBytes());
-				os.write('@');
-				os.write('@');
+				this.os.write('@');
+				this.os.write('@');
 				writeRange('-', aStartLine + 1, aEndLine - aStartLine);
 				writeRange('+', bStartLine + 1, bEndLine - bStartLine);
-				os.write(' ');
-				os.write('@');
-				os.write('@');
-				os.write("</td></tr>\n".getBytes());
+				this.os.write(' ');
+				this.os.write('@');
+				this.os.write('@');
+				this.os.write("</td></tr>\n".getBytes());
 			}
 		}
-		left = aStartLine + 1;
-		right = bStartLine + 1;
+		this.left = aStartLine + 1;
+		this.right = bStartLine + 1;
 	}
 
 	protected void writeRange(final char prefix, final int begin, final int cnt) throws IOException {
-		os.write(' ');
-		os.write(prefix);
+		this.os.write(' ');
+		this.os.write(prefix);
 		switch (cnt) {
 		case 0:
 			// If the range is empty, its beginning number must be the
@@ -369,77 +410,84 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 			// start of the file stream. Here, begin is always 1 based,
 			// so an empty file would produce "0,0".
 			//
-			os.write(encodeASCII(begin - 1));
-			os.write(',');
-			os.write('0');
+			this.os.write(encodeASCII(begin - 1));
+			this.os.write(',');
+			this.os.write('0');
 			break;
 
 		case 1:
 			// If the range is exactly one line, produce only the number.
 			//
-			os.write(encodeASCII(begin));
+			this.os.write(encodeASCII(begin));
 			break;
 
 		default:
-			os.write(encodeASCII(begin));
-			os.write(',');
-			os.write(encodeASCII(cnt));
+			this.os.write(encodeASCII(begin));
+			this.os.write(',');
+			this.os.write(encodeASCII(cnt));
 			break;
 		}
 	}
 
 	/**
-	 * Writes a line spanning the full width of the code view, including the gutter.
+	 * Writes a line spanning the full width of the code view, including the
+	 * gutter.
 	 *
 	 * @param text
 	 *            to put on that line; will be HTML-escaped.
 	 */
 	private void writeFullWidthLine(String text) {
 		try {
-			os.write("<tr><td class='diff-cell' colspan='4'>".getBytes());
-			os.write(StringUtils.escapeForHtml(text, false).getBytes());
-			os.write("</td></tr>\n".getBytes());
-		} catch (IOException ex) {
+			this.os.write("<tr><td class='diff-cell' colspan='4'>".getBytes());
+			this.os.write(StringUtils.escapeForHtml(text, false).getBytes());
+			this.os.write("</td></tr>\n".getBytes());
+		}
+		catch (final IOException ex) {
 			// Cannot happen with a ByteArrayOutputStream
 		}
 	}
 
 	@Override
-	protected void writeLine(final char prefix, final RawText text, final int cur) throws IOException {
-		if (nofLinesCurrent++ == 0) {
+	protected void writeLine(final char prefix, final RawText text, final int cur)
+			throws IOException {
+		if (this.nofLinesCurrent++ == 0) {
 			handleChange();
-			startCurrent = os.size();
+			this.startCurrent = this.os.size();
 		}
 		// update entry diffstat
-		currentPath.update(prefix);
-		if (isOff) {
+		this.currentPath.update(prefix);
+		if (this.isOff) {
 			return;
 		}
-		totalNofLinesCurrent++;
-		if (nofLinesCurrent > maxDiffLinesPerFile && maxDiffLinesPerFile > 0) {
+		this.totalNofLinesCurrent++;
+		if ((this.nofLinesCurrent > this.maxDiffLinesPerFile) && (this.maxDiffLinesPerFile > 0)) {
 			reset();
 		} else {
 			// output diff
-			os.write("<tr>".getBytes());
+			this.os.write("<tr>".getBytes());
 			switch (prefix) {
 			case '+':
-				os.write(("<th class='diff-line'></th><th class='diff-line' data-lineno='" + (right++) + "'></th>").getBytes());
-				os.write("<th class='diff-state diff-state-add'></th>".getBytes());
-				os.write("<td class='diff-cell add2'>".getBytes());
+				this.os.write(("<th class='diff-line'></th><th class='diff-line' data-lineno='"
+						+ (this.right++) + "'></th>").getBytes());
+				this.os.write("<th class='diff-state diff-state-add'></th>".getBytes());
+				this.os.write("<td class='diff-cell add2'>".getBytes());
 				break;
 			case '-':
-				os.write(("<th class='diff-line' data-lineno='" + (left++) + "'></th><th class='diff-line'></th>").getBytes());
-				os.write("<th class='diff-state diff-state-sub'></th>".getBytes());
-				os.write("<td class='diff-cell remove2'>".getBytes());
+				this.os.write(("<th class='diff-line' data-lineno='" + (this.left++) + "'></th><th class='diff-line'></th>")
+						.getBytes());
+				this.os.write("<th class='diff-state diff-state-sub'></th>".getBytes());
+				this.os.write("<td class='diff-cell remove2'>".getBytes());
 				break;
 			default:
-				os.write(("<th class='diff-line' data-lineno='" + (left++) + "'></th><th class='diff-line' data-lineno='" + (right++) + "'></th>").getBytes());
-				os.write("<th class='diff-state'></th>".getBytes());
-				os.write("<td class='diff-cell context2'>".getBytes());
+				this.os.write(("<th class='diff-line' data-lineno='" + (this.left++)
+						+ "'></th><th class='diff-line' data-lineno='" + (this.right++) + "'></th>")
+						.getBytes());
+				this.os.write("<th class='diff-state'></th>".getBytes());
+				this.os.write("<td class='diff-cell context2'>".getBytes());
 				break;
 			}
-			os.write(encode(codeLineToHtml(prefix, text.getString(cur))));
-			os.write("</td></tr>\n".getBytes());
+			this.os.write(encode(codeLineToHtml(prefix, text.getString(cur))));
+			this.os.write("</td></tr>\n".getBytes());
 		}
 	}
 
@@ -447,35 +495,39 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 	 * Convert the given code line to HTML.
 	 *
 	 * @param prefix
-	 *            the diff prefix (+/-) indicating whether the line was added or removed.
+	 *            the diff prefix (+/-) indicating whether the line was added or
+	 *            removed.
 	 * @param line
 	 *            the line to format as HTML
 	 * @return the HTML-formatted line, safe for inserting as is into HTML.
 	 */
 	private String codeLineToHtml(final char prefix, final String line) {
-		if ((prefix == '+' || prefix == '-')) {
+		if (((prefix == '+') || (prefix == '-'))) {
 			// Highlight trailing whitespace on deleted/added lines.
-			Matcher matcher = trailingWhitespace.matcher(line);
+			final Matcher matcher = trailingWhitespace.matcher(line);
 			if (matcher.find()) {
-				StringBuilder result = new StringBuilder(StringUtils.escapeForHtml(line.substring(0, matcher.start()), CONVERT_TABS, tabLength));
-				result.append("<span class='trailingws-").append(prefix == '+' ? "add" : "sub").append("'>");
+				final StringBuilder result = new StringBuilder(StringUtils.escapeForHtml(
+						line.substring(0, matcher.start()), CONVERT_TABS, this.tabLength));
+				result.append("<span class='trailingws-").append(prefix == '+' ? "add" : "sub")
+						.append("'>");
 				result.append(StringUtils.escapeForHtml(matcher.group(1), false));
 				result.append("</span>");
 				return result.toString();
 			}
 		}
-		return StringUtils.escapeForHtml(line, CONVERT_TABS, tabLength);
+		return StringUtils.escapeForHtml(line, CONVERT_TABS, this.tabLength);
 	}
 
 	/**
-	 * Workaround function for complex private methods in DiffFormatter. This sets the html for the diff headers.
+	 * Workaround function for complex private methods in DiffFormatter. This
+	 * sets the html for the diff headers.
 	 *
 	 * @return
 	 */
 	public String getHtml() {
-		String html = RawParseUtils.decode(os.toByteArray());
-		String[] lines = html.split("\n");
-		StringBuilder sb = new StringBuilder();
+		final String html = RawParseUtils.decode(this.os.toByteArray());
+		final String[] lines = html.split("\n");
+		final StringBuilder sb = new StringBuilder();
 		for (String line : lines) {
 			if (line.startsWith("index") || line.startsWith("similarity")
 					|| line.startsWith("rename from ") || line.startsWith("rename to ")) {
@@ -489,7 +541,8 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 			} else if (line.startsWith("diff")) {
 				// skip diff lines
 			} else {
-				boolean gitLinkDiff = line.length() > 0 && line.substring(1).startsWith("Subproject commit");
+				final boolean gitLinkDiff = (line.length() > 0)
+						&& line.substring(1).startsWith("Subproject commit");
 				if (gitLinkDiff) {
 					sb.append("<tr><th class='diff-line'></th><th class='diff-line'></th>");
 					if (line.charAt(0) == '+') {
@@ -497,7 +550,8 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 					} else {
 						sb.append("<th class='diff-state diff-state-sub'></th><td class=\"diff-cell remove2\">");
 					}
-					line = StringUtils.escapeForHtml(line.substring(1), CONVERT_TABS, tabLength);
+					line = StringUtils.escapeForHtml(line.substring(1), CONVERT_TABS,
+							this.tabLength);
 				}
 				sb.append(line);
 				if (gitLinkDiff) {
@@ -506,31 +560,39 @@ public class GitBlitDiffFormatter extends DiffFormatter {
 				sb.append('\n');
 			}
 		}
-		if (truncated) {
-			sb.append(MessageFormat.format("<div class='header'><div class='diffHeader'>{0}</div></div>",
-					StringUtils.escapeForHtml(getMsg("gb.diffTruncated", "Diff truncated after the above file"), false)));
-			// List all files not shown. We can be sure we do have at least one path in skipped.
+		if (this.truncated) {
+			sb.append(MessageFormat.format(
+					"<div class='header'><div class='diffHeader'>{0}</div></div>", StringUtils
+							.escapeForHtml(
+									getMsg("gb.diffTruncated",
+											"Diff truncated after the above file"), false)));
+			// List all files not shown. We can be sure we do have at least one
+			// path in skipped.
 			sb.append("<div class='diff'><table cellpadding='0'><tbody><tr><td class='diff-cell' colspan='4'>");
-			String deletedSuffix = StringUtils.escapeForHtml(getMsg("gb.diffDeletedFileSkipped", "(deleted)"), false);
+			final String deletedSuffix = StringUtils.escapeForHtml(
+					getMsg("gb.diffDeletedFileSkipped", "(deleted)"), false);
 			boolean first = true;
-			for (DiffEntry entry : skipped) {
+			for (final DiffEntry entry : this.skipped) {
 				if (!first) {
 					sb.append('\n');
 				}
 				if (ChangeType.DELETE.equals(entry.getChangeType())) {
-					sb.append("<span id=\"n" + entry.getOldId().name() + "\">" + StringUtils.escapeForHtml(entry.getOldPath(), false) + ' ' + deletedSuffix + "</span>");
+					sb.append("<span id=\"n" + entry.getOldId().name() + "\">"
+							+ StringUtils.escapeForHtml(entry.getOldPath(), false) + ' '
+							+ deletedSuffix + "</span>");
 				} else {
-					sb.append("<span id=\"n" + entry.getNewId().name() + "\">" + StringUtils.escapeForHtml(entry.getNewPath(), false) + "</span>");
+					sb.append("<span id=\"n" + entry.getNewId().name() + "\">"
+							+ StringUtils.escapeForHtml(entry.getNewPath(), false) + "</span>");
 				}
 				first = false;
 			}
-			skipped.clear();
+			this.skipped.clear();
 			sb.append("</td></tr></tbody></table></div>");
 		}
 		return sb.toString();
 	}
 
 	public DiffStat getDiffStat() {
-		return diffStat;
+		return this.diffStat;
 	}
 }

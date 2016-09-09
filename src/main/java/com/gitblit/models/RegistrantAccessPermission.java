@@ -27,7 +27,8 @@ import com.gitblit.utils.StringUtils;
  *
  * @author James Moger
  */
-public class RegistrantAccessPermission implements Serializable, Comparable<RegistrantAccessPermission> {
+public class RegistrantAccessPermission implements Serializable,
+		Comparable<RegistrantAccessPermission> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -47,7 +48,9 @@ public class RegistrantAccessPermission implements Serializable, Comparable<Regi
 		this.mutable = true;
 	}
 
-	public RegistrantAccessPermission(String registrant, AccessPermission permission, PermissionType permissionType, RegistrantType registrantType, String source, boolean mutable) {
+	public RegistrantAccessPermission(String registrant, AccessPermission permission,
+			PermissionType permissionType, RegistrantType registrantType, String source,
+			boolean mutable) {
 		this.registrant = registrant;
 		this.permission = permission;
 		this.permissionType = permissionType;
@@ -57,31 +60,31 @@ public class RegistrantAccessPermission implements Serializable, Comparable<Regi
 	}
 
 	public boolean isAdmin() {
-		return PermissionType.ADMINISTRATOR.equals(permissionType);
+		return PermissionType.ADMINISTRATOR.equals(this.permissionType);
 	}
 
 	public boolean isOwner() {
-		return PermissionType.OWNER.equals(permissionType);
+		return PermissionType.OWNER.equals(this.permissionType);
 	}
 
 	public boolean isExplicit() {
-		return PermissionType.EXPLICIT.equals(permissionType);
+		return PermissionType.EXPLICIT.equals(this.permissionType);
 	}
 
 	public boolean isRegex() {
-		return PermissionType.REGEX.equals(permissionType);
+		return PermissionType.REGEX.equals(this.permissionType);
 	}
 
 	public boolean isTeam() {
-		return PermissionType.TEAM.equals(permissionType);
+		return PermissionType.TEAM.equals(this.permissionType);
 	}
 
 	public boolean isMissing() {
-		return PermissionType.MISSING.equals(permissionType);
+		return PermissionType.MISSING.equals(this.permissionType);
 	}
 
 	public int getScore() {
-		switch (registrantType) {
+		switch (this.registrantType) {
 		case REPOSITORY:
 			if (isAdmin()) {
 				return 0;
@@ -98,6 +101,7 @@ public class RegistrantAccessPermission implements Serializable, Comparable<Regi
 			if (isTeam()) {
 				return 4;
 			}
+			//$FALL-THROUGH$
 		default:
 			return 0;
 		}
@@ -105,38 +109,38 @@ public class RegistrantAccessPermission implements Serializable, Comparable<Regi
 
 	@Override
 	public int compareTo(RegistrantAccessPermission p) {
-		switch (registrantType) {
+		switch (this.registrantType) {
 		case REPOSITORY:
 			// repository permissions are sorted in score order
 			// to convey the order in which permissions are tested
-			int score1 = getScore();
-			int score2 = p.getScore();
-			if (score1 <= 2 && score2 <= 2) {
+			final int score1 = getScore();
+			final int score2 = p.getScore();
+			if ((score1 <= 2) && (score2 <= 2)) {
 				// group admin, owner, and explicit together
-				return StringUtils.compareRepositoryNames(registrant, p.registrant);
+				return StringUtils.compareRepositoryNames(this.registrant, p.registrant);
 			}
 			if (score1 < score2) {
 				return -1;
 			} else if (score2 < score1) {
 				return 1;
 			}
-			return StringUtils.compareRepositoryNames(registrant, p.registrant);
+			return StringUtils.compareRepositoryNames(this.registrant, p.registrant);
 		default:
 			// user and team permissions are string sorted
-			return registrant.toLowerCase().compareTo(p.registrant.toLowerCase());
+			return this.registrant.toLowerCase().compareTo(p.registrant.toLowerCase());
 		}
 	}
 
 	@Override
 	public int hashCode() {
-		return registrant.hashCode();
+		return this.registrant.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof RegistrantAccessPermission) {
-			RegistrantAccessPermission p = (RegistrantAccessPermission) o;
-			return registrant.equals(p.registrant);
+			final RegistrantAccessPermission p = (RegistrantAccessPermission) o;
+			return this.registrant.equals(p.registrant);
 		}
 
 		return false;
@@ -144,6 +148,6 @@ public class RegistrantAccessPermission implements Serializable, Comparable<Regi
 
 	@Override
 	public String toString() {
-		return permission.asRole(registrant);
+		return this.permission.asRole(this.registrant);
 	}
 }

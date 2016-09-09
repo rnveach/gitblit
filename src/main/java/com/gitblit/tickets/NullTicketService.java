@@ -41,18 +41,11 @@ import com.google.inject.Singleton;
 public class NullTicketService extends ITicketService {
 
 	@Inject
-	public NullTicketService(
-			IRuntimeManager runtimeManager,
-			IPluginManager pluginManager,
-			INotificationManager notificationManager,
-			IUserManager userManager,
+	public NullTicketService(IRuntimeManager runtimeManager, IPluginManager pluginManager,
+			INotificationManager notificationManager, IUserManager userManager,
 			IRepositoryManager repositoryManager) {
 
-		super(runtimeManager,
-				pluginManager,
-				notificationManager,
-				userManager,
-				repositoryManager);
+		super(runtimeManager, pluginManager, notificationManager, userManager, repositoryManager);
 	}
 
 	@Override
@@ -62,7 +55,7 @@ public class NullTicketService extends ITicketService {
 
 	@Override
 	public NullTicketService start() {
-		log.info("{} started", getClass().getSimpleName());
+		this.log.info("{} started", getClass().getSimpleName());
 		return this;
 	}
 
@@ -119,12 +112,14 @@ public class NullTicketService extends ITicketService {
 	}
 
 	@Override
-	protected synchronized boolean deleteTicketImpl(RepositoryModel repository, TicketModel ticket, String deletedBy) {
+	protected synchronized boolean deleteTicketImpl(RepositoryModel repository, TicketModel ticket,
+			String deletedBy) {
 		return false;
 	}
 
 	@Override
-	protected synchronized boolean commitChangeImpl(RepositoryModel repository, long ticketId, Change change) {
+	protected synchronized boolean commitChangeImpl(RepositoryModel repository, long ticketId,
+			Change change) {
 		return false;
 	}
 

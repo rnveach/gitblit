@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 package com.gitblit.tests;
-
-import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jgit.lib.Repository;
@@ -37,6 +36,7 @@ import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.XssFilter;
 import com.gitblit.utils.XssFilter.AllowXssFilter;
 
+
 /**
  * Tests Lucene indexing and querying.
  *
@@ -47,24 +47,26 @@ public class LuceneExecutorTest extends GitblitUnitTest {
 
 	LuceneService lucene;
 
-	private LuceneService newLuceneExecutor() {
-		MemorySettings settings = new MemorySettings();
+	private static LuceneService newLuceneExecutor() {
+		final MemorySettings settings = new MemorySettings();
 		settings.put(Keys.git.repositoriesFolder, GitBlitSuite.REPOSITORIES);
-		XssFilter xssFilter = new AllowXssFilter();
-		RuntimeManager runtime = new RuntimeManager(settings, xssFilter, GitBlitSuite.BASEFOLDER).start();
-		UserManager users = new UserManager(runtime, null).start();
-		RepositoryManager repos = new RepositoryManager(runtime, null, users);
+		final XssFilter xssFilter = new AllowXssFilter();
+		final RuntimeManager runtime = new RuntimeManager(settings, xssFilter,
+				GitBlitSuite.BASEFOLDER).start();
+		final UserManager users = new UserManager(runtime, null).start();
+		final RepositoryManager repos = new RepositoryManager(runtime, null, users);
 		return new LuceneService(settings, repos);
 	}
 
-	private RepositoryModel newRepositoryModel(Repository repository) {
-		RepositoryModel model = new RepositoryModel();
-		model.name = FileUtils.getRelativePath(GitBlitSuite.REPOSITORIES, repository.getDirectory());
+	private static RepositoryModel newRepositoryModel(Repository repository) {
+		final RepositoryModel model = new RepositoryModel();
+		model.name = FileUtils
+				.getRelativePath(GitBlitSuite.REPOSITORIES, repository.getDirectory());
 		model.hasCommits = JGitUtils.hasCommits(repository);
 
 		// index all local branches
 		model.indexedBranches = new ArrayList<String>();
-		for (RefModel ref : JGitUtils.getLocalBranches(repository, true, -1)) {
+		for (final RefModel ref : JGitUtils.getLocalBranches(repository, true, -1)) {
 			model.indexedBranches.add(ref.getName());
 		}
 		return model;
@@ -72,12 +74,12 @@ public class LuceneExecutorTest extends GitblitUnitTest {
 
 	@Before
 	public void setup() {
-		lucene = newLuceneExecutor();
+		this.lucene = newLuceneExecutor();
 	}
 
 	@After
 	public void tearDown() {
-		lucene.close();
+		this.lucene.close();
 	}
 
 	@Test
@@ -85,40 +87,41 @@ public class LuceneExecutorTest extends GitblitUnitTest {
 		// reindex helloworld
 		Repository repository = GitBlitSuite.getHelloworldRepository();
 		RepositoryModel model = newRepositoryModel(repository);
-		lucene.reindex(model, repository);
+		this.lucene.reindex(model, repository);
 		repository.close();
 
-		SearchResult result = lucene.search("type:blob AND path:bit.bit", 1, 1, model.name).get(0);
+		SearchResult result = this.lucene.search("type:blob AND path:bit.bit", 1, 1, model.name)
+				.get(0);
 		assertEquals("Mike Donaghy", result.author);
-		result = lucene.search("type:blob AND path:clipper.prg", 1, 1, model.name).get(0);
+		result = this.lucene.search("type:blob AND path:clipper.prg", 1, 1, model.name).get(0);
 		assertEquals("tinogomes", result.author);
 
 		// reindex JGit
 		repository = GitBlitSuite.getJGitRepository();
 		model = newRepositoryModel(repository);
-		lucene.reindex(model, repository);
+		this.lucene.reindex(model, repository);
 		repository.close();
 	}
 
 	@Test
-	public void testQuery() throws Exception {
+	public void testQuery() {
 		// 2 occurrences on the master branch
 		Repository repository = GitBlitSuite.getHelloworldRepository();
 		RepositoryModel model = newRepositoryModel(repository);
 		repository.close();
 
-		List<SearchResult> results = lucene.search("ada", 1, 10, model.name);
+		List<SearchResult> results = this.lucene.search("ada", 1, 10, model.name);
 		assertEquals(2, results.size());
-		for (SearchResult res : results) {
+		for (final SearchResult res : results) {
 			assertEquals("refs/heads/master", res.branch);
 		}
 
 		// author test
-		results = lucene.search("author: tinogomes AND type:commit", 1, 10, model.name);
+		results = this.lucene.search("author: tinogomes AND type:commit", 1, 10, model.name);
 		assertEquals(2, results.size());
 
 		// blob test
-		results = lucene.search("type: blob AND \"import std.stdio\"", 1, 10, model.name);
+		results = this.lucene.search("type: blob AND \"import std.stdio\"", 1, 10, model.name);
 		assertEquals(1, results.size());
 		assertEquals("d.D", results.get(0).path);
 
@@ -127,29 +130,33 @@ public class LuceneExecutorTest extends GitblitUnitTest {
 		model = newRepositoryModel(repository);
 		repository.close();
 
-		results = lucene.search("\"initial jgit contribution to eclipse.org\"", 1, 10, model.name);
+		results = this.lucene.search("\"initial jgit contribution to eclipse.org\"", 1, 10,
+				model.name);
 		assertEquals(1, results.size());
 		assertEquals("Git Development Community", results.get(0).author);
 		assertEquals("1a6964c8274c50f0253db75f010d78ef0e739343", results.get(0).commitId);
 		assertEquals("refs/heads/master", results.get(0).branch);
 
 		// hash id tests
-		results = lucene.search("type:commit AND commit:1a6964c8274c50f0253db75f010d78ef0e739343", 1, 10, model.name);
+		results = this.lucene.search(
+				"type:commit AND commit:1a6964c8274c50f0253db75f010d78ef0e739343", 1, 10,
+				model.name);
 		assertEquals(1, results.size());
 
-		results = lucene.search("type:commit AND commit:1a6964c8274*", 1, 10, model.name);
+		results = this.lucene.search("type:commit AND commit:1a6964c8274*", 1, 10, model.name);
 		assertEquals("Shawn O. Pearce", results.get(0).committer);
 		assertEquals(1, results.size());
 
 		// annotated tag test
-		results = lucene.search("I663208919f297836a9c16bf458e4a43ffaca4c12", 1, 10, model.name);
+		results = this.lucene
+				.search("I663208919f297836a9c16bf458e4a43ffaca4c12", 1, 10, model.name);
 		assertEquals(1, results.size());
 		assertEquals("[v1.3.0.201202151440-r]", results.get(0).tags.toString());
 	}
 
 	@Test
-	public void testMultiSearch() throws Exception {
-		List<String> list = new ArrayList<String>();
+	public void testMultiSearch() {
+		final List<String> list = new ArrayList<String>();
 		Repository repository = GitBlitSuite.getHelloworldRepository();
 		list.add(newRepositoryModel(repository).name);
 		repository.close();
@@ -158,19 +165,19 @@ public class LuceneExecutorTest extends GitblitUnitTest {
 		list.add(newRepositoryModel(repository).name);
 		repository.close();
 
-		List<SearchResult> results = lucene.search("test", 1, 10, list);
+		final List<SearchResult> results = this.lucene.search("test", 1, 10, list);
 		assertEquals(10, results.size());
 	}
 
 	@Test
 	public void testDeleteBlobFromIndex() throws Exception {
 		// start with a fresh reindex of entire repository
-		Repository repository = GitBlitSuite.getHelloworldRepository();
-		RepositoryModel model = newRepositoryModel(repository);
-		lucene.reindex(model, repository);
+		final Repository repository = GitBlitSuite.getHelloworldRepository();
+		final RepositoryModel model = newRepositoryModel(repository);
+		this.lucene.reindex(model, repository);
 
 		// now delete a blob
-		assertTrue(lucene.deleteBlob(model.name, "refs/heads/master", "java.java"));
-		assertFalse(lucene.deleteBlob(model.name, "refs/heads/master", "java.java"));
+		assertTrue(this.lucene.deleteBlob(model.name, "refs/heads/master", "java.java"));
+		assertFalse(this.lucene.deleteBlob(model.name, "refs/heads/master", "java.java"));
 	}
 }

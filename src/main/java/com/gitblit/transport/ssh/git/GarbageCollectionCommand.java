@@ -36,19 +36,19 @@ public class GarbageCollectionCommand extends BaseGitCommand {
 	@Override
 	protected void runImpl() throws IOException, Failure {
 		try {
-			GarbageCollectCommand gc = Git.wrap(repo).gc();
+			final GarbageCollectCommand gc = Git.wrap(this.repo).gc();
 			logGcInfo("before:", gc.getStatistics());
 			gc.setProgressMonitor(NullProgressMonitor.INSTANCE);
-			Properties statistics = gc.call();
+			final Properties statistics = gc.call();
 			logGcInfo("after: ", statistics);
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			throw new Failure(1, "fatal: Cannot run gc: ", e);
 		}
 	}
 
-	private static void logGcInfo(String msg,
-			Properties statistics) {
-		StringBuilder b = new StringBuilder();
+	private static void logGcInfo(String msg, Properties statistics) {
+		final StringBuilder b = new StringBuilder();
 		b.append(msg);
 		if (statistics != null) {
 			b.append(" ");

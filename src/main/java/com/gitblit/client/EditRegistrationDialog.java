@@ -68,8 +68,8 @@ public class EditRegistrationDialog extends JDialog {
 
 	@Override
 	protected JRootPane createRootPane() {
-		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-		JRootPane rootPane = new JRootPane();
+		final KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+		final JRootPane rootPane = new JRootPane();
 		rootPane.registerKeyboardAction(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -81,23 +81,23 @@ public class EditRegistrationDialog extends JDialog {
 
 	private void initialize(GitblitRegistration reg, boolean isLogin) {
 		setIconImage(new ImageIcon(getClass().getResource("/gitblt-favicon.png")).getImage());
-		canceled = true;
-		urlField = new JTextField(reg == null ? "" : reg.url, 30);
-		nameField = new JTextField(reg == null ? "" : reg.name);
-		accountField = new JTextField(reg == null ? "" : reg.account);
-		passwordField = new JPasswordField(reg == null ? "" : new String(reg.password));
-		savePassword = new JCheckBox("save password (passwords are NOT encrypted!)");
-		savePassword.setSelected(reg == null ? false
-				: (reg.password != null && reg.password.length > 0));
+		this.canceled = true;
+		this.urlField = new JTextField(reg == null ? "" : reg.url, 30);
+		this.nameField = new JTextField(reg == null ? "" : reg.name);
+		this.accountField = new JTextField(reg == null ? "" : reg.account);
+		this.passwordField = new JPasswordField(reg == null ? "" : new String(reg.password));
+		this.savePassword = new JCheckBox("save password (passwords are NOT encrypted!)");
+		this.savePassword.setSelected(reg == null ? false
+				: ((reg.password != null) && (reg.password.length > 0)));
 
-		JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
-		panel.add(newLabelPanel(Translation.get("gb.name"), nameField));
-		panel.add(newLabelPanel(Translation.get("gb.url"), urlField));
-		panel.add(newLabelPanel(Translation.get("gb.username"), accountField));
-		panel.add(newLabelPanel(Translation.get("gb.password"), passwordField));
-		panel.add(newLabelPanel("", savePassword));
+		final JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+		panel.add(newLabelPanel(Translation.get("gb.name"), this.nameField));
+		panel.add(newLabelPanel(Translation.get("gb.url"), this.urlField));
+		panel.add(newLabelPanel(Translation.get("gb.username"), this.accountField));
+		panel.add(newLabelPanel(Translation.get("gb.password"), this.passwordField));
+		panel.add(newLabelPanel("", this.savePassword));
 
-		JButton cancel = new JButton(Translation.get("gb.cancel"));
+		final JButton cancel = new JButton(Translation.get("gb.cancel"));
 		cancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
@@ -110,34 +110,34 @@ public class EditRegistrationDialog extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				if (validateFields()) {
-					canceled = false;
+					EditRegistrationDialog.this.canceled = false;
 					setVisible(false);
 				}
 			}
 		});
 
 		// on enter in password field, save or login
-		passwordField.addActionListener(new ActionListener() {
+		this.passwordField.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				save.doClick();
 			}
 		});
 
-		JPanel controls = new JPanel();
+		final JPanel controls = new JPanel();
 		controls.add(cancel);
 		controls.add(save);
 
 		if (reg == null) {
-			this.setTitle(Translation.get("gb.create"));
-			headerPanel = new HeaderPanel(Translation.get("gb.create"), null);
+			setTitle(Translation.get("gb.create"));
+			this.headerPanel = new HeaderPanel(Translation.get("gb.create"), null);
 		} else {
-			this.setTitle(Translation.get(isLogin ? "gb.login" : "gb.edit"));
-			headerPanel = new HeaderPanel(reg.name, null);
+			setTitle(Translation.get(isLogin ? "gb.login" : "gb.edit"));
+			this.headerPanel = new HeaderPanel(reg.name, null);
 		}
 
 		final Insets insets = new Insets(5, 5, 5, 5);
-		JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
+		final JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -146,7 +146,7 @@ public class EditRegistrationDialog extends JDialog {
 				return insets;
 			}
 		};
-		centerPanel.add(headerPanel, BorderLayout.NORTH);
+		centerPanel.add(this.headerPanel, BorderLayout.NORTH);
 		centerPanel.add(panel, BorderLayout.CENTER);
 		centerPanel.add(controls, BorderLayout.SOUTH);
 
@@ -155,27 +155,27 @@ public class EditRegistrationDialog extends JDialog {
 		pack();
 		setModal(true);
 		if (isLogin) {
-			passwordField.requestFocus();
+			this.passwordField.requestFocus();
 		}
 	}
 
-	private JPanel newLabelPanel(String text, JComponent field) {
-		JLabel label = new JLabel(text);
+	private static JPanel newLabelPanel(String text, JComponent field) {
+		final JLabel label = new JLabel(text);
 		label.setFont(label.getFont().deriveFont(Font.BOLD));
 		label.setPreferredSize(new Dimension(75, 10));
-		JPanel jpanel = new JPanel(new BorderLayout());
+		final JPanel jpanel = new JPanel(new BorderLayout());
 		jpanel.add(label, BorderLayout.WEST);
 		jpanel.add(field, BorderLayout.CENTER);
 		return jpanel;
 	}
 
 	private boolean validateFields() {
-		String name = nameField.getText();
+		final String name = this.nameField.getText();
 		if (StringUtils.isEmpty(name)) {
 			error("Please enter a name for this registration!");
 			return false;
 		}
-		String url = urlField.getText();
+		final String url = this.urlField.getText();
 		if (StringUtils.isEmpty(url)) {
 			error("Please enter a url for this registration!");
 			return false;
@@ -189,12 +189,13 @@ public class EditRegistrationDialog extends JDialog {
 	}
 
 	public GitblitRegistration getRegistration() {
-		if (canceled) {
+		if (this.canceled) {
 			return null;
 		}
-		GitblitRegistration reg = new GitblitRegistration(nameField.getText(), urlField.getText(),
-				accountField.getText(), passwordField.getPassword());
-		reg.savePassword = savePassword.isSelected();
+		final GitblitRegistration reg = new GitblitRegistration(this.nameField.getText(),
+				this.urlField.getText(), this.accountField.getText(),
+				this.passwordField.getPassword());
+		reg.savePassword = this.savePassword.isSelected();
 		return reg;
 	}
 }

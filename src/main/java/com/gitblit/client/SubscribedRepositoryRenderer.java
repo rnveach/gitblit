@@ -42,8 +42,8 @@ public class SubscribedRepositoryRenderer extends NameRenderer {
 	public SubscribedRepositoryRenderer(GitblitClient gitblit) {
 		super();
 		this.gitblit = gitblit;
-		blankIcon = new ImageIcon(getClass().getResource("/blank.png"));
-		subscribedIcon = new ImageIcon(getClass().getResource("/bullet_feed.png"));
+		this.blankIcon = new ImageIcon(getClass().getResource("/blank.png"));
+		this.subscribedIcon = new ImageIcon(getClass().getResource("/bullet_feed.png"));
 	}
 
 	@Override
@@ -51,11 +51,11 @@ public class SubscribedRepositoryRenderer extends NameRenderer {
 			boolean hasFocus, int row, int column) {
 		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 		if (value instanceof RepositoryModel) {
-			RepositoryModel model = (RepositoryModel) value;
-			if (gitblit.isSubscribed(model)) {
-				setIcon(subscribedIcon);
+			final RepositoryModel model = (RepositoryModel) value;
+			if (this.gitblit.isSubscribed(model)) {
+				setIcon(this.subscribedIcon);
 			} else {
-				setIcon(blankIcon);
+				setIcon(this.blankIcon);
 			}
 		}
 		return this;

@@ -33,7 +33,6 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import com.gitblit.Constants;
 import com.gitblit.models.RefModel;
-import com.gitblit.models.RepositoryModel;
 import com.gitblit.utils.StringUtils;
 import com.gitblit.wicket.WicketUtils;
 import com.gitblit.wicket.pages.CommitPage;
@@ -62,8 +61,8 @@ public class RefsPanel extends BasePanel {
 				// this is so we can insert a break on the refs panel
 				// [head][branch][branch][tag][tag]
 				// [remote][remote][remote]
-				boolean remote1 = o1.displayName.startsWith(Constants.R_REMOTES);
-				boolean remote2 = o2.displayName.startsWith(Constants.R_REMOTES);
+				final boolean remote1 = o1.displayName.startsWith(Constants.R_REMOTES);
+				final boolean remote2 = o2.displayName.startsWith(Constants.R_REMOTES);
 				if (remote1 && remote2) {
 					// both are remote heads, sort by name
 					return o1.displayName.compareTo(o2.displayName);
@@ -83,23 +82,21 @@ public class RefsPanel extends BasePanel {
 
 		// count remote and determine if we should insert a break
 		int remoteCount = 0;
-		for (RefModel ref : refs) {
+		for (final RefModel ref : refs) {
 			if (ref.displayName.startsWith(Constants.R_REMOTES)) {
 				remoteCount++;
 			}
 		}
 		final boolean shouldBreak = remoteCount < refs.size();
-		RepositoryModel repository = app().repositories().getRepositoryModel(repositoryName);
-		final boolean hasTickets = app().tickets().hasTickets(repository);
 
-		ListDataProvider<RefModel> refsDp = new ListDataProvider<RefModel>(refs);
-		DataView<RefModel> refsView = new DataView<RefModel>("ref", refsDp) {
+		final ListDataProvider<RefModel> refsDp = new ListDataProvider<RefModel>(refs);
+		final DataView<RefModel> refsView = new DataView<RefModel>("ref", refsDp) {
 			private static final long serialVersionUID = 1L;
 			private boolean alreadyInsertedBreak = !shouldBreak;
 
 			@Override
 			public void populateItem(final Item<RefModel> item) {
-				RefModel entry = item.getModelObject();
+				final RefModel entry = item.getModelObject();
 				String name = entry.displayName;
 				String objectid = entry.getReferencedObjectId().getName();
 				boolean breakLine = false;
@@ -126,17 +123,19 @@ public class RefsPanel extends BasePanel {
 					name = name.substring(Constants.R_CHANGES.length());
 					// strip leading nn/ from nn/#####nn/ps = #####nn-ps
 					name = name.substring(name.indexOf('/') + 1).replace('/', '-');
-					String [] values = name.split("-");
+					final String[] values = name.split("-");
 					// Gerrit change
-					tooltip = MessageFormat.format(getString("gb.reviewPatchset"), values[0], values[1]);
+					tooltip = MessageFormat.format(getString("gb.reviewPatchset"), values[0],
+							values[1]);
 					cssClass = "otherRef";
 				} else if (name.startsWith(Constants.R_TICKETS_PATCHSETS)) {
 					// Gitblit patchset ref
 					name = name.substring(Constants.R_TICKETS_PATCHSETS.length());
 					// strip leading nn/ from nn/#####nn/ps = #####nn-ps
 					name = name.substring(name.indexOf('/') + 1).replace('/', '-');
-					String [] values = name.split("-");
-					tooltip = MessageFormat.format(getString("gb.ticketPatchset"), values[0], values[1]);
+					final String[] values = name.split("-");
+					tooltip = MessageFormat.format(getString("gb.ticketPatchset"), values[0],
+							values[1]);
 					linkClass = LogPage.class;
 					cssClass = "otherRef";
 				} else if (name.startsWith(Constants.R_PULL)) {
@@ -154,9 +153,9 @@ public class RefsPanel extends BasePanel {
 					linkClass = LogPage.class;
 					name = name.substring(Constants.R_REMOTES.length());
 					cssClass = "remoteBranch";
-					if (!alreadyInsertedBreak) {
+					if (!this.alreadyInsertedBreak) {
 						breakLine = true;
-						alreadyInsertedBreak = true;
+						this.alreadyInsertedBreak = true;
 					}
 				} else if (name.startsWith(Constants.R_TAGS)) {
 					// tag
@@ -180,7 +179,7 @@ public class RefsPanel extends BasePanel {
 					name = name.substring(com.gitblit.Constants.R_META.length());
 				}
 
-				Component c = new LinkPanel("refName", null, name, linkClass,
+				final Component c = new LinkPanel("refName", null, name, linkClass,
 						WicketUtils.newObjectParameter(repositoryName, objectid));
 				WicketUtils.setCssClass(c, cssClass);
 				if (StringUtils.isEmpty(tooltip)) {
@@ -189,7 +188,7 @@ public class RefsPanel extends BasePanel {
 					WicketUtils.setHtmlTooltip(c, tooltip);
 				}
 				item.add(c);
-				Label lb = new Label("lineBreak", "<br/>");
+				final Label lb = new Label("lineBreak", "<br/>");
 				lb.setVisible(breakLine);
 				lb.setRenderBodyOnly(true);
 				item.add(lb.setEscapeModelStrings(false));

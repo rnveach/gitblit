@@ -37,16 +37,17 @@ public abstract class AuthorityWorker extends SwingWorker<Boolean, Void> {
 
 	@Override
 	protected void done() {
-		parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+		this.parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		try {
-			Boolean success = get();
+			final Boolean success = get();
 			if (success) {
 				onSuccess();
 			} else {
 				onFailure();
 			}
-		} catch (Throwable t) {
-			Utils.showException(parent, t);
+		}
+		catch (final Throwable t) {
+			Utils.showException(this.parent, t);
 		}
 	}
 

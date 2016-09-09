@@ -67,43 +67,49 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		protected List<PluginWrapper> getItems() throws UnloggedFailure {
-			IGitblit gitblit = getContext().getGitblit();
-			List<PluginWrapper> list = gitblit.getPlugins();
+			final IGitblit gitblit = getContext().getGitblit();
+			final List<PluginWrapper> list = gitblit.getPlugins();
 			return list;
 		}
 
 		@Override
 		protected void asTable(List<PluginWrapper> list) {
 			String[] headers;
-			if (verbose) {
-				String [] h = { "#", "Id", "Description", "Version", "Requires", "State", "Path" };
+			if (this.verbose) {
+				final String[] h = { "#", "Id", "Description", "Version", "Requires", "State",
+						"Path" };
 				headers = h;
 			} else {
-				String [] h = { "#", "Id", "Version", "State", "Path"};
+				final String[] h = { "#", "Id", "Version", "State", "Path" };
 				headers = h;
 			}
-			Object[][] data = new Object[list.size()][];
+			final Object[][] data = new Object[list.size()][];
 			for (int i = 0; i < list.size(); i++) {
-				PluginWrapper p = list.get(i);
-				PluginDescriptor d = p.getDescriptor();
-				if (verbose) {
-					data[i] = new Object[] { "" + (i + 1), d.getPluginId(), d.getPluginDescription(), d.getVersion(), d.getRequires(), p.getPluginState(), p.getPluginPath() };
+				final PluginWrapper p = list.get(i);
+				final PluginDescriptor d = p.getDescriptor();
+				if (this.verbose) {
+					data[i] = new Object[] { "" + (i + 1), d.getPluginId(),
+							d.getPluginDescription(), d.getVersion(), d.getRequires(),
+							p.getPluginState(), p.getPluginPath() };
 				} else {
-					data[i] = new Object[] { "" + (i + 1), d.getPluginId(), d.getVersion(), p.getPluginState(), p.getPluginPath() };
+					data[i] = new Object[] { "" + (i + 1), d.getPluginId(), d.getVersion(),
+							p.getPluginState(), p.getPluginPath() };
 				}
 			}
 
-			stdout.println(FlipTable.of(headers, data, Borders.BODY_HCOLS));
+			this.stdout.println(FlipTable.of(headers, data, Borders.BODY_HCOLS));
 		}
 
 		@Override
 		protected void asTabbed(List<PluginWrapper> list) {
-			for (PluginWrapper pw : list) {
-				PluginDescriptor d = pw.getDescriptor();
-				if (verbose) {
-					outTabbed(d.getPluginId(), d.getPluginDescription(), d.getVersion(), d.getRequires(), pw.getPluginState(), pw.getPluginPath());
+			for (final PluginWrapper pw : list) {
+				final PluginDescriptor d = pw.getDescriptor();
+				if (this.verbose) {
+					outTabbed(d.getPluginId(), d.getPluginDescription(), d.getVersion(),
+							d.getRequires(), pw.getPluginState(), pw.getPluginPath());
 				} else {
-					outTabbed(d.getPluginId(), d.getVersion(), pw.getPluginState(), pw.getPluginPath());
+					outTabbed(d.getPluginId(), d.getVersion(), pw.getPluginState(),
+							pw.getPluginPath());
 				}
 			}
 		}
@@ -112,19 +118,20 @@ public class PluginDispatcher extends DispatchCommand {
 	static abstract class PluginCommand extends SshCommand {
 
 		protected PluginWrapper getPlugin(String id) throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
+			final IGitblit gitblit = getContext().getGitblit();
 			PluginWrapper pluginWrapper = null;
 			try {
-				int index = Integer.parseInt(id);
-				List<PluginWrapper> plugins = gitblit.getPlugins();
+				final int index = Integer.parseInt(id);
+				final List<PluginWrapper> plugins = gitblit.getPlugins();
 				if (index > plugins.size()) {
 					throw new UnloggedFailure(1, "Invalid plugin index specified!");
 				}
 				pluginWrapper = plugins.get(index - 1);
-			} catch (NumberFormatException e) {
+			}
+			catch (final NumberFormatException e) {
 				pluginWrapper = gitblit.getPlugin(id);
 				if (pluginWrapper == null) {
-					PluginRegistration reg = gitblit.lookupPlugin(id);
+					final PluginRegistration reg = gitblit.lookupPlugin(id);
 					if (reg == null) {
 						throw new UnloggedFailure("Invalid plugin specified!");
 					}
@@ -144,21 +151,22 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
-			if (id.equalsIgnoreCase("ALL")) {
+			final IGitblit gitblit = getContext().getGitblit();
+			if (this.id.equalsIgnoreCase("ALL")) {
 				gitblit.startPlugins();
-				stdout.println("All plugins started");
+				this.stdout.println("All plugins started");
 			} else {
-				PluginWrapper pluginWrapper = getPlugin(id);
+				final PluginWrapper pluginWrapper = getPlugin(this.id);
 				if (pluginWrapper == null) {
-					throw new UnloggedFailure(String.format("Plugin %s is not installed!", id));
+					throw new UnloggedFailure(String.format("Plugin %s is not installed!", this.id));
 				}
 
-				PluginState state = gitblit.startPlugin(pluginWrapper.getPluginId());
+				final PluginState state = gitblit.startPlugin(pluginWrapper.getPluginId());
 				if (PluginState.STARTED.equals(state)) {
-					stdout.println(String.format("Started %s", pluginWrapper.getPluginId()));
+					this.stdout.println(String.format("Started %s", pluginWrapper.getPluginId()));
 				} else {
-					throw new UnloggedFailure(1, String.format("Failed to start %s", pluginWrapper.getPluginId()));
+					throw new UnloggedFailure(1, String.format("Failed to start %s",
+							pluginWrapper.getPluginId()));
 				}
 			}
 		}
@@ -172,21 +180,22 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
-			if (id.equalsIgnoreCase("ALL")) {
+			final IGitblit gitblit = getContext().getGitblit();
+			if (this.id.equalsIgnoreCase("ALL")) {
 				gitblit.stopPlugins();
-				stdout.println("All plugins stopped");
+				this.stdout.println("All plugins stopped");
 			} else {
-				PluginWrapper pluginWrapper = getPlugin(id);
+				final PluginWrapper pluginWrapper = getPlugin(this.id);
 				if (pluginWrapper == null) {
-					throw new UnloggedFailure(String.format("Plugin %s is not installed!", id));
+					throw new UnloggedFailure(String.format("Plugin %s is not installed!", this.id));
 				}
 
-				PluginState state = gitblit.stopPlugin(pluginWrapper.getPluginId());
+				final PluginState state = gitblit.stopPlugin(pluginWrapper.getPluginId());
 				if (PluginState.STOPPED.equals(state)) {
-					stdout.println(String.format("Stopped %s", pluginWrapper.getPluginId()));
+					this.stdout.println(String.format("Stopped %s", pluginWrapper.getPluginId()));
 				} else {
-					throw new UnloggedFailure(1, String.format("Failed to stop %s", pluginWrapper.getPluginId()));
+					throw new UnloggedFailure(1, String.format("Failed to stop %s",
+							pluginWrapper.getPluginId()));
 				}
 			}
 		}
@@ -200,16 +209,17 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
-			PluginWrapper pluginWrapper = getPlugin(id);
+			final IGitblit gitblit = getContext().getGitblit();
+			final PluginWrapper pluginWrapper = getPlugin(this.id);
 			if (pluginWrapper == null) {
 				throw new UnloggedFailure("Invalid plugin specified!");
 			}
 
 			if (gitblit.enablePlugin(pluginWrapper.getPluginId())) {
-				stdout.println(String.format("Enabled %s", pluginWrapper.getPluginId()));
+				this.stdout.println(String.format("Enabled %s", pluginWrapper.getPluginId()));
 			} else {
-				throw new UnloggedFailure(1, String.format("Failed to enable %s", pluginWrapper.getPluginId()));
+				throw new UnloggedFailure(1, String.format("Failed to enable %s",
+						pluginWrapper.getPluginId()));
 			}
 		}
 	}
@@ -222,16 +232,17 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
-			PluginWrapper pluginWrapper = getPlugin(id);
+			final IGitblit gitblit = getContext().getGitblit();
+			final PluginWrapper pluginWrapper = getPlugin(this.id);
 			if (pluginWrapper == null) {
 				throw new UnloggedFailure("Invalid plugin specified!");
 			}
 
 			if (gitblit.disablePlugin(pluginWrapper.getPluginId())) {
-				stdout.println(String.format("Disabled %s", pluginWrapper.getPluginId()));
+				this.stdout.println(String.format("Disabled %s", pluginWrapper.getPluginId()));
 			} else {
-				throw new UnloggedFailure(1, String.format("Failed to disable %s", pluginWrapper.getPluginId()));
+				throw new UnloggedFailure(1, String.format("Failed to disable %s",
+						pluginWrapper.getPluginId()));
 			}
 		}
 	}
@@ -244,12 +255,12 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
-			PluginWrapper pw = getPlugin(id);
+			final IGitblit gitblit = getContext().getGitblit();
+			final PluginWrapper pw = getPlugin(this.id);
 			if (pw == null) {
-				PluginRegistration registration = gitblit.lookupPlugin(id);
+				final PluginRegistration registration = gitblit.lookupPlugin(this.id);
 				if (registration == null) {
-					throw new Failure(1, String.format("Unknown plugin %s", id));
+					throw new Failure(1, String.format("Unknown plugin %s", this.id));
 				}
 				show(registration);
 			} else {
@@ -258,7 +269,7 @@ public class PluginDispatcher extends DispatchCommand {
 		}
 
 		protected String buildFieldTable(PluginWrapper pw, PluginRegistration reg) {
-			Version system = getContext().getGitblit().getSystemVersion();
+			final Version system = getContext().getGitblit().getSystemVersion();
 			PluginRelease current = reg == null ? null : reg.getCurrentRelease(system);
 			if (current == null) {
 				current = new PluginRelease();
@@ -267,9 +278,12 @@ public class PluginDispatcher extends DispatchCommand {
 			}
 
 			final String id = pw == null ? reg.id : pw.getPluginId();
-			final String description = reg == null ? pw.getDescriptor().getPluginDescription() : reg.description;
-			final String version = pw == null ? current.version : pw.getDescriptor().getVersion().toString();
-			final String requires = pw == null ? current.requires : pw.getDescriptor().getRequires().toString();
+			final String description = reg == null ? pw.getDescriptor().getPluginDescription()
+					: reg.description;
+			final String version = pw == null ? current.version : pw.getDescriptor().getVersion()
+					.toString();
+			final String requires = pw == null ? current.requires : pw.getDescriptor()
+					.getRequires().toString();
 			final String provider = pw == null ? reg.provider : pw.getDescriptor().getProvider();
 			final String registry = reg == null ? "" : reg.registry;
 			final String path = pw == null ? "" : pw.getPluginPath();
@@ -286,7 +300,7 @@ public class PluginDispatcher extends DispatchCommand {
 				state = Joiner.on(", ").join(reg.getInstallState(system), pw.getPluginState());
 			}
 
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder();
 			sb.append("ID          : ").append(id).append('\n');
 			sb.append("Version     : ").append(version).append('\n');
 			sb.append("Requires    : ").append(requires).append('\n');
@@ -302,18 +316,19 @@ public class PluginDispatcher extends DispatchCommand {
 		}
 
 		protected String buildReleaseTable(PluginRegistration reg) {
-			List<PluginRelease> releases = reg.releases;
+			final List<PluginRelease> releases = reg.releases;
 			Collections.sort(releases);
 			String releaseTable;
 			if (releases.isEmpty()) {
 				releaseTable = FlipTable.EMPTY;
 			} else {
-				String[] headers = { "Version", "Date", "Requires" };
-				Object[][] data = new Object[releases.size()][];
+				final String[] headers = { "Version", "Date", "Requires" };
+				final Object[][] data = new Object[releases.size()][];
 				for (int i = 0; i < releases.size(); i++) {
-					PluginRelease release = releases.get(i);
-					data[i] = new Object[] { (release.version.equals(reg.installedRelease) ? ">" : " ") + release.version,
-							release.date, release.requires };
+					final PluginRelease release = releases.get(i);
+					data[i] = new Object[] {
+							(release.version.equals(reg.installedRelease) ? ">" : " ")
+									+ release.version, release.date, release.requires };
 				}
 				releaseTable = FlipTable.of(headers, data, Borders.COLS);
 			}
@@ -330,12 +345,12 @@ public class PluginDispatcher extends DispatchCommand {
 			final String fields = buildFieldTable(null, reg);
 			final String releases = buildReleaseTable(reg);
 
-			String[] headers = { reg.id };
-			Object[][] data = new Object[3][];
+			final String[] headers = { reg.id };
+			final Object[][] data = new Object[3][];
 			data[0] = new Object[] { fields };
 			data[1] = new Object[] { "RELEASES" };
 			data[2] = new Object[] { releases };
-			stdout.println(FlipTable.of(headers, data));
+			this.stdout.println(FlipTable.of(headers, data));
 		}
 
 		/**
@@ -344,24 +359,24 @@ public class PluginDispatcher extends DispatchCommand {
 		 * @param pw
 		 */
 		protected void show(PluginWrapper pw) {
-			IGitblit gitblit = getContext().getGitblit();
-			PluginRegistration reg = gitblit.lookupPlugin(pw.getPluginId());
+			final IGitblit gitblit = getContext().getGitblit();
+			final PluginRegistration reg = gitblit.lookupPlugin(pw.getPluginId());
 
 			// FIELDS
 			final String fields = buildFieldTable(pw, reg);
 
 			// EXTENSIONS
-			StringBuilder sb = new StringBuilder();
-			List<Class<?>> exts = gitblit.getExtensionClasses(pw.getPluginId());
+			final StringBuilder sb = new StringBuilder();
+			final List<Class<?>> exts = gitblit.getExtensionClasses(pw.getPluginId());
 			String extensions;
 			if (exts.isEmpty()) {
 				extensions = FlipTable.EMPTY;
 			} else {
-				StringBuilder description = new StringBuilder();
+				final StringBuilder description = new StringBuilder();
 				for (int i = 0; i < exts.size(); i++) {
-					Class<?> ext = exts.get(i);
+					final Class<?> ext = exts.get(i);
 					if (ext.isAnnotationPresent(CommandMetaData.class)) {
-						CommandMetaData meta = ext.getAnnotation(CommandMetaData.class);
+						final CommandMetaData meta = ext.getAnnotation(CommandMetaData.class);
 						description.append(meta.name());
 						if (meta.description().length() > 0) {
 							description.append(": ").append(meta.description());
@@ -377,15 +392,15 @@ public class PluginDispatcher extends DispatchCommand {
 
 			// DEPENDENCIES
 			sb.setLength(0);
-			List<PluginDependency> deps = pw.getDescriptor().getDependencies();
+			final List<PluginDependency> deps = pw.getDescriptor().getDependencies();
 			String dependencies;
 			if (deps.isEmpty()) {
 				dependencies = FlipTable.EMPTY;
 			} else {
-				String[] headers = { "Id", "Version" };
-				Object[][] data = new Object[deps.size()][];
+				final String[] headers = { "Id", "Version" };
+				final Object[][] data = new Object[deps.size()][];
 				for (int i = 0; i < deps.size(); i++) {
-					PluginDependency dep = deps.get(i);
+					final PluginDependency dep = deps.get(i);
 					data[i] = new Object[] { dep.getPluginId(), dep.getPluginVersion() };
 				}
 				dependencies = FlipTable.of(headers, data, Borders.COLS);
@@ -399,8 +414,8 @@ public class PluginDispatcher extends DispatchCommand {
 				releases = buildReleaseTable(reg);
 			}
 
-			String[] headers = { pw.getPluginId() };
-			Object[][] data = new Object[7][];
+			final String[] headers = { pw.getPluginId() };
+			final Object[][] data = new Object[7][];
 			data[0] = new Object[] { fields };
 			data[1] = new Object[] { "EXTENSIONS" };
 			data[2] = new Object[] { extensions };
@@ -408,12 +423,12 @@ public class PluginDispatcher extends DispatchCommand {
 			data[4] = new Object[] { dependencies };
 			data[5] = new Object[] { "RELEASES" };
 			data[6] = new Object[] { releases };
-			stdout.println(FlipTable.of(headers, data));
+			this.stdout.println(FlipTable.of(headers, data));
 		}
 
 		/* Find the ExtensionPoint */
 		protected Class<?> getExtensionPoint(Class<?> clazz) {
-			Class<?> superClass = clazz.getSuperclass();
+			final Class<?> superClass = clazz.getSuperclass();
 			if (ExtensionPoint.class.isAssignableFrom(superClass)) {
 				return superClass;
 			}
@@ -429,8 +444,8 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
-			gitblit.refreshRegistry(!disableChecksum);
+			final IGitblit gitblit = getContext().getGitblit();
+			gitblit.refreshRegistry(!this.disableChecksum);
 		}
 	}
 
@@ -448,13 +463,13 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		protected List<PluginRegistration> getItems() throws UnloggedFailure {
-			IGitblit gitblit = getContext().getGitblit();
-			if (refresh) {
-				gitblit.refreshRegistry(!disableChecksum);
+			final IGitblit gitblit = getContext().getGitblit();
+			if (this.refresh) {
+				gitblit.refreshRegistry(!this.disableChecksum);
 			}
 
 			List<PluginRegistration> list;
-			if (updates) {
+			if (this.updates) {
 				list = gitblit.getRegisteredPlugins(InstallState.UPDATE_AVAILABLE);
 			} else {
 				list = gitblit.getRegisteredPlugins();
@@ -464,49 +479,55 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		protected boolean matches(String filter, PluginRegistration t) {
-			return t.id.matches(filter) || (t.description != null && t.description.matches(filter));
+			return t.id.matches(filter)
+					|| ((t.description != null) && t.description.matches(filter));
 		}
 
 		@Override
 		protected void asTable(List<PluginRegistration> list) {
 			String[] headers;
-			if (verbose) {
-				String [] h = { "Id", "Description", "Installed", "Current", "Requires", "State", "Registry" };
+			if (this.verbose) {
+				final String[] h = { "Id", "Description", "Installed", "Current", "Requires",
+						"State", "Registry" };
 				headers = h;
 			} else {
-				String [] h = { "Id", "Installed", "Current", "Requires", "State" };
+				final String[] h = { "Id", "Installed", "Current", "Requires", "State" };
 				headers = h;
 			}
-			Version system = getContext().getGitblit().getSystemVersion();
-			Object[][] data = new Object[list.size()][];
+			final Version system = getContext().getGitblit().getSystemVersion();
+			final Object[][] data = new Object[list.size()][];
 			for (int i = 0; i < list.size(); i++) {
-				PluginRegistration p = list.get(i);
+				final PluginRegistration p = list.get(i);
 				PluginRelease curr = p.getCurrentRelease(system);
 				if (curr == null) {
 					curr = new PluginRelease();
 				}
-				if (verbose) {
-					data[i] = new Object[] {p.id, p.description, p.installedRelease, curr.version, curr.requires, p.getInstallState(system), p.registry};
+				if (this.verbose) {
+					data[i] = new Object[] { p.id, p.description, p.installedRelease, curr.version,
+							curr.requires, p.getInstallState(system), p.registry };
 				} else {
-					data[i] = new Object[] {p.id, p.installedRelease, curr.version, curr.requires, p.getInstallState(system)};
+					data[i] = new Object[] { p.id, p.installedRelease, curr.version, curr.requires,
+							p.getInstallState(system) };
 				}
 			}
 
-			stdout.println(FlipTable.of(headers, data, Borders.BODY_HCOLS));
+			this.stdout.println(FlipTable.of(headers, data, Borders.BODY_HCOLS));
 		}
 
 		@Override
 		protected void asTabbed(List<PluginRegistration> list) {
-			Version system = getContext().getGitblit().getSystemVersion();
-			for (PluginRegistration p : list) {
+			final Version system = getContext().getGitblit().getSystemVersion();
+			for (final PluginRegistration p : list) {
 				PluginRelease curr = p.getCurrentRelease(system);
 				if (curr == null) {
 					curr = new PluginRelease();
 				}
-				if (verbose) {
-					outTabbed(p.id, p.description, p.installedRelease, curr.version, curr.requires, p.getInstallState(system), p.provider, p.registry);
+				if (this.verbose) {
+					outTabbed(p.id, p.description, p.installedRelease, curr.version, curr.requires,
+							p.getInstallState(system), p.provider, p.registry);
 				} else {
-					outTabbed(p.id, p.installedRelease, curr.version, curr.requires, p.getInstallState(system));
+					outTabbed(p.id, p.installedRelease, curr.version, curr.requires,
+							p.getInstallState(system));
 				}
 			}
 		}
@@ -526,42 +547,47 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
+			final IGitblit gitblit = getContext().getGitblit();
 			try {
-				String ulc = urlOrId.toLowerCase();
+				final String ulc = this.urlOrId.toLowerCase();
 				if (ulc.startsWith("http://") || ulc.startsWith("https://")) {
-					if (gitblit.installPlugin(urlOrId, !disableChecksum)) {
-						stdout.println(String.format("Installed %s", urlOrId));
+					if (gitblit.installPlugin(this.urlOrId, !this.disableChecksum)) {
+						this.stdout.println(String.format("Installed %s", this.urlOrId));
 					} else {
-						throw new UnloggedFailure(1, String.format("Failed to install %s", urlOrId));
+						throw new UnloggedFailure(1, String.format("Failed to install %s",
+								this.urlOrId));
 					}
 				} else {
-					PluginRelease pr = gitblit.lookupRelease(urlOrId, version);
+					final PluginRelease pr = gitblit.lookupRelease(this.urlOrId, this.version);
 					if (pr == null) {
-						throw new UnloggedFailure(1,  String.format("Plugin \"%s\" is not in the registry!", urlOrId));
+						throw new UnloggedFailure(1, String.format(
+								"Plugin \"%s\" is not in the registry!", this.urlOrId));
 					}
 
 					// enforce minimum system requirement
 					if (!StringUtils.isEmpty(pr.requires)) {
-						Version requires = Version.createVersion(pr.requires);
-						Version system = gitblit.getSystemVersion();
-						boolean isValid = system.isZero() || system.atLeast(requires);
+						final Version requires = Version.createVersion(pr.requires);
+						final Version system = gitblit.getSystemVersion();
+						final boolean isValid = system.isZero() || system.atLeast(requires);
 						if (!isValid) {
-							String msg = String.format("Plugin \"%s:%s\" requires Gitblit %s",
-									urlOrId, pr.version, pr.requires);
+							final String msg = String.format(
+									"Plugin \"%s:%s\" requires Gitblit %s", this.urlOrId,
+									pr.version, pr.requires);
 							throw new UnloggedFailure(1, msg);
 						}
 					}
 
-					if (gitblit.installPlugin(pr.url, !disableChecksum)) {
-						stdout.println(String.format("Installed %s", urlOrId));
+					if (gitblit.installPlugin(pr.url, !this.disableChecksum)) {
+						this.stdout.println(String.format("Installed %s", this.urlOrId));
 					} else {
-						throw new UnloggedFailure(1, String.format("Failed to install %s", urlOrId));
+						throw new UnloggedFailure(1, String.format("Failed to install %s",
+								this.urlOrId));
 					}
 				}
-			} catch (IOException e) {
-				log.error("Failed to install " + urlOrId, e);
-				throw new UnloggedFailure(1, String.format("Failed to install %s", urlOrId), e);
+			}
+			catch (final IOException e) {
+				this.log.error("Failed to install " + this.urlOrId, e);
+				throw new UnloggedFailure(1, String.format("Failed to install %s", this.urlOrId), e);
 			}
 		}
 	}
@@ -580,22 +606,24 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
-			PluginWrapper pluginWrapper = getPlugin(id);
+			final IGitblit gitblit = getContext().getGitblit();
+			final PluginWrapper pluginWrapper = getPlugin(this.id);
 			if (pluginWrapper == null) {
 				throw new UnloggedFailure("Invalid plugin specified!");
 			}
 
-			PluginRelease pr = gitblit.lookupRelease(pluginWrapper.getPluginId(), version);
+			final PluginRelease pr = gitblit.lookupRelease(pluginWrapper.getPluginId(),
+					this.version);
 			if (pr == null) {
-				throw new UnloggedFailure(1,  String.format("Plugin \"%s\" is not in the registry!", pluginWrapper.getPluginId()));
+				throw new UnloggedFailure(1, String.format("Plugin \"%s\" is not in the registry!",
+						pluginWrapper.getPluginId()));
 			}
 
 			// enforce minimum system requirement
 			if (!StringUtils.isEmpty(pr.requires)) {
-				Version requires = Version.createVersion(pr.requires);
-				Version system = gitblit.getSystemVersion();
-				boolean isValid = system.isZero() || system.atLeast(requires);
+				final Version requires = Version.createVersion(pr.requires);
+				final Version system = gitblit.getSystemVersion();
+				final boolean isValid = system.isZero() || system.atLeast(requires);
 				if (!isValid) {
 					throw new Failure(1, String.format("Plugin \"%s:%s\" requires Gitblit %s",
 							pluginWrapper.getPluginId(), pr.version, pr.requires));
@@ -603,14 +631,18 @@ public class PluginDispatcher extends DispatchCommand {
 			}
 
 			try {
-				if (gitblit.upgradePlugin(pluginWrapper.getPluginId(), pr.url, !disableChecksum)) {
-					stdout.println(String.format("Upgraded %s", pluginWrapper.getPluginId()));
+				if (gitblit.upgradePlugin(pluginWrapper.getPluginId(), pr.url,
+						!this.disableChecksum)) {
+					this.stdout.println(String.format("Upgraded %s", pluginWrapper.getPluginId()));
 				} else {
-					throw new UnloggedFailure(1, String.format("Failed to upgrade %s", pluginWrapper.getPluginId()));
+					throw new UnloggedFailure(1, String.format("Failed to upgrade %s",
+							pluginWrapper.getPluginId()));
 				}
-			} catch (IOException e) {
-				log.error("Failed to upgrade " + pluginWrapper.getPluginId(), e);
-				throw new UnloggedFailure(1, String.format("Failed to upgrade %s", pluginWrapper.getPluginId()), e);
+			}
+			catch (final IOException e) {
+				this.log.error("Failed to upgrade " + pluginWrapper.getPluginId(), e);
+				throw new UnloggedFailure(1, String.format("Failed to upgrade %s",
+						pluginWrapper.getPluginId()), e);
 			}
 		}
 	}
@@ -623,16 +655,17 @@ public class PluginDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws Failure {
-			IGitblit gitblit = getContext().getGitblit();
-			PluginWrapper pluginWrapper = getPlugin(id);
+			final IGitblit gitblit = getContext().getGitblit();
+			final PluginWrapper pluginWrapper = getPlugin(this.id);
 			if (pluginWrapper == null) {
-				throw new UnloggedFailure(String.format("Plugin %s is not installed!", id));
+				throw new UnloggedFailure(String.format("Plugin %s is not installed!", this.id));
 			}
 
 			if (gitblit.uninstallPlugin(pluginWrapper.getPluginId())) {
-				stdout.println(String.format("Uninstalled %s", pluginWrapper.getPluginId()));
+				this.stdout.println(String.format("Uninstalled %s", pluginWrapper.getPluginId()));
 			} else {
-				throw new UnloggedFailure(1, String.format("Failed to uninstall %s", pluginWrapper.getPluginId()));
+				throw new UnloggedFailure(1, String.format("Failed to uninstall %s",
+						pluginWrapper.getPluginId()));
 			}
 		}
 	}

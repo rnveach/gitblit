@@ -60,15 +60,13 @@ public class MirrorService implements Runnable {
 
 	private final IRepositoryManager repositoryManager;
 
-	private AtomicBoolean running = new AtomicBoolean(false);
+	private final AtomicBoolean running = new AtomicBoolean(false);
 
-	private AtomicBoolean forceClose = new AtomicBoolean(false);
+	private final AtomicBoolean forceClose = new AtomicBoolean(false);
 
 	private final UserModel gitblitUser;
 
-	public MirrorService(
-			IStoredSettings settings,
-			IRepositoryManager repositoryManager) {
+	public MirrorService(IStoredSettings settings, IRepositoryManager repositoryManager) {
 
 		this.settings = settings;
 		this.repositoryManager = repositoryManager;
@@ -77,15 +75,15 @@ public class MirrorService implements Runnable {
 	}
 
 	public boolean isReady() {
-		return settings.getBoolean(Keys.git.enableMirroring, false);
+		return this.settings.getBoolean(Keys.git.enableMirroring, false);
 	}
 
 	public boolean isRunning() {
-		return running.get();
+		return this.running.get();
 	}
 
 	public void close() {
-		forceClose.set(true);
+		this.forceClose.set(true);
 	}
 
 	@Override
@@ -94,43 +92,44 @@ public class MirrorService implements Runnable {
 			return;
 		}
 
-		running.set(true);
+		this.running.set(true);
 
-		for (String repositoryName : repositoryManager.getRepositoryList()) {
-			if (forceClose.get()) {
+		for (final String repositoryName : this.repositoryManager.getRepositoryList()) {
+			if (this.forceClose.get()) {
 				break;
 			}
-			if (repositoryManager.isCollectingGarbage(repositoryName)) {
-				logger.debug("mirror is skipping {} garbagecollection", repositoryName);
+			if (this.repositoryManager.isCollectingGarbage(repositoryName)) {
+				this.logger.debug("mirror is skipping {} garbagecollection", repositoryName);
 				continue;
 			}
 			RepositoryModel model = null;
 			Repository repository = null;
 			try {
-				model = repositoryManager.getRepositoryModel(repositoryName);
+				model = this.repositoryManager.getRepositoryModel(repositoryName);
 				if (!model.isMirror && !model.isBare) {
 					// repository must be a valid bare git mirror
-					logger.debug("mirror is skipping {} !mirror !bare", repositoryName);
+					this.logger.debug("mirror is skipping {} !mirror !bare", repositoryName);
 					continue;
 				}
 
-				repository = repositoryManager.getRepository(repositoryName);
+				repository = this.repositoryManager.getRepository(repositoryName);
 				if (repository == null) {
-					logger.warn(MessageFormat.format("MirrorExecutor is missing repository {0}?!?", repositoryName));
+					this.logger.warn(MessageFormat.format(
+							"MirrorExecutor is missing repository {0}?!?", repositoryName));
 					continue;
 				}
 
 				// automatically repair (some) invalid fetch ref specs
-				if (!repairAttempted.contains(repositoryName)) {
-					repairAttempted.add(repositoryName);
+				if (!this.repairAttempted.contains(repositoryName)) {
+					this.repairAttempted.add(repositoryName);
 					JGitUtils.repairFetchSpecs(repository);
 				}
 
 				// find the first mirror remote - there should only be one
-				StoredConfig rc = repository.getConfig();
+				final StoredConfig rc = repository.getConfig();
 				RemoteConfig mirror = null;
-				List<RemoteConfig> configs = RemoteConfig.getAllRemoteConfigs(rc);
-				for (RemoteConfig config : configs) {
+				final List<RemoteConfig> configs = RemoteConfig.getAllRemoteConfigs(rc);
+				for (final RemoteConfig config : configs) {
 					if (config.isMirror()) {
 						mirror = config;
 						break;
@@ -139,19 +138,23 @@ public class MirrorService implements Runnable {
 
 				if (mirror == null) {
 					// repository does not have a mirror remote
-					logger.debug("mirror is skipping {} no mirror remote found", repositoryName);
+					this.logger.debug("mirror is skipping {} no mirror remote found",
+							repositoryName);
 					continue;
 				}
 
-				logger.debug("checking {} remote {} for ref updates", repositoryName, mirror.getName());
+				this.logger.debug("checking {} remote {} for ref updates", repositoryName,
+						mirror.getName());
 				final boolean testing = false;
-				Git git = new Git(repository);
-				FetchResult result = git.fetch().setRemote(mirror.getName()).setDryRun(testing).call();
-				Collection<TrackingRefUpdate> refUpdates = result.getTrackingRefUpdates();
+				final Git git = new Git(repository);
+				final FetchResult result = git.fetch().setRemote(mirror.getName())
+						.setDryRun(testing).call();
+				git.close();
+				final Collection<TrackingRefUpdate> refUpdates = result.getTrackingRefUpdates();
 				if (refUpdates.size() > 0) {
 					ReceiveCommand ticketBranchCmd = null;
-					for (TrackingRefUpdate ru : refUpdates) {
-						StringBuilder sb = new StringBuilder();
+					for (final TrackingRefUpdate ru : refUpdates) {
+						final StringBuilder sb = new StringBuilder();
 						sb.append("updated mirror ");
 						sb.append(repositoryName);
 						sb.append(" ");
@@ -162,13 +165,15 @@ public class MirrorService implements Runnable {
 							sb.append(" (forced)");
 						}
 						sb.append(" ");
-						sb.append(ru.getOldObjectId() == null ? "" : ru.getOldObjectId().abbreviate(7).name());
+						sb.append(ru.getOldObjectId() == null ? "" : ru.getOldObjectId()
+								.abbreviate(7).name());
 						sb.append("..");
-						sb.append(ru.getNewObjectId() == null ? "" : ru.getNewObjectId().abbreviate(7).name());
-						logger.info(sb.toString());
+						sb.append(ru.getNewObjectId() == null ? "" : ru.getNewObjectId()
+								.abbreviate(7).name());
+						this.logger.info(sb.toString());
 
 						if (BranchTicketService.BRANCH.equals(ru.getLocalName())) {
-							ReceiveCommand.Type type = null;
+							final ReceiveCommand.Type type;
 							switch (ru.getResult()) {
 							case NEW:
 								type = Type.CREATE;
@@ -186,7 +191,7 @@ public class MirrorService implements Runnable {
 
 							if (type != null) {
 								ticketBranchCmd = new ReceiveCommand(ru.getOldObjectId(),
-									ru.getNewObjectId(), ru.getLocalName(), type);
+										ru.getNewObjectId(), ru.getLocalName(), type);
 							}
 						}
 					}
@@ -195,9 +200,11 @@ public class MirrorService implements Runnable {
 						repository.fireEvent(new ReceiveCommandEvent(model, ticketBranchCmd));
 					}
 				}
-			} catch (Exception e) {
-				logger.error("Error updating mirror " + repositoryName, e);
-			} finally {
+			}
+			catch (final Exception e) {
+				this.logger.error("Error updating mirror " + repositoryName, e);
+			}
+			finally {
 				// cleanup
 				if (repository != null) {
 					repository.close();
@@ -205,6 +212,6 @@ public class MirrorService implements Runnable {
 			}
 		}
 
-		running.set(false);
+		this.running.set(false);
 	}
 }

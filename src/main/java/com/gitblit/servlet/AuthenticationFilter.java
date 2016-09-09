@@ -100,13 +100,13 @@ public abstract class AuthenticationFilter implements Filter {
 	 * @return url
 	 */
 	protected String getFullUrl(HttpServletRequest httpRequest) {
-		String servletUrl = httpRequest.getContextPath() + httpRequest.getServletPath();
+		final String servletUrl = httpRequest.getContextPath() + httpRequest.getServletPath();
 		String url = httpRequest.getRequestURI().substring(servletUrl.length());
-		String params = httpRequest.getQueryString();
-		if (url.length() > 0 && url.charAt(0) == '/') {
+		final String params = httpRequest.getQueryString();
+		if ((url.length() > 0) && (url.charAt(0) == '/')) {
 			url = url.substring(1);
 		}
-		String fullUrl = url + (StringUtils.isEmpty(params) ? "" : ("?" + params));
+		final String fullUrl = url + (StringUtils.isEmpty(params) ? "" : ("?" + params));
 		return fullUrl;
 	}
 
@@ -117,7 +117,8 @@ public abstract class AuthenticationFilter implements Filter {
 	 * @return user
 	 */
 	protected UserModel getUser(HttpServletRequest httpRequest) {
-		UserModel user = authenticationManager.authenticate(httpRequest, requiresClientCertificate());
+		final UserModel user = this.authenticationManager.authenticate(httpRequest,
+				requiresClientCertificate());
 		return user;
 	}
 
@@ -125,21 +126,21 @@ public abstract class AuthenticationFilter implements Filter {
 	 * Taken from Jetty's LoginAuthenticator.renewSessionOnAuthentication()
 	 */
 	protected void newSession(HttpServletRequest request, HttpServletResponse response) {
-		HttpSession oldSession = request.getSession(false);
-		if (oldSession != null && oldSession.getAttribute(SESSION_SECURED) == null) {
+		final HttpSession oldSession = request.getSession(false);
+		if ((oldSession != null) && (oldSession.getAttribute(SESSION_SECURED) == null)) {
 			synchronized (this) {
-				Map<String, Object> attributes = new HashMap<String, Object>();
-				Enumeration<String> e = oldSession.getAttributeNames();
+				final Map<String, Object> attributes = new HashMap<String, Object>();
+				final Enumeration<String> e = oldSession.getAttributeNames();
 				while (e.hasMoreElements()) {
-					String name = e.nextElement();
+					final String name = e.nextElement();
 					attributes.put(name, oldSession.getAttribute(name));
 					oldSession.removeAttribute(name);
 				}
 				oldSession.invalidate();
 
-				HttpSession newSession = request.getSession(true);
+				final HttpSession newSession = request.getSession(true);
 				newSession.setAttribute(SESSION_SECURED, Boolean.TRUE);
-				for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+				for (final Map.Entry<String, Object> entry : attributes.entrySet()) {
 					newSession.setAttribute(entry.getKey(), entry.getValue());
 				}
 			}
@@ -155,11 +156,11 @@ public abstract class AuthenticationFilter implements Filter {
 
 		public AuthenticatedRequest(HttpServletRequest req) {
 			super(req);
-			user = DeepCopier.copy(UserModel.ANONYMOUS);
+			this.user = DeepCopier.copy(UserModel.ANONYMOUS);
 		}
 
 		UserModel getUser() {
-			return user;
+			return this.user;
 		}
 
 		void setUser(UserModel user) {
@@ -168,23 +169,23 @@ public abstract class AuthenticationFilter implements Filter {
 
 		@Override
 		public String getRemoteUser() {
-			return user.username;
+			return this.user.username;
 		}
 
 		@Override
 		public boolean isUserInRole(String role) {
 			if (role.equals(Role.ADMIN.getRole())) {
-				return user.canAdmin();
+				return this.user.canAdmin();
 			}
 			// Gitblit does not currently use actual roles in the traditional
-			// servlet container sense.  That is the reason this is marked
+			// servlet container sense. That is the reason this is marked
 			// deprecated, but I may want to revisit this.
-			return user.hasRepositoryPermission(role);
+			return this.user.hasRepositoryPermission(role);
 		}
 
 		@Override
 		public Principal getUserPrincipal() {
-			return user;
+			return this.user;
 		}
 	}
 }

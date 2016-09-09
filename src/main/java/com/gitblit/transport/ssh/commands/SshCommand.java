@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package com.gitblit.transport.ssh.commands;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
@@ -32,6 +31,7 @@ import com.gitblit.Keys;
 import com.gitblit.manager.IGitblit;
 import com.gitblit.utils.StringUtils;
 
+
 public abstract class SshCommand extends BaseCommand {
 
 	protected Logger log = LoggerFactory.getLogger(getClass());
@@ -44,26 +44,29 @@ public abstract class SshCommand extends BaseCommand {
 			@Override
 			public void run() throws Exception {
 				parseCommandLine();
-				stdout = toPrintWriter(out);
-				stderr = toPrintWriter(err);
+				SshCommand.this.stdout = toPrintWriter(SshCommand.this.out);
+				SshCommand.this.stderr = toPrintWriter(SshCommand.this.err);
 				try {
 					SshCommand.this.run();
-				} finally {
-					stdout.flush();
-					stderr.flush();
+				}
+				finally {
+					SshCommand.this.stdout.flush();
+					SshCommand.this.stderr.flush();
 				}
 			}
 		});
 	}
 
 	protected String getHostname() {
-		IGitblit gitblit = getContext().getGitblit();
+		final IGitblit gitblit = getContext().getGitblit();
 		String host = null;
-		String url = gitblit.getSettings().getString(Keys.web.canonicalUrl, "https://localhost:8443");
+		final String url = gitblit.getSettings().getString(Keys.web.canonicalUrl,
+				"https://localhost:8443");
 		if (url != null) {
 			try {
 				host = new URL(url).getHost();
-			} catch (MalformedURLException e) {
+			}
+			catch (final MalformedURLException e) {
 			}
 		}
 		if (StringUtils.isEmpty(host)) {
@@ -73,21 +76,21 @@ public abstract class SshCommand extends BaseCommand {
 	}
 
 	protected String getRepositoryUrl(String repository) {
-		String username = getContext().getClient().getUsername();
-		IStoredSettings settings = getContext().getGitblit().getSettings();
+		final String username = getContext().getClient().getUsername();
+		final IStoredSettings settings = getContext().getGitblit().getSettings();
 		String displayHostname = settings.getString(Keys.git.sshAdvertisedHost, "");
-		if(displayHostname.isEmpty()) {
+		if (displayHostname.isEmpty()) {
 			displayHostname = getHostname();
 		}
-		int port = settings.getInteger(Keys.git.sshPort, 0);
-		int displayPort = settings.getInteger(Keys.git.sshAdvertisedPort, port);
+		final int port = settings.getInteger(Keys.git.sshPort, 0);
+		final int displayPort = settings.getInteger(Keys.git.sshAdvertisedPort, port);
 		if (displayPort == 22) {
 			// standard port
 			return MessageFormat.format("{0}@{1}/{2}.git", username, displayHostname, repository);
 		} else {
 			// non-standard port
-			return MessageFormat.format("ssh://{0}@{1}:{2,number,0}/{3}",
-					username, displayHostname, displayPort, repository);
+			return MessageFormat.format("ssh://{0}@{1}:{2,number,0}/{3}", username,
+					displayHostname, displayPort, repository);
 		}
 	}
 

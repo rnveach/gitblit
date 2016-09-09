@@ -40,25 +40,27 @@ public class AuthorizationStrategy extends AbstractPageAuthorizationStrategy imp
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	protected boolean isPageAuthorized(Class pageClass) {
-		if (homepageClass.equals(pageClass)) {
+		if (this.homepageClass.equals(pageClass)) {
 			// allow all requests to get to the HomePage with its inline
 			// authentication form
 			return true;
 		}
 
 		if (BasePage.class.isAssignableFrom(pageClass)) {
-			boolean authenticateView = settings.getBoolean(Keys.web.authenticateViewPages, true);
-			boolean authenticateAdmin = settings.getBoolean(Keys.web.authenticateAdminPages, true);
-			boolean allowAdmin = settings.getBoolean(Keys.web.allowAdministration, true);
+			final boolean authenticateView = this.settings.getBoolean(
+					Keys.web.authenticateViewPages, true);
+			final boolean authenticateAdmin = this.settings.getBoolean(
+					Keys.web.authenticateAdminPages, true);
+			final boolean allowAdmin = this.settings.getBoolean(Keys.web.allowAdministration, true);
 
-			GitBlitWebSession session = GitBlitWebSession.get();
+			final GitBlitWebSession session = GitBlitWebSession.get();
 			if (authenticateView && !session.isLoggedIn()) {
 				// authentication required
 				session.cacheRequest(pageClass);
 				return false;
 			}
 
-			UserModel user = session.getUser();
+			final UserModel user = session.getUser();
 			if (pageClass.isAnnotationPresent(RequiresAdminRole.class)) {
 				// admin page
 				if (allowAdmin) {
@@ -85,7 +87,7 @@ public class AuthorizationStrategy extends AbstractPageAuthorizationStrategy imp
 	public void onUnauthorizedInstantiation(Component component) {
 
 		if (component instanceof BasePage) {
-			throw new RestartResponseException(homepageClass);
+			throw new RestartResponseException(this.homepageClass);
 		}
 	}
 }

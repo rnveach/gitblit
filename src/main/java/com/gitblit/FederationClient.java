@@ -48,15 +48,17 @@ import com.gitblit.utils.XssFilter.AllowXssFilter;
 public class FederationClient {
 
 	public static void main(String[] args) {
-		Params params = new Params();
-		CmdLineParser parser = new CmdLineParser(params);
+		final Params params = new Params();
+		final CmdLineParser parser = new CmdLineParser(params);
 		try {
 			parser.parseArgument(args);
-		} catch (CmdLineException t) {
+		}
+		catch (final CmdLineException t) {
 			usage(parser, t);
 		}
 
-		System.out.println("Gitblit Federation Client v" + Constants.getVersion() + " (" + Constants.getBuildDate() + ")");
+		System.out.println("Gitblit Federation Client v" + Constants.getVersion() + " ("
+				+ Constants.getBuildDate() + ")");
 
 		// command-line specified base folder
 		File baseFolder = new File(System.getProperty("user.dir"));
@@ -64,9 +66,10 @@ public class FederationClient {
 			baseFolder = new File(params.baseFolder);
 		}
 
-		File regFile = com.gitblit.utils.FileUtils.resolveParameter(Constants.baseFolder$, baseFolder, params.registrationsFile);
-		FileSettings settings = new FileSettings(regFile.getAbsolutePath());
-		List<FederationModel> registrations = new ArrayList<FederationModel>();
+		final File regFile = com.gitblit.utils.FileUtils.resolveParameter(Constants.baseFolder$,
+				baseFolder, params.registrationsFile);
+		final FileSettings settings = new FileSettings(regFile.getAbsolutePath());
+		final List<FederationModel> registrations = new ArrayList<FederationModel>();
 		if (StringUtils.isEmpty(params.url)) {
 			registrations.addAll(FederationUtils.getFederationRegistrations(settings));
 		} else {
@@ -74,7 +77,7 @@ public class FederationClient {
 				System.out.println("Must specify --token parameter!");
 				System.exit(0);
 			}
-			FederationModel model = new FederationModel("Gitblit");
+			final FederationModel model = new FederationModel("Gitblit");
 			model.url = params.url;
 			model.token = params.token;
 			model.mirror = params.mirror;
@@ -94,15 +97,18 @@ public class FederationClient {
 		}
 
 		// configure the Gitblit singleton for minimal, non-server operation
-		XssFilter xssFilter = new AllowXssFilter();
-		RuntimeManager runtime = new RuntimeManager(settings, xssFilter, baseFolder).start();
-		NoopNotificationManager notifications = new NoopNotificationManager().start();
-		UserManager users = new UserManager(runtime, null).start();
-		RepositoryManager repositories = new RepositoryManager(runtime, null, users).start();
-		FederationManager federation = new FederationManager(runtime, notifications, repositories).start();
-		IGitblit gitblit = new GitblitManager(null, null, runtime, null, notifications, users, null, repositories, null, federation, null);
+		final XssFilter xssFilter = new AllowXssFilter();
+		final RuntimeManager runtime = new RuntimeManager(settings, xssFilter, baseFolder).start();
+		final NoopNotificationManager notifications = new NoopNotificationManager().start();
+		final UserManager users = new UserManager(runtime, null).start();
+		final RepositoryManager repositories = new RepositoryManager(runtime, null, users).start();
+		final FederationManager federation = new FederationManager(runtime, notifications,
+				repositories).start();
+		final IGitblit gitblit = new GitblitManager(null, null, runtime, null, notifications,
+				users, null, repositories, null, federation, null);
 
-		FederationPullService puller = new FederationPullService(gitblit, federation.getFederationRegistrations()) {
+		final FederationPullService puller = new FederationPullService(gitblit,
+				federation.getFederationRegistrations()) {
 			@Override
 			public void reschedule(FederationModel registration) {
 				// NOOP

@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -44,7 +43,6 @@ public class PagesServlet extends RawServlet {
 
 	private static final long serialVersionUID = 1L;
 
-
 	/**
 	 * Returns an url to this servlet for the specified parameters.
 	 *
@@ -54,16 +52,14 @@ public class PagesServlet extends RawServlet {
 	 * @return an url
 	 */
 	public static String asLink(String baseURL, String repository, String path) {
-		if (baseURL.length() > 0 && baseURL.charAt(baseURL.length() - 1) == '/') {
+		if ((baseURL.length() > 0) && (baseURL.charAt(baseURL.length() - 1) == '/')) {
 			baseURL = baseURL.substring(0, baseURL.length() - 1);
 		}
 		return baseURL + Constants.PAGES + repository + "/" + (path == null ? "" : ("/" + path));
 	}
 
 	@Inject
-	public PagesServlet(
-			IRuntimeManager runtimeManager,
-			IRepositoryManager repositoryManager) {
+	public PagesServlet(IRuntimeManager runtimeManager, IRepositoryManager repositoryManager) {
 
 		super(runtimeManager, repositoryManager);
 	}
@@ -75,7 +71,7 @@ public class PagesServlet extends RawServlet {
 
 	@Override
 	protected String getPath(String repository, String branch, HttpServletRequest request) {
-		String pi = request.getPathInfo().substring(1);
+		final String pi = request.getPathInfo().substring(1);
 		if (pi.equals(repository)) {
 			return "";
 		}
@@ -93,12 +89,13 @@ public class PagesServlet extends RawServlet {
 
 	@Override
 	protected void setContentType(HttpServletResponse response, String contentType) {
-		response.setContentType(contentType);;
+		response.setContentType(contentType);
+		;
 	}
 
 	@Override
-	protected boolean streamFromRepo(HttpServletRequest request, HttpServletResponse response, Repository repository,
-			RevCommit commit, String requestedPath) throws IOException {
+	protected boolean streamFromRepo(HttpServletRequest request, HttpServletResponse response,
+			Repository repository, RevCommit commit, String requestedPath) throws IOException {
 
 		response.setDateHeader("Last-Modified", JGitUtils.getCommitDate(commit).getTime());
 		response.setHeader("Cache-Control", "public, max-age=3600, must-revalidate");
@@ -107,7 +104,8 @@ public class PagesServlet extends RawServlet {
 	}
 
 	@Override
-	protected void sendContent(HttpServletResponse response, Date date, InputStream is) throws ServletException, IOException {
+	protected void sendContent(HttpServletResponse response, Date date, InputStream is)
+			throws Exception {
 		response.setDateHeader("Last-Modified", date.getTime());
 		response.setHeader("Cache-Control", "public, max-age=3600, must-revalidate");
 

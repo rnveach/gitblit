@@ -59,8 +59,8 @@ public class TimeUtils {
 	 * @return true if date is today
 	 */
 	public static boolean isToday(Date date, TimeZone timezone) {
-		Date now = new Date();
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
+		final Date now = new Date();
+		final SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 		if (timezone != null) {
 			df.setTimeZone(timezone);
 		}
@@ -74,10 +74,10 @@ public class TimeUtils {
 	 * @return true if date is yesterday
 	 */
 	public static boolean isYesterday(Date date, TimeZone timezone) {
-		Calendar cal = Calendar.getInstance();
+		final Calendar cal = Calendar.getInstance();
 		cal.setTime(new Date());
 		cal.add(Calendar.DATE, -1);
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
+		final SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 		if (timezone != null) {
 			df.setTimeZone(timezone);
 		}
@@ -93,28 +93,35 @@ public class TimeUtils {
 	 */
 	public String duration(int days) {
 		if (days <= 60) {
-			return (days > 1 ? translate(days, "gb.duration.days", "{0} days") : translate("gb.duration.oneDay", "1 day"));
+			return (days > 1 ? translate(days, "gb.duration.days", "{0} days") : translate(
+					"gb.duration.oneDay", "1 day"));
 		} else if (days < 365) {
-			int rem = days % 30;
-			return translate(((days / 30) + (rem >= 15 ? 1 : 0)), "gb.duration.months", "{0} months");
+			final int rem = days % 30;
+			return translate(((days / 30) + (rem >= 15 ? 1 : 0)), "gb.duration.months",
+					"{0} months");
 		} else {
-			int years = days / 365;
-			int rem = days % 365;
-			String yearsString = (years > 1 ? translate(years, "gb.duration.years", "{0} years") : translate("gb.duration.oneYear", "1 year"));
+			final int years = days / 365;
+			final int rem = days % 365;
+			final String yearsString = (years > 1 ? translate(years, "gb.duration.years",
+					"{0} years") : translate("gb.duration.oneYear", "1 year"));
 			if (rem < 30) {
 				if (rem == 0) {
 					return yearsString;
 				} else {
-					return yearsString + (rem >= 15 ? (", " + translate("gb.duration.oneMonth", "1 month")): "");
+					return yearsString
+							+ (rem >= 15 ? (", " + translate("gb.duration.oneMonth", "1 month"))
+									: "");
 				}
 			} else {
 				int months = rem / 30;
-				int remDays = rem % 30;
+				final int remDays = rem % 30;
 				if (remDays >= 15) {
 					months++;
 				}
-				String monthsString = yearsString + ", "
-						+ (months > 1 ? translate(months, "gb.duration.months", "{0} months") : translate("gb.duration.oneMonth", "1 month"));
+				final String monthsString = yearsString
+						+ ", "
+						+ (months > 1 ? translate(months, "gb.duration.months", "{0} months")
+								: translate("gb.duration.oneMonth", "1 month"));
 				return monthsString;
 			}
 		}
@@ -130,9 +137,9 @@ public class TimeUtils {
 	 * @return difference in minutes
 	 */
 	public static int minutesAgo(Date date, long endTime, boolean roundup) {
-		long diff = endTime - date.getTime();
+		final long diff = endTime - date.getTime();
 		int mins = (int) (diff / MIN);
-		if (roundup && (diff % MIN) >= 30) {
+		if (roundup && ((diff % MIN) >= 30)) {
 			mins++;
 		}
 		return mins;
@@ -157,9 +164,9 @@ public class TimeUtils {
 	 * @return hours ago
 	 */
 	public static int hoursAgo(Date date, boolean roundup) {
-		long diff = System.currentTimeMillis() - date.getTime();
+		final long diff = System.currentTimeMillis() - date.getTime();
 		int hours = (int) (diff / ONEHOUR);
-		if (roundup && (diff % ONEHOUR) >= HALFHOUR) {
+		if (roundup && ((diff % ONEHOUR) >= HALFHOUR)) {
 			hours++;
 		}
 		return hours;
@@ -172,10 +179,10 @@ public class TimeUtils {
 	 * @return days ago
 	 */
 	public static int daysAgo(Date date) {
-		long today = ONEDAY * (System.currentTimeMillis()/ONEDAY);
-		long day = ONEDAY * (date.getTime()/ONEDAY);
-		long diff = today - day;
-		int days = (int) (diff / ONEDAY);
+		final long today = ONEDAY * (System.currentTimeMillis() / ONEDAY);
+		final long day = ONEDAY * (date.getTime() / ONEDAY);
+		final long diff = today - day;
+		final int days = (int) (diff / ONEDAY);
 		return days;
 	}
 
@@ -217,13 +224,13 @@ public class TimeUtils {
 	 * @return the string representation of the duration OR the css class
 	 */
 	private String timeAgo(Date date, boolean css) {
-		if (isToday(date, timezone) || isYesterday(date, timezone)) {
-			int mins = minutesAgo(date, true);
+		if (isToday(date, this.timezone) || isYesterday(date, this.timezone)) {
+			final int mins = minutesAgo(date, true);
 			if (mins >= 120) {
 				if (css) {
 					return "age1";
 				}
-				int hours = hoursAgo(date, true);
+				final int hours = hoursAgo(date, true);
 				if (hours > 23) {
 					return yesterday();
 				} else {
@@ -242,7 +249,8 @@ public class TimeUtils {
 			if (css) {
 				if (days <= 7) {
 					return "age2";
-				} if (days <= 30) {
+				}
+				if (days <= 30) {
 					return "age3";
 				} else {
 					return "age4";
@@ -252,7 +260,7 @@ public class TimeUtils {
 				if (days <= 30) {
 					return translate(days, "gb.time.daysAgo", "{0} days ago");
 				} else if (days <= 90) {
-					int weeks = days / 7;
+					final int weeks = days / 7;
 					if (weeks == 12) {
 						return translate(3, "gb.time.monthsAgo", "{0} months ago");
 					} else {
@@ -260,7 +268,7 @@ public class TimeUtils {
 					}
 				}
 				int months = days / 30;
-				int weeks = (days % 30) / 7;
+				final int weeks = (days % 30) / 7;
 				if (weeks >= 2) {
 					months++;
 				}
@@ -268,9 +276,9 @@ public class TimeUtils {
 			} else if (days == 365) {
 				return translate("gb.time.oneYearAgo", "1 year ago");
 			} else {
-				int yr = days / 365;
+				final int yr = days / 365;
 				days = days % 365;
-				int months = (yr * 12) + (days / 30);
+				final int months = (yr * 12) + (days / 30);
 				if (months > 23) {
 					return translate(yr, "gb.time.yearsAgo", "{0} years ago");
 				} else {
@@ -281,16 +289,16 @@ public class TimeUtils {
 	}
 
 	public String inFuture(Date date) {
-		long diff = date.getTime() - System.currentTimeMillis();
+		final long diff = date.getTime() - System.currentTimeMillis();
 		if (diff > ONEDAY) {
-			double days = ((double) diff)/ONEDAY;
+			final double days = ((double) diff) / ONEDAY;
 			return translate((int) Math.round(days), "gb.time.inDays", "in {0} days");
 		} else {
-			double hours = ((double) diff)/ONEHOUR;
+			final double hours = ((double) diff) / ONEHOUR;
 			if (hours > 2) {
 				return translate((int) Math.round(hours), "gb.time.inHours", "in {0} hours");
 			} else {
-				int mins = (int) (diff/MIN);
+				final int mins = (int) (diff / MIN);
 				return translate(mins, "gb.time.inMinutes", "in {0} minutes");
 			}
 		}
@@ -298,8 +306,8 @@ public class TimeUtils {
 
 	private String translate(String key, String defaultValue) {
 		String value = defaultValue;
-		if (translation != null && translation.containsKey(key)) {
-			String aValue = translation.getString(key);
+		if ((this.translation != null) && this.translation.containsKey(key)) {
+			final String aValue = this.translation.getString(key);
 			if (!StringUtils.isEmpty(aValue)) {
 				value = aValue;
 			}
@@ -309,8 +317,8 @@ public class TimeUtils {
 
 	private String translate(int val, String key, String defaultPattern) {
 		String pattern = defaultPattern;
-		if (translation != null && translation.containsKey(key)) {
-			String aValue = translation.getString(key);
+		if ((this.translation != null) && this.translation.containsKey(key)) {
+			final String aValue = this.translation.getString(key);
 			if (!StringUtils.isEmpty(aValue)) {
 				pattern = aValue;
 			}
@@ -336,7 +344,8 @@ public class TimeUtils {
 					str = str.substring(0, str.indexOf(' ')).trim();
 				}
 				mins = (int) Float.parseFloat(str);
-			} catch (NumberFormatException e) {
+			}
+			catch (final NumberFormatException e) {
 			}
 			if (mins < minimumMins) {
 				mins = minimumMins;

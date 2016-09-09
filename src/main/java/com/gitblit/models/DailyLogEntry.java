@@ -22,9 +22,9 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.transport.ReceiveCommand;
 
 /**
- * Model class to simulate a push for presentation in the push log news feed
- * for a repository that does not have a Gitblit push log.  Commits are grouped
- * by date and may be additionally split by ref.
+ * Model class to simulate a push for presentation in the push log news feed for
+ * a repository that does not have a Gitblit push log. Commits are grouped by
+ * date and may be additionally split by ref.
  *
  * @author James Moger
  */
@@ -75,8 +75,8 @@ public class DailyLogEntry extends RefLogEntry implements Serializable {
 			// for this ref
 			preservedNewId = newId;
 		}
-		refUpdates.put(ref, type);
-		refIdChanges.put(ref, oldId + "-" + preservedNewId);
+		this.refUpdates.put(ref, type);
+		this.refIdChanges.put(ref, oldId + "-" + preservedNewId);
 	}
 
 }

@@ -74,7 +74,7 @@ public abstract class TeamsPanel extends JPanel {
 	}
 
 	private void initialize() {
-		JButton refreshTeams = new JButton(Translation.get("gb.refresh"));
+		final JButton refreshTeams = new JButton(Translation.get("gb.refresh"));
 		refreshTeams.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -82,7 +82,7 @@ public abstract class TeamsPanel extends JPanel {
 			}
 		});
 
-		JButton createTeam = new JButton(Translation.get("gb.create"));
+		final JButton createTeam = new JButton(Translation.get("gb.create"));
 		createTeam.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -108,38 +108,38 @@ public abstract class TeamsPanel extends JPanel {
 			}
 		});
 
-		NameRenderer nameRenderer = new NameRenderer();
-		tableModel = new TeamsTableModel();
-		defaultSorter = new TableRowSorter<TeamsTableModel>(tableModel);
-		table = Utils.newTable(tableModel, Utils.DATE_FORMAT);
-		String name = table.getColumnName(TeamsTableModel.Columns.Name.ordinal());
-		table.getColumn(name).setCellRenderer(nameRenderer);
+		final NameRenderer nameRenderer = new NameRenderer();
+		this.tableModel = new TeamsTableModel();
+		this.defaultSorter = new TableRowSorter<TeamsTableModel>(this.tableModel);
+		this.table = Utils.newTable(this.tableModel, Utils.DATE_FORMAT);
+		String name = this.table.getColumnName(TeamsTableModel.Columns.Name.ordinal());
+		this.table.getColumn(name).setCellRenderer(nameRenderer);
 
-		int w = 125;
-		name = table.getColumnName(TeamsTableModel.Columns.Members.ordinal());
-		table.getColumn(name).setMinWidth(w);
-		table.getColumn(name).setMaxWidth(w);
-		name = table.getColumnName(TeamsTableModel.Columns.Repositories.ordinal());
-		table.getColumn(name).setMinWidth(w);
-		table.getColumn(name).setMaxWidth(w);
+		final int w = 125;
+		name = this.table.getColumnName(TeamsTableModel.Columns.Members.ordinal());
+		this.table.getColumn(name).setMinWidth(w);
+		this.table.getColumn(name).setMaxWidth(w);
+		name = this.table.getColumnName(TeamsTableModel.Columns.Repositories.ordinal());
+		this.table.getColumn(name).setMinWidth(w);
+		this.table.getColumn(name).setMaxWidth(w);
 
-		table.setRowSorter(defaultSorter);
-		table.getRowSorter().toggleSortOrder(TeamsTableModel.Columns.Name.ordinal());
-		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+		this.table.setRowSorter(this.defaultSorter);
+		this.table.getRowSorter().toggleSortOrder(TeamsTableModel.Columns.Name.ordinal());
+		this.table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
-				boolean selected = table.getSelectedRow() > -1;
-				boolean singleSelection = table.getSelectedRows().length == 1;
+				final boolean selected = TeamsPanel.this.table.getSelectedRow() > -1;
+				final boolean singleSelection = TeamsPanel.this.table.getSelectedRows().length == 1;
 				editTeam.setEnabled(singleSelection && selected);
 				delTeam.setEnabled(selected);
 			}
 		});
 
-		table.addMouseListener(new MouseAdapter() {
+		this.table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2) {
@@ -148,44 +148,44 @@ public abstract class TeamsPanel extends JPanel {
 			}
 		});
 
-		filterTextfield = new JTextField();
-		filterTextfield.addActionListener(new ActionListener() {
+		this.filterTextfield = new JTextField();
+		this.filterTextfield.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				filterTeams(filterTextfield.getText());
+				filterTeams(TeamsPanel.this.filterTextfield.getText());
 			}
 		});
-		filterTextfield.addKeyListener(new KeyAdapter() {
+		this.filterTextfield.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				filterTeams(filterTextfield.getText());
+				filterTeams(TeamsPanel.this.filterTextfield.getText());
 			}
 		});
 
-		JPanel teamFilterPanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
+		final JPanel teamFilterPanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
 		teamFilterPanel.add(new JLabel(Translation.get("gb.filter")), BorderLayout.WEST);
-		teamFilterPanel.add(filterTextfield, BorderLayout.CENTER);
+		teamFilterPanel.add(this.filterTextfield, BorderLayout.CENTER);
 
-		JPanel teamTablePanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
+		final JPanel teamTablePanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
 		teamTablePanel.add(teamFilterPanel, BorderLayout.NORTH);
-		teamTablePanel.add(new JScrollPane(table), BorderLayout.CENTER);
+		teamTablePanel.add(new JScrollPane(this.table), BorderLayout.CENTER);
 
-		JPanel teamControls = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+		final JPanel teamControls = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
 		teamControls.add(refreshTeams);
 		teamControls.add(createTeam);
 		teamControls.add(editTeam);
 		teamControls.add(delTeam);
 
 		setLayout(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
-		header = new HeaderPanel(Translation.get("gb.teams"), "users_16x16.png");
-		add(header, BorderLayout.NORTH);
+		this.header = new HeaderPanel(Translation.get("gb.teams"), "users_16x16.png");
+		add(this.header, BorderLayout.NORTH);
 		add(teamTablePanel, BorderLayout.CENTER);
 		add(teamControls, BorderLayout.SOUTH);
 	}
 
 	@Override
 	public void requestFocus() {
-		filterTextfield.requestFocus();
+		this.filterTextfield.requestFocus();
 	}
 
 	@Override
@@ -196,21 +196,22 @@ public abstract class TeamsPanel extends JPanel {
 	protected abstract void updateUsersTable();
 
 	protected void updateTable(boolean pack) {
-		tableModel.list.clear();
-		tableModel.list.addAll(gitblit.getTeams());
-		tableModel.fireTableDataChanged();
-		header.setText(Translation.get("gb.teams") + " (" + gitblit.getTeams().size() + ")");
+		this.tableModel.list.clear();
+		this.tableModel.list.addAll(this.gitblit.getTeams());
+		this.tableModel.fireTableDataChanged();
+		this.header.setText(Translation.get("gb.teams") + " (" + this.gitblit.getTeams().size()
+				+ ")");
 		if (pack) {
-			Utils.packColumns(table, Utils.MARGIN);
+			Utils.packColumns(this.table, Utils.MARGIN);
 		}
 	}
 
 	private void filterTeams(final String fragment) {
 		if (StringUtils.isEmpty(fragment)) {
-			table.setRowSorter(defaultSorter);
+			this.table.setRowSorter(this.defaultSorter);
 			return;
 		}
-		RowFilter<TeamsTableModel, Object> containsFilter = new RowFilter<TeamsTableModel, Object>() {
+		final RowFilter<TeamsTableModel, Object> containsFilter = new RowFilter<TeamsTableModel, Object>() {
 			@Override
 			public boolean include(Entry<? extends TeamsTableModel, ? extends Object> entry) {
 				for (int i = entry.getValueCount() - 1; i >= 0; i--) {
@@ -221,26 +222,27 @@ public abstract class TeamsPanel extends JPanel {
 				return false;
 			}
 		};
-		TableRowSorter<TeamsTableModel> sorter = new TableRowSorter<TeamsTableModel>(tableModel);
+		final TableRowSorter<TeamsTableModel> sorter = new TableRowSorter<TeamsTableModel>(
+				this.tableModel);
 		sorter.setRowFilter(containsFilter);
-		table.setRowSorter(sorter);
+		this.table.setRowSorter(sorter);
 	}
 
 	private List<TeamModel> getSelectedTeams() {
-		List<TeamModel> teams = new ArrayList<TeamModel>();
-		for (int viewRow : table.getSelectedRows()) {
-			int modelRow = table.convertRowIndexToModel(viewRow);
-			TeamModel model = tableModel.list.get(modelRow);
+		final List<TeamModel> teams = new ArrayList<TeamModel>();
+		for (final int viewRow : this.table.getSelectedRows()) {
+			final int modelRow = this.table.convertRowIndexToModel(viewRow);
+			final TeamModel model = this.tableModel.list.get(modelRow);
 			teams.add(model);
 		}
 		return teams;
 	}
 
 	protected void refreshTeams() {
-		GitblitWorker worker = new GitblitWorker(TeamsPanel.this, RpcRequest.LIST_TEAMS) {
+		final GitblitWorker worker = new GitblitWorker(TeamsPanel.this, RpcRequest.LIST_TEAMS) {
 			@Override
 			protected Boolean doRequest() throws IOException {
-				gitblit.refreshTeams();
+				TeamsPanel.this.gitblit.refreshTeams();
 				return true;
 			}
 
@@ -258,30 +260,30 @@ public abstract class TeamsPanel extends JPanel {
 	 *
 	 */
 	protected void createTeam() {
-		EditTeamDialog dialog = new EditTeamDialog(gitblit.getProtocolVersion(),
-				gitblit.getSettings());
+		final EditTeamDialog dialog = new EditTeamDialog(this.gitblit.getProtocolVersion(),
+				this.gitblit.getSettings());
 		dialog.setLocationRelativeTo(TeamsPanel.this);
-		dialog.setTeams(gitblit.getTeams());
-		dialog.setRepositories(gitblit.getRepositories(), null);
-		dialog.setUsers(gitblit.getUsernames(), null);
-		dialog.setPreReceiveScripts(gitblit.getPreReceiveScriptsUnused(null),
-				gitblit.getPreReceiveScriptsInherited(null), null);
-		dialog.setPostReceiveScripts(gitblit.getPostReceiveScriptsUnused(null),
-				gitblit.getPostReceiveScriptsInherited(null), null);
+		dialog.setTeams(this.gitblit.getTeams());
+		dialog.setRepositories(this.gitblit.getRepositories(), null);
+		dialog.setUsers(this.gitblit.getUsernames(), null);
+		dialog.setPreReceiveScripts(this.gitblit.getPreReceiveScriptsUnused(null),
+				this.gitblit.getPreReceiveScriptsInherited(null), null);
+		dialog.setPostReceiveScripts(this.gitblit.getPostReceiveScriptsUnused(null),
+				this.gitblit.getPostReceiveScriptsInherited(null), null);
 		dialog.setVisible(true);
 		final TeamModel newTeam = dialog.getTeam();
 		if (newTeam == null) {
 			return;
 		}
 
-		GitblitWorker worker = new GitblitWorker(this, RpcRequest.CREATE_TEAM) {
+		final GitblitWorker worker = new GitblitWorker(this, RpcRequest.CREATE_TEAM) {
 
 			@Override
 			protected Boolean doRequest() throws IOException {
-				boolean success = gitblit.createTeam(newTeam);
+				final boolean success = TeamsPanel.this.gitblit.createTeam(newTeam);
 				if (success) {
-					gitblit.refreshTeams();
-					gitblit.refreshUsers();
+					TeamsPanel.this.gitblit.refreshTeams();
+					TeamsPanel.this.gitblit.refreshUsers();
 				}
 				return success;
 			}
@@ -308,30 +310,30 @@ public abstract class TeamsPanel extends JPanel {
 	 * @param user
 	 */
 	protected void editTeam(final TeamModel team) {
-		EditTeamDialog dialog = new EditTeamDialog(gitblit.getProtocolVersion(), team,
-				gitblit.getSettings());
+		final EditTeamDialog dialog = new EditTeamDialog(this.gitblit.getProtocolVersion(), team,
+				this.gitblit.getSettings());
 		dialog.setLocationRelativeTo(TeamsPanel.this);
-		dialog.setTeams(gitblit.getTeams());
-		dialog.setRepositories(gitblit.getRepositories(), team.getRepositoryPermissions());
-		dialog.setUsers(gitblit.getUsernames(), team.users == null ? null : new ArrayList<String>(
-				team.users));
-		dialog.setPreReceiveScripts(gitblit.getPreReceiveScriptsUnused(null),
-				gitblit.getPreReceiveScriptsInherited(null), team.preReceiveScripts);
-		dialog.setPostReceiveScripts(gitblit.getPostReceiveScriptsUnused(null),
-				gitblit.getPostReceiveScriptsInherited(null), team.postReceiveScripts);
+		dialog.setTeams(this.gitblit.getTeams());
+		dialog.setRepositories(this.gitblit.getRepositories(), team.getRepositoryPermissions());
+		dialog.setUsers(this.gitblit.getUsernames(), team.users == null ? null
+				: new ArrayList<String>(team.users));
+		dialog.setPreReceiveScripts(this.gitblit.getPreReceiveScriptsUnused(null),
+				this.gitblit.getPreReceiveScriptsInherited(null), team.preReceiveScripts);
+		dialog.setPostReceiveScripts(this.gitblit.getPostReceiveScriptsUnused(null),
+				this.gitblit.getPostReceiveScriptsInherited(null), team.postReceiveScripts);
 		dialog.setVisible(true);
 		final TeamModel revisedTeam = dialog.getTeam();
 		if (revisedTeam == null) {
 			return;
 		}
 
-		GitblitWorker worker = new GitblitWorker(this, RpcRequest.EDIT_TEAM) {
+		final GitblitWorker worker = new GitblitWorker(this, RpcRequest.EDIT_TEAM) {
 			@Override
 			protected Boolean doRequest() throws IOException {
-				boolean success = gitblit.updateTeam(team.name, revisedTeam);
+				final boolean success = TeamsPanel.this.gitblit.updateTeam(team.name, revisedTeam);
 				if (success) {
-					gitblit.refreshTeams();
-					gitblit.refreshUsers();
+					TeamsPanel.this.gitblit.refreshTeams();
+					TeamsPanel.this.gitblit.refreshUsers();
 				}
 				return success;
 			}
@@ -352,26 +354,26 @@ public abstract class TeamsPanel extends JPanel {
 	}
 
 	protected void deleteTeams(final List<TeamModel> teams) {
-		if (teams == null || teams.size() == 0) {
+		if ((teams == null) || (teams.size() == 0)) {
 			return;
 		}
-		StringBuilder message = new StringBuilder("Delete the following teams?\n\n");
-		for (TeamModel team : teams) {
+		final StringBuilder message = new StringBuilder("Delete the following teams?\n\n");
+		for (final TeamModel team : teams) {
 			message.append(team.name).append("\n");
 		}
-		int result = JOptionPane.showConfirmDialog(TeamsPanel.this, message.toString(),
+		final int result = JOptionPane.showConfirmDialog(TeamsPanel.this, message.toString(),
 				"Delete Teams?", JOptionPane.YES_NO_OPTION);
 		if (result == JOptionPane.YES_OPTION) {
-			GitblitWorker worker = new GitblitWorker(this, RpcRequest.DELETE_TEAM) {
+			final GitblitWorker worker = new GitblitWorker(this, RpcRequest.DELETE_TEAM) {
 				@Override
 				protected Boolean doRequest() throws IOException {
 					boolean success = true;
-					for (TeamModel team : teams) {
-						success &= gitblit.deleteTeam(team);
+					for (final TeamModel team : teams) {
+						success &= TeamsPanel.this.gitblit.deleteTeam(team);
 					}
 					if (success) {
-						gitblit.refreshTeams();
-						gitblit.refreshUsers();
+						TeamsPanel.this.gitblit.refreshTeams();
+						TeamsPanel.this.gitblit.refreshUsers();
 					}
 					return success;
 				}

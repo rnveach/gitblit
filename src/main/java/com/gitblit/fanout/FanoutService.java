@@ -39,12 +39,13 @@ import org.slf4j.LoggerFactory;
  * Base class for Fanout service implementations.
  *
  * Subclass implementations can be used as a Sparkleshare PubSub notification
- * server.  This allows Sparkleshare to be used in conjunction with Gitblit
- * behind a corporate firewall that restricts or prohibits client internet access
- * to the default Sparkleshare PubSub server: notifications.sparkleshare.org
+ * server. This allows Sparkleshare to be used in conjunction with Gitblit
+ * behind a corporate firewall that restricts or prohibits client internet
+ * access to the default Sparkleshare PubSub server:
+ * notifications.sparkleshare.org
  *
  * @author James Moger
- *
+ * 
  */
 public abstract class FanoutService implements Runnable {
 
@@ -83,24 +84,25 @@ public abstract class FanoutService implements Runnable {
 		this.port = port;
 		this.name = name;
 
-		connections = new ConcurrentHashMap<String, FanoutServiceConnection>();
-		subscriptions = new ConcurrentHashMap<String, Set<FanoutServiceConnection>>();
-		subscriptions.put(FanoutConstants.CH_ALL, new ConcurrentSkipListSet<FanoutServiceConnection>());
+		this.connections = new ConcurrentHashMap<String, FanoutServiceConnection>();
+		this.subscriptions = new ConcurrentHashMap<String, Set<FanoutServiceConnection>>();
+		this.subscriptions.put(FanoutConstants.CH_ALL,
+				new ConcurrentSkipListSet<FanoutServiceConnection>());
 
-		isRunning = new AtomicBoolean(false);
-		strictRequestTermination = new AtomicBoolean(false);
-		allowAllChannelAnnouncements = new AtomicBoolean(false);
-		concurrentConnectionLimit = new AtomicInteger(0);
+		this.isRunning = new AtomicBoolean(false);
+		this.strictRequestTermination = new AtomicBoolean(false);
+		this.allowAllChannelAnnouncements = new AtomicBoolean(false);
+		this.concurrentConnectionLimit = new AtomicInteger(0);
 
-		bootDate = new Date();
-		rejectedConnectionCount = new AtomicLong(0);
-		peakConnectionCount = new AtomicInteger(0);
-		totalConnections = new AtomicLong(0);
-		totalAnnouncements = new AtomicLong(0);
-		totalMessages = new AtomicLong(0);
-		totalSubscribes = new AtomicLong(0);
-		totalUnsubscribes = new AtomicLong(0);
-		totalPings = new AtomicLong(0);
+		this.bootDate = new Date();
+		this.rejectedConnectionCount = new AtomicLong(0);
+		this.peakConnectionCount = new AtomicInteger(0);
+		this.totalConnections = new AtomicLong(0);
+		this.totalAnnouncements = new AtomicLong(0);
+		this.totalMessages = new AtomicLong(0);
+		this.totalSubscribes = new AtomicLong(0);
+		this.totalUnsubscribes = new AtomicLong(0);
+		this.totalPings = new AtomicLong(0);
 	}
 
 	/*
@@ -121,7 +123,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return true if request requires \n termination
 	 */
 	public boolean isStrictRequestTermination() {
-		return strictRequestTermination.get();
+		return this.strictRequestTermination.get();
 	}
 
 	/**
@@ -132,7 +134,7 @@ public abstract class FanoutService implements Runnable {
 	 * @param isStrictTermination
 	 */
 	public void setStrictRequestTermination(boolean isStrictTermination) {
-		strictRequestTermination.set(isStrictTermination);
+		this.strictRequestTermination.set(isStrictTermination);
 	}
 
 	/**
@@ -141,7 +143,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return the maximum allowable concurrent connection count
 	 */
 	public int getConcurrentConnectionLimit() {
-		return concurrentConnectionLimit.get();
+		return this.concurrentConnectionLimit.get();
 	}
 
 	/**
@@ -150,7 +152,7 @@ public abstract class FanoutService implements Runnable {
 	 * @param value
 	 */
 	public void setConcurrentConnectionLimit(int value) {
-		concurrentConnectionLimit.set(value);
+		this.concurrentConnectionLimit.set(value);
 	}
 
 	/**
@@ -159,7 +161,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return true if connections are allowed to announce on the all channel
 	 */
 	public boolean allowAllChannelAnnouncements() {
-		return allowAllChannelAnnouncements.get();
+		return this.allowAllChannelAnnouncements.get();
 	}
 
 	/**
@@ -168,7 +170,7 @@ public abstract class FanoutService implements Runnable {
 	 * @param value
 	 */
 	public void setAllowAllChannelAnnouncements(boolean value) {
-		allowAllChannelAnnouncements.set(value);
+		this.allowAllChannelAnnouncements.set(value);
 	}
 
 	/**
@@ -178,7 +180,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return map of current connections keyed by their id
 	 */
 	public Map<String, FanoutServiceConnection> getCurrentConnections() {
-		return connections;
+		return this.connections;
 	}
 
 	/**
@@ -187,7 +189,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return map of current subscriptions keyed by channel name
 	 */
 	public Map<String, Set<FanoutServiceConnection>> getCurrentSubscriptions() {
-		return subscriptions;
+		return this.subscriptions;
 	}
 
 	/**
@@ -197,7 +199,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return set of subscribed connections for the specified channel
 	 */
 	public Set<FanoutServiceConnection> getCurrentSubscriptions(String channel) {
-		return subscriptions.get(channel);
+		return this.subscriptions.get(channel);
 	}
 
 	/**
@@ -206,7 +208,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return stats
 	 */
 	public FanoutStats getStatistics() {
-		FanoutStats stats = new FanoutStats();
+		final FanoutStats stats = new FanoutStats();
 
 		// settings
 		stats.allowAllChannelAnnouncements = allowAllChannelAnnouncements();
@@ -214,18 +216,18 @@ public abstract class FanoutService implements Runnable {
 		stats.strictRequestTermination = isStrictRequestTermination();
 
 		// runtime stats
-		stats.bootDate = bootDate;
-		stats.rejectedConnectionCount = rejectedConnectionCount.get();
-		stats.peakConnectionCount = peakConnectionCount.get();
-		stats.totalConnections = totalConnections.get();
-		stats.totalAnnouncements = totalAnnouncements.get();
-		stats.totalMessages = totalMessages.get();
-		stats.totalSubscribes = totalSubscribes.get();
-		stats.totalUnsubscribes = totalUnsubscribes.get();
-		stats.totalPings = totalPings.get();
-		stats.currentConnections = connections.size();
-		stats.currentChannels = subscriptions.size();
-		stats.currentSubscriptions = subscriptions.size() * connections.size();
+		stats.bootDate = this.bootDate;
+		stats.rejectedConnectionCount = this.rejectedConnectionCount.get();
+		stats.peakConnectionCount = this.peakConnectionCount.get();
+		stats.totalConnections = this.totalConnections.get();
+		stats.totalAnnouncements = this.totalAnnouncements.get();
+		stats.totalMessages = this.totalMessages.get();
+		stats.totalSubscribes = this.totalSubscribes.get();
+		stats.totalUnsubscribes = this.totalUnsubscribes.get();
+		stats.totalPings = this.totalPings.get();
+		stats.currentConnections = this.connections.size();
+		stats.currentChannels = this.subscriptions.size();
+		stats.currentSubscriptions = this.subscriptions.size() * this.connections.size();
 		return stats;
 	}
 
@@ -235,7 +237,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return true, if the service is ready
 	 */
 	public boolean isReady() {
-		if (isRunning.get()) {
+		if (this.isRunning.get()) {
 			return isConnected();
 		}
 		return false;
@@ -246,17 +248,19 @@ public abstract class FanoutService implements Runnable {
 	 *
 	 */
 	public void start() {
-		if (isRunning.get()) {
-			logger.warn(MessageFormat.format("{0} is already running", name));
+		if (this.isRunning.get()) {
+			logger.warn(MessageFormat.format("{0} is already running", this.name));
 			return;
 		}
-		serviceThread = new Thread(this);
-		serviceThread.setName(MessageFormat.format("{0} {1}:{2,number,0}", name, host == null ? "all" : host, port));
-		serviceThread.start();
+		this.serviceThread = new Thread(this);
+		this.serviceThread.setName(MessageFormat.format("{0} {1}:{2,number,0}", this.name,
+				this.host == null ? "all" : this.host, this.port));
+		this.serviceThread.start();
 	}
 
 	/**
-	 * Start the Fanout service thread and wait until it is accepting connections.
+	 * Start the Fanout service thread and wait until it is accepting
+	 * connections.
 	 *
 	 */
 	public void startSynchronously() {
@@ -264,31 +268,33 @@ public abstract class FanoutService implements Runnable {
 		while (!isReady()) {
 			try {
 				Thread.sleep(100);
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 			}
 		}
 	}
 
 	/**
-	 * Stop the Fanout service.  This method returns when the service has been
+	 * Stop the Fanout service. This method returns when the service has been
 	 * completely shutdown.
 	 */
 	public void stop() {
-		if (!isRunning.get()) {
-			logger.warn(MessageFormat.format("{0} is not running", name));
+		if (!this.isRunning.get()) {
+			logger.warn(MessageFormat.format("{0} is not running", this.name));
 			return;
 		}
-		logger.info(MessageFormat.format("stopping {0}...", name));
-		isRunning.set(false);
+		logger.info(MessageFormat.format("stopping {0}...", this.name));
+		this.isRunning.set(false);
 		try {
-			if (serviceThread != null) {
-				serviceThread.join();
-				serviceThread = null;
+			if (this.serviceThread != null) {
+				this.serviceThread.join();
+				this.serviceThread = null;
 			}
-		} catch (InterruptedException e1) {
+		}
+		catch (final InterruptedException e1) {
 			logger.error("", e1);
 		}
-		logger.info(MessageFormat.format("stopped {0}", name));
+		logger.info(MessageFormat.format("stopped {0}", this.name));
 	}
 
 	/**
@@ -298,19 +304,21 @@ public abstract class FanoutService implements Runnable {
 	public final void run() {
 		disconnect();
 		resetState();
-		isRunning.set(true);
-		while (isRunning.get()) {
+		this.isRunning.set(true);
+		while (this.isRunning.get()) {
 			if (connect()) {
 				try {
 					listen();
-				} catch (IOException e) {
-					logger.error(MessageFormat.format("error processing {0}", name), e);
-					isRunning.set(false);
+				}
+				catch (final IOException e) {
+					logger.error(MessageFormat.format("error processing {0}", this.name), e);
+					this.isRunning.set(false);
 				}
 			} else {
 				try {
 					Thread.sleep(serviceTimeout);
-				} catch (InterruptedException x) {
+				}
+				catch (final InterruptedException x) {
 				}
 			}
 		}
@@ -320,16 +328,16 @@ public abstract class FanoutService implements Runnable {
 
 	protected void resetState() {
 		// reset state data
-		connections.clear();
-		subscriptions.clear();
-		rejectedConnectionCount.set(0);
-		peakConnectionCount.set(0);
-		totalConnections.set(0);
-		totalAnnouncements.set(0);
-		totalMessages.set(0);
-		totalSubscribes.set(0);
-		totalUnsubscribes.set(0);
-		totalPings.set(0);
+		this.connections.clear();
+		this.subscriptions.clear();
+		this.rejectedConnectionCount.set(0);
+		this.peakConnectionCount.set(0);
+		this.totalConnections.set(0);
+		this.totalAnnouncements.set(0);
+		this.totalMessages.set(0);
+		this.totalSubscribes.set(0);
+		this.totalUnsubscribes.set(0);
+		this.totalPings.set(0);
 	}
 
 	/**
@@ -351,20 +359,22 @@ public abstract class FanoutService implements Runnable {
 	 *         connections
 	 */
 	protected boolean addConnection(FanoutServiceConnection connection) {
-		int limit = getConcurrentConnectionLimit();
-		if (limit > 0 && connections.size() > limit) {
-			logger.info(MessageFormat.format("hit {0,number,0} connection limit, rejecting fanout connection", concurrentConnectionLimit));
-			increment(rejectedConnectionCount);
+		final int limit = getConcurrentConnectionLimit();
+		if ((limit > 0) && (this.connections.size() > limit)) {
+			logger.info(MessageFormat.format(
+					"hit {0,number,0} connection limit, rejecting fanout connection",
+					this.concurrentConnectionLimit));
+			increment(this.rejectedConnectionCount);
 			connection.busy();
 			return false;
 		}
 
 		// add the connection to our map
-		connections.put(connection.id, connection);
+		this.connections.put(connection.id, connection);
 
 		// track peak number of concurrent connections
-		if (connections.size() > peakConnectionCount.get()) {
-			peakConnectionCount.set(connections.size());
+		if (this.connections.size() > this.peakConnectionCount.get()) {
+			this.peakConnectionCount.set(this.connections.size());
 		}
 
 		logger.info("fanout new connection " + connection.id);
@@ -378,16 +388,18 @@ public abstract class FanoutService implements Runnable {
 	 * @param connection
 	 */
 	protected void removeConnection(FanoutServiceConnection connection) {
-		connections.remove(connection.id);
-		Iterator<Map.Entry<String, Set<FanoutServiceConnection>>> itr = subscriptions.entrySet().iterator();
+		this.connections.remove(connection.id);
+		final Iterator<Map.Entry<String, Set<FanoutServiceConnection>>> itr = this.subscriptions
+				.entrySet().iterator();
 		while (itr.hasNext()) {
-			Map.Entry<String, Set<FanoutServiceConnection>> entry = itr.next();
-			Set<FanoutServiceConnection> subscriptions = entry.getValue();
+			final Map.Entry<String, Set<FanoutServiceConnection>> entry = itr.next();
+			final Set<FanoutServiceConnection> subscriptions = entry.getValue();
 			subscriptions.remove(connection);
 			if (!FanoutConstants.CH_ALL.equals(entry.getKey())) {
 				if (subscriptions.size() == 0) {
 					itr.remove();
-					logger.info(MessageFormat.format("fanout remove channel {0}, no subscribers", entry.getKey()));
+					logger.info(MessageFormat.format("fanout remove channel {0}, no subscribers",
+							entry.getKey()));
 				}
 			}
 		}
@@ -401,7 +413,7 @@ public abstract class FanoutService implements Runnable {
 	 * @return true if the service is monitoring the connection
 	 */
 	protected boolean hasConnection(FanoutServiceConnection connection) {
-		return connections.containsKey(connection.id);
+		return this.connections.containsKey(connection.id);
 	}
 
 	/**
@@ -413,8 +425,8 @@ public abstract class FanoutService implements Runnable {
 	 * @return the reply
 	 */
 	protected String reply(FanoutServiceConnection connection, String channel, String message) {
-		if (channel != null && channel.length() > 0) {
-			increment(totalMessages);
+		if ((channel != null) && (channel.length() > 0)) {
+			increment(this.totalMessages);
 		}
 		return connection.reply(channel, message);
 	}
@@ -425,8 +437,8 @@ public abstract class FanoutService implements Runnable {
 	 * @param message
 	 */
 	public void broadcastAll(String message) {
-		broadcast(connections.values(), FanoutConstants.CH_ALL, message);
-		increment(totalAnnouncements);
+		broadcast(this.connections.values(), FanoutConstants.CH_ALL, message);
+		increment(this.totalAnnouncements);
 	}
 
 	/**
@@ -436,9 +448,10 @@ public abstract class FanoutService implements Runnable {
 	 * @param message
 	 */
 	public void broadcast(String channel, String message) {
-		List<FanoutServiceConnection> connections = new ArrayList<FanoutServiceConnection>(subscriptions.get(channel));
+		final List<FanoutServiceConnection> connections = new ArrayList<FanoutServiceConnection>(
+				this.subscriptions.get(channel));
 		broadcast(connections, channel, message);
-		increment(totalAnnouncements);
+		increment(this.totalAnnouncements);
 	}
 
 	/**
@@ -448,8 +461,9 @@ public abstract class FanoutService implements Runnable {
 	 * @param channel
 	 * @param message
 	 */
-	protected void broadcast(Collection<FanoutServiceConnection> connections, String channel, String message) {
-		for (FanoutServiceConnection connection : connections) {
+	protected void broadcast(Collection<FanoutServiceConnection> connections, String channel,
+			String message) {
+		for (final FanoutServiceConnection connection : connections) {
 			reply(connection, channel, message);
 		}
 	}
@@ -463,15 +477,17 @@ public abstract class FanoutService implements Runnable {
 	 */
 	protected String processRequest(FanoutServiceConnection connection, String req) {
 		logger.info(MessageFormat.format("fanout request from {0}: {1}", connection.id, req));
-		String[] fields = req.split(" ", 3);
-		String action = fields[0];
-		String channel = fields.length >= 2 ? fields[1] : null;
-		String message = fields.length >= 3 ? fields[2] : null;
+		final String[] fields = req.split(" ", 3);
+		final String action = fields[0];
+		final String channel = fields.length >= 2 ? fields[1] : null;
+		final String message = fields.length >= 3 ? fields[2] : null;
 		try {
 			return processRequest(connection, action, channel, message);
-		} catch (IllegalArgumentException e) {
+		}
+		catch (final IllegalArgumentException e) {
 			// invalid action
-			logger.error(MessageFormat.format("fanout connection {0} requested invalid action {1}", connection.id, action));
+			logger.error(MessageFormat.format("fanout connection {0} requested invalid action {1}",
+					connection.id, action));
 			logger.error(asHexArray(req));
 		}
 		return null;
@@ -487,47 +503,55 @@ public abstract class FanoutService implements Runnable {
 	 * @return the reply to the request, may be null
 	 * @throws IllegalArgumentException
 	 */
-	protected String processRequest(FanoutServiceConnection connection, String action, String channel, String message) throws IllegalArgumentException {
+	protected String processRequest(FanoutServiceConnection connection, String action,
+			String channel, String message) throws IllegalArgumentException {
 		if ("ping".equals(action)) {
 			// ping
-			increment(totalPings);
+			increment(this.totalPings);
 			return reply(connection, null, "" + System.currentTimeMillis());
 		} else if ("info".equals(action)) {
 			// info
-			String info = getStatistics().info();
+			final String info = getStatistics().info();
 			return reply(connection, null, info);
 		} else if ("announce".equals(action)) {
 			// announcement
-			if (!allowAllChannelAnnouncements.get() && FanoutConstants.CH_ALL.equals(channel)) {
+			if (!this.allowAllChannelAnnouncements.get() && FanoutConstants.CH_ALL.equals(channel)) {
 				// prohibiting connection-sourced all announcements
-				logger.warn(MessageFormat.format("fanout connection {0} attempted to announce {1} on ALL channel", connection.id, message));
+				logger.warn(MessageFormat.format(
+						"fanout connection {0} attempted to announce {1} on ALL channel",
+						connection.id, message));
 			} else if ("debug".equals(channel)) {
 				// prohibiting connection-sourced debug announcements
-				logger.warn(MessageFormat.format("fanout connection {0} attempted to announce {1} on DEBUG channel", connection.id, message));
+				logger.warn(MessageFormat.format(
+						"fanout connection {0} attempted to announce {1} on DEBUG channel",
+						connection.id, message));
 			} else {
 				// acceptable announcement
-				List<FanoutServiceConnection> connections = new ArrayList<FanoutServiceConnection>(subscriptions.get(channel));
+				final List<FanoutServiceConnection> connections = new ArrayList<FanoutServiceConnection>(
+						this.subscriptions.get(channel));
 				connections.remove(connection); // remove announcer
 				broadcast(connections, channel, message);
-				increment(totalAnnouncements);
+				increment(this.totalAnnouncements);
 			}
 		} else if ("subscribe".equals(action)) {
 			// subscribe
-			if (!subscriptions.containsKey(channel)) {
+			if (!this.subscriptions.containsKey(channel)) {
 				logger.info(MessageFormat.format("fanout new channel {0}", channel));
-				subscriptions.put(channel, new ConcurrentSkipListSet<FanoutServiceConnection>());
+				this.subscriptions.put(channel,
+						new ConcurrentSkipListSet<FanoutServiceConnection>());
 			}
-			subscriptions.get(channel).add(connection);
-			logger.debug(MessageFormat.format("fanout connection {0} subscribed to channel {1}", connection.id, channel));
-			increment(totalSubscribes);
+			this.subscriptions.get(channel).add(connection);
+			logger.debug(MessageFormat.format("fanout connection {0} subscribed to channel {1}",
+					connection.id, channel));
+			increment(this.totalSubscribes);
 		} else if ("unsubscribe".equals(action)) {
 			// unsubscribe
-			if (subscriptions.containsKey(channel)) {
-				subscriptions.get(channel).remove(connection);
-				if (subscriptions.get(channel).size() == 0) {
-					subscriptions.remove(channel);
+			if (this.subscriptions.containsKey(channel)) {
+				this.subscriptions.get(channel).remove(connection);
+				if (this.subscriptions.get(channel).size() == 0) {
+					this.subscriptions.remove(channel);
 				}
-				increment(totalUnsubscribes);
+				increment(this.totalUnsubscribes);
 			}
 		} else {
 			// invalid action
@@ -536,9 +560,9 @@ public abstract class FanoutService implements Runnable {
 		return null;
 	}
 
-	private String asHexArray(String req) {
-		StringBuilder sb = new StringBuilder();
-		for (char c : req.toCharArray()) {
+	private static String asHexArray(String req) {
+		final StringBuilder sb = new StringBuilder();
+		for (final char c : req.toCharArray()) {
 			sb.append(Integer.toHexString(c)).append(' ');
 		}
 		return "[ " + sb.toString().trim() + " ]";
@@ -549,8 +573,8 @@ public abstract class FanoutService implements Runnable {
 	 *
 	 * @param counter
 	 */
-	private void increment(AtomicLong counter) {
-		long v = counter.incrementAndGet();
+	private static void increment(AtomicLong counter) {
+		final long v = counter.incrementAndGet();
 		if (v < 0) {
 			counter.set(0);
 		}
@@ -558,6 +582,6 @@ public abstract class FanoutService implements Runnable {
 
 	@Override
 	public String toString() {
-		return name;
+		return this.name;
 	}
 }

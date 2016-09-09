@@ -15,13 +15,11 @@
  */
 package com.gitblit.servlet;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import com.gitblit.manager.IAuthenticationManager;
 import com.gitblit.manager.IRepositoryManager;
 import com.gitblit.manager.IRuntimeManager;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * The PagesFilter is an AccessRestrictionFilter which ensures the gh-pages
@@ -35,10 +33,8 @@ import com.gitblit.manager.IRuntimeManager;
 public class PagesFilter extends RawFilter {
 
 	@Inject
-	public PagesFilter(
-			IRuntimeManager runtimeManager,
-			IAuthenticationManager authenticationManager,
-			IRepositoryManager repositoryManager) {
+	public PagesFilter(IRuntimeManager runtimeManager,
+			IAuthenticationManager authenticationManager, IRepositoryManager repositoryManager) {
 
 		super(runtimeManager, authenticationManager, repositoryManager);
 	}

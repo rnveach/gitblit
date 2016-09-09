@@ -37,7 +37,8 @@ public class Translation {
 		try {
 			// development location
 			bundle = ResourceBundle.getBundle("com/gitblit/wicket/GitBlitWebApp");
-		} catch (MissingResourceException e) {
+		}
+		catch (final MissingResourceException e) {
 			// runtime location
 			bundle = ResourceBundle.getBundle("GitBlitWebApp");
 		}

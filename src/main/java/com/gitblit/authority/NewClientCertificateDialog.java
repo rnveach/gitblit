@@ -53,12 +53,13 @@ public class NewClientCertificateDialog extends JDialog {
 	JCheckBox sendEmail;
 	boolean isCanceled = true;
 
-	public NewClientCertificateDialog(Frame owner, String displayname, Date defaultExpiration, boolean allowEmail) {
+	public NewClientCertificateDialog(Frame owner, String displayname, Date defaultExpiration,
+			boolean allowEmail) {
 		super(owner);
 
 		setTitle(Translation.get("gb.newCertificate"));
 
-		JPanel content = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN)) {
+		final JPanel content = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN)) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -68,56 +69,55 @@ public class NewClientCertificateDialog extends JDialog {
 			}
 		};
 
-		expirationDate = new JDateChooser(defaultExpiration);
-		pw1 = new JPasswordField(20);
-		pw2 = new JPasswordField(20);
-		hint = new JTextField(20);
-		sendEmail = new JCheckBox(Translation.get("gb.sendEmail"));
+		this.expirationDate = new JDateChooser(defaultExpiration);
+		this.pw1 = new JPasswordField(20);
+		this.pw2 = new JPasswordField(20);
+		this.hint = new JTextField(20);
+		this.sendEmail = new JCheckBox(Translation.get("gb.sendEmail"));
 
-		JPanel panel = new JPanel(new GridLayout(0, 2, Utils.MARGIN, Utils.MARGIN));
+		final JPanel panel = new JPanel(new GridLayout(0, 2, Utils.MARGIN, Utils.MARGIN));
 
 		panel.add(new JLabel(Translation.get("gb.expires")));
-		panel.add(expirationDate);
+		panel.add(this.expirationDate);
 
 		panel.add(new JLabel(Translation.get("gb.password")));
-		panel.add(pw1);
+		panel.add(this.pw1);
 
 		panel.add(new JLabel(Translation.get("gb.confirmPassword")));
-		panel.add(pw2);
+		panel.add(this.pw2);
 
 		panel.add(new JLabel(Translation.get("gb.passwordHint")));
-		panel.add(hint);
+		panel.add(this.hint);
 
 		if (allowEmail) {
 			panel.add(new JLabel(""));
-			panel.add(sendEmail);
+			panel.add(this.sendEmail);
 		}
 
-
-		JButton ok = new JButton(Translation.get("gb.ok"));
+		final JButton ok = new JButton(Translation.get("gb.ok"));
 		ok.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (validateInputs()) {
-					isCanceled = false;
+					NewClientCertificateDialog.this.isCanceled = false;
 					setVisible(false);
 				}
 			}
 		});
-		JButton cancel = new JButton(Translation.get("gb.cancel"));
+		final JButton cancel = new JButton(Translation.get("gb.cancel"));
 		cancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				isCanceled = true;
+				NewClientCertificateDialog.this.isCanceled = true;
 				setVisible(false);
 			}
 		});
 
-		JPanel controls = new JPanel();
+		final JPanel controls = new JPanel();
 		controls.add(ok);
 		controls.add(cancel);
 
-		JTextArea message = new JTextArea(Translation.get("gb.newClientCertificateMessage"));
+		final JTextArea message = new JTextArea(Translation.get("gb.newClientCertificateMessage"));
 		message.setLineWrap(true);
 		message.setWrapStyleWord(true);
 		message.setEditable(false);
@@ -128,7 +128,9 @@ public class NewClientCertificateDialog extends JDialog {
 		content.add(panel, BorderLayout.NORTH);
 		content.add(controls, BorderLayout.SOUTH);
 
-		getContentPane().add(new HeaderPanel(Translation.get("gb.newCertificate") + " (" + displayname + ")", "rosette_16x16.png"), BorderLayout.NORTH);
+		getContentPane().add(
+				new HeaderPanel(Translation.get("gb.newCertificate") + " (" + displayname + ")",
+						"rosette_16x16.png"), BorderLayout.NORTH);
 		getContentPane().add(content, BorderLayout.CENTER);
 		pack();
 
@@ -142,7 +144,8 @@ public class NewClientCertificateDialog extends JDialog {
 					Translation.get("gb.error"), JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
-		if (pw1.getPassword().length == 0 || !Arrays.areEqual(pw1.getPassword(), pw2.getPassword())) {
+		if ((this.pw1.getPassword().length == 0)
+				|| !Arrays.areEqual(this.pw1.getPassword(), this.pw2.getPassword())) {
 			// password mismatch
 			JOptionPane.showMessageDialog(this, Translation.get("gb.passwordsDoNotMatch"),
 					Translation.get("gb.error"), JOptionPane.ERROR_MESSAGE);
@@ -158,22 +161,22 @@ public class NewClientCertificateDialog extends JDialog {
 	}
 
 	public String getPassword() {
-		return new String(pw1.getPassword());
+		return new String(this.pw1.getPassword());
 	}
 
 	public String getPasswordHint() {
-		return hint.getText();
+		return this.hint.getText();
 	}
 
 	public Date getExpiration() {
-		return expirationDate.getDate();
+		return this.expirationDate.getDate();
 	}
 
 	public boolean sendEmail() {
-		return sendEmail.isSelected();
+		return this.sendEmail.isSelected();
 	}
 
 	public boolean isCanceled() {
-		return isCanceled;
+		return this.isCanceled;
 	}
 }

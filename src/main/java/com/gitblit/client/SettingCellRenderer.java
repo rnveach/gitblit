@@ -40,8 +40,8 @@ public class SettingCellRenderer extends DefaultTableCellRenderer {
 	private final Font modifiedFont;
 
 	public SettingCellRenderer() {
-		defaultFont = getFont();
-		modifiedFont = defaultFont.deriveFont(Font.BOLD);
+		this.defaultFont = getFont();
+		this.modifiedFont = this.defaultFont.deriveFont(Font.BOLD);
 	}
 
 	@Override
@@ -49,19 +49,19 @@ public class SettingCellRenderer extends DefaultTableCellRenderer {
 			boolean hasFocus, int row, int column) {
 		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 		if (value instanceof SettingModel) {
-			SettingModel setting = (SettingModel) value;
+			final SettingModel setting = (SettingModel) value;
 			if (setting.isDefaultValue()) {
-				this.setFont(defaultFont);
+				setFont(this.defaultFont);
 				if (!isSelected) {
-					this.setForeground(Color.BLACK);
+					setForeground(Color.BLACK);
 				}
 			} else {
-				this.setFont(modifiedFont);
+				setFont(this.modifiedFont);
 				if (!isSelected) {
-					this.setForeground(Color.BLUE);
+					setForeground(Color.BLUE);
 				}
 			}
-			this.setText(setting.getString(""));
+			setText(setting.getString(""));
 		}
 		return this;
 	}

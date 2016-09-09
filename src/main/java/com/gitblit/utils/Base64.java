@@ -57,15 +57,17 @@ public class Base64 {
 					+ "0123456789" //
 					+ "+/" //
 			).getBytes(UTF_8);
-		} catch (UnsupportedEncodingException uee) {
+		}
+		catch (final UnsupportedEncodingException uee) {
 			throw new RuntimeException(uee.getMessage(), uee);
 		}
 
 		DEC = new byte[128];
 		Arrays.fill(DEC, INVALID_DEC);
 
-		for (int i = 0; i < 64; i++)
+		for (int i = 0; i < 64; i++) {
 			DEC[ENC[i]] = (byte) i;
+		}
 		DEC[EQUALS_SIGN] = EQUALS_SIGN_DEC;
 
 		DEC['\t'] = WHITE_SPACE_DEC;
@@ -167,15 +169,16 @@ public class Base64 {
 	 * @return encoded base64 representation of source.
 	 */
 	public static String encodeBytes(byte[] source, int off, int len) {
-		final int len43 = len * 4 / 3;
+		final int len43 = (len * 4) / 3;
 
-		byte[] outBuff = new byte[len43 + ((len % 3) > 0 ? 4 : 0)];
+		final byte[] outBuff = new byte[len43 + ((len % 3) > 0 ? 4 : 0)];
 		int d = 0;
 		int e = 0;
-		int len2 = len - 2;
+		final int len2 = len - 2;
 
-		for (; d < len2; d += 3, e += 4)
+		for (; d < len2; d += 3, e += 4) {
 			encode3to4(source, d + off, 3, outBuff, e);
+		}
 
 		if (d < len) {
 			encode3to4(source, d + off, len - d, outBuff, e);
@@ -184,7 +187,8 @@ public class Base64 {
 
 		try {
 			return new String(outBuff, 0, e, UTF_8);
-		} catch (UnsupportedEncodingException uue) {
+		}
+		catch (final UnsupportedEncodingException uue) {
 			return new String(outBuff, 0, e);
 		}
 	}
@@ -213,7 +217,7 @@ public class Base64 {
 	private static int decode4to3(byte[] source, int srcOffset, byte[] destination, int destOffset) {
 		// Example: Dk==
 		if (source[srcOffset + 2] == EQUALS_SIGN) {
-			int outBuff = ((DEC[source[srcOffset]] & 0xFF) << 18)
+			final int outBuff = ((DEC[source[srcOffset]] & 0xFF) << 18)
 					| ((DEC[source[srcOffset + 1]] & 0xFF) << 12);
 			destination[destOffset] = (byte) (outBuff >>> 16);
 			return 1;
@@ -221,7 +225,7 @@ public class Base64 {
 
 		// Example: DkL=
 		else if (source[srcOffset + 3] == EQUALS_SIGN) {
-			int outBuff = ((DEC[source[srcOffset]] & 0xFF) << 18)
+			final int outBuff = ((DEC[source[srcOffset]] & 0xFF) << 18)
 					| ((DEC[source[srcOffset + 1]] & 0xFF) << 12)
 					| ((DEC[source[srcOffset + 2]] & 0xFF) << 6);
 			destination[destOffset] = (byte) (outBuff >>> 16);
@@ -231,7 +235,7 @@ public class Base64 {
 
 		// Example: DkLE
 		else {
-			int outBuff = ((DEC[source[srcOffset]] & 0xFF) << 18)
+			final int outBuff = ((DEC[source[srcOffset]] & 0xFF) << 18)
 					| ((DEC[source[srcOffset + 1]] & 0xFF) << 12)
 					| ((DEC[source[srcOffset + 2]] & 0xFF) << 6)
 					| ((DEC[source[srcOffset + 3]] & 0xFF));
@@ -258,15 +262,16 @@ public class Base64 {
 	 *             the input is not a valid Base64 sequence.
 	 */
 	public static byte[] decode(byte[] source, int off, int len) {
-		byte[] outBuff = new byte[len * 3 / 4]; // Upper limit on size of output
+		final byte[] outBuff = new byte[(len * 3) / 4]; // Upper limit on size
+														// of output
 		int outBuffPosn = 0;
 
-		byte[] b4 = new byte[4];
+		final byte[] b4 = new byte[4];
 		int b4Posn = 0;
 
-		for (int i = off; i < off + len; i++) {
-			byte sbiCrop = (byte) (source[i] & 0x7f);
-			byte sbiDecode = DEC[sbiCrop];
+		for (int i = off; i < (off + len); i++) {
+			final byte sbiCrop = (byte) (source[i] & 0x7f);
+			final byte sbiDecode = DEC[sbiCrop];
 
 			if (EQUALS_SIGN_DEC <= sbiDecode) {
 				b4[b4Posn++] = sbiCrop;
@@ -275,19 +280,22 @@ public class Base64 {
 					b4Posn = 0;
 
 					// If that was the equals sign, break out of 'for' loop
-					if (sbiCrop == EQUALS_SIGN)
+					if (sbiCrop == EQUALS_SIGN) {
 						break;
+					}
 				}
 
-			} else if (sbiDecode != WHITE_SPACE_DEC)
+			} else if (sbiDecode != WHITE_SPACE_DEC) {
 				throw new IllegalArgumentException(MessageFormat.format(
 						"bad base64 input character {1} at {0}", i, source[i] & 0xff));
+			}
 		}
 
-		if (outBuff.length == outBuffPosn)
+		if (outBuff.length == outBuffPosn) {
 			return outBuff;
+		}
 
-		byte[] out = new byte[outBuffPosn];
+		final byte[] out = new byte[outBuffPosn];
 		System.arraycopy(outBuff, 0, out, 0, outBuffPosn);
 		return out;
 	}
@@ -303,7 +311,8 @@ public class Base64 {
 		byte[] bytes;
 		try {
 			bytes = s.getBytes(UTF_8);
-		} catch (UnsupportedEncodingException uee) {
+		}
+		catch (final UnsupportedEncodingException uee) {
 			bytes = s.getBytes();
 		}
 		return decode(bytes, 0, bytes.length);

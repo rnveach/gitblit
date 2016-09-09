@@ -25,15 +25,14 @@ import java.util.Date;
  * Implementation of a Bar chart using the flotr2 library
  *
  * @author Tim Ryan
- *
+ * 
  */
 public class Flotr2BarChart extends Chart {
 
 	private static final long serialVersionUID = 1L;
 	boolean xAxisIsDate = false;
 
-	public Flotr2BarChart(String tagId, String title, String keyName,
-			String valueName) {
+	public Flotr2BarChart(String tagId, String title, String keyName, String valueName) {
 		super(tagId, title, keyName, valueName);
 
 	}
@@ -41,42 +40,40 @@ public class Flotr2BarChart extends Chart {
 	@Override
 	protected void appendChart(StringBuilder sb) {
 
-		String dName = "data_" + dataName;
-		sb.append("var labels_" + dataName + " = [");
-		if(xAxisIsDate){
+		final String dName = "data_" + this.dataName;
+		sb.append("var labels_" + this.dataName + " = [");
+		if (this.xAxisIsDate) {
 
 			// Generate labels for the dates
-			SimpleDateFormat df = new SimpleDateFormat(dateFormat);
+			final SimpleDateFormat df = new SimpleDateFormat(this.dateFormat);
 			df.setTimeZone(getTimeZone());
 
 			// Sort the values first
-			Collections.sort(values, new Comparator<ChartValue>() {
+			Collections.sort(this.values, new Comparator<ChartValue>() {
 
-		        @Override
+				@Override
 				public int compare(ChartValue o1, ChartValue o2) {
-		        	long long1 = Long.parseLong(o1.name);
-		        	long long2 = Long.parseLong(o2.name);
-		            return (int) (long2 - long1);
-		        }
+					final long long1 = Long.parseLong(o1.name);
+					final long long2 = Long.parseLong(o2.name);
+					return (int) (long2 - long1);
+				}
 
-		    });
+			});
 
-
-			for (int i = 0; i < values.size(); i++) {
-				ChartValue value = values.get(i);
-				Date date = new Date(Long.parseLong(value.name));
-				String label = df.format(date);
-				if(i > 0){
+			for (int i = 0; i < this.values.size(); i++) {
+				final ChartValue value = this.values.get(i);
+				final Date date = new Date(Long.parseLong(value.name));
+				final String label = df.format(date);
+				if (i > 0) {
 					sb.append(",");
 				}
 				sb.append("[\"" + label + "\", " + value.name + "]");
 			}
 
-		}
-		else {
-			for (int i = 0; i < values.size(); i++) {
-				ChartValue value = values.get(i);
-				if(i > 0){
+		} else {
+			for (int i = 0; i < this.values.size(); i++) {
+				final ChartValue value = this.values.get(i);
+				if (i > 0) {
 					sb.append(",");
 				}
 				sb.append("\"" + value.name + "\"");
@@ -84,31 +81,35 @@ public class Flotr2BarChart extends Chart {
 		}
 		line(sb, "];");
 
-		line(sb, MessageFormat.format("var {0} = Flotr.draw(document.getElementById(''{1}''),", dName, tagId));
+		line(sb, MessageFormat.format("var {0} = Flotr.draw(document.getElementById(''{1}''),",
+				dName, this.tagId));
 
 		// Add the data
 		line(sb, "[");
 		line(sb, "{ data : [ ");
-		for (int i = 0; i < values.size(); i++) {
-			ChartValue value = values.get(i);
-			if(i > 0){
+		for (int i = 0; i < this.values.size(); i++) {
+			final ChartValue value = this.values.get(i);
+			if (i > 0) {
 				sb.append(",");
 			}
-			if(xAxisIsDate){
-				line(sb, MessageFormat.format("[{0}, {1}] ",  value.name, Float.toString(value.value)));
-			}
-			else {
-				line(sb, MessageFormat.format("[{0}, {1}] ",  Integer.toString(i), Float.toString(value.value)));
+			if (this.xAxisIsDate) {
+				line(sb, MessageFormat.format("[{0}, {1}] ", value.name,
+						Float.toString(value.value)));
+			} else {
+				line(sb,
+						MessageFormat.format("[{0}, {1}] ", Integer.toString(i),
+								Float.toString(value.value)));
 			}
 
 		}
-		line(sb, MessageFormat.format(" ], label : \"{0}\", color: ''#FF9900'' '}'", valueName));
+		line(sb,
+				MessageFormat.format(" ], label : \"{0}\", color: ''#FF9900'' '}'", this.valueName));
 		line(sb, "]");
 
 		// Add the options
 		line(sb, ", {");
-		if(title != null && title.isEmpty() == false){
-			line(sb, MessageFormat.format("title : \"{0}\",", title));
+		if ((this.title != null) && (this.title.isEmpty() == false)) {
+			line(sb, MessageFormat.format("title : \"{0}\",", this.title));
 		}
 		line(sb, "bars : {");
 		line(sb, "  show : true,");
@@ -121,7 +122,8 @@ public class Flotr2BarChart extends Chart {
 		line(sb, "  lineColor: '#002060',");
 		line(sb, "  position: 'ne',");
 		line(sb, "  trackFormatter: function (obj) {");
-		line(sb, "    return labels_" + dataName + "[obj.index] + ': ' + parseInt(obj.y) + ' ' +  obj.series.label;");
+		line(sb, "    return labels_" + this.dataName
+				+ "[obj.index] + ': ' + parseInt(obj.y) + ' ' +  obj.series.label;");
 		line(sb, "  }");
 		line(sb, "},");
 		line(sb, "xaxis: {");
@@ -129,8 +131,8 @@ public class Flotr2BarChart extends Chart {
 		line(sb, "  showMinorLabels: false,");
 		line(sb, "  tickFormatter: function (x) {");
 		line(sb, "   var index = parseInt(x);");
-		line(sb, "    if(x % 1 == 0 && labels_" + dataName + "[index])");
-		line(sb, "      return labels_" + dataName + "[index];");
+		line(sb, "    if(x % 1 == 0 && labels_" + this.dataName + "[index])");
+		line(sb, "      return labels_" + this.dataName + "[index];");
 		line(sb, "    return \"\";");
 		line(sb, "  },");
 		line(sb, "  margin: 10");
@@ -158,11 +160,9 @@ public class Flotr2BarChart extends Chart {
 
 	@Override
 	public void addValue(Date date, int value) {
-		xAxisIsDate = true;
-		String name = String.valueOf(date.getTime());
+		this.xAxisIsDate = true;
+		final String name = String.valueOf(date.getTime());
 		super.addValue(name, value);
 	}
-
-
 
 }

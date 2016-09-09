@@ -29,9 +29,9 @@ import com.gitblit.models.TicketModel;
 public abstract class PatchsetHook implements ExtensionPoint {
 
 	/**
-	 * Called after a new patchset has been created.  This patchset
-	 * may not be the first patchset of the ticket.  The ticket may be a new
-	 * proposal or it may be a existing ticket that now has a new patchset.
+	 * Called after a new patchset has been created. This patchset may not be
+	 * the first patchset of the ticket. The ticket may be a new proposal or it
+	 * may be a existing ticket that now has a new patchset.
 	 *
 	 * @param ticket
 	 * @since 1.5.0
@@ -47,8 +47,8 @@ public abstract class PatchsetHook implements ExtensionPoint {
 	public abstract void onUpdatePatchset(TicketModel ticket);
 
 	/**
-	 * Called after a patchset has been merged to the integration branch specified
-	 * in the ticket.
+	 * Called after a patchset has been merged to the integration branch
+	 * specified in the ticket.
 	 *
 	 * @param ticket
 	 * @since 1.5.0

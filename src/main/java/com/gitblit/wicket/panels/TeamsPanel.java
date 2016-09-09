@@ -37,12 +37,12 @@ public class TeamsPanel extends BasePanel {
 	public TeamsPanel(String wicketId, final boolean showAdmin) {
 		super(wicketId);
 
-		Fragment adminLinks = new Fragment("adminPanel", "adminLinks", this);
+		final Fragment adminLinks = new Fragment("adminPanel", "adminLinks", this);
 		adminLinks.add(new BookmarkablePageLink<Void>("newTeam", EditTeamPage.class));
 		add(adminLinks.setVisible(showAdmin));
 
 		final List<TeamModel> teams = app().users().getAllTeams();
-		DataView<TeamModel> teamsView = new DataView<TeamModel>("teamRow",
+		final DataView<TeamModel> teamsView = new DataView<TeamModel>("teamRow",
 				new ListDataProvider<TeamModel>(teams)) {
 			private static final long serialVersionUID = 1L;
 			private int counter;
@@ -50,13 +50,13 @@ public class TeamsPanel extends BasePanel {
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
 			public void populateItem(final Item<TeamModel> item) {
 				final TeamModel entry = item.getModelObject();
-				LinkPanel editLink = new LinkPanel("teamname", "list", entry.name,
+				final LinkPanel editLink = new LinkPanel("teamname", "list", entry.name,
 						EditTeamPage.class, WicketUtils.newTeamnameParameter(entry.name));
 				WicketUtils.setHtmlTooltip(editLink, getString("gb.edit") + " " + entry.name);
 				item.add(editLink);
@@ -65,10 +65,10 @@ public class TeamsPanel extends BasePanel {
 						: ""));
 				item.add(new Label("repositories",
 						entry.repositories.size() > 0 ? ("" + entry.repositories.size()) : ""));
-				Fragment teamLinks = new Fragment("teamLinks", "teamAdminLinks", this);
+				final Fragment teamLinks = new Fragment("teamLinks", "teamAdminLinks", this);
 				teamLinks.add(new BookmarkablePageLink<Void>("editTeam", EditTeamPage.class,
 						WicketUtils.newTeamnameParameter(entry.name)));
-				Link<Void> deleteLink = new Link<Void>("deleteTeam") {
+				final Link<Void> deleteLink = new Link<Void>("deleteTeam") {
 
 					private static final long serialVersionUID = 1L;
 
@@ -88,8 +88,8 @@ public class TeamsPanel extends BasePanel {
 				teamLinks.add(deleteLink);
 				item.add(teamLinks);
 
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(teamsView.setVisible(showAdmin));

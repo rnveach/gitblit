@@ -38,34 +38,37 @@ public class RepositoryModelTest extends GitblitUnitTest {
 
 	@AfterClass
 	public static void stopGitBlit() throws Exception {
-		if (wasStarted == false)
+		if (wasStarted == false) {
 			GitBlitSuite.stopGitblit();
+		}
 	}
 
 	@Before
-	public void initializeConfiguration() throws Exception{
-		Repository r = GitBlitSuite.getHelloworldRepository();
-		StoredConfig config = r.getConfig();
+	public void initializeConfiguration() throws Exception {
+		final Repository r = GitBlitSuite.getHelloworldRepository();
+		final StoredConfig config = r.getConfig();
 
 		config.unsetSection(Constants.CONFIG_GITBLIT, Constants.CONFIG_CUSTOM_FIELDS);
-		config.setString(Constants.CONFIG_GITBLIT, Constants.CONFIG_CUSTOM_FIELDS, "commitMessageRegEx", "\\d");
-		config.setString(Constants.CONFIG_GITBLIT, Constants.CONFIG_CUSTOM_FIELDS, "anotherProperty", "Hello");
+		config.setString(Constants.CONFIG_GITBLIT, Constants.CONFIG_CUSTOM_FIELDS,
+				"commitMessageRegEx", "\\d");
+		config.setString(Constants.CONFIG_GITBLIT, Constants.CONFIG_CUSTOM_FIELDS,
+				"anotherProperty", "Hello");
 
 		config.save();
 	}
 
 	@After
 	public void teardownConfiguration() throws Exception {
-		Repository r = GitBlitSuite.getHelloworldRepository();
-		StoredConfig config = r.getConfig();
+		final Repository r = GitBlitSuite.getHelloworldRepository();
+		final StoredConfig config = r.getConfig();
 
 		config.unsetSection(Constants.CONFIG_GITBLIT, Constants.CONFIG_CUSTOM_FIELDS);
 		config.save();
 	}
 
 	@Test
-	public void testGetCustomProperty() throws Exception {
-		RepositoryModel model = repositories().getRepositoryModel(
+	public void testGetCustomProperty() {
+		final RepositoryModel model = repositories().getRepositoryModel(
 				GitBlitSuite.getHelloworldRepository().getDirectory().getName());
 
 		assertEquals("\\d", model.customFields.get("commitMessageRegEx"));

@@ -28,7 +28,7 @@ import com.gitblit.wicket.GitblitWicketApp;
  * @author James Moger
  * @since 1.6.0
  */
-public abstract class GitblitWicketPlugin extends GitblitPlugin implements IInitializer  {
+public abstract class GitblitWicketPlugin extends GitblitPlugin implements IInitializer {
 
 	public GitblitWicketPlugin(PluginWrapper wrapper) {
 		super(wrapper);

@@ -52,7 +52,7 @@ public abstract class JsonServlet extends HttpServlet {
 
 	public JsonServlet() {
 		super();
-		logger = LoggerFactory.getLogger(getClass());
+		this.logger = LoggerFactory.getLogger(getClass());
 	}
 
 	/**
@@ -80,30 +80,30 @@ public abstract class JsonServlet extends HttpServlet {
 
 	protected <X> X deserialize(HttpServletRequest request, HttpServletResponse response,
 			Class<X> clazz) throws IOException {
-		String json = readJson(request, response);
+		final String json = readJson(request, response);
 		if (StringUtils.isEmpty(json)) {
 			return null;
 		}
 
-		X object = JsonUtils.fromJsonString(json.toString(), clazz);
+		final X object = JsonUtils.fromJsonString(json.toString(), clazz);
 		return object;
 	}
 
 	protected <X> X deserialize(HttpServletRequest request, HttpServletResponse response, Type type)
 			throws IOException {
-		String json = readJson(request, response);
+		final String json = readJson(request, response);
 		if (StringUtils.isEmpty(json)) {
 			return null;
 		}
 
-		X object = JsonUtils.fromJsonString(json.toString(), type);
+		final X object = JsonUtils.fromJsonString(json.toString(), type);
 		return object;
 	}
 
 	private String readJson(HttpServletRequest request, HttpServletResponse response)
 			throws IOException {
-		BufferedReader reader = request.getReader();
-		StringBuilder json = new StringBuilder();
+		final BufferedReader reader = request.getReader();
+		final StringBuilder json = new StringBuilder();
 		String line = null;
 		while ((line = reader.readLine()) != null) {
 			json.append(line);
@@ -111,7 +111,7 @@ public abstract class JsonServlet extends HttpServlet {
 		reader.close();
 
 		if (json.length() == 0) {
-			logger.error(MessageFormat.format("Failed to receive json data from {0}",
+			this.logger.error(MessageFormat.format("Failed to receive json data from {0}",
 					request.getRemoteAddr()));
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return null;
@@ -122,7 +122,7 @@ public abstract class JsonServlet extends HttpServlet {
 	protected void serialize(HttpServletResponse response, Object o) throws IOException {
 		if (o != null) {
 			// Send JSON response
-			String json = JsonUtils.toJsonString(o);
+			final String json = JsonUtils.toJsonString(o);
 			response.setCharacterEncoding(Constants.ENCODING);
 			response.setContentType("application/json");
 			response.getWriter().append(json);

@@ -24,31 +24,32 @@ import com.gitblit.models.FilestoreModel;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.UserModel;
 
-
 public interface IFilestoreManager extends IManager {
 
 	boolean isValidOid(String oid);
-	
+
 	FilestoreModel.Status addObject(String oid, long size, UserModel user, RepositoryModel repo);
-	
+
 	FilestoreModel getObject(String oid, UserModel user, RepositoryModel repo);
-	
-	FilestoreModel.Status uploadBlob(String oid, long size, UserModel user, RepositoryModel repo, InputStream streamIn );
-	
-	FilestoreModel.Status downloadBlob(String oid, UserModel user, RepositoryModel repo, OutputStream streamOut );
-	
+
+	FilestoreModel.Status uploadBlob(String oid, long size, UserModel user, RepositoryModel repo,
+			InputStream streamIn);
+
+	FilestoreModel.Status downloadBlob(String oid, UserModel user, RepositoryModel repo,
+			OutputStream streamOut);
+
 	List<FilestoreModel> getAllObjects(UserModel user);
-	
+
 	File getStorageFolder();
-	
+
 	File getStoragePath(String oid);
-	
+
 	long getMaxUploadSize();
-	
+
 	void clearFilestoreCache();
-	
+
 	long getFilestoreUsedByteCount();
-	
+
 	long getFilestoreAvailableByteCount();
 
 }

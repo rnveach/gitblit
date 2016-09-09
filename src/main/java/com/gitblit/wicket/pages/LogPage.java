@@ -32,36 +32,36 @@ public class LogPage extends RepositoryPage {
 
 		addSyndicationDiscoveryLink();
 
-		int pageNumber = WicketUtils.getPage(params);
-		int prevPage = Math.max(0, pageNumber - 1);
-		int nextPage = pageNumber + 1;
-		String refid = objectId;
+		final int pageNumber = WicketUtils.getPage(params);
+		final int prevPage = Math.max(0, pageNumber - 1);
+		final int nextPage = pageNumber + 1;
+		String refid = this.objectId;
 		if (StringUtils.isEmpty(refid)) {
 			refid = getRepositoryModel().HEAD;
 		}
-		LogPanel logPanel = new LogPanel("logPanel", repositoryName, refid, getRepository(), -1,
-				pageNumber - 1, getRepositoryModel().showRemoteBranches);
-		boolean hasMore = logPanel.hasMore();
+		final LogPanel logPanel = new LogPanel("logPanel", this.repositoryName, refid,
+				getRepository(), -1, pageNumber - 1, getRepositoryModel().showRemoteBranches);
+		final boolean hasMore = logPanel.hasMore();
 		add(logPanel);
 
 		add(new BookmarkablePageLink<Void>("firstPageTop", LogPage.class,
-				WicketUtils.newObjectParameter(repositoryName, objectId))
+				WicketUtils.newObjectParameter(this.repositoryName, this.objectId))
 				.setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("prevPageTop", LogPage.class,
-				WicketUtils.newLogPageParameter(repositoryName, objectId, prevPage))
+				WicketUtils.newLogPageParameter(this.repositoryName, this.objectId, prevPage))
 				.setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("nextPageTop", LogPage.class,
-				WicketUtils.newLogPageParameter(repositoryName, objectId, nextPage))
+				WicketUtils.newLogPageParameter(this.repositoryName, this.objectId, nextPage))
 				.setEnabled(hasMore));
 
 		add(new BookmarkablePageLink<Void>("firstPageBottom", LogPage.class,
-				WicketUtils.newObjectParameter(repositoryName, objectId))
+				WicketUtils.newObjectParameter(this.repositoryName, this.objectId))
 				.setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("prevPageBottom", LogPage.class,
-				WicketUtils.newLogPageParameter(repositoryName, objectId, prevPage))
+				WicketUtils.newLogPageParameter(this.repositoryName, this.objectId, prevPage))
 				.setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("nextPageBottom", LogPage.class,
-				WicketUtils.newLogPageParameter(repositoryName, objectId, nextPage))
+				WicketUtils.newLogPageParameter(this.repositoryName, this.objectId, nextPage))
 				.setEnabled(hasMore));
 	}
 

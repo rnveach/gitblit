@@ -57,6 +57,7 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 
 import org.eclipse.jgit.lib.Repository;
 
@@ -96,7 +97,7 @@ public class EditRepositoryDialog extends JDialog {
 
 	private JCheckBox requireApproval;
 
-	private JComboBox mergeToField;
+	private JComboBox<String> mergeToField;
 
 	private JCheckBox useIncrementalPushTags;
 
@@ -110,7 +111,7 @@ public class EditRepositoryDialog extends JDialog {
 
 	private JTextField mailingListsField;
 
-	private JComboBox accessRestriction;
+	private JComboBox<AccessRestrictionType> accessRestriction;
 
 	private JRadioButton allowAuthenticated;
 
@@ -120,17 +121,17 @@ public class EditRepositoryDialog extends JDialog {
 
 	private JCheckBox verifyCommitter;
 
-	private JComboBox federationStrategy;
+	private JComboBox<FederationStrategy> federationStrategy;
 
 	private JPalette<String> ownersPalette;
 
-	private JComboBox headRefField;
+	private JComboBox<String> headRefField;
 
-	private JComboBox gcPeriod;
+	private JComboBox<Integer> gcPeriod;
 
 	private JTextField gcThreshold;
 
-	private JComboBox maxActivityCommits;
+	private JComboBox<Integer> maxActivityCommits;
 
 	private RegistrantPermissionsPanel usersPalette;
 
@@ -148,7 +149,7 @@ public class EditRepositoryDialog extends JDialog {
 
 	private JLabel postReceiveInherited;
 
-	private Set<String> repositoryNames;
+	private final Set<String> repositoryNames;
 
 	private JPanel customFieldsPanel;
 
@@ -170,14 +171,13 @@ public class EditRepositoryDialog extends JDialog {
 		setModal(true);
 		setResizable(false);
 		setTitle(Translation.get("gb.edit") + ": " + aRepository.name);
-		setIconImage(new ImageIcon(getClass()
-				.getResource("/gitblt-favicon.png")).getImage());
+		setIconImage(new ImageIcon(getClass().getResource("/gitblt-favicon.png")).getImage());
 	}
 
 	@Override
 	protected JRootPane createRootPane() {
-		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-		JRootPane rootPane = new JRootPane();
+		final KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+		final JRootPane rootPane = new JRootPane();
 		rootPane.registerKeyboardAction(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -188,229 +188,231 @@ public class EditRepositoryDialog extends JDialog {
 	}
 
 	private void initialize(int protocolVersion, RepositoryModel anRepository) {
-		nameField = new JTextField(anRepository.name == null ? ""
-				: anRepository.name, 35);
-		descriptionField = new JTextField(anRepository.description == null ? ""
+		this.nameField = new JTextField(anRepository.name == null ? "" : anRepository.name, 35);
+		this.descriptionField = new JTextField(anRepository.description == null ? ""
 				: anRepository.description, 35);
 
-		JTextField originField = new JTextField(
-				anRepository.origin == null ? "" : anRepository.origin, 40);
+		final JTextField originField = new JTextField(anRepository.origin == null ? ""
+				: anRepository.origin, 40);
 		originField.setEditable(false);
 
 		if (ArrayUtils.isEmpty(anRepository.availableRefs)) {
-			headRefField = new JComboBox();
-			headRefField.setEnabled(false);
+			this.headRefField = new JComboBox<String>();
+			this.headRefField.setEnabled(false);
 		} else {
-			headRefField = new JComboBox(
-					anRepository.availableRefs.toArray());
-			headRefField.setSelectedItem(anRepository.HEAD);
+			this.headRefField = new JComboBox<String>(
+					anRepository.availableRefs.toArray(new String[0]));
+			this.headRefField.setSelectedItem(anRepository.HEAD);
 		}
 
-		Integer []  gcPeriods =  { 1, 2, 3, 4, 5, 7, 10, 14 };
-		gcPeriod = new JComboBox(gcPeriods);
-		gcPeriod.setSelectedItem(anRepository.gcPeriod);
+		final Integer[] gcPeriods = { 1, 2, 3, 4, 5, 7, 10, 14 };
+		this.gcPeriod = new JComboBox<Integer>(gcPeriods);
+		this.gcPeriod.setSelectedItem(anRepository.gcPeriod);
 
-		gcThreshold = new JTextField(8);
-		gcThreshold.setText(anRepository.gcThreshold);
+		this.gcThreshold = new JTextField(8);
+		this.gcThreshold.setText(anRepository.gcThreshold);
 
-		ownersPalette = new JPalette<String>(true);
+		this.ownersPalette = new JPalette<String>(true);
 
-		acceptNewTickets = new JCheckBox(Translation.get("gb.acceptsNewTicketsDescription"),
+		this.acceptNewTickets = new JCheckBox(Translation.get("gb.acceptsNewTicketsDescription"),
 				anRepository.acceptNewTickets);
-		acceptNewPatchsets = new JCheckBox(Translation.get("gb.acceptsNewPatchsetsDescription"),
+		this.acceptNewPatchsets = new JCheckBox(
+				Translation.get("gb.acceptsNewPatchsetsDescription"),
 				anRepository.acceptNewPatchsets);
-		requireApproval = new JCheckBox(Translation.get("gb.requireApprovalDescription"),
+		this.requireApproval = new JCheckBox(Translation.get("gb.requireApprovalDescription"),
 				anRepository.requireApproval);
 
 		if (ArrayUtils.isEmpty(anRepository.availableRefs)) {
-			mergeToField = new JComboBox();
-			mergeToField.setEnabled(false);
+			this.mergeToField = new JComboBox<String>();
+			this.mergeToField.setEnabled(false);
 		} else {
-			mergeToField = new JComboBox(
-					anRepository.availableRefs.toArray());
-			mergeToField.setSelectedItem(anRepository.mergeTo);
+			this.mergeToField = new JComboBox<String>(
+					anRepository.availableRefs.toArray(new String[0]));
+			this.mergeToField.setSelectedItem(anRepository.mergeTo);
 		}
 
-		useIncrementalPushTags = new JCheckBox(Translation.get("gb.useIncrementalPushTagsDescription"),
+		this.useIncrementalPushTags = new JCheckBox(
+				Translation.get("gb.useIncrementalPushTagsDescription"),
 				anRepository.useIncrementalPushTags);
-		showRemoteBranches = new JCheckBox(
+		this.showRemoteBranches = new JCheckBox(
 				Translation.get("gb.showRemoteBranchesDescription"),
 				anRepository.showRemoteBranches);
-		skipSizeCalculation = new JCheckBox(
+		this.skipSizeCalculation = new JCheckBox(
 				Translation.get("gb.skipSizeCalculationDescription"),
 				anRepository.skipSizeCalculation);
-		skipSummaryMetrics = new JCheckBox(
+		this.skipSummaryMetrics = new JCheckBox(
 				Translation.get("gb.skipSummaryMetricsDescription"),
 				anRepository.skipSummaryMetrics);
-		isFrozen = new JCheckBox(Translation.get("gb.isFrozenDescription"),
+		this.isFrozen = new JCheckBox(Translation.get("gb.isFrozenDescription"),
 				anRepository.isFrozen);
 
-		maxActivityCommits = new JComboBox(new Integer [] { -1, 0, 25, 50, 75, 100, 150, 250, 500 });
-		maxActivityCommits.setSelectedItem(anRepository.maxActivityCommits);
+		this.maxActivityCommits = new JComboBox<Integer>(new Integer[] { -1, 0, 25, 50, 75, 100,
+				150, 250, 500 });
+		this.maxActivityCommits.setSelectedItem(anRepository.maxActivityCommits);
 
-		mailingListsField = new JTextField(
-				ArrayUtils.isEmpty(anRepository.mailingLists) ? ""
-						: StringUtils.flattenStrings(anRepository.mailingLists,
-								" "), 50);
+		this.mailingListsField = new JTextField(ArrayUtils.isEmpty(anRepository.mailingLists) ? ""
+				: StringUtils.flattenStrings(anRepository.mailingLists, " "), 50);
 
-		accessRestriction = new JComboBox(AccessRestrictionType.values());
-		accessRestriction.setRenderer(new AccessRestrictionRenderer());
-		accessRestriction.setSelectedItem(anRepository.accessRestriction);
-		accessRestriction.addItemListener(new ItemListener() {
+		this.accessRestriction = new JComboBox<AccessRestrictionType>(
+				AccessRestrictionType.values());
+		this.accessRestriction.setRenderer(new AccessRestrictionRenderer());
+		this.accessRestriction.setSelectedItem(anRepository.accessRestriction);
+		this.accessRestriction.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
-					AccessRestrictionType art = (AccessRestrictionType) accessRestriction.getSelectedItem();
+					final AccessRestrictionType art = (AccessRestrictionType) EditRepositoryDialog.this.accessRestriction
+							.getSelectedItem();
 					EditRepositoryDialog.this.setupAccessPermissions(art);
 				}
 			}
 		});
 
-		boolean authenticated = anRepository.authorizationControl != null
+		final boolean authenticated = (anRepository.authorizationControl != null)
 				&& AuthorizationControl.AUTHENTICATED.equals(anRepository.authorizationControl);
-		allowAuthenticated = new JRadioButton(Translation.get("gb.allowAuthenticatedDescription"));
-		allowAuthenticated.setSelected(authenticated);
-		allowAuthenticated.addItemListener(new ItemListener() {
+		this.allowAuthenticated = new JRadioButton(
+				Translation.get("gb.allowAuthenticatedDescription"));
+		this.allowAuthenticated.setSelected(authenticated);
+		this.allowAuthenticated.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
-					usersPalette.setEnabled(false);
-					teamsPalette.setEnabled(false);
+					EditRepositoryDialog.this.usersPalette.setEnabled(false);
+					EditRepositoryDialog.this.teamsPalette.setEnabled(false);
 				}
 			}
 		});
 
-		allowNamed = new JRadioButton(Translation.get("gb.allowNamedDescription"));
-		allowNamed.setSelected(!authenticated);
-		allowNamed.addItemListener(new ItemListener() {
+		this.allowNamed = new JRadioButton(Translation.get("gb.allowNamedDescription"));
+		this.allowNamed.setSelected(!authenticated);
+		this.allowNamed.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
 				if (e.getStateChange() == ItemEvent.SELECTED) {
-					usersPalette.setEnabled(true);
-					teamsPalette.setEnabled(true);
+					EditRepositoryDialog.this.usersPalette.setEnabled(true);
+					EditRepositoryDialog.this.teamsPalette.setEnabled(true);
 				}
 			}
 		});
 
-		ButtonGroup group = new ButtonGroup();
-		group.add(allowAuthenticated);
-		group.add(allowNamed);
+		final ButtonGroup group = new ButtonGroup();
+		group.add(this.allowAuthenticated);
+		group.add(this.allowNamed);
 
-		JPanel authorizationPanel = new JPanel(new GridLayout(0, 1));
-		authorizationPanel.add(allowAuthenticated);
-		authorizationPanel.add(allowNamed);
+		final JPanel authorizationPanel = new JPanel(new GridLayout(0, 1));
+		authorizationPanel.add(this.allowAuthenticated);
+		authorizationPanel.add(this.allowNamed);
 
-		allowForks = new JCheckBox(Translation.get("gb.allowForksDescription"), anRepository.allowForks);
-		verifyCommitter = new JCheckBox(Translation.get("gb.verifyCommitterDescription"), anRepository.verifyCommitter);
+		this.allowForks = new JCheckBox(Translation.get("gb.allowForksDescription"),
+				anRepository.allowForks);
+		this.verifyCommitter = new JCheckBox(Translation.get("gb.verifyCommitterDescription"),
+				anRepository.verifyCommitter);
 
 		// federation strategies - remove ORIGIN choice if this repository has
 		// no origin.
-		List<FederationStrategy> federationStrategies = new ArrayList<FederationStrategy>(
+		final List<FederationStrategy> federationStrategies = new ArrayList<FederationStrategy>(
 				Arrays.asList(FederationStrategy.values()));
 		if (StringUtils.isEmpty(anRepository.origin)) {
 			federationStrategies.remove(FederationStrategy.FEDERATE_ORIGIN);
 		}
-		federationStrategy = new JComboBox(federationStrategies.toArray());
-		federationStrategy.setRenderer(new FederationStrategyRenderer());
-		federationStrategy.setSelectedItem(anRepository.federationStrategy);
+		this.federationStrategy = new JComboBox<FederationStrategy>(
+				federationStrategies.toArray(new FederationStrategy[0]));
+		this.federationStrategy.setRenderer(new FederationStrategyRenderer<FederationStrategy>());
+		this.federationStrategy.setSelectedItem(anRepository.federationStrategy);
 
-		JPanel fieldsPanel = new JPanel(new GridLayout(0, 1));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.name"), nameField));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.description"),
-				descriptionField));
-		fieldsPanel
-				.add(newFieldPanel(Translation.get("gb.origin"), originField));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.headRef"), headRefField));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.gcPeriod"), gcPeriod));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.gcThreshold"), gcThreshold));
+		final JPanel fieldsPanel = new JPanel(new GridLayout(0, 1));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.name"), this.nameField));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.description"), this.descriptionField));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.origin"), originField));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.headRef"), this.headRefField));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.gcPeriod"), this.gcPeriod));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.gcThreshold"), this.gcThreshold));
 
 		fieldsPanel.add(newFieldPanel(Translation.get("gb.acceptsNewTickets"),
-				acceptNewTickets));
+				this.acceptNewTickets));
 		fieldsPanel.add(newFieldPanel(Translation.get("gb.acceptsNewPatchsets"),
-				acceptNewPatchsets));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.requireApproval"),
-				requireApproval));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.mergeTo"), mergeToField));
-		fieldsPanel
-		.add(newFieldPanel(Translation.get("gb.enableIncrementalPushTags"), useIncrementalPushTags));
+				this.acceptNewPatchsets));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.requireApproval"), this.requireApproval));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.mergeTo"), this.mergeToField));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.enableIncrementalPushTags"),
+				this.useIncrementalPushTags));
 		fieldsPanel.add(newFieldPanel(Translation.get("gb.showRemoteBranches"),
-				showRemoteBranches));
-		fieldsPanel
-				.add(newFieldPanel(Translation.get("gb.skipSizeCalculation"),
-						skipSizeCalculation));
+				this.showRemoteBranches));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.skipSizeCalculation"),
+				this.skipSizeCalculation));
 		fieldsPanel.add(newFieldPanel(Translation.get("gb.skipSummaryMetrics"),
-				skipSummaryMetrics));
+				this.skipSummaryMetrics));
 		fieldsPanel.add(newFieldPanel(Translation.get("gb.maxActivityCommits"),
-				maxActivityCommits));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.mailingLists"),
-				mailingListsField));
+				this.maxActivityCommits));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.mailingLists"), this.mailingListsField));
 
-		JPanel clonePushPanel = new JPanel(new GridLayout(0, 1));
-		clonePushPanel
-		.add(newFieldPanel(Translation.get("gb.isFrozen"), isFrozen));
-		clonePushPanel
-		.add(newFieldPanel(Translation.get("gb.allowForks"), allowForks));
-		clonePushPanel
-		.add(newFieldPanel(Translation.get("gb.verifyCommitter"), verifyCommitter));
+		final JPanel clonePushPanel = new JPanel(new GridLayout(0, 1));
+		clonePushPanel.add(newFieldPanel(Translation.get("gb.isFrozen"), this.isFrozen));
+		clonePushPanel.add(newFieldPanel(Translation.get("gb.allowForks"), this.allowForks));
+		clonePushPanel.add(newFieldPanel(Translation.get("gb.verifyCommitter"),
+				this.verifyCommitter));
 
-		usersPalette = new RegistrantPermissionsPanel(RegistrantType.USER);
+		this.usersPalette = new RegistrantPermissionsPanel(RegistrantType.USER);
 
-		JPanel northFieldsPanel = new JPanel(new BorderLayout(0, 5));
-		northFieldsPanel.add(newFieldPanel(Translation.get("gb.owners"), ownersPalette), BorderLayout.NORTH);
-		northFieldsPanel.add(newFieldPanel(Translation.get("gb.accessRestriction"),
-				accessRestriction), BorderLayout.CENTER);
+		final JPanel northFieldsPanel = new JPanel(new BorderLayout(0, 5));
+		northFieldsPanel.add(newFieldPanel(Translation.get("gb.owners"), this.ownersPalette),
+				BorderLayout.NORTH);
+		northFieldsPanel.add(
+				newFieldPanel(Translation.get("gb.accessRestriction"), this.accessRestriction),
+				BorderLayout.CENTER);
 
-		JPanel northAccessPanel = new JPanel(new BorderLayout(5, 5));
+		final JPanel northAccessPanel = new JPanel(new BorderLayout(5, 5));
 		northAccessPanel.add(northFieldsPanel, BorderLayout.NORTH);
-		northAccessPanel.add(newFieldPanel(Translation.get("gb.authorizationControl"),
-				authorizationPanel), BorderLayout.CENTER);
+		northAccessPanel.add(
+				newFieldPanel(Translation.get("gb.authorizationControl"), authorizationPanel),
+				BorderLayout.CENTER);
 		northAccessPanel.add(clonePushPanel, BorderLayout.SOUTH);
 
-		JPanel accessPanel = new JPanel(new BorderLayout(5, 5));
+		final JPanel accessPanel = new JPanel(new BorderLayout(5, 5));
 		accessPanel.add(northAccessPanel, BorderLayout.NORTH);
-		accessPanel.add(newFieldPanel(Translation.get("gb.userPermissions"),
-						usersPalette), BorderLayout.CENTER);
+		accessPanel.add(newFieldPanel(Translation.get("gb.userPermissions"), this.usersPalette),
+				BorderLayout.CENTER);
 
-		teamsPalette = new RegistrantPermissionsPanel(RegistrantType.TEAM);
-		JPanel teamsPanel = new JPanel(new BorderLayout(5, 5));
-		teamsPanel.add(
-				newFieldPanel(Translation.get("gb.teamPermissions"),
-						teamsPalette), BorderLayout.CENTER);
+		this.teamsPalette = new RegistrantPermissionsPanel(RegistrantType.TEAM);
+		final JPanel teamsPanel = new JPanel(new BorderLayout(5, 5));
+		teamsPanel.add(newFieldPanel(Translation.get("gb.teamPermissions"), this.teamsPalette),
+				BorderLayout.CENTER);
 
-		setsPalette = new JPalette<String>();
-		JPanel federationPanel = new JPanel(new BorderLayout(5, 5));
+		this.setsPalette = new JPalette<String>();
+		final JPanel federationPanel = new JPanel(new BorderLayout(5, 5));
 		federationPanel.add(
-				newFieldPanel(Translation.get("gb.federationStrategy"),
-						federationStrategy), BorderLayout.NORTH);
-		federationPanel
-				.add(newFieldPanel(Translation.get("gb.federationSets"),
-						setsPalette), BorderLayout.CENTER);
+				newFieldPanel(Translation.get("gb.federationStrategy"), this.federationStrategy),
+				BorderLayout.NORTH);
+		federationPanel.add(newFieldPanel(Translation.get("gb.federationSets"), this.setsPalette),
+				BorderLayout.CENTER);
 
-		indexedBranchesPalette = new JPalette<String>();
-		JPanel indexedBranchesPanel = new JPanel(new BorderLayout(5, 5));
-		indexedBranchesPanel
-				.add(newFieldPanel(Translation.get("gb.indexedBranches"),
-						indexedBranchesPalette), BorderLayout.CENTER);
+		this.indexedBranchesPalette = new JPalette<String>();
+		final JPanel indexedBranchesPanel = new JPanel(new BorderLayout(5, 5));
+		indexedBranchesPanel.add(
+				newFieldPanel(Translation.get("gb.indexedBranches"), this.indexedBranchesPalette),
+				BorderLayout.CENTER);
 
-		preReceivePalette = new JPalette<String>(true);
-		preReceiveInherited = new JLabel();
-		JPanel preReceivePanel = new JPanel(new BorderLayout(5, 5));
-		preReceivePanel.add(preReceivePalette, BorderLayout.CENTER);
-		preReceivePanel.add(preReceiveInherited, BorderLayout.WEST);
+		this.preReceivePalette = new JPalette<String>(true);
+		this.preReceiveInherited = new JLabel();
+		final JPanel preReceivePanel = new JPanel(new BorderLayout(5, 5));
+		preReceivePanel.add(this.preReceivePalette, BorderLayout.CENTER);
+		preReceivePanel.add(this.preReceiveInherited, BorderLayout.WEST);
 
-		postReceivePalette = new JPalette<String>(true);
-		postReceiveInherited = new JLabel();
-		JPanel postReceivePanel = new JPanel(new BorderLayout(5, 5));
-		postReceivePanel.add(postReceivePalette, BorderLayout.CENTER);
-		postReceivePanel.add(postReceiveInherited, BorderLayout.WEST);
+		this.postReceivePalette = new JPalette<String>(true);
+		this.postReceiveInherited = new JLabel();
+		final JPanel postReceivePanel = new JPanel(new BorderLayout(5, 5));
+		postReceivePanel.add(this.postReceivePalette, BorderLayout.CENTER);
+		postReceivePanel.add(this.postReceiveInherited, BorderLayout.WEST);
 
-		customFieldsPanel = new JPanel();
-		customFieldsPanel.setLayout(new BoxLayout(customFieldsPanel, BoxLayout.Y_AXIS));
-		JScrollPane customFieldsScrollPane = new JScrollPane(customFieldsPanel);
-		customFieldsScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-		customFieldsScrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+		this.customFieldsPanel = new JPanel();
+		this.customFieldsPanel.setLayout(new BoxLayout(this.customFieldsPanel, BoxLayout.Y_AXIS));
+		final JScrollPane customFieldsScrollPane = new JScrollPane(this.customFieldsPanel);
+		customFieldsScrollPane
+				.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		customFieldsScrollPane
+				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-		JTabbedPane panel = new JTabbedPane(JTabbedPane.TOP);
+		final JTabbedPane panel = new JTabbedPane(SwingConstants.TOP);
 		panel.addTab(Translation.get("gb.general"), fieldsPanel);
 		panel.addTab(Translation.get("gb.accessRestriction"), accessPanel);
 		if (protocolVersion >= 2) {
@@ -425,35 +427,34 @@ public class EditRepositoryDialog extends JDialog {
 
 		panel.addTab(Translation.get("gb.customFields"), customFieldsScrollPane);
 
-
 		setupAccessPermissions(anRepository.accessRestriction);
 
-		JButton createButton = new JButton(Translation.get("gb.save"));
+		final JButton createButton = new JButton(Translation.get("gb.save"));
 		createButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				if (validateFields()) {
-					canceled = false;
+					EditRepositoryDialog.this.canceled = false;
 					setVisible(false);
 				}
 			}
 		});
 
-		JButton cancelButton = new JButton(Translation.get("gb.cancel"));
+		final JButton cancelButton = new JButton(Translation.get("gb.cancel"));
 		cancelButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				canceled = true;
+				EditRepositoryDialog.this.canceled = true;
 				setVisible(false);
 			}
 		});
 
-		JPanel controls = new JPanel();
+		final JPanel controls = new JPanel();
 		controls.add(cancelButton);
 		controls.add(createButton);
 
 		final Insets _insets = new Insets(5, 5, 5, 5);
-		JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
+		final JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -468,18 +469,18 @@ public class EditRepositoryDialog extends JDialog {
 		getContentPane().setLayout(new BorderLayout(5, 5));
 		getContentPane().add(centerPanel, BorderLayout.CENTER);
 		pack();
-		nameField.requestFocus();
+		this.nameField.requestFocus();
 	}
 
-	private JPanel newFieldPanel(String label, JComponent comp) {
+	private static JPanel newFieldPanel(String label, JComponent comp) {
 		return newFieldPanel(label, 150, comp);
 	}
 
-	private JPanel newFieldPanel(String label, int labelSize, JComponent comp) {
-		JLabel fieldLabel = new JLabel(label);
+	private static JPanel newFieldPanel(String label, int labelSize, JComponent comp) {
+		final JLabel fieldLabel = new JLabel(label);
 		fieldLabel.setFont(fieldLabel.getFont().deriveFont(Font.BOLD));
 		fieldLabel.setPreferredSize(new Dimension(labelSize, 20));
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+		final JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
 		panel.add(fieldLabel);
 		panel.add(comp);
 		return panel;
@@ -487,27 +488,27 @@ public class EditRepositoryDialog extends JDialog {
 
 	private void setupAccessPermissions(AccessRestrictionType art) {
 		if (AccessRestrictionType.NONE.equals(art)) {
-			usersPalette.setEnabled(false);
-			teamsPalette.setEnabled(false);
+			this.usersPalette.setEnabled(false);
+			this.teamsPalette.setEnabled(false);
 
-			allowAuthenticated.setEnabled(false);
-			allowNamed.setEnabled(false);
-			verifyCommitter.setEnabled(false);
+			this.allowAuthenticated.setEnabled(false);
+			this.allowNamed.setEnabled(false);
+			this.verifyCommitter.setEnabled(false);
 		} else {
-			allowAuthenticated.setEnabled(true);
-			allowNamed.setEnabled(true);
-			verifyCommitter.setEnabled(true);
+			this.allowAuthenticated.setEnabled(true);
+			this.allowNamed.setEnabled(true);
+			this.verifyCommitter.setEnabled(true);
 
-			if (allowNamed.isSelected()) {
-				usersPalette.setEnabled(true);
-				teamsPalette.setEnabled(true);
+			if (this.allowNamed.isSelected()) {
+				this.usersPalette.setEnabled(true);
+				this.teamsPalette.setEnabled(true);
 			}
 		}
 
 	}
 
 	private boolean validateFields() {
-		String rname = nameField.getText();
+		String rname = this.nameField.getText();
 		if (StringUtils.isEmpty(rname)) {
 			error("Please enter a repository name!");
 			return false;
@@ -536,104 +537,102 @@ public class EditRepositoryDialog extends JDialog {
 		}
 
 		// confirm valid characters in repository name
-		Character c = StringUtils.findInvalidCharacter(rname);
+		final Character c = StringUtils.findInvalidCharacter(rname);
 		if (c != null) {
-			error(MessageFormat.format(
-					"Illegal character ''{0}'' in repository name!", c));
+			error(MessageFormat.format("Illegal character ''{0}'' in repository name!", c));
 			return false;
 		}
 
 		// verify repository name uniqueness on create
-		if (isCreate) {
+		if (this.isCreate) {
 			// force repo names to lowercase
 			// this means that repository name checking for rpc creation
 			// is case-insensitive, regardless of the Gitblit server's
 			// filesystem
-			if (repositoryNames.contains(rname.toLowerCase())) {
-				error(MessageFormat
-						.format("Can not create repository ''{0}'' because it already exists.",
-								rname));
+			if (this.repositoryNames.contains(rname.toLowerCase())) {
+				error(MessageFormat.format(
+						"Can not create repository ''{0}'' because it already exists.", rname));
 				return false;
 			}
 		} else {
 			// check rename collision
-			if (!repositoryName.equalsIgnoreCase(rname)) {
-				if (repositoryNames.contains(rname.toLowerCase())) {
-					error(MessageFormat
-							.format("Failed to rename ''{0}'' because ''{1}'' already exists.",
-									repositoryName, rname));
+			if (!this.repositoryName.equalsIgnoreCase(rname)) {
+				if (this.repositoryNames.contains(rname.toLowerCase())) {
+					error(MessageFormat.format(
+							"Failed to rename ''{0}'' because ''{1}'' already exists.",
+							this.repositoryName, rname));
 					return false;
 				}
 			}
 		}
 
-		if (accessRestriction.getSelectedItem() == null) {
+		if (this.accessRestriction.getSelectedItem() == null) {
 			error("Please select access restriction!");
 			return false;
 		}
 
-		if (federationStrategy.getSelectedItem() == null) {
+		if (this.federationStrategy.getSelectedItem() == null) {
 			error("Please select federation strategy!");
 			return false;
 		}
 
-		repository.name = rname;
-		repository.description = descriptionField.getText();
-		repository.owners.clear();
-		repository.owners.addAll(ownersPalette.getSelections());
-		repository.HEAD = headRefField.getSelectedItem() == null ? null
-				: headRefField.getSelectedItem().toString();
-		repository.gcPeriod = (Integer) gcPeriod.getSelectedItem();
-		repository.gcThreshold = gcThreshold.getText();
-		repository.acceptNewPatchsets = acceptNewPatchsets.isSelected();
-		repository.acceptNewTickets = acceptNewTickets.isSelected();
-		repository.requireApproval = requireApproval.isSelected();
-		repository.mergeTo = mergeToField.getSelectedItem() == null ? null
-				: Repository.shortenRefName(mergeToField.getSelectedItem().toString());
-		repository.useIncrementalPushTags = useIncrementalPushTags.isSelected();
-		repository.showRemoteBranches = showRemoteBranches.isSelected();
-		repository.skipSizeCalculation = skipSizeCalculation.isSelected();
-		repository.skipSummaryMetrics = skipSummaryMetrics.isSelected();
-		repository.maxActivityCommits = (Integer) maxActivityCommits.getSelectedItem();
+		this.repository.name = rname;
+		this.repository.description = this.descriptionField.getText();
+		this.repository.owners.clear();
+		this.repository.owners.addAll(this.ownersPalette.getSelections());
+		this.repository.HEAD = this.headRefField.getSelectedItem() == null ? null
+				: this.headRefField.getSelectedItem().toString();
+		this.repository.gcPeriod = (Integer) this.gcPeriod.getSelectedItem();
+		this.repository.gcThreshold = this.gcThreshold.getText();
+		this.repository.acceptNewPatchsets = this.acceptNewPatchsets.isSelected();
+		this.repository.acceptNewTickets = this.acceptNewTickets.isSelected();
+		this.repository.requireApproval = this.requireApproval.isSelected();
+		this.repository.mergeTo = this.mergeToField.getSelectedItem() == null ? null : Repository
+				.shortenRefName(this.mergeToField.getSelectedItem().toString());
+		this.repository.useIncrementalPushTags = this.useIncrementalPushTags.isSelected();
+		this.repository.showRemoteBranches = this.showRemoteBranches.isSelected();
+		this.repository.skipSizeCalculation = this.skipSizeCalculation.isSelected();
+		this.repository.skipSummaryMetrics = this.skipSummaryMetrics.isSelected();
+		this.repository.maxActivityCommits = (Integer) this.maxActivityCommits.getSelectedItem();
 
-		repository.isFrozen = isFrozen.isSelected();
-		repository.allowForks = allowForks.isSelected();
-		repository.verifyCommitter = verifyCommitter.isSelected();
+		this.repository.isFrozen = this.isFrozen.isSelected();
+		this.repository.allowForks = this.allowForks.isSelected();
+		this.repository.verifyCommitter = this.verifyCommitter.isSelected();
 
-		String ml = mailingListsField.getText();
+		final String ml = this.mailingListsField.getText();
 		if (!StringUtils.isEmpty(ml)) {
-			Set<String> list = new HashSet<String>();
-			for (String address : ml.split("(,|\\s)")) {
+			final Set<String> list = new HashSet<String>();
+			for (final String address : ml.split("(,|\\s)")) {
 				if (StringUtils.isEmpty(address)) {
 					continue;
 				}
 				list.add(address.toLowerCase());
 			}
-			repository.mailingLists = new ArrayList<String>(list);
+			this.repository.mailingLists = new ArrayList<String>(list);
 		}
 
-		repository.accessRestriction = (AccessRestrictionType) accessRestriction
+		this.repository.accessRestriction = (AccessRestrictionType) this.accessRestriction
 				.getSelectedItem();
-		repository.authorizationControl = allowAuthenticated.isSelected() ?
-				AuthorizationControl.AUTHENTICATED : AuthorizationControl.NAMED;
-		repository.federationStrategy = (FederationStrategy) federationStrategy
+		this.repository.authorizationControl = this.allowAuthenticated.isSelected() ? AuthorizationControl.AUTHENTICATED
+				: AuthorizationControl.NAMED;
+		this.repository.federationStrategy = (FederationStrategy) this.federationStrategy
 				.getSelectedItem();
 
-		if (repository.federationStrategy.exceeds(FederationStrategy.EXCLUDE)) {
-			repository.federationSets = setsPalette.getSelections();
+		if (this.repository.federationStrategy.exceeds(FederationStrategy.EXCLUDE)) {
+			this.repository.federationSets = this.setsPalette.getSelections();
 		}
 
-		repository.indexedBranches = indexedBranchesPalette.getSelections();
-		repository.preReceiveScripts = preReceivePalette.getSelections();
-		repository.postReceiveScripts = postReceivePalette.getSelections();
+		this.repository.indexedBranches = this.indexedBranchesPalette.getSelections();
+		this.repository.preReceiveScripts = this.preReceivePalette.getSelections();
+		this.repository.postReceiveScripts = this.postReceivePalette.getSelections();
 
 		// Custom Fields
-		repository.customFields = new LinkedHashMap<String, String>();
-		if (customTextfields != null) {
-			for (JTextField field : customTextfields) {
-				String key = field.getName();
-				String value = field.getText();
-				repository.customFields.put(key, value);
+		this.repository.customFields = new LinkedHashMap<String, String>();
+		if (this.customTextfields != null) {
+			for (final JTextField field : this.customTextfields) {
+				final String key = field.getName();
+				final String value = field.getText();
+				this.repository.customFields.put(key, value);
 			}
 		}
 		return true;
@@ -650,56 +649,57 @@ public class EditRepositoryDialog extends JDialog {
 	}
 
 	public void setAuthorizationControl(AuthorizationControl authorization) {
-		boolean authenticated = authorization != null && AuthorizationControl.AUTHENTICATED.equals(authorization);
+		final boolean authenticated = (authorization != null)
+				&& AuthorizationControl.AUTHENTICATED.equals(authorization);
 		this.allowAuthenticated.setSelected(authenticated);
 		this.allowNamed.setSelected(!authenticated);
 	}
 
-	public void setUsers(List<String> owners, List<String> all, List<RegistrantAccessPermission> permissions) {
-		ownersPalette.setObjects(all, owners);
-		usersPalette.setObjects(all, permissions);
+	public void setUsers(List<String> owners, List<String> all,
+			List<RegistrantAccessPermission> permissions) {
+		this.ownersPalette.setObjects(all, owners);
+		this.usersPalette.setObjects(all, permissions);
 	}
 
 	public void setTeams(List<String> all, List<RegistrantAccessPermission> permissions) {
-		teamsPalette.setObjects(all, permissions);
+		this.teamsPalette.setObjects(all, permissions);
 	}
 
 	public void setRepositories(List<RepositoryModel> repositories) {
-		repositoryNames.clear();
-		for (RepositoryModel repository : repositories) {
+		this.repositoryNames.clear();
+		for (final RepositoryModel repository : repositories) {
 			// force repo names to lowercase
 			// this means that repository name checking for rpc creation
 			// is case-insensitive, regardless of the Gitblit server's
 			// filesystem
-			repositoryNames.add(repository.name.toLowerCase());
+			this.repositoryNames.add(repository.name.toLowerCase());
 		}
 	}
 
 	public void setFederationSets(List<String> all, List<String> selected) {
-		setsPalette.setObjects(all, selected);
+		this.setsPalette.setObjects(all, selected);
 	}
 
 	public void setIndexedBranches(List<String> all, List<String> selected) {
-		indexedBranchesPalette.setObjects(all, selected);
+		this.indexedBranchesPalette.setObjects(all, selected);
 	}
 
-	public void setPreReceiveScripts(List<String> all, List<String> inherited,
-			List<String> selected) {
-		preReceivePalette.setObjects(all, selected);
-		showInherited(inherited, preReceiveInherited);
+	public void setPreReceiveScripts(List<String> all, List<String> inherited, List<String> selected) {
+		this.preReceivePalette.setObjects(all, selected);
+		showInherited(inherited, this.preReceiveInherited);
 	}
 
 	public void setPostReceiveScripts(List<String> all, List<String> inherited,
 			List<String> selected) {
-		postReceivePalette.setObjects(all, selected);
-		showInherited(inherited, postReceiveInherited);
+		this.postReceivePalette.setObjects(all, selected);
+		showInherited(inherited, this.postReceiveInherited);
 	}
 
-	private void showInherited(List<String> list, JLabel label) {
-		StringBuilder sb = new StringBuilder();
-		if (list != null && list.size() > 0) {
+	private static void showInherited(List<String> list, JLabel label) {
+		final StringBuilder sb = new StringBuilder();
+		if ((list != null) && (list.size() > 0)) {
 			sb.append("<html><body><b>INHERITED</b><ul style=\"margin-left:5px;list-style-type: none;\">");
-			for (String script : list) {
+			for (final String script : list) {
 				sb.append("<li>").append(script).append("</li>");
 			}
 			sb.append("</ul></body></html>");
@@ -708,26 +708,26 @@ public class EditRepositoryDialog extends JDialog {
 	}
 
 	public RepositoryModel getRepository() {
-		if (canceled) {
+		if (this.canceled) {
 			return null;
 		}
-		return repository;
+		return this.repository;
 	}
 
 	public List<RegistrantAccessPermission> getUserAccessPermissions() {
-		return usersPalette.getPermissions();
+		return this.usersPalette.getPermissions();
 	}
 
 	public List<RegistrantAccessPermission> getTeamAccessPermissions() {
-		return teamsPalette.getPermissions();
+		return this.teamsPalette.getPermissions();
 	}
 
 	public void setCustomFields(RepositoryModel repository, Map<String, String> customFields) {
-		customFieldsPanel.removeAll();
-		customTextfields = new ArrayList<JTextField>();
+		this.customFieldsPanel.removeAll();
+		this.customTextfields = new ArrayList<JTextField>();
 
 		final Insets insets = new Insets(5, 5, 5, 5);
-		JPanel fields = new JPanel(new GridLayout(0, 1, 0, 5)) {
+		final JPanel fields = new JPanel(new GridLayout(0, 1, 0, 5)) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -737,27 +737,27 @@ public class EditRepositoryDialog extends JDialog {
 			}
 		};
 
-		for (Map.Entry<String, String> entry : customFields.entrySet()) {
-			String field = entry.getKey();
+		for (final Map.Entry<String, String> entry : customFields.entrySet()) {
+			final String field = entry.getKey();
 			String value = "";
-			if (repository.customFields != null && repository.customFields.containsKey(field)) {
+			if ((repository.customFields != null) && repository.customFields.containsKey(field)) {
 				value = repository.customFields.get(field);
 			}
-			JTextField textField = new JTextField(value);
+			final JTextField textField = new JTextField(value);
 			textField.setName(field);
 
 			textField.setPreferredSize(new Dimension(450, 26));
 
 			fields.add(newFieldPanel(entry.getValue(), 250, textField));
 
-			customTextfields.add(textField);
+			this.customTextfields.add(textField);
 		}
-		JScrollPane jsp = new JScrollPane(fields);
+		final JScrollPane jsp = new JScrollPane(fields);
 		jsp.getVerticalScrollBar().setBlockIncrement(100);
 		jsp.getVerticalScrollBar().setUnitIncrement(100);
 		jsp.setViewportBorder(null);
-		customFieldsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
-		customFieldsPanel.add(jsp);
+		this.customFieldsPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		this.customFieldsPanel.add(jsp);
 	}
 
 	/**
@@ -770,12 +770,12 @@ public class EditRepositoryDialog extends JDialog {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Component getListCellRendererComponent(JList list, Object value,
-				int index, boolean isSelected, boolean cellHasFocus) {
+		public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+				boolean isSelected, boolean cellHasFocus) {
 			super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
 			if (value instanceof AccessRestrictionType) {
-				AccessRestrictionType restriction = (AccessRestrictionType) value;
+				final AccessRestrictionType restriction = (AccessRestrictionType) value;
 				switch (restriction) {
 				case NONE:
 					setText(Translation.get("gb.notRestricted"));
@@ -801,16 +801,15 @@ public class EditRepositoryDialog extends JDialog {
 	 * ListCellRenderer to display descriptive text about the federation
 	 * strategy.
 	 */
-	private class FederationStrategyRenderer extends JLabel implements
-			ListCellRenderer {
+	private class FederationStrategyRenderer<E> extends JLabel implements ListCellRenderer<E> {
 
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Component getListCellRendererComponent(JList list, Object value,
-				int index, boolean isSelected, boolean cellHasFocus) {
+		public Component getListCellRendererComponent(JList<? extends E> list, E value, int index,
+				boolean isSelected, boolean cellHasFocus) {
 			if (value instanceof FederationStrategy) {
-				FederationStrategy strategy = (FederationStrategy) value;
+				final FederationStrategy strategy = (FederationStrategy) value;
 				switch (strategy) {
 				case EXCLUDE:
 					setText(Translation.get("gb.excludeFromFederation"));

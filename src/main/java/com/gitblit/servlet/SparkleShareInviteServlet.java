@@ -46,20 +46,17 @@ public class SparkleShareInviteServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private IUserManager userManager;
+	private final IUserManager userManager;
 
-	private IAuthenticationManager authenticationManager;
+	private final IAuthenticationManager authenticationManager;
 
-	private IRepositoryManager repositoryManager;
+	private final IRepositoryManager repositoryManager;
 
 	@Inject
-	public SparkleShareInviteServlet(
-			IStoredSettings settings,
-			IUserManager userManager,
-			IAuthenticationManager authenticationManager,
-			IRepositoryManager repositoryManager) {
+	public SparkleShareInviteServlet(IStoredSettings settings, IUserManager userManager,
+			IAuthenticationManager authenticationManager, IRepositoryManager repositoryManager) {
 
 		this.settings = settings;
 		this.userManager = userManager;
@@ -80,16 +77,15 @@ public class SparkleShareInviteServlet extends HttpServlet {
 	}
 
 	protected void processRequest(javax.servlet.http.HttpServletRequest request,
-			javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException,
-			java.io.IOException {
+			javax.servlet.http.HttpServletResponse response) throws java.io.IOException {
 
-		int sshPort = settings.getInteger(Keys.git.sshPort, 0);
+		final int sshPort = this.settings.getInteger(Keys.git.sshPort, 0);
 		if (sshPort == 0) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			response.getWriter().append("SSH is not active on this server!");
 			return;
 		}
-		int sshDisplayPort = settings.getInteger(Keys.git.sshAdvertisedPort, sshPort);
+		final int sshDisplayPort = this.settings.getInteger(Keys.git.sshAdvertisedPort, sshPort);
 
 		// extract repo name from request
 		String repoUrl = request.getPathInfo().substring(1);
@@ -101,7 +97,7 @@ public class SparkleShareInviteServlet extends HttpServlet {
 
 		String username = null;
 		String path;
-		int fetchIndex = repoUrl.indexOf('@');
+		final int fetchIndex = repoUrl.indexOf('@');
 		if (fetchIndex > -1) {
 			username = repoUrl.substring(0, fetchIndex);
 			path = repoUrl.substring(fetchIndex + 1);
@@ -110,49 +106,56 @@ public class SparkleShareInviteServlet extends HttpServlet {
 		}
 
 		String host = request.getServerName();
-		String url = settings.getString(Keys.web.canonicalUrl, "https://localhost:8443");
-		if (!StringUtils.isEmpty(url) && url.indexOf("localhost") == -1) {
+		final String url = this.settings.getString(Keys.web.canonicalUrl, "https://localhost:8443");
+		if (!StringUtils.isEmpty(url) && (url.indexOf("localhost") == -1)) {
 			host = new URL(url).getHost();
 		}
-		String sshDisplayHost = settings.getString(Keys.git.sshAdvertisedHost, "");
-		if(sshDisplayHost.isEmpty()) {
+		String sshDisplayHost = this.settings.getString(Keys.git.sshAdvertisedHost, "");
+		if (sshDisplayHost.isEmpty()) {
 			sshDisplayHost = host;
 		}
 
 		UserModel user;
 		if (StringUtils.isEmpty(username)) {
-			user = authenticationManager.authenticate(request);
+			user = this.authenticationManager.authenticate(request);
 		} else {
-			user = userManager.getUserModel(username);
+			user = this.userManager.getUserModel(username);
 		}
-		if (user == null || user.disabled) {
+		if ((user == null) || user.disabled) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
 			response.getWriter().append("Access is not permitted!");
 			return;
 		}
 
 		// ensure that the requested repository exists
-		RepositoryModel model = repositoryManager.getRepositoryModel(path);
+		final RepositoryModel model = this.repositoryManager.getRepositoryModel(path);
 		if (model == null) {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-			response.getWriter().append(MessageFormat.format("Repository \"{0}\" not found!", path));
+			response.getWriter()
+					.append(MessageFormat.format("Repository \"{0}\" not found!", path));
 			return;
 		}
 
 		if (!user.canRewindRef(model)) {
 			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			response.getWriter().append(MessageFormat.format("{0} does not have RW+ permissions to \"{1}\"!", user.username, model.name));
+			response.getWriter().append(
+					MessageFormat.format("{0} does not have RW+ permissions to \"{1}\"!",
+							user.username, model.name));
 		}
 
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
 		sb.append("<sparkleshare><invite>\n");
-		sb.append(MessageFormat.format("<address>ssh://{0}@{1}:{2,number,0}/</address>\n", user.username, sshDisplayHost, sshDisplayPort));
+		sb.append(MessageFormat.format("<address>ssh://{0}@{1}:{2,number,0}/</address>\n",
+				user.username, sshDisplayHost, sshDisplayPort));
 		sb.append(MessageFormat.format("<remote_path>/{0}</remote_path>\n", model.name));
-		int fanoutPort = settings.getInteger(Keys.fanout.port, 0);
+		final int fanoutPort = this.settings.getInteger(Keys.fanout.port, 0);
 		if (fanoutPort > 0) {
-			// Gitblit is running it's own fanout service for pubsub notifications
-			sb.append(MessageFormat.format("<announcements_url>tcp://{0}:{1,number,0}</announcements_url>\n", request.getServerName(), fanoutPort));
+			// Gitblit is running it's own fanout service for pubsub
+			// notifications
+			sb.append(MessageFormat.format(
+					"<announcements_url>tcp://{0}:{1,number,0}</announcements_url>\n",
+					request.getServerName(), fanoutPort));
 		}
 		sb.append("</invite></sparkleshare>\n");
 

@@ -67,13 +67,19 @@ public class UserManager implements IUserManager {
 		this.pluginManager = pluginManager;
 
 		// map of legacy realm backing user services
-		legacyBackingServices = new HashMap<String, String>();
-		legacyBackingServices.put("com.gitblit.HtpasswdUserService", "realm.htpasswd.backingUserService");
-		legacyBackingServices.put("com.gitblit.LdapUserService", "realm.ldap.backingUserService");
-		legacyBackingServices.put("com.gitblit.PAMUserService", "realm.pam.backingUserService");
-		legacyBackingServices.put("com.gitblit.RedmineUserService", "realm.redmine.backingUserService");
-		legacyBackingServices.put("com.gitblit.SalesforceUserService", "realm.salesforce.backingUserService");
-		legacyBackingServices.put("com.gitblit.WindowsUserService", "realm.windows.backingUserService");
+		this.legacyBackingServices = new HashMap<String, String>();
+		this.legacyBackingServices.put("com.gitblit.HtpasswdUserService",
+				"realm.htpasswd.backingUserService");
+		this.legacyBackingServices.put("com.gitblit.LdapUserService",
+				"realm.ldap.backingUserService");
+		this.legacyBackingServices
+				.put("com.gitblit.PAMUserService", "realm.pam.backingUserService");
+		this.legacyBackingServices.put("com.gitblit.RedmineUserService",
+				"realm.redmine.backingUserService");
+		this.legacyBackingServices.put("com.gitblit.SalesforceUserService",
+				"realm.salesforce.backingUserService");
+		this.legacyBackingServices.put("com.gitblit.WindowsUserService",
+				"realm.windows.backingUserService");
 	}
 
 	/**
@@ -84,8 +90,8 @@ public class UserManager implements IUserManager {
 	 */
 	public void setUserService(IUserService userService) {
 		this.userService = userService;
-		this.userService.setup(runtimeManager);
-		logger.info(userService.toString());
+		this.userService.setup(this.runtimeManager);
+		this.logger.info(userService.toString());
 	}
 
 	@Override
@@ -96,31 +102,39 @@ public class UserManager implements IUserManager {
 	@Override
 	public UserManager start() {
 		if (this.userService == null) {
-			String realm = settings.getString(Keys.realm.userService, "${baseFolder}/users.conf");
+			final String realm = this.settings.getString(Keys.realm.userService,
+					"${baseFolder}/users.conf");
 			IUserService service = null;
-			if (legacyBackingServices.containsKey(realm)) {
+			if (this.legacyBackingServices.containsKey(realm)) {
 				// create the user service from the legacy config
-				String realmKey = legacyBackingServices.get(realm);
-				logger.warn("");
-				logger.warn(Constants.BORDER2);
-				logger.warn(" Key '{}' is obsolete!", realmKey);
-				logger.warn(" Please set '{}={}'", Keys.realm.userService, settings.getString(realmKey, "${baseFolder}/users.conf"));
-				logger.warn(Constants.BORDER2);
-				logger.warn("");
-				File realmFile = runtimeManager.getFileOrFolder(realmKey, "${baseFolder}/users.conf");
+				final String realmKey = this.legacyBackingServices.get(realm);
+				this.logger.warn("");
+				this.logger.warn(Constants.BORDER2);
+				this.logger.warn(" Key '{}' is obsolete!", realmKey);
+				this.logger.warn(" Please set '{}={}'", Keys.realm.userService,
+						this.settings.getString(realmKey, "${baseFolder}/users.conf"));
+				this.logger.warn(Constants.BORDER2);
+				this.logger.warn("");
+				final File realmFile = this.runtimeManager.getFileOrFolder(realmKey,
+						"${baseFolder}/users.conf");
 				service = createUserService(realmFile);
 			} else {
 				// either a file path OR a custom user service
 				try {
-					// check to see if this "file" is a custom user service class
-					Class<?> realmClass = Class.forName(realm);
+					// check to see if this "file" is a custom user service
+					// class
+					final Class<?> realmClass = Class.forName(realm);
 					service = (IUserService) realmClass.newInstance();
-				} catch (ClassNotFoundException t) {
+				}
+				catch (final ClassNotFoundException t) {
 					// typical file path configuration
-					File realmFile = runtimeManager.getFileOrFolder(Keys.realm.userService, "${baseFolder}/users.conf");
+					final File realmFile = this.runtimeManager.getFileOrFolder(
+							Keys.realm.userService, "${baseFolder}/users.conf");
 					service = createUserService(realmFile);
-				} catch (InstantiationException | IllegalAccessException  e) {
-					logger.error("failed to instantiate user service {}: {}", realm, e.getMessage());
+				}
+				catch (InstantiationException | IllegalAccessException e) {
+					this.logger.error("failed to instantiate user service {}: {}", realm,
+							e.getMessage());
 				}
 			}
 			setUserService(service);
@@ -141,10 +155,12 @@ public class UserManager implements IUserManager {
 			// Create the Administrator account for a new realm file
 			try {
 				realmFile.createNewFile();
-			} catch (IOException x) {
-				logger.error(MessageFormat.format("COULD NOT CREATE REALM FILE {0}!", realmFile), x);
 			}
-			UserModel admin = new UserModel("admin");
+			catch (final IOException x) {
+				this.logger.error(
+						MessageFormat.format("COULD NOT CREATE REALM FILE {0}!", realmFile), x);
+			}
+			final UserModel admin = new UserModel("admin");
 			admin.password = "admin";
 			admin.canAdmin = true;
 			admin.excludeFromFederation = true;
@@ -168,8 +184,8 @@ public class UserManager implements IUserManager {
 	@Override
 	public boolean isInternalAccount(String username) {
 		return !StringUtils.isEmpty(username)
-				&& (username.equalsIgnoreCase(Constants.FEDERATION_USER)
-						|| username.equalsIgnoreCase(UserModel.ANONYMOUS.username));
+				&& (username.equalsIgnoreCase(Constants.FEDERATION_USER) || username
+						.equalsIgnoreCase(UserModel.ANONYMOUS.username));
 	}
 
 	/**
@@ -180,7 +196,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public String getCookie(UserModel model) {
-		return userService.getCookie(model);
+		return this.userService.getCookie(model);
 	}
 
 	/**
@@ -191,7 +207,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public UserModel getUserModel(char[] cookie) {
-		UserModel user = userService.getUserModel(cookie);
+		final UserModel user = this.userService.getUserModel(cookie);
 		return user;
 	}
 
@@ -206,8 +222,8 @@ public class UserManager implements IUserManager {
 		if (StringUtils.isEmpty(username)) {
 			return null;
 		}
-		String usernameDecoded = StringUtils.decodeUsername(username);
-		UserModel user = userService.getUserModel(usernameDecoded);
+		final String usernameDecoded = StringUtils.decodeUsername(username);
+		final UserModel user = this.userService.getUserModel(usernameDecoded);
 		return user;
 	}
 
@@ -219,8 +235,8 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean updateUserModel(UserModel model) {
-		final boolean isCreate = null == userService.getUserModel(model.username);
-		if (userService.updateUserModel(model)) {
+		final boolean isCreate = null == this.userService.getUserModel(model.username);
+		if (this.userService.updateUserModel(model)) {
 			if (isCreate) {
 				callCreateUserListeners(model);
 			}
@@ -232,13 +248,14 @@ public class UserManager implements IUserManager {
 	/**
 	 * Updates/writes all specified user objects.
 	 *
-	 * @param models a list of user models
+	 * @param models
+	 *            a list of user models
 	 * @return true if update is successful
 	 * @since 1.2.0
 	 */
 	@Override
 	public boolean updateUserModels(Collection<UserModel> models) {
-		return userService.updateUserModels(models);
+		return this.userService.updateUserModels(models);
 	}
 
 	/**
@@ -253,8 +270,8 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean updateUserModel(String username, UserModel model) {
-		final boolean isCreate = null == userService.getUserModel(username);
-		if (userService.updateUserModel(username, model)) {
+		final boolean isCreate = null == this.userService.getUserModel(username);
+		if (this.userService.updateUserModel(username, model)) {
 			if (isCreate) {
 				callCreateUserListeners(model);
 			}
@@ -271,7 +288,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean deleteUserModel(UserModel model) {
-		if (userService.deleteUserModel(model)) {
+		if (this.userService.deleteUserModel(model)) {
 			callDeleteUserListeners(model);
 			return true;
 		}
@@ -289,9 +306,9 @@ public class UserManager implements IUserManager {
 		if (StringUtils.isEmpty(username)) {
 			return false;
 		}
-		String usernameDecoded = StringUtils.decodeUsername(username);
-		UserModel user = getUserModel(usernameDecoded);
-		if (userService.deleteUser(usernameDecoded)) {
+		final String usernameDecoded = StringUtils.decodeUsername(username);
+		final UserModel user = getUserModel(usernameDecoded);
+		if (this.userService.deleteUser(usernameDecoded)) {
 			callDeleteUserListeners(user);
 			return true;
 		}
@@ -305,7 +322,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public List<String> getAllUsernames() {
-		List<String> names = new ArrayList<String>(userService.getAllUsernames());
+		final List<String> names = new ArrayList<String>(this.userService.getAllUsernames());
 		return names;
 	}
 
@@ -317,7 +334,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public List<UserModel> getAllUsers() {
-		List<UserModel> users = userService.getAllUsers();
+		final List<UserModel> users = this.userService.getAllUsers();
 		return users;
 	}
 
@@ -329,7 +346,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public List<String> getAllTeamNames() {
-		List<String> teams = userService.getAllTeamNames();
+		final List<String> teams = this.userService.getAllTeamNames();
 		return teams;
 	}
 
@@ -341,7 +358,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public List<TeamModel> getAllTeams() {
-		List<TeamModel> teams = userService.getAllTeams();
+		final List<TeamModel> teams = this.userService.getAllTeams();
 		return teams;
 	}
 
@@ -356,7 +373,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public List<String> getTeamNamesForRepositoryRole(String role) {
-		List<String> teams = userService.getTeamNamesForRepositoryRole(role);
+		final List<String> teams = this.userService.getTeamNamesForRepositoryRole(role);
 		return teams;
 	}
 
@@ -369,7 +386,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public TeamModel getTeamModel(String teamname) {
-		TeamModel team = userService.getTeamModel(teamname);
+		final TeamModel team = this.userService.getTeamModel(teamname);
 		return team;
 	}
 
@@ -382,8 +399,8 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean updateTeamModel(TeamModel model) {
-		final boolean isCreate = null == userService.getTeamModel(model.name);
-		if (userService.updateTeamModel(model)) {
+		final boolean isCreate = null == this.userService.getTeamModel(model.name);
+		if (this.userService.updateTeamModel(model)) {
 			if (isCreate) {
 				callCreateTeamListeners(model);
 			}
@@ -395,13 +412,14 @@ public class UserManager implements IUserManager {
 	/**
 	 * Updates/writes all specified team objects.
 	 *
-	 * @param models a list of team models
+	 * @param models
+	 *            a list of team models
 	 * @return true if update is successful
 	 * @since 1.2.0
 	 */
 	@Override
 	public boolean updateTeamModels(Collection<TeamModel> models) {
-		return userService.updateTeamModels(models);
+		return this.userService.updateTeamModels(models);
 	}
 
 	/**
@@ -417,8 +435,8 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean updateTeamModel(String teamname, TeamModel model) {
-		final boolean isCreate = null == userService.getTeamModel(teamname);
-		if (userService.updateTeamModel(teamname, model)) {
+		final boolean isCreate = null == this.userService.getTeamModel(teamname);
+		if (this.userService.updateTeamModel(teamname, model)) {
 			if (isCreate) {
 				callCreateTeamListeners(model);
 			}
@@ -436,7 +454,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean deleteTeamModel(TeamModel model) {
-		if (userService.deleteTeamModel(model)) {
+		if (this.userService.deleteTeamModel(model)) {
 			callDeleteTeamListeners(model);
 			return true;
 		}
@@ -452,8 +470,8 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean deleteTeam(String teamname) {
-		TeamModel team = userService.getTeamModel(teamname);
-		if (userService.deleteTeam(teamname)) {
+		final TeamModel team = this.userService.getTeamModel(teamname);
+		if (this.userService.deleteTeam(teamname)) {
 			callDeleteTeamListeners(team);
 			return true;
 		}
@@ -471,7 +489,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public List<String> getUsernamesForRepositoryRole(String role) {
-		return userService.getUsernamesForRepositoryRole(role);
+		return this.userService.getUsernamesForRepositoryRole(role);
 	}
 
 	/**
@@ -483,7 +501,7 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean renameRepositoryRole(String oldRole, String newRole) {
-		return userService.renameRepositoryRole(oldRole, newRole);
+		return this.userService.renameRepositoryRole(oldRole, newRole);
 	}
 
 	/**
@@ -494,61 +512,73 @@ public class UserManager implements IUserManager {
 	 */
 	@Override
 	public boolean deleteRepositoryRole(String role) {
-		return userService.deleteRepositoryRole(role);
+		return this.userService.deleteRepositoryRole(role);
 	}
 
 	protected void callCreateUserListeners(UserModel user) {
-		if (pluginManager == null || user == null) {
+		if ((this.pluginManager == null) || (user == null)) {
 			return;
 		}
 
-		for (UserTeamLifeCycleListener listener : pluginManager.getExtensions(UserTeamLifeCycleListener.class)) {
+		for (final UserTeamLifeCycleListener listener : this.pluginManager
+				.getExtensions(UserTeamLifeCycleListener.class)) {
 			try {
 				listener.onCreation(user);
-			} catch (Throwable t) {
-				logger.error(String.format("failed to call plugin.onCreation%s", user.username), t);
+			}
+			catch (final Throwable t) {
+				this.logger.error(
+						String.format("failed to call plugin.onCreation%s", user.username), t);
 			}
 		}
 	}
 
 	protected void callCreateTeamListeners(TeamModel team) {
-		if (pluginManager == null || team == null) {
+		if ((this.pluginManager == null) || (team == null)) {
 			return;
 		}
 
-		for (UserTeamLifeCycleListener listener : pluginManager.getExtensions(UserTeamLifeCycleListener.class)) {
+		for (final UserTeamLifeCycleListener listener : this.pluginManager
+				.getExtensions(UserTeamLifeCycleListener.class)) {
 			try {
 				listener.onCreation(team);
-			} catch (Throwable t) {
-				logger.error(String.format("failed to call plugin.onCreation %s", team.name), t);
+			}
+			catch (final Throwable t) {
+				this.logger.error(String.format("failed to call plugin.onCreation %s", team.name),
+						t);
 			}
 		}
 	}
 
 	protected void callDeleteUserListeners(UserModel user) {
-		if (pluginManager == null || user == null) {
+		if ((this.pluginManager == null) || (user == null)) {
 			return;
 		}
 
-		for (UserTeamLifeCycleListener listener : pluginManager.getExtensions(UserTeamLifeCycleListener.class)) {
+		for (final UserTeamLifeCycleListener listener : this.pluginManager
+				.getExtensions(UserTeamLifeCycleListener.class)) {
 			try {
 				listener.onDeletion(user);
-			} catch (Throwable t) {
-				logger.error(String.format("failed to call plugin.onDeletion %s", user.username), t);
+			}
+			catch (final Throwable t) {
+				this.logger.error(
+						String.format("failed to call plugin.onDeletion %s", user.username), t);
 			}
 		}
 	}
 
 	protected void callDeleteTeamListeners(TeamModel team) {
-		if (pluginManager == null || team == null) {
+		if ((this.pluginManager == null) || (team == null)) {
 			return;
 		}
 
-		for (UserTeamLifeCycleListener listener : pluginManager.getExtensions(UserTeamLifeCycleListener.class)) {
+		for (final UserTeamLifeCycleListener listener : this.pluginManager
+				.getExtensions(UserTeamLifeCycleListener.class)) {
 			try {
 				listener.onDeletion(team);
-			} catch (Throwable t) {
-				logger.error(String.format("failed to call plugin.onDeletion %s", team.name), t);
+			}
+			catch (final Throwable t) {
+				this.logger.error(String.format("failed to call plugin.onDeletion %s", team.name),
+						t);
 			}
 		}
 	}

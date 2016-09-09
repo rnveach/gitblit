@@ -34,7 +34,9 @@ public class RegistrationsTableModel extends AbstractTableModel {
 	List<GitblitRegistration> list;
 
 	enum Columns {
-		Name, URL, Last_Login;
+		Name,
+		URL,
+		Last_Login;
 
 		@Override
 		public String toString() {
@@ -49,7 +51,7 @@ public class RegistrationsTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return list.size();
+		return this.list.size();
 	}
 
 	@Override
@@ -59,7 +61,7 @@ public class RegistrationsTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Name:
 			return Translation.get("gb.name");
@@ -88,8 +90,8 @@ public class RegistrationsTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		GitblitRegistration model = list.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final GitblitRegistration model = this.list.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Name:
 			return model.name;

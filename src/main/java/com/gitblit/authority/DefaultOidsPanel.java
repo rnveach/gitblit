@@ -27,54 +27,55 @@ public class DefaultOidsPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
-	private JTextField organizationalUnit;
-	private JTextField organization;
-	private JTextField locality;
-	private JTextField stateProvince;
-	private JTextField countryCode;
+	private final JTextField organizationalUnit;
+	private final JTextField organization;
+	private final JTextField locality;
+	private final JTextField stateProvince;
+	private final JTextField countryCode;
 
 	public DefaultOidsPanel(X509Metadata metadata) {
 		super();
 
-		organizationalUnit = new JTextField(metadata.getOID("OU", ""), 20);
-		organization = new JTextField(metadata.getOID("O", ""), 20);
-		locality = new JTextField(metadata.getOID("L", ""), 20);
-		stateProvince = new JTextField(metadata.getOID("ST", ""), 20);
-		countryCode = new JTextField(metadata.getOID("C", ""), 20);
+		this.organizationalUnit = new JTextField(metadata.getOID("OU", ""), 20);
+		this.organization = new JTextField(metadata.getOID("O", ""), 20);
+		this.locality = new JTextField(metadata.getOID("L", ""), 20);
+		this.stateProvince = new JTextField(metadata.getOID("ST", ""), 20);
+		this.countryCode = new JTextField(metadata.getOID("C", ""), 20);
 
 		setLayout(new GridLayout(0, 1, Utils.MARGIN, Utils.MARGIN));
-		add(Utils.newFieldPanel(Translation.get("gb.organizationalUnit") + " (OU)", organizationalUnit));
-		add(Utils.newFieldPanel(Translation.get("gb.organization") + " (O)", organization));
-		add(Utils.newFieldPanel(Translation.get("gb.locality") + " (L)", locality));
-		add(Utils.newFieldPanel(Translation.get("gb.stateProvince") + " (ST)", stateProvince));
-		add(Utils.newFieldPanel(Translation.get("gb.countryCode") + " (C)", countryCode));
+		add(Utils.newFieldPanel(Translation.get("gb.organizationalUnit") + " (OU)",
+				this.organizationalUnit));
+		add(Utils.newFieldPanel(Translation.get("gb.organization") + " (O)", this.organization));
+		add(Utils.newFieldPanel(Translation.get("gb.locality") + " (L)", this.locality));
+		add(Utils.newFieldPanel(Translation.get("gb.stateProvince") + " (ST)", this.stateProvince));
+		add(Utils.newFieldPanel(Translation.get("gb.countryCode") + " (C)", this.countryCode));
 	}
 
 	public void update(X509Metadata metadata) {
-		metadata.setOID("OU", organizationalUnit.getText());
-		metadata.setOID("O", organization.getText());
-		metadata.setOID("L", locality.getText());
-		metadata.setOID("ST", stateProvince.getText());
-		metadata.setOID("C", countryCode.getText());
+		metadata.setOID("OU", this.organizationalUnit.getText());
+		metadata.setOID("O", this.organization.getText());
+		metadata.setOID("L", this.locality.getText());
+		metadata.setOID("ST", this.stateProvince.getText());
+		metadata.setOID("C", this.countryCode.getText());
 	}
 
 	public String getOrganizationalUnit() {
-		return organizationalUnit.getText();
+		return this.organizationalUnit.getText();
 	}
 
 	public String getOrganization() {
-		return organization.getText();
+		return this.organization.getText();
 	}
 
 	public String getLocality() {
-		return locality.getText();
+		return this.locality.getText();
 	}
 
 	public String getStateProvince() {
-		return stateProvince.getText();
+		return this.stateProvince.getText();
 	}
 
 	public String getCountryCode() {
-		return countryCode.getText();
+		return this.countryCode.getText();
 	}
 }

@@ -41,75 +41,75 @@ import com.sun.jna.platform.win32.Win32Exception;
  */
 public class WindowsAuthProvider extends UsernamePasswordAuthenticationProvider {
 
-    private IWindowsAuthProvider waffle;
+	private IWindowsAuthProvider waffle;
 
-    public WindowsAuthProvider() {
-        super("windows");
-    }
+	public WindowsAuthProvider() {
+		super("windows");
+	}
 
-    @Override
-    public void setup() {
+	@Override
+	public void setup() {
 
-        waffle = new WindowsAuthProviderImpl();
-        IWindowsComputer computer = waffle.getCurrentComputer();
-        logger.info("Windows Authentication Provider");
-        logger.info("      name = " + computer.getComputerName());
-        logger.info("    status = " + describeJoinStatus(computer.getJoinStatus()));
-        logger.info("  memberOf = " + computer.getMemberOf());
-        //logger.info("  groups     = " + Arrays.asList(computer.getGroups()));
-    }
+		this.waffle = new WindowsAuthProviderImpl();
+		final IWindowsComputer computer = this.waffle.getCurrentComputer();
+		this.logger.info("Windows Authentication Provider");
+		this.logger.info("      name = " + computer.getComputerName());
+		this.logger.info("    status = " + describeJoinStatus(computer.getJoinStatus()));
+		this.logger.info("  memberOf = " + computer.getMemberOf());
+		// logger.info("  groups     = " + Arrays.asList(computer.getGroups()));
+	}
 
-    protected String describeJoinStatus(String value) {
-    	if ("NetSetupUnknownStatus".equals(value)) {
-    		return "unknown";
-    	} else if ("NetSetupUnjoined".equals(value)) {
-    		return "not joined";
-    	} else if ("NetSetupWorkgroupName".equals(value)) {
-    		return "joined to a workgroup";
-    	} else if ("NetSetupDomainName".equals(value)) {
-    		return "joined to a domain";
-    	}
-    	return value;
-    }
+	private static String describeJoinStatus(String value) {
+		if ("NetSetupUnknownStatus".equals(value)) {
+			return "unknown";
+		} else if ("NetSetupUnjoined".equals(value)) {
+			return "not joined";
+		} else if ("NetSetupWorkgroupName".equals(value)) {
+			return "joined to a workgroup";
+		} else if ("NetSetupDomainName".equals(value)) {
+			return "joined to a domain";
+		}
+		return value;
+	}
 
-    @Override
-    public boolean supportsCredentialChanges() {
-        return false;
-    }
+	@Override
+	public boolean supportsCredentialChanges() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsDisplayNameChanges() {
-        return false;
-    }
+	@Override
+	public boolean supportsDisplayNameChanges() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsEmailAddressChanges() {
-        return true;
-    }
+	@Override
+	public boolean supportsEmailAddressChanges() {
+		return true;
+	}
 
-    @Override
-    public boolean supportsTeamMembershipChanges() {
-        return true;
-    }
+	@Override
+	public boolean supportsTeamMembershipChanges() {
+		return true;
+	}
 
-    @Override
-    public boolean supportsRoleChanges(UserModel user, Role role) {
-        return true;
-    }
+	@Override
+	public boolean supportsRoleChanges(UserModel user, Role role) {
+		return true;
+	}
 
 	@Override
 	public boolean supportsRoleChanges(TeamModel team, Role role) {
 		return true;
 	}
 
-	 @Override
+	@Override
 	public AccountType getAccountType() {
 		return AccountType.WINDOWS;
 	}
 
-    @Override
-    public UserModel authenticate(String username, char[] password) {
-		String defaultDomain = settings.getString(Keys.realm.windows.defaultDomain, null);
+	@Override
+	public UserModel authenticate(String username, char[] password) {
+		String defaultDomain = this.settings.getString(Keys.realm.windows.defaultDomain, null);
 		if (StringUtils.isEmpty(defaultDomain)) {
 			// ensure that default domain is null
 			defaultDomain = null;
@@ -128,63 +128,65 @@ public class WindowsAuthProvider extends UsernamePasswordAuthenticationProvider 
 
 		IWindowsIdentity identity = null;
 		try {
-			if (username.indexOf('@') > -1 || username.indexOf('\\') > -1) {
+			if ((username.indexOf('@') > -1) || (username.indexOf('\\') > -1)) {
 				// manually specified domain
-				identity = waffle.logonUser(username, new String(password));
+				identity = this.waffle.logonUser(username, new String(password));
 			} else {
 				// no domain specified, use default domain
-				identity = waffle.logonDomainUser(username, defaultDomain, new String(password));
+				identity = this.waffle.logonDomainUser(username, defaultDomain,
+						new String(password));
 			}
-		} catch (Win32Exception e) {
-			logger.error(e.getMessage());
+		}
+		catch (final Win32Exception e) {
+			this.logger.error(e.getMessage());
 			return null;
 		}
 
-		if (identity.isGuest() && !settings.getBoolean(Keys.realm.windows.allowGuests, false)) {
-			logger.warn("Guest account access is disabled");
+		if (identity.isGuest() && !this.settings.getBoolean(Keys.realm.windows.allowGuests, false)) {
+			this.logger.warn("Guest account access is disabled");
 			identity.dispose();
 			return null;
 		}
 
-        UserModel user = userManager.getUserModel(username);
-        if (user == null) {
-        	// create user object for new authenticated user
-        	user = new UserModel(username.toLowerCase());
-        }
+		UserModel user = this.userManager.getUserModel(username);
+		if (user == null) {
+			// create user object for new authenticated user
+			user = new UserModel(username.toLowerCase());
+		}
 
-        // create a user cookie
-        setCookie(user, password);
+		// create a user cookie
+		setCookie(user, password);
 
-        // update user attributes from Windows identity
-        user.accountType = getAccountType();
-        String fqn = identity.getFqn();
-        if (fqn.indexOf('\\') > -1) {
-        	user.displayName = fqn.substring(fqn.lastIndexOf('\\') + 1);
-        } else {
-        	user.displayName = fqn;
-        }
-        user.password = Constants.EXTERNAL_ACCOUNT;
+		// update user attributes from Windows identity
+		user.accountType = getAccountType();
+		final String fqn = identity.getFqn();
+		if (fqn.indexOf('\\') > -1) {
+			user.displayName = fqn.substring(fqn.lastIndexOf('\\') + 1);
+		} else {
+			user.displayName = fqn;
+		}
+		user.password = Constants.EXTERNAL_ACCOUNT;
 
-        Set<String> groupNames = new TreeSet<String>();
-       	for (IWindowsAccount group : identity.getGroups()) {
-       		groupNames.add(group.getFqn());
-        }
+		final Set<String> groupNames = new TreeSet<String>();
+		for (final IWindowsAccount group : identity.getGroups()) {
+			groupNames.add(group.getFqn());
+		}
 
-       	if (settings.getBoolean(Keys.realm.windows.permitBuiltInAdministrators, true)) {
-       		if (groupNames.contains("BUILTIN\\Administrators")) {
-       			// local administrator
-       			user.canAdmin = true;
-       		}
-        }
+		if (this.settings.getBoolean(Keys.realm.windows.permitBuiltInAdministrators, true)) {
+			if (groupNames.contains("BUILTIN\\Administrators")) {
+				// local administrator
+				user.canAdmin = true;
+			}
+		}
 
-        // TODO consider mapping Windows groups to teams
+		// TODO consider mapping Windows groups to teams
 
-        // push the changes to the backing user service
-        updateUser(user);
+		// push the changes to the backing user service
+		updateUser(user);
 
-        // cleanup resources
-        identity.dispose();
+		// cleanup resources
+		identity.dispose();
 
-        return user;
-    }
+		return user;
+	}
 }

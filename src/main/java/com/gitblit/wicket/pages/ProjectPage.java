@@ -29,8 +29,8 @@ import com.gitblit.Keys;
 import com.gitblit.models.Menu.MenuDivider;
 import com.gitblit.models.Menu.MenuItem;
 import com.gitblit.models.Menu.ParameterMenuItem;
-import com.gitblit.models.NavLink.DropDownPageMenuNavLink;
 import com.gitblit.models.NavLink;
+import com.gitblit.models.NavLink.DropDownPageMenuNavLink;
 import com.gitblit.models.ProjectModel;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.UserModel;
@@ -68,12 +68,12 @@ public class ProjectPage extends DashboardPage {
 	@Override
 	protected void setLastModified() {
 		if (getClass().isAnnotationPresent(CacheControl.class)) {
-			CacheControl cacheControl = getClass().getAnnotation(CacheControl.class);
+			final CacheControl cacheControl = getClass().getAnnotation(CacheControl.class);
 			switch (cacheControl.value()) {
 			case PROJECT:
-				String projectName = WicketUtils.getProjectName(getPageParameters());
+				final String projectName = WicketUtils.getProjectName(getPageParameters());
 				if (!StringUtils.isEmpty(projectName)) {
-					ProjectModel project = getProjectModel(projectName);
+					final ProjectModel project = getProjectModel(projectName);
 					if (project != null) {
 						setLastModified(project.lastChange);
 					}
@@ -88,18 +88,19 @@ public class ProjectPage extends DashboardPage {
 	private void setup(PageParameters params) {
 		setupPage("", "");
 		// check to see if we should display a login message
-		boolean authenticateView = app().settings().getBoolean(Keys.web.authenticateViewPages, true);
+		final boolean authenticateView = app().settings().getBoolean(
+				Keys.web.authenticateViewPages, true);
 		if (authenticateView && !GitBlitWebSession.get().isLoggedIn()) {
 			authenticationError("Please login");
 			return;
 		}
 
-		String projectName = params == null ? null : WicketUtils.getProjectName(params);
+		final String projectName = params == null ? null : WicketUtils.getProjectName(params);
 		if (StringUtils.isEmpty(projectName)) {
 			throw new GitblitRedirectException(GitBlitWebApp.get().getHomePage());
 		}
 
-		ProjectModel project = getProjectModel(projectName);
+		final ProjectModel project = getProjectModel(projectName);
 		if (project == null) {
 			throw new GitblitRedirectException(GitBlitWebApp.get().getHomePage());
 		}
@@ -107,21 +108,22 @@ public class ProjectPage extends DashboardPage {
 		add(new Label("projectTitle", project.getDisplayName()));
 		add(new Label("projectDescription", project.description));
 
-		String feedLink = SyndicationServlet.asLink(getRequest().getRelativePathPrefixToContextRoot(), projectName, null, 0);
+		final String feedLink = SyndicationServlet.asLink(getRequest()
+				.getRelativePathPrefixToContextRoot(), projectName, null, 0);
 		add(new ExternalLink("syndication", feedLink));
 
-		add(WicketUtils.syndicationDiscoveryLink(SyndicationServlet.getTitle(project.getDisplayName(),
-				null), feedLink));
+		add(WicketUtils.syndicationDiscoveryLink(
+				SyndicationServlet.getTitle(project.getDisplayName(), null), feedLink));
 
 		// project markdown message
-		String pmessage = transformMarkdown(project.projectMarkdown);
-		Component projectMessage = new Label("projectMessage", pmessage)
+		final String pmessage = transformMarkdown(project.projectMarkdown);
+		final Component projectMessage = new Label("projectMessage", pmessage)
 				.setEscapeModelStrings(false).setVisible(pmessage.length() > 0);
 		add(projectMessage);
 
 		// markdown message above repositories list
-		String rmessage = transformMarkdown(project.repositoriesMarkdown);
-		Component repositoriesMessage = new Label("repositoriesMessage", rmessage)
+		final String rmessage = transformMarkdown(project.repositoriesMarkdown);
+		final Component repositoriesMessage = new Label("repositoriesMessage", rmessage)
 				.setEscapeModelStrings(false).setVisible(rmessage.length() > 0);
 		add(repositoriesMessage);
 
@@ -134,13 +136,13 @@ public class ProjectPage extends DashboardPage {
 			daysBack = app().settings().getInteger(Keys.web.activityDuration, 7);
 		}
 		// reset the daysback parameter so that we have a complete project
-		// repository list.  the recent activity will be built up by the
+		// repository list. the recent activity will be built up by the
 		// reflog utils.
 		if (params != null) {
 			params.remove("db");
 		}
 
-		List<RepositoryModel> repositories = getRepositories(params);
+		final List<RepositoryModel> repositories = getRepositories(params);
 		Collections.sort(repositories, new Comparator<RepositoryModel>() {
 			@Override
 			public int compare(RepositoryModel o1, RepositoryModel o2) {
@@ -154,7 +156,8 @@ public class ProjectPage extends DashboardPage {
 		if (repositories.isEmpty()) {
 			add(new Label("repositoryList").setVisible(false));
 		} else {
-			FilterableRepositoryList repoList = new FilterableRepositoryList("repositoryList", repositories);
+			final FilterableRepositoryList repoList = new FilterableRepositoryList(
+					"repositoryList", repositories);
 			repoList.setAllowCreate(user.canCreate(project.name + "/"));
 			add(repoList);
 		}
@@ -162,9 +165,9 @@ public class ProjectPage extends DashboardPage {
 
 	@Override
 	protected void addDropDownMenus(List<NavLink> navLinks) {
-		PageParameters params = getPageParameters();
+		final PageParameters params = getPageParameters();
 
-		DropDownPageMenuNavLink menu = new DropDownPageMenuNavLink("gb.filters",
+		final DropDownPageMenuNavLink menu = new DropDownPageMenuNavLink("gb.filters",
 				ProjectPage.class);
 		// preserve time filter option on repository choices
 		menu.menuItems.addAll(getRepositoryFilterItems(params));
@@ -174,12 +177,13 @@ public class ProjectPage extends DashboardPage {
 
 		if (menu.menuItems.size() > 0) {
 			// Reset Filter
-			menu.menuItems.add(new ParameterMenuItem(getString("gb.reset"), "p", WicketUtils.getProjectName(params)));
+			menu.menuItems.add(new ParameterMenuItem(getString("gb.reset"), "p", WicketUtils
+					.getProjectName(params)));
 		}
 
 		navLinks.add(menu);
 
-		DropDownPageMenuNavLink projects = new DropDownPageMenuNavLink("gb.projects",
+		final DropDownPageMenuNavLink projects = new DropDownPageMenuNavLink("gb.projects",
 				ProjectPage.class);
 		projects.menuItems.addAll(getProjectsMenu());
 		navLinks.add(projects);
@@ -187,16 +191,17 @@ public class ProjectPage extends DashboardPage {
 
 	@Override
 	protected List<ProjectModel> getProjectModels() {
-		if (projectModels.isEmpty()) {
-			List<RepositoryModel> repositories = getRepositoryModels();
-			List<ProjectModel> projects = app().projects().getProjectModels(repositories, false);
-			projectModels.addAll(projects);
+		if (this.projectModels.isEmpty()) {
+			final List<RepositoryModel> repositories = getRepositoryModels();
+			final List<ProjectModel> projects = app().projects().getProjectModels(repositories,
+					false);
+			this.projectModels.addAll(projects);
 		}
-		return projectModels;
+		return this.projectModels;
 	}
 
 	private ProjectModel getProjectModel(String name) {
-		for (ProjectModel project : getProjectModels()) {
+		for (final ProjectModel project : getProjectModels()) {
 			if (name.equalsIgnoreCase(project.name)) {
 				return project;
 			}
@@ -205,15 +210,15 @@ public class ProjectPage extends DashboardPage {
 	}
 
 	protected List<MenuItem> getProjectsMenu() {
-		List<MenuItem> menu = new ArrayList<MenuItem>();
+		final List<MenuItem> menu = new ArrayList<MenuItem>();
 		List<ProjectModel> projects = new ArrayList<ProjectModel>();
-		for (ProjectModel model : getProjectModels()) {
+		for (final ProjectModel model : getProjectModels()) {
 			if (!model.isUserProject()) {
 				projects.add(model);
 			}
 		}
-		int maxProjects = 15;
-		boolean showAllProjects = projects.size() > maxProjects;
+		final int maxProjects = 15;
+		final boolean showAllProjects = projects.size() > maxProjects;
 		if (showAllProjects) {
 
 			// sort by last changed
@@ -231,7 +236,7 @@ public class ProjectPage extends DashboardPage {
 			Collections.sort(projects);
 		}
 
-		for (ProjectModel project : projects) {
+		for (final ProjectModel project : projects) {
 			menu.add(new ParameterMenuItem(project.getDisplayName(), "p", project.name));
 		}
 		if (showAllProjects) {
@@ -247,7 +252,8 @@ public class ProjectPage extends DashboardPage {
 			// Read user-supplied message
 			try {
 				message = MarkdownUtils.transformMarkdown(markdown);
-			} catch (Throwable t) {
+			}
+			catch (final Throwable t) {
 				message = getString("gb.failedToRead") + " " + markdown;
 				warn(message, t);
 			}

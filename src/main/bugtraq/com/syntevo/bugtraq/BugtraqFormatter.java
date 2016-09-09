@@ -29,9 +29,12 @@
  */
 package com.syntevo.bugtraq;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
 
 public final class BugtraqFormatter {
 
@@ -57,15 +60,15 @@ public final class BugtraqFormatter {
 			}
 		});
 
-		for (BugtraqEntry entry : config.getEntries()) {
+		for (final BugtraqEntry entry : this.config.getEntries()) {
 			final List<BugtraqParserIssueId> ids = entry.getParser().parse(message);
-			for (BugtraqParserIssueId id : ids) {
+			for (final BugtraqParserIssueId id : ids) {
 				allIds.add(new IssueId(entry, id));
 			}
 		}
 
 		int lastIdEnd = -1;
-		for (IssueId issueId : allIds) {
+		for (final IssueId issueId : allIds) {
 			final BugtraqParserIssueId id = issueId.id;
 			if (id.getFrom() <= lastIdEnd) {
 				continue;
@@ -76,8 +79,7 @@ public final class BugtraqFormatter {
 			final String linkText;
 			if (logLinkText != null) {
 				linkText = logLinkText.replace("%BUGID%", id.getId());
-			}
-			else {
+			} else {
 				linkText = message.substring(id.getFrom(), id.getTo() + 1);
 			}
 
@@ -86,7 +88,7 @@ public final class BugtraqFormatter {
 			lastIdEnd = id.getTo();
 		}
 
-		if (lastIdEnd - 1 < message.length()) {
+		if ((lastIdEnd - 1) < message.length()) {
 			appendText(message.substring(lastIdEnd + 1, message.length()), outputHandler);
 		}
 	}
@@ -108,7 +110,7 @@ public final class BugtraqFormatter {
 
 		void appendLink(@NotNull String name, @NotNull String target);
 	}
-	
+
 	private static class IssueId {
 		private final BugtraqEntry entry;
 		private final BugtraqParserIssueId id;

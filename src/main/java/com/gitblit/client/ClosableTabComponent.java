@@ -48,18 +48,18 @@ public class ClosableTabComponent extends JPanel {
 	private static final MouseListener BUTTON_MOUSE_LISTENER = new MouseAdapter() {
 		@Override
 		public void mouseEntered(MouseEvent e) {
-			Component component = e.getComponent();
+			final Component component = e.getComponent();
 			if (component instanceof AbstractButton) {
-				AbstractButton button = (AbstractButton) component;
+				final AbstractButton button = (AbstractButton) component;
 				button.setBorderPainted(true);
 			}
 		}
 
 		@Override
 		public void mouseExited(MouseEvent e) {
-			Component component = e.getComponent();
+			final Component component = e.getComponent();
 			if (component instanceof AbstractButton) {
-				AbstractButton button = (AbstractButton) component;
+				final AbstractButton button = (AbstractButton) component;
 				button.setBorderPainted(false);
 			}
 		}
@@ -85,14 +85,14 @@ public class ClosableTabComponent extends JPanel {
 		}
 		this.pane = pane;
 		setOpaque(false);
-		label = new JLabel(title);
+		this.label = new JLabel(title);
 		if (icon != null) {
-			label.setIcon(icon);
+			this.label.setIcon(icon);
 		}
 
-		add(label);
-		label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
-		add(button);
+		add(this.label);
+		this.label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
+		add(this.button);
 		setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 	}
 
@@ -101,7 +101,7 @@ public class ClosableTabComponent extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		public TabButton() {
-			int size = 17;
+			final int size = 17;
 			setPreferredSize(new Dimension(size, size));
 			setToolTipText("Close");
 			setUI(new BasicButtonUI());
@@ -116,13 +116,14 @@ public class ClosableTabComponent extends JPanel {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			int i = pane.indexOfTabComponent(ClosableTabComponent.this);
-			Component c = pane.getComponentAt(i);
+			final int i = ClosableTabComponent.this.pane
+					.indexOfTabComponent(ClosableTabComponent.this);
+			final Component c = ClosableTabComponent.this.pane.getComponentAt(i);
 			if (i != -1) {
-				pane.remove(i);
+				ClosableTabComponent.this.pane.remove(i);
 			}
-			if (closeListener != null) {
-				closeListener.closeTab(c);
+			if (ClosableTabComponent.this.closeListener != null) {
+				ClosableTabComponent.this.closeListener.closeTab(c);
 			}
 		}
 
@@ -133,21 +134,22 @@ public class ClosableTabComponent extends JPanel {
 		@Override
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
-			Graphics2D g2 = (Graphics2D) g;
-			Stroke stroke = g2.getStroke();
+			final Graphics2D g2 = (Graphics2D) g;
+			final Stroke stroke = g2.getStroke();
 			g2.setStroke(new BasicStroke(2));
 			g.setColor(Color.BLACK);
 			if (getModel().isRollover()) {
-				Color highlight = new Color(0, 51, 153);
+				final Color highlight = new Color(0, 51, 153);
 				g.setColor(highlight);
 			}
-			int delta = 5;
+			final int delta = 5;
 			g.drawLine(delta, delta, getWidth() - delta - 1, getHeight() - delta - 1);
 			g.drawLine(getWidth() - delta - 1, delta, delta, getHeight() - delta - 1);
 			g2.setStroke(stroke);
 
-			int i = pane.indexOfTabComponent(ClosableTabComponent.this);
-			pane.setTitleAt(i, label.getText());
+			final int i = ClosableTabComponent.this.pane
+					.indexOfTabComponent(ClosableTabComponent.this);
+			ClosableTabComponent.this.pane.setTitleAt(i, ClosableTabComponent.this.label.getText());
 		}
 	}
 }

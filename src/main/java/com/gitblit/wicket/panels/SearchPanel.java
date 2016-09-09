@@ -43,19 +43,19 @@ public class SearchPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
 
-	private boolean hasMore;
+	private final boolean hasMore;
 
 	public SearchPanel(String wicketId, final String repositoryName, final String objectId,
-			final String value, Constants.SearchType searchType, Repository r, int limit, int pageOffset,
-			boolean showRemoteRefs) {
+			final String value, Constants.SearchType searchType, Repository r, int limit,
+			int pageOffset, boolean showRemoteRefs) {
 		super(wicketId);
-		boolean pageResults = limit <= 0;
+		final boolean pageResults = limit <= 0;
 		int itemsPerPage = app().settings().getInteger(Keys.web.itemsPerPage, 50);
 		if (itemsPerPage <= 1) {
 			itemsPerPage = 50;
 		}
 
-		RevCommit commit = JGitUtils.getCommit(r, objectId);
+		final RevCommit commit = JGitUtils.getCommit(r, objectId);
 
 		final Map<ObjectId, List<RefModel>> allRefs = JGitUtils.getAllRefs(r, showRemoteRefs);
 		List<RevCommit> commits;
@@ -70,7 +70,7 @@ public class SearchPanel extends BasePanel {
 
 		// inaccurate way to determine if there are more commits.
 		// works unless commits.size() represents the exact end.
-		hasMore = commits.size() >= itemsPerPage;
+		this.hasMore = commits.size() >= itemsPerPage;
 
 		// header
 		add(new CommitHeaderPanel("commitHeader", repositoryName, commit));
@@ -78,8 +78,8 @@ public class SearchPanel extends BasePanel {
 		add(new Label("searchString", value));
 		add(new Label("searchType", searchType.toString()));
 
-		ListDataProvider<RevCommit> dp = new ListDataProvider<RevCommit>(commits);
-		DataView<RevCommit> searchView = new DataView<RevCommit>("commit", dp) {
+		final ListDataProvider<RevCommit> dp = new ListDataProvider<RevCommit>(commits);
+		final DataView<RevCommit> searchView = new DataView<RevCommit>("commit", dp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
@@ -88,11 +88,12 @@ public class SearchPanel extends BasePanel {
 				final RevCommit entry = item.getModelObject();
 				final Date date = JGitUtils.getAuthorDate(entry);
 
-				item.add(WicketUtils.createDateLabel("commitDate", date, getTimeZone(), getTimeUtils()));
+				item.add(WicketUtils.createDateLabel("commitDate", date, getTimeZone(),
+						getTimeUtils()));
 
 				// author search link
-				String author = entry.getAuthorIdent().getName();
-				LinkPanel authorLink = new LinkPanel("commitAuthor", "list", author,
+				final String author = entry.getAuthorIdent().getName();
+				final LinkPanel authorLink = new LinkPanel("commitAuthor", "list", author,
 						GitSearchPage.class, WicketUtils.newSearchParameter(repositoryName, null,
 								author, Constants.SearchType.AUTHOR));
 				setPersonSearchTooltip(authorLink, author, Constants.SearchType.AUTHOR);
@@ -105,14 +106,15 @@ public class SearchPanel extends BasePanel {
 					item.add(WicketUtils.newBlankImage("commitIcon"));
 				}
 
-				String shortMessage = entry.getShortMessage();
+				final String shortMessage = entry.getShortMessage();
 				String trimmedMessage = shortMessage;
 				if (allRefs.containsKey(entry.getId())) {
-					trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG_REFS);
+					trimmedMessage = StringUtils.trimString(shortMessage,
+							Constants.LEN_SHORTLOG_REFS);
 				} else {
 					trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG);
 				}
-				LinkPanel shortlog = new LinkPanel("commitShortMessage", "list subject",
+				final LinkPanel shortlog = new LinkPanel("commitShortMessage", "list subject",
 						trimmedMessage, CommitPage.class, WicketUtils.newObjectParameter(
 								repositoryName, entry.getName()));
 				if (!shortMessage.equals(trimmedMessage)) {
@@ -129,14 +131,14 @@ public class SearchPanel extends BasePanel {
 				item.add(new BookmarkablePageLink<Void>("tree", TreePage.class, WicketUtils
 						.newObjectParameter(repositoryName, entry.getName())));
 
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(searchView);
 	}
 
 	public boolean hasMore() {
-		return hasMore;
+		return this.hasMore;
 	}
 }

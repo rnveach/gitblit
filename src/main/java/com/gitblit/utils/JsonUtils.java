@@ -74,7 +74,7 @@ public class JsonUtils {
 	 * @return json
 	 */
 	public static String toJsonString(Object o) {
-		String json = gson().toJson(o);
+		final String json = gson().toJson(o);
 		return json;
 	}
 
@@ -144,7 +144,7 @@ public class JsonUtils {
 	 */
 	public static <X> X retrieveJson(String url, Type type, String username, char[] password)
 			throws IOException {
-		String json = retrieveJsonString(url, username, password);
+		final String json = retrieveJsonString(url, username, password);
 		if (StringUtils.isEmpty(json)) {
 			return null;
 		}
@@ -163,7 +163,7 @@ public class JsonUtils {
 	 */
 	public static <X> X retrieveJson(String url, Class<X> clazz, String username, char[] password)
 			throws IOException {
-		String json = retrieveJsonString(url, username, password);
+		final String json = retrieveJsonString(url, username, password);
 		if (StringUtils.isEmpty(json)) {
 			return null;
 		}
@@ -180,19 +180,20 @@ public class JsonUtils {
 	public static String retrieveJsonString(String url, String username, char[] password)
 			throws IOException {
 		try {
-			URLConnection conn = ConnectionUtils.openReadConnection(url, username, password);
-			InputStream is = conn.getInputStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is,
+			final URLConnection conn = ConnectionUtils.openReadConnection(url, username, password);
+			final InputStream is = conn.getInputStream();
+			final BufferedReader reader = new BufferedReader(new InputStreamReader(is,
 					ConnectionUtils.CHARSET));
-			StringBuilder json = new StringBuilder();
-			char[] buffer = new char[4096];
+			final StringBuilder json = new StringBuilder();
+			final char[] buffer = new char[4096];
 			int len = 0;
 			while ((len = reader.read(buffer)) > -1) {
 				json.append(buffer, 0, len);
 			}
 			is.close();
 			return json.toString();
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			if (e.getMessage().indexOf("401") > -1) {
 				// unauthorized
 				throw new UnauthorizedException(url);
@@ -239,19 +240,20 @@ public class JsonUtils {
 	public static int sendJsonString(String url, String json, String username, char[] password)
 			throws IOException {
 		try {
-			byte[] jsonBytes = json.getBytes(ConnectionUtils.CHARSET);
-			URLConnection conn = ConnectionUtils.openConnection(url, username, password);
+			final byte[] jsonBytes = json.getBytes(ConnectionUtils.CHARSET);
+			final URLConnection conn = ConnectionUtils.openConnection(url, username, password);
 			conn.setRequestProperty("Content-Type", "text/plain;charset=" + ConnectionUtils.CHARSET);
 			conn.setRequestProperty("Content-Length", "" + jsonBytes.length);
 
 			// write json body
-			OutputStream os = conn.getOutputStream();
+			final OutputStream os = conn.getOutputStream();
 			os.write(jsonBytes);
 			os.close();
 
-			int status = ((HttpURLConnection) conn).getResponseCode();
+			final int status = ((HttpURLConnection) conn).getResponseCode();
 			return status;
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			if (e.getMessage().indexOf("401") > -1) {
 				// unauthorized
 				throw new UnauthorizedException(url);
@@ -272,7 +274,7 @@ public class JsonUtils {
 	// build custom gson instance with GMT date serializer/deserializer
 	// http://code.google.com/p/google-gson/issues/detail?id=281
 	public static Gson gson(ExclusionStrategy... strategies) {
-		GsonBuilder builder = new GsonBuilder();
+		final GsonBuilder builder = new GsonBuilder();
 		builder.registerTypeAdapter(Date.class, new GmtDateTypeAdapter());
 		builder.registerTypeAdapter(AccessPermission.class, new AccessPermissionTypeAdapter());
 		if (!ArrayUtils.isEmpty(strategies)) {
@@ -285,15 +287,15 @@ public class JsonUtils {
 		private final DateFormat dateFormat;
 
 		public GmtDateTypeAdapter() {
-			dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
-			dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+			this.dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+			this.dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 		}
 
 		@Override
 		public synchronized JsonElement serialize(Date date, Type type,
 				JsonSerializationContext jsonSerializationContext) {
-			synchronized (dateFormat) {
-				String dateFormatAsString = dateFormat.format(date);
+			synchronized (this.dateFormat) {
+				final String dateFormatAsString = this.dateFormat.format(date);
 				return new JsonPrimitive(dateFormatAsString);
 			}
 		}
@@ -302,17 +304,19 @@ public class JsonUtils {
 		public synchronized Date deserialize(JsonElement jsonElement, Type type,
 				JsonDeserializationContext jsonDeserializationContext) {
 			try {
-				synchronized (dateFormat) {
-					Date date = dateFormat.parse(jsonElement.getAsString());
+				synchronized (this.dateFormat) {
+					final Date date = this.dateFormat.parse(jsonElement.getAsString());
 					return new Date((date.getTime() / 1000) * 1000);
 				}
-			} catch (ParseException e) {
+			}
+			catch (final ParseException e) {
 				throw new JsonSyntaxException(jsonElement.getAsString(), e);
 			}
 		}
 	}
 
-	private static class AccessPermissionTypeAdapter implements JsonSerializer<AccessPermission>, JsonDeserializer<AccessPermission> {
+	private static class AccessPermissionTypeAdapter implements JsonSerializer<AccessPermission>,
+			JsonDeserializer<AccessPermission> {
 
 		private AccessPermissionTypeAdapter() {
 		}
@@ -332,11 +336,10 @@ public class JsonUtils {
 
 	public static class ExcludeField implements ExclusionStrategy {
 
-		private Class<?> c;
-		private String fieldName;
+		private final Class<?> c;
+		private final String fieldName;
 
-		public ExcludeField(String fqfn) throws SecurityException, NoSuchFieldException,
-				ClassNotFoundException {
+		public ExcludeField(String fqfn) throws SecurityException, ClassNotFoundException {
 			this.c = Class.forName(fqfn.substring(0, fqfn.lastIndexOf(".")));
 			this.fieldName = fqfn.substring(fqfn.lastIndexOf(".") + 1);
 		}
@@ -348,7 +351,7 @@ public class JsonUtils {
 
 		@Override
 		public boolean shouldSkipField(FieldAttributes f) {
-			return (f.getDeclaringClass() == c && f.getName().equals(fieldName));
+			return ((f.getDeclaringClass() == this.c) && f.getName().equals(this.fieldName));
 		}
 	}
 }

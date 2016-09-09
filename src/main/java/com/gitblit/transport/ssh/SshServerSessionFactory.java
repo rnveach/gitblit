@@ -41,17 +41,18 @@ public class SshServerSessionFactory extends SessionFactory {
 
 	@Override
 	protected AbstractSession createSession(final IoSession io) throws Exception {
-		log.info("creating ssh session from {}", io.getRemoteAddress());
+		this.log.info("creating ssh session from {}", io.getRemoteAddress());
 
 		if (io instanceof MinaSession) {
 			if (((MinaSession) io).getSession().getConfig() instanceof SocketSessionConfig) {
-				((SocketSessionConfig) ((MinaSession) io).getSession().getConfig()).setKeepAlive(true);
+				((SocketSessionConfig) ((MinaSession) io).getSession().getConfig())
+						.setKeepAlive(true);
 			}
 		}
 
 		final SshServerSession session = (SshServerSession) super.createSession(io);
-		SocketAddress peer = io.getRemoteAddress();
-		SshDaemonClient client = new SshDaemonClient(peer);
+		final SocketAddress peer = io.getRemoteAddress();
+		final SshDaemonClient client = new SshDaemonClient(peer);
 		session.setAttribute(SshDaemonClient.KEY, client);
 
 		// TODO(davido): Log a session close without authentication as a
@@ -59,7 +60,8 @@ public class SshServerSessionFactory extends SessionFactory {
 		session.addCloseSessionListener(new SshFutureListener<CloseFuture>() {
 			@Override
 			public void operationComplete(CloseFuture future) {
-				log.info("closed ssh session from {}", io.getRemoteAddress());
+				SshServerSessionFactory.this.log.info("closed ssh session from {}",
+						io.getRemoteAddress());
 			}
 		});
 		return session;

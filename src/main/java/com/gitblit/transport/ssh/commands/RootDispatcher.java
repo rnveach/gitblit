@@ -36,9 +36,10 @@ import com.gitblit.utils.WorkQueue;
 @CommandMetaData(name = "")
 class RootDispatcher extends DispatchCommand {
 
-	private Logger log = LoggerFactory.getLogger(getClass());
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	public RootDispatcher(IGitblit gitblit, SshDaemonClient client, String cmdLine, WorkQueue workQueue) {
+	public RootDispatcher(IGitblit gitblit, SshDaemonClient client, String cmdLine,
+			WorkQueue workQueue) {
 		super();
 		setContext(new SshCommandContext(gitblit, client, cmdLine));
 		setWorkQueue(workQueue);
@@ -48,13 +49,13 @@ class RootDispatcher extends DispatchCommand {
 		register(KeysDispatcher.class);
 		register(PluginDispatcher.class);
 
-		List<DispatchCommand> exts = gitblit.getExtensions(DispatchCommand.class);
-		for (DispatchCommand ext : exts) {
-			Class<? extends DispatchCommand> extClass = ext.getClass();
-			PluginWrapper wrapper = gitblit.whichPlugin(extClass);
-			String plugin = wrapper.getDescriptor().getPluginId();
-			CommandMetaData meta = extClass.getAnnotation(CommandMetaData.class);
-			log.debug("Dispatcher {} is loaded from plugin {}", meta.name(), plugin);
+		final List<DispatchCommand> exts = gitblit.getExtensions(DispatchCommand.class);
+		for (final DispatchCommand ext : exts) {
+			final Class<? extends DispatchCommand> extClass = ext.getClass();
+			final PluginWrapper wrapper = gitblit.whichPlugin(extClass);
+			final String plugin = wrapper.getDescriptor().getPluginId();
+			final CommandMetaData meta = extClass.getAnnotation(CommandMetaData.class);
+			this.log.debug("Dispatcher {} is loaded from plugin {}", meta.name(), plugin);
 			register(ext);
 		}
 	}

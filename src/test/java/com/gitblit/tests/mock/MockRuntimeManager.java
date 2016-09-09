@@ -71,7 +71,7 @@ public class MockRuntimeManager implements IRuntimeManager {
 
 	@Override
 	public File getBaseFolder() {
-		return baseFolder;
+		return this.baseFolder;
 	}
 
 	@Override
@@ -91,48 +91,48 @@ public class MockRuntimeManager implements IRuntimeManager {
 
 	@Override
 	public Date getBootDate() {
-		return serverStatus.bootDate;
+		return this.serverStatus.bootDate;
 	}
 
 	@Override
 	public ServerStatus getStatus() {
 		// update heap memory status
-		serverStatus.heapAllocated = Runtime.getRuntime().totalMemory();
-		serverStatus.heapFree = Runtime.getRuntime().freeMemory();
-		return serverStatus;
+		this.serverStatus.heapAllocated = Runtime.getRuntime().totalMemory();
+		this.serverStatus.heapFree = Runtime.getRuntime().freeMemory();
+		return this.serverStatus;
 	}
 
 	@Override
 	public ServerSettings getSettingsModel() {
 		// ensure that the current values are updated in the setting models
-		for (String key : settings.getAllKeys(null)) {
-			SettingModel setting = serverSettings.get(key);
+		for (final String key : this.settings.getAllKeys(null)) {
+			SettingModel setting = this.serverSettings.get(key);
 			if (setting == null) {
 				// unreferenced setting, create a setting model
 				setting = new SettingModel();
 				setting.name = key;
-				serverSettings.add(setting);
+				this.serverSettings.add(setting);
 			}
-			setting.currentValue = settings.getString(key, "");
+			setting.currentValue = this.settings.getString(key, "");
 		}
-		return serverSettings;
+		return this.serverSettings;
 	}
 
 	@Override
 	public File getFileOrFolder(String key, String defaultFileOrFolder) {
-		String fileOrFolder = settings.getString(key, defaultFileOrFolder);
+		final String fileOrFolder = this.settings.getString(key, defaultFileOrFolder);
 		return getFileOrFolder(fileOrFolder);
 	}
 
 	@Override
 	public File getFileOrFolder(String fileOrFolder) {
-		return com.gitblit.utils.FileUtils.resolveParameter(Constants.baseFolder$,
-				baseFolder, fileOrFolder);
+		return com.gitblit.utils.FileUtils.resolveParameter(Constants.baseFolder$, this.baseFolder,
+				fileOrFolder);
 	}
 
 	@Override
 	public IStoredSettings getSettings() {
-		return settings;
+		return this.settings;
 	}
 
 	@Override
@@ -142,7 +142,7 @@ public class MockRuntimeManager implements IRuntimeManager {
 
 	@Override
 	public boolean updateSettings(Map<String, String> updatedSettings) {
-		return settings.saveSettings(updatedSettings);
+		return this.settings.saveSettings(updatedSettings);
 	}
 
 	@Override

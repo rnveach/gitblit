@@ -22,17 +22,17 @@ import java.util.Date;
 import java.util.List;
 
 import com.gitblit.models.TicketModel.Patchset;
-import com.gitblit.models.TicketModel.Status;
-import com.gitblit.models.TicketModel.Type;
 import com.gitblit.models.TicketModel.Priority;
 import com.gitblit.models.TicketModel.Severity;
+import com.gitblit.models.TicketModel.Status;
+import com.gitblit.models.TicketModel.Type;
 import com.gitblit.utils.StringUtils;
 
 /**
  * Represents the results of a query to the ticket index.
  *
  * @author James Moger
- *
+ * 
  */
 public class QueryResult implements Serializable {
 
@@ -71,36 +71,36 @@ public class QueryResult implements Serializable {
 	public int totalResults;
 
 	public Date getDate() {
-		return updatedAt == null ? createdAt : updatedAt;
+		return this.updatedAt == null ? this.createdAt : this.updatedAt;
 	}
 
 	public boolean isProposal() {
-		return type != null && Type.Proposal == type;
+		return (this.type != null) && (Type.Proposal == this.type);
 	}
 
 	public boolean isOpen() {
-		return !status.isClosed();
+		return !this.status.isClosed();
 	}
 
 	public boolean isClosed() {
-		return status.isClosed();
+		return this.status.isClosed();
 	}
 
 	public boolean isMerged() {
-		return Status.Merged == status && !StringUtils.isEmpty(mergeSha);
+		return (Status.Merged == this.status) && !StringUtils.isEmpty(this.mergeSha);
 	}
 
 	public boolean isWatching(String username) {
-		return watchedby != null && watchedby.contains(username);
+		return (this.watchedby != null) && this.watchedby.contains(username);
 	}
 
 	public List<String> getLabels() {
-		List<String> list = new ArrayList<String>();
-		if (labels != null) {
-			list.addAll(labels);
+		final List<String> list = new ArrayList<String>();
+		if (this.labels != null) {
+			list.addAll(this.labels);
 		}
-		if (topic != null) {
-			list.add(topic);
+		if (this.topic != null) {
+			list.add(this.topic);
 		}
 		Collections.sort(list);
 		return list;
@@ -116,11 +116,11 @@ public class QueryResult implements Serializable {
 
 	@Override
 	public int hashCode() {
-		return (repository + number).hashCode();
+		return (this.repository + this.number).hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return repository + "-" + number;
+		return this.repository + "-" + this.number;
 	}
 }

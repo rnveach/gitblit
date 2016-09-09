@@ -119,11 +119,11 @@ public class RepositoryModel implements Serializable, Comparable<RepositoryModel
 	}
 
 	public List<String> getLocalBranches() {
-		if (ArrayUtils.isEmpty(availableRefs)) {
+		if (ArrayUtils.isEmpty(this.availableRefs)) {
 			return new ArrayList<String>();
 		}
-		List<String> localBranches = new ArrayList<String>();
-		for (String ref : availableRefs) {
+		final List<String> localBranches = new ArrayList<String>();
+		for (final String ref : this.availableRefs) {
 			if (ref.startsWith("refs/heads")) {
 				localBranches.add(ref);
 			}
@@ -132,132 +132,134 @@ public class RepositoryModel implements Serializable, Comparable<RepositoryModel
 	}
 
 	public void addFork(String repository) {
-		if (forks == null) {
-			forks = new TreeSet<String>();
+		if (this.forks == null) {
+			this.forks = new TreeSet<String>();
 		}
-		forks.add(repository);
+		this.forks.add(repository);
 	}
 
 	public void removeFork(String repository) {
-		if (forks == null) {
+		if (this.forks == null) {
 			return;
 		}
-		forks.remove(repository);
+		this.forks.remove(repository);
 	}
 
 	public void resetDisplayName() {
-		displayName = null;
+		this.displayName = null;
 	}
 
 	public String getRID() {
-		return StringUtils.getSHA1(name);
+		return StringUtils.getSHA1(this.name);
 	}
 
 	@Override
 	public int hashCode() {
-		return name.hashCode();
+		return this.name.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof RepositoryModel) {
-			return name.equals(((RepositoryModel) o).name);
+			return this.name.equals(((RepositoryModel) o).name);
 		}
 		return false;
 	}
 
 	@Override
 	public String toString() {
-		if (displayName == null) {
-			displayName = StringUtils.stripDotGit(name);
+		if (this.displayName == null) {
+			this.displayName = StringUtils.stripDotGit(this.name);
 		}
-		return displayName;
+		return this.displayName;
 	}
 
 	@Override
 	public int compareTo(RepositoryModel o) {
-		return StringUtils.compareRepositoryNames(name, o.name);
+		return StringUtils.compareRepositoryNames(this.name, o.name);
 	}
 
 	public boolean isFork() {
-		return !StringUtils.isEmpty(originRepository);
+		return !StringUtils.isEmpty(this.originRepository);
 	}
 
 	public boolean isOwner(String username) {
-		if (StringUtils.isEmpty(username) || ArrayUtils.isEmpty(owners)) {
+		if (StringUtils.isEmpty(username) || ArrayUtils.isEmpty(this.owners)) {
 			return isUsersPersonalRepository(username);
 		}
-		return owners.contains(username.toLowerCase()) || isUsersPersonalRepository(username);
+		return this.owners.contains(username.toLowerCase()) || isUsersPersonalRepository(username);
 	}
 
 	public boolean isPersonalRepository() {
-		return !StringUtils.isEmpty(projectPath) && ModelUtils.isPersonalRepository(projectPath);
+		return !StringUtils.isEmpty(this.projectPath)
+				&& ModelUtils.isPersonalRepository(this.projectPath);
 	}
 
 	public boolean isUsersPersonalRepository(String username) {
-		return !StringUtils.isEmpty(projectPath) && ModelUtils.isUsersPersonalRepository(username, projectPath);
+		return !StringUtils.isEmpty(this.projectPath)
+				&& ModelUtils.isUsersPersonalRepository(username, this.projectPath);
 	}
 
 	public boolean allowAnonymousView() {
-		return !accessRestriction.atLeast(AccessRestrictionType.VIEW);
+		return !this.accessRestriction.atLeast(AccessRestrictionType.VIEW);
 	}
 
 	public boolean isShowActivity() {
-		return maxActivityCommits > -1;
+		return this.maxActivityCommits > -1;
 	}
 
 	public boolean isSparkleshared() {
-		return !StringUtils.isEmpty(sparkleshareId);
+		return !StringUtils.isEmpty(this.sparkleshareId);
 	}
 
 	public RepositoryModel cloneAs(String cloneName) {
-		RepositoryModel clone = new RepositoryModel();
-		clone.originRepository = name;
+		final RepositoryModel clone = new RepositoryModel();
+		clone.originRepository = this.name;
 		clone.name = cloneName;
 		clone.projectPath = StringUtils.getFirstPathElement(cloneName);
 		clone.isBare = true;
-		clone.description = description;
+		clone.description = this.description;
 		clone.accessRestriction = AccessRestrictionType.PUSH;
 		clone.authorizationControl = AuthorizationControl.NAMED;
-		clone.federationStrategy = federationStrategy;
+		clone.federationStrategy = this.federationStrategy;
 		clone.showRemoteBranches = false;
 		clone.allowForks = false;
 		clone.acceptNewPatchsets = false;
 		clone.acceptNewTickets = false;
-		clone.skipSizeCalculation = skipSizeCalculation;
-		clone.skipSummaryMetrics = skipSummaryMetrics;
-		clone.sparkleshareId = sparkleshareId;
+		clone.skipSizeCalculation = this.skipSizeCalculation;
+		clone.skipSummaryMetrics = this.skipSummaryMetrics;
+		clone.sparkleshareId = this.sparkleshareId;
 		return clone;
 	}
 
 	public void addOwner(String username) {
 		if (!StringUtils.isEmpty(username)) {
-			String name = username.toLowerCase();
+			final String name = username.toLowerCase();
 			// a set would be more efficient, but this complicates JSON
 			// deserialization so we enforce uniqueness with an arraylist
-			if (!owners.contains(name)) {
-				owners.add(name);
+			if (!this.owners.contains(name)) {
+				this.owners.add(name);
 			}
 		}
 	}
 
 	public void removeOwner(String username) {
 		if (!StringUtils.isEmpty(username)) {
-			owners.remove(username.toLowerCase());
+			this.owners.remove(username.toLowerCase());
 		}
 	}
 
 	public void addOwners(Collection<String> usernames) {
 		if (!ArrayUtils.isEmpty(usernames)) {
-			for (String username : usernames) {
+			for (final String username : usernames) {
 				addOwner(username);
 			}
 		}
 	}
 
 	public void removeOwners(Collection<String> usernames) {
-		if (!ArrayUtils.isEmpty(owners)) {
-			for (String username : usernames) {
+		if (!ArrayUtils.isEmpty(this.owners)) {
+			for (final String username : usernames) {
 				removeOwner(username);
 			}
 		}

@@ -33,7 +33,7 @@ public abstract class GitblitPlugin extends Plugin {
 
 	/**
 	 * Called after a plugin as been loaded but before it is started for the
-	 * first time.  This allows the plugin to install settings or perform any
+	 * first time. This allows the plugin to install settings or perform any
 	 * other required first-time initialization.
 	 *
 	 * @since 1.5.0
@@ -42,7 +42,7 @@ public abstract class GitblitPlugin extends Plugin {
 
 	/**
 	 * Called after an updated plugin has been installed but before the updated
-	 * plugin is started.  The oldVersion is passed as a parameter in the event
+	 * plugin is started. The oldVersion is passed as a parameter in the event
 	 * that special processing needs to be executed.
 	 *
 	 * @param oldVersion

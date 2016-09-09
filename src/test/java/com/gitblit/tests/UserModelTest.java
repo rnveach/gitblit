@@ -27,26 +27,32 @@ public class UserModelTest extends GitblitUnitTest {
 
 	@Test
 	public void whenDisplayNameIsEmptyUsernameIsUsed() {
-		String username = "test";
-		UserModel userModel = new UserModel(username);
+		final String username = "test";
+		final UserModel userModel = new UserModel(username);
 		userModel.displayName = "";
-		assertEquals("When displayName is empty the username has to be returnd from getDisplayName().", username, userModel.getDisplayName());
+		assertEquals(
+				"When displayName is empty the username has to be returnd from getDisplayName().",
+				username, userModel.getDisplayName());
 	}
 
 	@Test
 	public void whenDisplayNameIsNullUsernameIsUsed() {
-		String username = "test";
-		UserModel userModel = new UserModel(username);
+		final String username = "test";
+		final UserModel userModel = new UserModel(username);
 		userModel.displayName = null;
-		assertEquals("When displayName is null the username has to be returnd from getDisplayName().", username, userModel.getDisplayName());
+		assertEquals(
+				"When displayName is null the username has to be returnd from getDisplayName().",
+				username, userModel.getDisplayName());
 	}
 
 	@Test
 	public void whenDisplayNameIsNotEmptyDisplayNameIsUsed() {
-		String displayName = "Test User";
-		UserModel userModel = new UserModel("test");
+		final String displayName = "Test User";
+		final UserModel userModel = new UserModel("test");
 		userModel.displayName = displayName;
-		assertEquals("When displayName is not empty its value has to be returnd from getDisplayName().", displayName, userModel.getDisplayName());
+		assertEquals(
+				"When displayName is not empty its value has to be returnd from getDisplayName().",
+				displayName, userModel.getDisplayName());
 	}
 
 }

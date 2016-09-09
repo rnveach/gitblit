@@ -59,10 +59,11 @@ public class BugtraqProcessor {
 		switch (model.commitMessageRenderer) {
 		case MARKDOWN:
 			try {
-				String prepared = processTextRegex(repository, model.name, text);
+				final String prepared = processTextRegex(repository, model.name, text);
 				return MarkdownUtils.transformMarkdown(prepared);
-			} catch (Exception e) {
-				logger.error("Failed to render commit message as markdown", e);
+			}
+			catch (final Exception e) {
+				this.logger.error("Failed to render commit message as markdown", e);
 			}
 			break;
 		default:
@@ -84,7 +85,8 @@ public class BugtraqProcessor {
 	 * @param text
 	 * @return html version of the commit message
 	 */
-	public String processPlainCommitMessage(Repository repository, String repositoryName, String text) {
+	public String processPlainCommitMessage(Repository repository, String repositoryName,
+			String text) {
 		String html = StringUtils.escapeForHtml(text, false);
 		html = processTextRegex(repository, repositoryName, html);
 		return StringUtils.breakLinesForHtml(html);
@@ -101,7 +103,7 @@ public class BugtraqProcessor {
 	 * @return processed version of the text
 	 */
 	public String processText(Repository repository, String repositoryName, String text) {
-		String html = processTextRegex(repository, repositoryName, text);
+		final String html = processTextRegex(repository, repositoryName, text);
 		return html;
 	}
 
@@ -115,32 +117,32 @@ public class BugtraqProcessor {
 	 * @return the processed text
 	 */
 	protected String processTextRegex(Repository repository, String repositoryName, String text) {
-		Map<String, String> map = new HashMap<String, String>();
+		final Map<String, String> map = new HashMap<String, String>();
 		// global regex keys
-		if (settings.getBoolean(Keys.regex.global, false)) {
-			for (String key : settings.getAllKeys(Keys.regex.global)) {
+		if (this.settings.getBoolean(Keys.regex.global, false)) {
+			for (final String key : this.settings.getAllKeys(Keys.regex.global)) {
 				if (!key.equals(Keys.regex.global)) {
-					String subKey = key.substring(key.lastIndexOf('.') + 1);
-					map.put(subKey, settings.getString(key, ""));
+					final String subKey = key.substring(key.lastIndexOf('.') + 1);
+					map.put(subKey, this.settings.getString(key, ""));
 				}
 			}
 		}
 
 		// repository-specific regex keys
-		List<String> keys = settings.getAllKeys(Keys.regex._ROOT + "."
+		final List<String> keys = this.settings.getAllKeys(Keys.regex._ROOT + "."
 				+ repositoryName.toLowerCase());
-		for (String key : keys) {
-			String subKey = key.substring(key.lastIndexOf('.') + 1);
-			map.put(subKey, settings.getString(key, ""));
+		for (final String key : keys) {
+			final String subKey = key.substring(key.lastIndexOf('.') + 1);
+			map.put(subKey, this.settings.getString(key, ""));
 		}
 
-		for (Entry<String, String> entry : map.entrySet()) {
-			String definition = entry.getValue().trim();
-			String[] chunks = definition.split("!!!");
+		for (final Entry<String, String> entry : map.entrySet()) {
+			final String definition = entry.getValue().trim();
+			final String[] chunks = definition.split("!!!");
 			if (chunks.length == 2) {
 				text = text.replaceAll(chunks[0], chunks[1]);
 			} else {
-				logger.warn(entry.getKey()
+				this.logger.warn(entry.getKey()
 						+ " improperly formatted.  Use !!! to separate match from replacement: "
 						+ definition);
 			}
@@ -148,17 +150,21 @@ public class BugtraqProcessor {
 
 		try {
 			// parse bugtraq repo config
-			BugtraqConfig config = BugtraqConfig.read(repository);
+			final BugtraqConfig config = BugtraqConfig.read(repository);
 			if (config != null) {
-				BugtraqFormatter formatter = new BugtraqFormatter(config);
-				StringBuilder sb = new StringBuilder();
+				final BugtraqFormatter formatter = new BugtraqFormatter(config);
+				final StringBuilder sb = new StringBuilder();
 				formatter.formatLogMessage(text, new BugtraqOutputHandler(sb));
 				text = sb.toString();
 			}
-		} catch (IOException e) {
-			logger.error(MessageFormat.format("Bugtraq config for {0} is invalid!", repositoryName), e);
-		} catch (ConfigInvalidException e) {
-			logger.error(MessageFormat.format("Bugtraq config for {0} is invalid!", repositoryName), e);
+		}
+		catch (final IOException e) {
+			this.logger.error(
+					MessageFormat.format("Bugtraq config for {0} is invalid!", repositoryName), e);
+		}
+		catch (final ConfigInvalidException e) {
+			this.logger.error(
+					MessageFormat.format("Bugtraq config for {0} is invalid!", repositoryName), e);
 		}
 
 		return text;
@@ -174,12 +180,13 @@ public class BugtraqProcessor {
 
 		@Override
 		public void appendText(String text) {
-			sb.append(text);
+			this.sb.append(text);
 		}
 
 		@Override
 		public void appendLink(String name, String target) {
-			sb.append(MessageFormat.format("<a class=\"bugtraq\" href=\"{1}\" target=\"_blank\">{0}</a>", name, target));
+			this.sb.append(MessageFormat.format(
+					"<a class=\"bugtraq\" href=\"{1}\" target=\"_blank\">{0}</a>", name, target));
 		}
 	}
 }

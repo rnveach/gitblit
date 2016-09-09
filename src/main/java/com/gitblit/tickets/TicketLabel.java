@@ -39,20 +39,20 @@ public class TicketLabel implements Serializable {
 	public TicketLabel(String name) {
 		setName(name);
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 		this.color = StringUtils.getColor(name);
 	}
 
 	public int getTotalTickets() {
-		return tickets == null ? 0 : tickets.size();
+		return this.tickets == null ? 0 : this.tickets.size();
 	}
 
 	public int getOpenTickets() {
 		int cnt = 0;
-		if (tickets != null) {
-			for (QueryResult ticket : tickets) {
+		if (this.tickets != null) {
+			for (final QueryResult ticket : this.tickets) {
 				if (!ticket.status.isClosed()) {
 					cnt++;
 				}
@@ -63,8 +63,8 @@ public class TicketLabel implements Serializable {
 
 	public int getClosedTickets() {
 		int cnt = 0;
-		if (tickets != null) {
-			for (QueryResult ticket : tickets) {
+		if (this.tickets != null) {
+			for (final QueryResult ticket : this.tickets) {
 				if (ticket.status.isClosed()) {
 					cnt++;
 				}
@@ -75,6 +75,6 @@ public class TicketLabel implements Serializable {
 
 	@Override
 	public String toString() {
-		return name;
+		return this.name;
 	}
 }

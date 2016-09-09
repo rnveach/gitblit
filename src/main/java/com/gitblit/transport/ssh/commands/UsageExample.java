@@ -22,11 +22,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
-* Annotation tagged on a concrete Command to describe how to use it.
-*/
-@Target({ElementType.TYPE})
+ * Annotation tagged on a concrete Command to describe how to use it.
+ */
+@Target({ ElementType.TYPE })
 @Retention(RUNTIME)
 public @interface UsageExample {
-String syntax();
-String description() default "";
+	String syntax();
+
+	String description() default "";
 }

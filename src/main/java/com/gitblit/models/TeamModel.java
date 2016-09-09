@@ -69,22 +69,23 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 	 * @return the team's list of permissions
 	 */
 	public List<RegistrantAccessPermission> getRepositoryPermissions() {
-		List<RegistrantAccessPermission> list = new ArrayList<RegistrantAccessPermission>();
-		if (canAdmin) {
+		final List<RegistrantAccessPermission> list = new ArrayList<RegistrantAccessPermission>();
+		if (this.canAdmin) {
 			// team has REWIND access to all repositories
 			return list;
 		}
-		for (Map.Entry<String, AccessPermission> entry : permissions.entrySet()) {
-			String registrant = entry.getKey();
+		for (final Map.Entry<String, AccessPermission> entry : this.permissions.entrySet()) {
+			final String registrant = entry.getKey();
 			String source = null;
-			boolean editable = true;
+			final boolean editable = true;
 			PermissionType pType = PermissionType.EXPLICIT;
 			if (StringUtils.findInvalidCharacter(registrant) != null) {
 				// a regex will have at least 1 invalid character
 				pType = PermissionType.REGEX;
 				source = registrant;
 			}
-			list.add(new RegistrantAccessPermission(registrant, entry.getValue(), pType, RegistrantType.REPOSITORY, source, editable));
+			list.add(new RegistrantAccessPermission(registrant, entry.getValue(), pType,
+					RegistrantType.REPOSITORY, source, editable));
 		}
 		Collections.sort(list);
 		return list;
@@ -98,15 +99,15 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 	 * @return true if team has a specified access permission for the repository
 	 */
 	public boolean hasRepositoryPermission(String name) {
-		String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
-		if (permissions.containsKey(repository)) {
+		final String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
+		if (this.permissions.containsKey(repository)) {
 			// exact repository permission specified
 			return true;
 		} else {
 			// search for regex permission match
-			for (String key : permissions.keySet()) {
+			for (final String key : this.permissions.keySet()) {
 				if (name.matches(key)) {
-					AccessPermission p = permissions.get(key);
+					final AccessPermission p = this.permissions.get(key);
 					if (p != null) {
 						return true;
 					}
@@ -117,15 +118,15 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 	}
 
 	/**
-	 * Returns true if the team has an explicitly specified access permission for
-	 * this repository.
+	 * Returns true if the team has an explicitly specified access permission
+	 * for this repository.
 	 *
 	 * @param name
 	 * @return if the team has an explicitly specified access permission
 	 */
 	public boolean hasExplicitRepositoryPermission(String name) {
-		String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
-		return permissions.containsKey(repository);
+		final String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
+		return this.permissions.containsKey(repository);
 	}
 
 	/**
@@ -133,53 +134,53 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 	 * <p>
 	 * Role may be formatted as:
 	 * <ul>
-	 * <li> myrepo.git <i>(this is implicitly RW+)</i>
-	 * <li> RW+:myrepo.git
+	 * <li>myrepo.git <i>(this is implicitly RW+)</i>
+	 * <li>RW+:myrepo.git
 	 * </ul>
+	 * 
 	 * @param role
 	 */
 	public void addRepositoryPermission(String role) {
-		AccessPermission permission = AccessPermission.permissionFromRole(role);
-		String repository = AccessPermission.repositoryFromRole(role).toLowerCase();
-		repositories.add(repository);
-		permissions.put(repository, permission);
+		final AccessPermission permission = AccessPermission.permissionFromRole(role);
+		final String repository = AccessPermission.repositoryFromRole(role).toLowerCase();
+		this.repositories.add(repository);
+		this.permissions.put(repository, permission);
 	}
 
 	public void addRepositoryPermissions(Collection<String> roles) {
-		for (String role:roles) {
+		for (final String role : roles) {
 			addRepositoryPermission(role);
 		}
 	}
 
 	public AccessPermission removeRepositoryPermission(String name) {
-		String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
-		repositories.remove(repository);
-		return permissions.remove(repository);
+		final String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
+		this.repositories.remove(repository);
+		return this.permissions.remove(repository);
 	}
 
 	public void setRepositoryPermission(String repository, AccessPermission permission) {
 		if (permission == null) {
 			// remove the permission
-			permissions.remove(repository.toLowerCase());
-			repositories.remove(repository.toLowerCase());
+			this.permissions.remove(repository.toLowerCase());
+			this.repositories.remove(repository.toLowerCase());
 		} else {
 			// set the new permission
-			permissions.put(repository.toLowerCase(), permission);
-			repositories.add(repository.toLowerCase());
+			this.permissions.put(repository.toLowerCase(), permission);
+			this.repositories.add(repository.toLowerCase());
 		}
 	}
 
 	public RegistrantAccessPermission getRepositoryPermission(RepositoryModel repository) {
-		RegistrantAccessPermission ap = new RegistrantAccessPermission();
-		ap.registrant = name;
+		final RegistrantAccessPermission ap = new RegistrantAccessPermission();
+		ap.registrant = this.name;
 		ap.registrantType = RegistrantType.TEAM;
 		ap.permission = AccessPermission.NONE;
 		ap.mutable = false;
 
 		// determine maximum permission for the repository
-		final AccessPermission maxPermission =
-				(repository.isFrozen || !repository.isBare || repository.isMirror) ?
-						AccessPermission.CLONE : AccessPermission.REWIND;
+		final AccessPermission maxPermission = (repository.isFrozen || !repository.isBare || repository.isMirror) ? AccessPermission.CLONE
+				: AccessPermission.REWIND;
 
 		if (AccessRestrictionType.NONE.equals(repository.accessRestriction)) {
 			// anonymous rewind
@@ -192,7 +193,7 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 			return ap;
 		}
 
-		if (canAdmin) {
+		if (this.canAdmin) {
 			ap.permissionType = PermissionType.ADMINISTRATOR;
 			if (AccessPermission.REWIND.atMost(maxPermission)) {
 				ap.permission = AccessPermission.REWIND;
@@ -202,10 +203,10 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 			return ap;
 		}
 
-		if (permissions.containsKey(repository.name.toLowerCase())) {
+		if (this.permissions.containsKey(repository.name.toLowerCase())) {
 			// exact repository permission specified
-			AccessPermission p = permissions.get(repository.name.toLowerCase());
-			if (p != null && repository.accessRestriction.isValidPermission(p)) {
+			final AccessPermission p = this.permissions.get(repository.name.toLowerCase());
+			if ((p != null) && repository.accessRestriction.isValidPermission(p)) {
 				ap.permissionType = PermissionType.EXPLICIT;
 				if (p.atMost(maxPermission)) {
 					ap.permission = p;
@@ -217,10 +218,10 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 			}
 		} else {
 			// search for case-insensitive regex permission match
-			for (String key : permissions.keySet()) {
+			for (final String key : this.permissions.keySet()) {
 				if (StringUtils.matchesIgnoreCase(repository.name, key)) {
-					AccessPermission p = permissions.get(key);
-					if (p != null && repository.accessRestriction.isValidPermission(p)) {
+					final AccessPermission p = this.permissions.get(key);
+					if ((p != null) && repository.accessRestriction.isValidPermission(p)) {
 						// take first match
 						ap.permissionType = PermissionType.REGEX;
 						if (p.atMost(maxPermission)) {
@@ -262,9 +263,10 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 		return ap;
 	}
 
-	protected boolean canAccess(RepositoryModel repository, AccessRestrictionType ifRestriction, AccessPermission requirePermission) {
+	protected boolean canAccess(RepositoryModel repository, AccessRestrictionType ifRestriction,
+			AccessPermission requirePermission) {
 		if (repository.accessRestriction.atLeast(ifRestriction)) {
-			RegistrantAccessPermission ap = getRepositoryPermission(repository);
+			final RegistrantAccessPermission ap = getRepositoryPermission(repository);
 			return ap.permission.atLeast(requirePermission);
 		}
 		return true;
@@ -307,40 +309,40 @@ public class TeamModel implements Serializable, Comparable<TeamModel> {
 	}
 
 	public boolean hasUser(String name) {
-		return users.contains(name.toLowerCase());
+		return this.users.contains(name.toLowerCase());
 	}
 
 	public void addUser(String name) {
-		users.add(name.toLowerCase());
+		this.users.add(name.toLowerCase());
 	}
 
 	public void addUsers(Collection<String> names) {
-		for (String name:names) {
-			users.add(name.toLowerCase());
+		for (final String name : names) {
+			this.users.add(name.toLowerCase());
 		}
 	}
 
 	public void removeUser(String name) {
-		users.remove(name.toLowerCase());
+		this.users.remove(name.toLowerCase());
 	}
 
 	public void addMailingLists(Collection<String> addresses) {
-		for (String address:addresses) {
-			mailingLists.add(address.toLowerCase());
+		for (final String address : addresses) {
+			this.mailingLists.add(address.toLowerCase());
 		}
 	}
 
 	public boolean isLocalTeam() {
-		return accountType.isLocal();
+		return this.accountType.isLocal();
 	}
 
 	@Override
 	public String toString() {
-		return name;
+		return this.name;
 	}
 
 	@Override
 	public int compareTo(TeamModel o) {
-		return name.compareTo(o.name);
+		return this.name.compareTo(o.name);
 	}
 }

@@ -23,12 +23,12 @@ import com.gitblit.utils.TimeUtils;
 
 public class TimeUtilsTest extends GitblitUnitTest {
 
-	private Date offset(long subtract) {
+	private static Date offset(long subtract) {
 		return new Date(System.currentTimeMillis() - subtract);
 	}
 
 	@Test
-	public void testBasicTimeFunctions() throws Exception {
+	public void testBasicTimeFunctions() {
 		assertEquals(2, TimeUtils.minutesAgo(offset(2 * TimeUtils.MIN), false));
 		assertEquals(3, TimeUtils.minutesAgo(offset((2 * TimeUtils.MIN) + (35 * 1000L)), true));
 
@@ -39,18 +39,18 @@ public class TimeUtilsTest extends GitblitUnitTest {
 	}
 
 	@Test
-	public void testToday() throws Exception {
+	public void testToday() {
 		assertTrue(TimeUtils.isToday(new Date(), null));
 	}
 
 	@Test
-	public void testYesterday() throws Exception {
+	public void testYesterday() {
 		assertTrue(TimeUtils.isYesterday(offset(TimeUtils.ONEDAY), null));
 	}
 
 	@Test
-	public void testDurations() throws Exception {
-		TimeUtils timeUtils = new TimeUtils();
+	public void testDurations() {
+		final TimeUtils timeUtils = new TimeUtils();
 		assertEquals("1 day", timeUtils.duration(1));
 		assertEquals("5 days", timeUtils.duration(5));
 		assertEquals("3 months", timeUtils.duration(75));
@@ -63,19 +63,19 @@ public class TimeUtilsTest extends GitblitUnitTest {
 		assertEquals("1 year, 2 months", timeUtils.duration(365 + 45));
 		assertEquals("1 year, 2 months", timeUtils.duration(365 + 60));
 
-		assertEquals("2 years", timeUtils.duration(2 * 365 + 0));
-		assertEquals("2 years", timeUtils.duration(2 * 365 + 10));
-		assertEquals("2 years, 1 month", timeUtils.duration(2 * 365 + 15));
-		assertEquals("2 years, 1 month", timeUtils.duration(2 * 365 + 30));
-		assertEquals("2 years, 1 month", timeUtils.duration(2 * 365 + 44));
-		assertEquals("2 years, 2 months", timeUtils.duration(2 * 365 + 45));
-		assertEquals("2 years, 2 months", timeUtils.duration(2 * 365 + 60));
+		assertEquals("2 years", timeUtils.duration((2 * 365) + 0));
+		assertEquals("2 years", timeUtils.duration((2 * 365) + 10));
+		assertEquals("2 years, 1 month", timeUtils.duration((2 * 365) + 15));
+		assertEquals("2 years, 1 month", timeUtils.duration((2 * 365) + 30));
+		assertEquals("2 years, 1 month", timeUtils.duration((2 * 365) + 44));
+		assertEquals("2 years, 2 months", timeUtils.duration((2 * 365) + 45));
+		assertEquals("2 years, 2 months", timeUtils.duration((2 * 365) + 60));
 	}
 
 	@Test
-	public void testTimeAgo() throws Exception {
+	public void testTimeAgo() {
 		// standard time ago tests
-		TimeUtils timeUtils = new TimeUtils();
+		final TimeUtils timeUtils = new TimeUtils();
 		assertEquals("just now", timeUtils.timeAgo(offset(1 * TimeUtils.MIN)));
 		assertEquals("60 mins ago", timeUtils.timeAgo(offset(60 * TimeUtils.MIN)));
 		assertEquals("2 hours ago", timeUtils.timeAgo(offset(120 * TimeUtils.MIN)));
@@ -88,7 +88,7 @@ public class TimeUtilsTest extends GitblitUnitTest {
 		assertEquals("4 months ago", timeUtils.timeAgo(offset(104 * TimeUtils.ONEDAY)));
 		assertEquals("1 year ago", timeUtils.timeAgo(offset(365 * TimeUtils.ONEDAY)));
 		assertEquals("13 months ago", timeUtils.timeAgo(offset(395 * TimeUtils.ONEDAY)));
-		assertEquals("2 years ago", timeUtils.timeAgo(offset((2 * 365 + 30) * TimeUtils.ONEDAY)));
+		assertEquals("2 years ago", timeUtils.timeAgo(offset(((2 * 365) + 30) * TimeUtils.ONEDAY)));
 
 		// css class tests
 		assertEquals("age0", timeUtils.timeAgoCss(offset(1 * TimeUtils.MIN)));

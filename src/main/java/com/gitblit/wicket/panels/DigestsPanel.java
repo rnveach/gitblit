@@ -53,22 +53,23 @@ public class DigestsPanel extends BasePanel {
 
 	public DigestsPanel(String wicketId, List<DailyLogEntry> digests) {
 		super(wicketId);
-		hasChanges = digests.size() > 0;
+		this.hasChanges = digests.size() > 0;
 
-		ListDataProvider<DailyLogEntry> dp = new ListDataProvider<DailyLogEntry>(digests);
-		DataView<DailyLogEntry> pushView = new DataView<DailyLogEntry>("change", dp) {
+		final ListDataProvider<DailyLogEntry> dp = new ListDataProvider<DailyLogEntry>(digests);
+		final DataView<DailyLogEntry> pushView = new DataView<DailyLogEntry>("change", dp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<DailyLogEntry> logItem) {
 				final DailyLogEntry change = logItem.getModelObject();
 
-				String dateFormat = app().settings().getString(Keys.web.datestampLongFormat, "EEEE, MMMM d, yyyy");
-				TimeZone timezone = getTimeZone();
-				DateFormat df = new SimpleDateFormat(dateFormat);
+				final String dateFormat = app().settings().getString(Keys.web.datestampLongFormat,
+						"EEEE, MMMM d, yyyy");
+				final TimeZone timezone = getTimeZone();
+				final DateFormat df = new SimpleDateFormat(dateFormat);
 				df.setTimeZone(timezone);
 
-				String fullRefName = change.getChangedRefs().get(0);
+				final String fullRefName = change.getChangedRefs().get(0);
 				String shortRefName = fullRefName;
 				String ticketId = "";
 				boolean isTag = false;
@@ -85,8 +86,8 @@ public class DigestsPanel extends BasePanel {
 				}
 
 				String fuzzydate;
-				TimeUtils tu = getTimeUtils();
-				Date pushDate = change.date;
+				final TimeUtils tu = getTimeUtils();
+				final Date pushDate = change.date;
 				if (TimeUtils.isToday(pushDate, timezone)) {
 					fuzzydate = tu.today();
 				} else if (TimeUtils.isYesterday(pushDate, timezone)) {
@@ -96,10 +97,11 @@ public class DigestsPanel extends BasePanel {
 				}
 				logItem.add(new Label("whenChanged", fuzzydate + ", " + df.format(pushDate)));
 
-				Label changeIcon = new Label("changeIcon");
+				final Label changeIcon = new Label("changeIcon");
 				// use the repository hash color to differentiate the icon.
-                String color = StringUtils.getColor(StringUtils.stripDotGit(change.repository));
-                WicketUtils.setCssStyle(changeIcon, "color: " + color);
+				final String color = StringUtils.getColor(StringUtils
+						.stripDotGit(change.repository));
+				WicketUtils.setCssStyle(changeIcon, "color: " + color);
 
 				if (isTag) {
 					WicketUtils.setCssClass(changeIcon, "iconic-tag");
@@ -110,23 +112,23 @@ public class DigestsPanel extends BasePanel {
 				}
 				logItem.add(changeIcon);
 
-                if (isTag) {
-                	// tags are special
-                	PersonIdent ident = change.getCommits().get(0).getAuthorIdent();
-                	if (!StringUtils.isEmpty(ident.getName())) {
-                		logItem.add(new Label("whoChanged", ident.getName()));
-                	} else {
-                		logItem.add(new Label("whoChanged", ident.getEmailAddress()));
-                	}
-                } else {
-                	logItem.add(new Label("whoChanged").setVisible(false));
-                }
+				if (isTag) {
+					// tags are special
+					final PersonIdent ident = change.getCommits().get(0).getAuthorIdent();
+					if (!StringUtils.isEmpty(ident.getName())) {
+						logItem.add(new Label("whoChanged", ident.getName()));
+					} else {
+						logItem.add(new Label("whoChanged", ident.getEmailAddress()));
+					}
+				} else {
+					logItem.add(new Label("whoChanged").setVisible(false));
+				}
 
 				String preposition = "gb.of";
 				boolean isDelete = false;
 				String what;
 				String by = null;
-				switch(change.getChangeType(fullRefName)) {
+				switch (change.getChangeType(fullRefName)) {
 				case CREATE:
 					if (isTag) {
 						// new tag
@@ -148,12 +150,16 @@ public class DigestsPanel extends BasePanel {
 					preposition = "gb.from";
 					break;
 				default:
-					what = MessageFormat.format(change.getCommitCount() > 1 ? getString("gb.commitsTo") : getString("gb.oneCommitTo"), change.getCommitCount());
+					what = MessageFormat.format(
+							change.getCommitCount() > 1 ? getString("gb.commitsTo")
+									: getString("gb.oneCommitTo"), change.getCommitCount());
 
 					if (change.getAuthorCount() == 1) {
-						by = MessageFormat.format(getString("gb.byOneAuthor"), change.getAuthorIdent().getName());
+						by = MessageFormat.format(getString("gb.byOneAuthor"), change
+								.getAuthorIdent().getName());
 					} else {
-						by = MessageFormat.format(getString("gb.byNAuthors"), change.getAuthorCount());
+						by = MessageFormat.format(getString("gb.byNAuthors"),
+								change.getAuthorCount());
 					}
 					break;
 				}
@@ -165,50 +171,57 @@ public class DigestsPanel extends BasePanel {
 					logItem.add(new Label("refChanged", shortRefName));
 				} else if (isTag) {
 					// link to tag
-					logItem.add(new LinkPanel("refChanged", null, shortRefName,
-							TagPage.class, WicketUtils.newObjectParameter(change.repository, shortRefName)));
+					logItem.add(new LinkPanel("refChanged", null, shortRefName, TagPage.class,
+							WicketUtils.newObjectParameter(change.repository, shortRefName)));
 				} else if (isTicket) {
 					// link to ticket
-					logItem.add(new LinkPanel("refChanged", null, shortRefName,
-							TicketsPage.class, WicketUtils.newObjectParameter(change.repository, ticketId)));
+					logItem.add(new LinkPanel("refChanged", null, shortRefName, TicketsPage.class,
+							WicketUtils.newObjectParameter(change.repository, ticketId)));
 				} else {
 					// link to tree
-					logItem.add(new LinkPanel("refChanged", null, shortRefName,
-						TreePage.class, WicketUtils.newObjectParameter(change.repository, shortRefName)));
+					logItem.add(new LinkPanel("refChanged", null, shortRefName, TreePage.class,
+							WicketUtils.newObjectParameter(change.repository, shortRefName)));
 				}
 
 				// to/from/etc
 				logItem.add(new Label("repoPreposition", getString(preposition)));
-				String repoName = StringUtils.stripDotGit(change.repository);
-				logItem.add(new LinkPanel("repoChanged", null, repoName,
-						SummaryPage.class, WicketUtils.newRepositoryParameter(change.repository)));
+				final String repoName = StringUtils.stripDotGit(change.repository);
+				logItem.add(new LinkPanel("repoChanged", null, repoName, SummaryPage.class,
+						WicketUtils.newRepositoryParameter(change.repository)));
 
-				int maxCommitCount = 5;
+				final int maxCommitCount = 5;
 				List<RepositoryCommit> commits = change.getCommits();
 				if (commits.size() > maxCommitCount) {
-					commits = new ArrayList<RepositoryCommit>(commits.subList(0,  maxCommitCount));
+					commits = new ArrayList<RepositoryCommit>(commits.subList(0, maxCommitCount));
 				}
 
 				// compare link
 				String compareLinkText = null;
 				if ((change.getCommitCount() <= maxCommitCount) && (change.getCommitCount() > 1)) {
-					compareLinkText = MessageFormat.format(getString("gb.viewComparison"), commits.size());
+					compareLinkText = MessageFormat.format(getString("gb.viewComparison"),
+							commits.size());
 				} else if (change.getCommitCount() > maxCommitCount) {
-					int diff = change.getCommitCount() - maxCommitCount;
-					compareLinkText = MessageFormat.format(diff > 1 ? getString("gb.nMoreCommits") : getString("gb.oneMoreCommit"), diff);
+					final int diff = change.getCommitCount() - maxCommitCount;
+					compareLinkText = MessageFormat.format(diff > 1 ? getString("gb.nMoreCommits")
+							: getString("gb.oneMoreCommit"), diff);
 				}
 				if (StringUtils.isEmpty(compareLinkText)) {
 					logItem.add(new Label("compareLink").setVisible(false));
 				} else {
-					String endRangeId = change.getNewId(fullRefName);
-					String startRangeId = change.getOldId(fullRefName);
-					logItem.add(new LinkPanel("compareLink", null, compareLinkText, ComparePage.class, WicketUtils.newRangeParameter(change.repository, startRangeId, endRangeId)));
+					final String endRangeId = change.getNewId(fullRefName);
+					final String startRangeId = change.getOldId(fullRefName);
+					logItem.add(new LinkPanel("compareLink", null, compareLinkText,
+							ComparePage.class, WicketUtils.newRangeParameter(change.repository,
+									startRangeId, endRangeId)));
 				}
 
-				final boolean showSwatch = app().settings().getBoolean(Keys.web.repositoryListSwatches, true);
+				final boolean showSwatch = app().settings().getBoolean(
+						Keys.web.repositoryListSwatches, true);
 
-				ListDataProvider<RepositoryCommit> cdp = new ListDataProvider<RepositoryCommit>(commits);
-				DataView<RepositoryCommit> commitsView = new DataView<RepositoryCommit>("commit", cdp) {
+				final ListDataProvider<RepositoryCommit> cdp = new ListDataProvider<RepositoryCommit>(
+						commits);
+				final DataView<RepositoryCommit> commitsView = new DataView<RepositoryCommit>(
+						"commit", cdp) {
 					private static final long serialVersionUID = 1L;
 
 					@Override
@@ -216,24 +229,28 @@ public class DigestsPanel extends BasePanel {
 						final RepositoryCommit commit = commitItem.getModelObject();
 
 						// author gravatar
-						commitItem.add(new AvatarImage("commitAuthor", commit.getAuthorIdent(), null, 16, false));
+						commitItem.add(new AvatarImage("commitAuthor", commit.getAuthorIdent(),
+								null, 16, false));
 
 						// merge icon
 						if (commit.getParentCount() > 1) {
-							commitItem.add(WicketUtils.newImage("commitIcon", "commit_merge_16x16.png"));
+							commitItem.add(WicketUtils.newImage("commitIcon",
+									"commit_merge_16x16.png"));
 						} else {
 							commitItem.add(WicketUtils.newBlankImage("commitIcon"));
 						}
 
 						// short message
-						String shortMessage = commit.getShortMessage();
+						final String shortMessage = commit.getShortMessage();
 						String trimmedMessage = shortMessage;
-						if (commit.getRefs() != null && commit.getRefs().size() > 0) {
-							trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG_REFS);
+						if ((commit.getRefs() != null) && (commit.getRefs().size() > 0)) {
+							trimmedMessage = StringUtils.trimString(shortMessage,
+									Constants.LEN_SHORTLOG_REFS);
 						} else {
-							trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG);
+							trimmedMessage = StringUtils.trimString(shortMessage,
+									Constants.LEN_SHORTLOG);
 						}
-						LinkPanel shortlog = new LinkPanel("commitShortMessage", "list",
+						final LinkPanel shortlog = new LinkPanel("commitShortMessage", "list",
 								trimmedMessage, CommitPage.class, WicketUtils.newObjectParameter(
 										change.repository, commit.getName()));
 						if (!shortMessage.equals(trimmedMessage)) {
@@ -242,18 +259,21 @@ public class DigestsPanel extends BasePanel {
 						commitItem.add(shortlog);
 
 						// commit hash link
-						int hashLen = app().settings().getInteger(Keys.web.shortCommitIdLength, 6);
-						LinkPanel commitHash = new LinkPanel("hashLink", null, commit.getName().substring(0, hashLen),
-								CommitPage.class, WicketUtils.newObjectParameter(
-										change.repository, commit.getName()));
+						final int hashLen = app().settings().getInteger(
+								Keys.web.shortCommitIdLength, 6);
+						final LinkPanel commitHash = new LinkPanel("hashLink", null, commit
+								.getName().substring(0, hashLen), CommitPage.class,
+								WicketUtils.newObjectParameter(change.repository, commit.getName()));
 						WicketUtils.setCssClass(commitHash, "shortsha1");
 						WicketUtils.setHtmlTooltip(commitHash, commit.getName());
 						commitItem.add(commitHash);
 
 						if (showSwatch) {
 							// set repository color
-							String color = StringUtils.getColor(StringUtils.stripDotGit(change.repository));
-							WicketUtils.setCssStyle(commitItem, MessageFormat.format("border-left: 2px solid {0};", color));
+							final String color = StringUtils.getColor(StringUtils
+									.stripDotGit(change.repository));
+							WicketUtils.setCssStyle(commitItem,
+									MessageFormat.format("border-left: 2px solid {0};", color));
 						}
 					}
 				};
@@ -266,11 +286,11 @@ public class DigestsPanel extends BasePanel {
 	}
 
 	public boolean hasMore() {
-		return hasMore;
+		return this.hasMore;
 	}
 
 	public boolean hideIfEmpty() {
-		setVisible(hasChanges);
-		return hasChanges;
+		setVisible(this.hasChanges);
+		return this.hasChanges;
 	}
 }

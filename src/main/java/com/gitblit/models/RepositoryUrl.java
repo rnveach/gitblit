@@ -42,11 +42,11 @@ public class RepositoryUrl implements Serializable {
 	}
 
 	public boolean hasPermission() {
-		return permission != null;
+		return this.permission != null;
 	}
 
 	@Override
 	public String toString() {
-		return url;
+		return this.url;
 	}
 }

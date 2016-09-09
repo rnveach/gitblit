@@ -24,37 +24,37 @@ import com.gitblit.utils.FileUtils;
 public class FileUtilsTest extends GitblitUnitTest {
 
 	@Test
-	public void testReadContent() throws Exception {
-		File dir = new File(System.getProperty("user.dir"));
-		String rawContent = FileUtils.readContent(new File(dir, "LICENSE"), "\n");
+	public void testReadContent() {
+		final File dir = new File(System.getProperty("user.dir"));
+		final String rawContent = FileUtils.readContent(new File(dir, "LICENSE"), "\n");
 		assertTrue(rawContent.trim().startsWith("Apache License"));
 	}
 
 	@Test
 	public void testWriteContent() throws Exception {
-		String contentA = "this is a test";
-		File tmp = File.createTempFile("gitblit-", ".test");
+		final String contentA = "this is a test";
+		final File tmp = File.createTempFile("gitblit-", ".test");
 		FileUtils.writeContent(tmp, contentA);
-		String contentB = FileUtils.readContent(tmp, "\n").trim();
+		final String contentB = FileUtils.readContent(tmp, "\n").trim();
 		assertEquals(contentA, contentB);
 	}
 
 	@Test
-	public void testFolderSize() throws Exception {
+	public void testFolderSize() {
 		assertEquals(-1, FileUtils.folderSize(null));
 		assertEquals(-1, FileUtils.folderSize(new File(System.getProperty("user.dir"), "pretend")));
 
-		File dir = new File(System.getProperty("user.dir"), "src/main/distrib");
+		final File dir = new File(System.getProperty("user.dir"), "src/main/distrib");
 		long size = FileUtils.folderSize(dir);
 		assertTrue("size is actually " + size, size >= 470000L);
 
-		File file = new File(System.getProperty("user.dir"), "LICENSE");
+		final File file = new File(System.getProperty("user.dir"), "LICENSE");
 		size = FileUtils.folderSize(file);
 		assertEquals("size is actually " + size, 11556L, size);
 	}
 
 	@Test
-	public void testStringSizes() throws Exception {
+	public void testStringSizes() {
 		assertEquals(50 * FileUtils.KB, FileUtils.convertSizeToInt("50k", 0));
 		assertEquals(50 * FileUtils.MB, FileUtils.convertSizeToInt("50m", 0));
 		assertEquals(2 * FileUtils.GB, FileUtils.convertSizeToInt("2g", 0));

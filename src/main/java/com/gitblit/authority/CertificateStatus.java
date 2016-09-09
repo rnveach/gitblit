@@ -16,5 +16,9 @@
 package com.gitblit.authority;
 
 public enum CertificateStatus {
-	unknown, ok, expiring, expired, revoked
+	unknown,
+	ok,
+	expiring,
+	expired,
+	revoked
 }

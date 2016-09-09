@@ -35,7 +35,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-
 /**
  * Utility class for establishing HTTP/HTTPS connections.
  *
@@ -55,7 +54,8 @@ public class ConnectionUtils {
 		try {
 			context = SSLContext.getInstance("SSL");
 			context.init(null, new TrustManager[] { new DummyTrustManager() }, new SecureRandom());
-		} catch (Throwable t) {
+		}
+		catch (final Throwable t) {
 			t.printStackTrace();
 		}
 		SSL_CONTEXT = context;
@@ -68,7 +68,7 @@ public class ConnectionUtils {
 	}
 
 	public static void setAuthorization(URLConnection conn, String username, char[] password) {
-		if (!StringUtils.isEmpty(username) && (password != null && password.length > 0)) {
+		if (!StringUtils.isEmpty(username) && ((password != null) && (password.length > 0))) {
 			conn.setRequestProperty(
 					"Authorization",
 					"Basic "
@@ -78,20 +78,20 @@ public class ConnectionUtils {
 
 	public static URLConnection openReadConnection(String url, String username, char[] password)
 			throws IOException {
-		URLConnection conn = openConnection(url, username, password);
+		final URLConnection conn = openConnection(url, username, password);
 		conn.setRequestProperty("Accept-Charset", ConnectionUtils.CHARSET);
 		return conn;
 	}
 
 	public static URLConnection openConnection(String url, String username, char[] password)
 			throws IOException {
-		URL urlObject = new URL(url);
-		URLConnection conn = urlObject.openConnection();
+		final URL urlObject = new URL(url);
+		final URLConnection conn = urlObject.openConnection();
 		setAuthorization(conn, username, password);
 		conn.setUseCaches(false);
 		conn.setDoOutput(true);
 		if (conn instanceof HttpsURLConnection) {
-			HttpsURLConnection secureConn = (HttpsURLConnection) conn;
+			final HttpsURLConnection secureConn = (HttpsURLConnection) conn;
 			secureConn.setSSLSocketFactory(SSL_CONTEXT.getSocketFactory());
 			secureConn.setHostnameVerifier(HOSTNAME_VERIFIER);
 		}
@@ -121,12 +121,13 @@ public class ConnectionUtils {
 				final SecureRandom rng = new SecureRandom();
 				context.init(null, trustManagers, rng);
 				INSTANCE = new BlindSSLSocketFactory(context.getSocketFactory());
-			} catch (GeneralSecurityException e) {
+			}
+			catch (final GeneralSecurityException e) {
 				throw new RuntimeException("Cannot create BlindSslSocketFactory", e);
 			}
 		}
 
-		public static SocketFactory getDefault() {
+		public static synchronized SocketFactory getDefault() {
 			return INSTANCE;
 		}
 
@@ -139,45 +140,44 @@ public class ConnectionUtils {
 		@Override
 		public Socket createSocket(Socket s, String host, int port, boolean autoClose)
 				throws IOException {
-			return sslFactory.createSocket(s, host, port, autoClose);
+			return this.sslFactory.createSocket(s, host, port, autoClose);
 		}
 
 		@Override
 		public String[] getDefaultCipherSuites() {
-			return sslFactory.getDefaultCipherSuites();
+			return this.sslFactory.getDefaultCipherSuites();
 		}
 
 		@Override
 		public String[] getSupportedCipherSuites() {
-			return sslFactory.getSupportedCipherSuites();
+			return this.sslFactory.getSupportedCipherSuites();
 		}
 
 		@Override
 		public Socket createSocket() throws IOException {
-			return sslFactory.createSocket();
+			return this.sslFactory.createSocket();
 		}
 
 		@Override
-		public Socket createSocket(String host, int port) throws IOException,
-		UnknownHostException {
-			return sslFactory.createSocket(host, port);
+		public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
+			return this.sslFactory.createSocket(host, port);
 		}
 
 		@Override
 		public Socket createSocket(InetAddress host, int port) throws IOException {
-			return sslFactory.createSocket(host, port);
+			return this.sslFactory.createSocket(host, port);
 		}
 
 		@Override
-		public Socket createSocket(String host, int port, InetAddress localHost,
-				int localPort) throws IOException, UnknownHostException {
-			return sslFactory.createSocket(host, port, localHost, localPort);
+		public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
+				throws IOException, UnknownHostException {
+			return this.sslFactory.createSocket(host, port, localHost, localPort);
 		}
 
 		@Override
-		public Socket createSocket(InetAddress address, int port,
-				InetAddress localAddress, int localPort) throws IOException {
-			return sslFactory.createSocket(address, port, localAddress, localPort);
+		public Socket createSocket(InetAddress address, int port, InetAddress localAddress,
+				int localPort) throws IOException {
+			return this.sslFactory.createSocket(address, port, localAddress, localPort);
 		}
 	}
 

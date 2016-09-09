@@ -44,20 +44,22 @@ public class UsernamePasswordAuthenticator implements PasswordAuthenticator {
 
 	@Override
 	public boolean authenticate(String username, String password, ServerSession session) {
-		SshDaemonClient client = session.getAttribute(SshDaemonClient.KEY);
+		final SshDaemonClient client = session.getAttribute(SshDaemonClient.KEY);
 		if (client.getUser() != null) {
-			log.info("{} has already authenticated!", username);
+			this.log.info("{} has already authenticated!", username);
 			return true;
 		}
 
 		username = username.toLowerCase(Locale.US);
-		UserModel user = authManager.authenticate(username, password.toCharArray(), null);
+		final UserModel user = this.authManager
+				.authenticate(username, password.toCharArray(), null);
 		if (user != null) {
 			client.setUser(user);
 			return true;
 		}
 
-		log.warn("could not authenticate {} ({}) for SSH using the supplied password", username, client.getRemoteAddress());
+		this.log.warn("could not authenticate {} ({}) for SSH using the supplied password",
+				username, client.getRemoteAddress());
 		return false;
 	}
 }

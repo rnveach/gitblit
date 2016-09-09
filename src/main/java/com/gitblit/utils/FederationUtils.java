@@ -94,7 +94,7 @@ public class FederationUtils {
 	 */
 	public static String asLink(String remoteURL, FederationToken tokenType, String token,
 			FederationRequest req, String myURL) {
-		if (remoteURL.length() > 0 && remoteURL.charAt(remoteURL.length() - 1) == '/') {
+		if ((remoteURL.length() > 0) && (remoteURL.charAt(remoteURL.length() - 1) == '/')) {
 			remoteURL = remoteURL.substring(0, remoteURL.length() - 1);
 		}
 		if (req == null) {
@@ -113,8 +113,8 @@ public class FederationUtils {
 	 * @return list of registered gitblit instances
 	 */
 	public static List<FederationModel> getFederationRegistrations(IStoredSettings settings) {
-		List<FederationModel> federationRegistrations = new ArrayList<FederationModel>();
-		List<String> keys = settings.getAllKeys(Keys.federation._ROOT);
+		final List<FederationModel> federationRegistrations = new ArrayList<FederationModel>();
+		final List<String> keys = settings.getAllKeys(Keys.federation._ROOT);
 		keys.remove(Keys.federation.name);
 		keys.remove(Keys.federation.passphrase);
 		keys.remove(Keys.federation.allowProposals);
@@ -122,15 +122,15 @@ public class FederationUtils {
 		keys.remove(Keys.federation.defaultFrequency);
 		keys.remove(Keys.federation.sets);
 		Collections.sort(keys);
-		Map<String, FederationModel> federatedModels = new HashMap<String, FederationModel>();
-		for (String key : keys) {
-			String value = key.substring(Keys.federation._ROOT.length() + 1);
-			List<String> values = StringUtils.getStringsFromValue(value, "\\.");
-			String server = values.get(0);
+		final Map<String, FederationModel> federatedModels = new HashMap<String, FederationModel>();
+		for (final String key : keys) {
+			final String value = key.substring(Keys.federation._ROOT.length() + 1);
+			final List<String> values = StringUtils.getStringsFromValue(value, "\\.");
+			final String server = values.get(0);
 			if (!federatedModels.containsKey(server)) {
 				federatedModels.put(server, new FederationModel(server));
 			}
-			String setting = values.get(1);
+			final String setting = values.get(1);
 			if (setting.equals("url")) {
 				// url of the origin Gitblit instance
 				federatedModels.get(server).url = settings.getString(key, "");
@@ -169,7 +169,7 @@ public class FederationUtils {
 		}
 
 		// verify that registrations have a url and a token
-		for (FederationModel model : federatedModels.values()) {
+		for (final FederationModel model : federatedModels.values()) {
 			if (StringUtils.isEmpty(model.url)) {
 				LOGGER.warn(MessageFormat.format(
 						"Dropping federation registration {0}. Missing url.", model.name));
@@ -202,9 +202,9 @@ public class FederationUtils {
 	 * @return true if there is a route to the remoteUrl
 	 */
 	public static boolean poke(String remoteUrl) throws Exception {
-		String url = asLink(remoteUrl, null, FederationRequest.POKE);
-		String json = JsonUtils.toJsonString("POKE");
-		int status = JsonUtils.sendJsonString(url, json);
+		final String url = asLink(remoteUrl, null, FederationRequest.POKE);
+		final String json = JsonUtils.toJsonString("POKE");
+		final int status = JsonUtils.sendJsonString(url, json);
 		return status == HttpServletResponse.SC_OK;
 	}
 
@@ -219,9 +219,9 @@ public class FederationUtils {
 	 */
 	public static FederationProposalResult propose(String remoteUrl, FederationProposal proposal)
 			throws Exception {
-		String url = asLink(remoteUrl, null, FederationRequest.PROPOSAL);
-		String json = JsonUtils.toJsonString(proposal);
-		int status = JsonUtils.sendJsonString(url, json);
+		final String url = asLink(remoteUrl, null, FederationRequest.PROPOSAL);
+		final String json = JsonUtils.toJsonString(proposal);
+		final int status = JsonUtils.sendJsonString(url, json);
 		switch (status) {
 		case HttpServletResponse.SC_FORBIDDEN:
 			// remote Gitblit Federation disabled
@@ -255,12 +255,12 @@ public class FederationUtils {
 	 */
 	public static Map<String, RepositoryModel> getRepositories(FederationModel registration,
 			boolean checkExclusions) throws Exception {
-		String url = asLink(registration.url, registration.token,
+		final String url = asLink(registration.url, registration.token,
 				FederationRequest.PULL_REPOSITORIES);
-		Map<String, RepositoryModel> models = JsonUtils.retrieveJson(url, REPOSITORIES_TYPE);
+		final Map<String, RepositoryModel> models = JsonUtils.retrieveJson(url, REPOSITORIES_TYPE);
 		if (checkExclusions) {
-			Map<String, RepositoryModel> includedModels = new HashMap<String, RepositoryModel>();
-			for (Map.Entry<String, RepositoryModel> entry : models.entrySet()) {
+			final Map<String, RepositoryModel> includedModels = new HashMap<String, RepositoryModel>();
+			for (final Map.Entry<String, RepositoryModel> entry : models.entrySet()) {
 				if (registration.isIncluded(entry.getValue())) {
 					includedModels.put(entry.getKey(), entry.getValue());
 				}
@@ -278,9 +278,10 @@ public class FederationUtils {
 	 * @throws Exception
 	 */
 	public static List<UserModel> getUsers(FederationModel registration) throws Exception {
-		String url = asLink(registration.url, registration.token, FederationRequest.PULL_USERS);
-		Collection<UserModel> models = JsonUtils.retrieveJson(url, USERS_TYPE);
-		List<UserModel> list = new ArrayList<UserModel>(models);
+		final String url = asLink(registration.url, registration.token,
+				FederationRequest.PULL_USERS);
+		final Collection<UserModel> models = JsonUtils.retrieveJson(url, USERS_TYPE);
+		final List<UserModel> list = new ArrayList<UserModel>(models);
 		return list;
 	}
 
@@ -293,9 +294,10 @@ public class FederationUtils {
 	 * @throws Exception
 	 */
 	public static List<TeamModel> getTeams(FederationModel registration) throws Exception {
-		String url = asLink(registration.url, registration.token, FederationRequest.PULL_TEAMS);
-		Collection<TeamModel> models = JsonUtils.retrieveJson(url, TEAMS_TYPE);
-		List<TeamModel> list = new ArrayList<TeamModel>(models);
+		final String url = asLink(registration.url, registration.token,
+				FederationRequest.PULL_TEAMS);
+		final Collection<TeamModel> models = JsonUtils.retrieveJson(url, TEAMS_TYPE);
+		final List<TeamModel> list = new ArrayList<TeamModel>(models);
 		return list;
 	}
 
@@ -308,8 +310,9 @@ public class FederationUtils {
 	 * @throws Exception
 	 */
 	public static Map<String, String> getSettings(FederationModel registration) throws Exception {
-		String url = asLink(registration.url, registration.token, FederationRequest.PULL_SETTINGS);
-		Map<String, String> settings = JsonUtils.retrieveJson(url, SETTINGS_TYPE);
+		final String url = asLink(registration.url, registration.token,
+				FederationRequest.PULL_SETTINGS);
+		final Map<String, String> settings = JsonUtils.retrieveJson(url, SETTINGS_TYPE);
 		return settings;
 	}
 
@@ -321,8 +324,9 @@ public class FederationUtils {
 	 * @throws Exception
 	 */
 	public static Map<String, String> getScripts(FederationModel registration) throws Exception {
-		String url = asLink(registration.url, registration.token, FederationRequest.PULL_SCRIPTS);
-		Map<String, String> scripts = JsonUtils.retrieveJson(url, SETTINGS_TYPE);
+		final String url = asLink(registration.url, registration.token,
+				FederationRequest.PULL_SCRIPTS);
+		final Map<String, String> scripts = JsonUtils.retrieveJson(url, SETTINGS_TYPE);
 		return scripts;
 	}
 
@@ -340,10 +344,10 @@ public class FederationUtils {
 	 */
 	public static boolean acknowledgeStatus(String identification, FederationModel registration)
 			throws Exception {
-		String url = asLink(registration.url, null, registration.token, FederationRequest.STATUS,
-				identification);
-		String json = JsonUtils.toJsonString(registration);
-		int status = JsonUtils.sendJsonString(url, json);
+		final String url = asLink(registration.url, null, registration.token,
+				FederationRequest.STATUS, identification);
+		final String json = JsonUtils.toJsonString(registration);
+		final int status = JsonUtils.sendJsonString(url, json);
 		return status == HttpServletResponse.SC_OK;
 	}
 }

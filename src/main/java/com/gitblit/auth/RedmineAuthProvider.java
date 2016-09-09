@@ -38,156 +38,160 @@ import com.google.gson.Gson;
  */
 public class RedmineAuthProvider extends UsernamePasswordAuthenticationProvider {
 
-    private String testingJson;
+	private String testingJson;
 
-    private class RedmineCurrent {
-        private class RedmineUser {
-            public String login;
-            public String firstname;
-            public String lastname;
-            public String mail;
-        }
+	private class RedmineCurrent {
+		private class RedmineUser {
+			public String firstname;
+			public String lastname;
+			public String mail;
+		}
 
-        public RedmineUser user;
-    }
+		public RedmineUser user;
+	}
 
-    public RedmineAuthProvider() {
-        super("redmine");
-    }
+	public RedmineAuthProvider() {
+		super("redmine");
+	}
 
-    @Override
-    public void setup() {
-    }
+	@Override
+	public void setup() {
+	}
 
-    @Override
-    public boolean supportsCredentialChanges() {
-        return false;
-    }
+	@Override
+	public boolean supportsCredentialChanges() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsDisplayNameChanges() {
-        return false;
-    }
+	@Override
+	public boolean supportsDisplayNameChanges() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsEmailAddressChanges() {
-        return false;
-    }
+	@Override
+	public boolean supportsEmailAddressChanges() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsTeamMembershipChanges() {
-        return false;
-    }
+	@Override
+	public boolean supportsTeamMembershipChanges() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsRoleChanges(UserModel user, Role role) {
-        return true;
-    }
+	@Override
+	public boolean supportsRoleChanges(UserModel user, Role role) {
+		return true;
+	}
 
 	@Override
 	public boolean supportsRoleChanges(TeamModel team, Role role) {
 		return true;
 	}
 
-	 @Override
+	@Override
 	public AccountType getAccountType() {
 		return AccountType.REDMINE;
 	}
 
-    @Override
-    public UserModel authenticate(String username, char[] password) {
-        String jsonString = null;
-        try {
-        	// first attempt by username/password
-        	jsonString = getCurrentUserAsJson(username, password);
-        } catch (Exception e1) {
-        	logger.warn("Failed to authenticate via username/password against Redmine");
-        	try {
-        		// second attempt is by apikey
-        		jsonString = getCurrentUserAsJson(null, password);
-        		username = null;
-        	} catch (Exception e2) {
-        		logger.error("Failed to authenticate via apikey against Redmine", e2);
-        		return null;
-        	}
-        }
+	@Override
+	public UserModel authenticate(String username, char[] password) {
+		String jsonString = null;
+		try {
+			// first attempt by username/password
+			jsonString = getCurrentUserAsJson(username, password);
+		}
+		catch (final Exception e1) {
+			this.logger.warn("Failed to authenticate via username/password against Redmine");
+			try {
+				// second attempt is by apikey
+				jsonString = getCurrentUserAsJson(null, password);
+				username = null;
+			}
+			catch (final Exception e2) {
+				this.logger.error("Failed to authenticate via apikey against Redmine", e2);
+				return null;
+			}
+		}
 
-        if (StringUtils.isEmpty(jsonString)) {
-        	logger.error("Received empty authentication response from Redmine");
-        	return null;
-        }
+		if (StringUtils.isEmpty(jsonString)) {
+			this.logger.error("Received empty authentication response from Redmine");
+			return null;
+		}
 
-        RedmineCurrent current = null;
-        try {
-        	current = new Gson().fromJson(jsonString, RedmineCurrent.class);
-        } catch (Exception e) {
-        	logger.error("Failed to deserialize Redmine json response: " + jsonString, e);
-        	return null;
-        }
+		RedmineCurrent current = null;
+		try {
+			current = new Gson().fromJson(jsonString, RedmineCurrent.class);
+		}
+		catch (final Exception e) {
+			this.logger.error("Failed to deserialize Redmine json response: " + jsonString, e);
+			return null;
+		}
 
-        if (StringUtils.isEmpty(username)) {
-        	// if the username has been reset because of apikey authentication
-        	// then use the email address of the user. this is the original
-        	// behavior as contributed by github/mallowlabs
-        	username = current.user.mail;
-        }
+		if (StringUtils.isEmpty(username)) {
+			// if the username has been reset because of apikey authentication
+			// then use the email address of the user. this is the original
+			// behavior as contributed by github/mallowlabs
+			username = current.user.mail;
+		}
 
-        UserModel user = userManager.getUserModel(username);
-        if (user == null) {
-        	// create user object for new authenticated user
-        	user = new UserModel(username.toLowerCase());
-        }
+		UserModel user = this.userManager.getUserModel(username);
+		if (user == null) {
+			// create user object for new authenticated user
+			user = new UserModel(username.toLowerCase());
+		}
 
-        // create a user cookie
-        setCookie(user, password);
+		// create a user cookie
+		setCookie(user, password);
 
-        // update user attributes from Redmine
-        user.accountType = getAccountType();
-        user.displayName = current.user.firstname + " " + current.user.lastname;
-        user.emailAddress = current.user.mail;
-        user.password = Constants.EXTERNAL_ACCOUNT;
+		// update user attributes from Redmine
+		user.accountType = getAccountType();
+		user.displayName = current.user.firstname + " " + current.user.lastname;
+		user.emailAddress = current.user.mail;
+		user.password = Constants.EXTERNAL_ACCOUNT;
 
-        // TODO consider Redmine group mapping for team membership
-        // http://www.redmine.org/projects/redmine/wiki/Rest_Users
+		// TODO consider Redmine group mapping for team membership
+		// http://www.redmine.org/projects/redmine/wiki/Rest_Users
 
-        // push the changes to the backing user service
-        updateUser(user);
+		// push the changes to the backing user service
+		updateUser(user);
 
-        return user;
-    }
+		return user;
+	}
 
-    private String getCurrentUserAsJson(String username, char [] password) throws IOException {
-        if (testingJson != null) { // for testing
-            return testingJson;
-        }
+	private String getCurrentUserAsJson(String username, char[] password) throws IOException {
+		if (this.testingJson != null) { // for testing
+			return this.testingJson;
+		}
 
-        String url = this.settings.getString(Keys.realm.redmine.url, "");
-        if (!url.endsWith("/")) {
-        	url = url.concat("/");
-        }
-        String apiUrl = url + "users/current.json";
+		String url = this.settings.getString(Keys.realm.redmine.url, "");
+		if (!url.endsWith("/")) {
+			url = url.concat("/");
+		}
+		final String apiUrl = url + "users/current.json";
 
-        HttpURLConnection http;
-        if (username == null) {
-        	// apikey authentication
-        	String apiKey = String.valueOf(password);
-        	http = (HttpURLConnection) ConnectionUtils.openConnection(apiUrl, null, null);
-            http.addRequestProperty("X-Redmine-API-Key", apiKey);
-        } else {
-        	// username/password BASIC authentication
-        	http = (HttpURLConnection) ConnectionUtils.openConnection(apiUrl, username, password);
-        }
-        http.setRequestMethod("GET");
-        http.connect();
-        InputStreamReader reader = new InputStreamReader(http.getInputStream());
-        return IOUtils.toString(reader);
-    }
+		HttpURLConnection http;
+		if (username == null) {
+			// apikey authentication
+			final String apiKey = String.valueOf(password);
+			http = (HttpURLConnection) ConnectionUtils.openConnection(apiUrl, null, null);
+			http.addRequestProperty("X-Redmine-API-Key", apiKey);
+		} else {
+			// username/password BASIC authentication
+			http = (HttpURLConnection) ConnectionUtils.openConnection(apiUrl, username, password);
+		}
+		http.setRequestMethod("GET");
+		http.connect();
+		final InputStreamReader reader = new InputStreamReader(http.getInputStream());
+		return IOUtils.toString(reader);
+	}
 
-    /**
-     * set json response. do NOT invoke from production code.
-     * @param json json
-     */
-    public void setTestingCurrentUserAsJson(String json) {
-        this.testingJson = json;
-    }
+	/**
+	 * set json response. do NOT invoke from production code.
+	 * 
+	 * @param json
+	 *            json
+	 */
+	public void setTestingCurrentUserAsJson(String json) {
+		this.testingJson = json;
+	}
 }

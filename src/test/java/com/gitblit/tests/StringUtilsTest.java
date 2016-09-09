@@ -25,7 +25,7 @@ import com.gitblit.utils.StringUtils;
 public class StringUtilsTest extends GitblitUnitTest {
 
 	@Test
-	public void testIsEmpty() throws Exception {
+	public void testIsEmpty() {
 		assertTrue(StringUtils.isEmpty(null));
 		assertTrue(StringUtils.isEmpty(""));
 		assertTrue(StringUtils.isEmpty("  "));
@@ -33,52 +33,52 @@ public class StringUtilsTest extends GitblitUnitTest {
 	}
 
 	@Test
-	public void testBreakLinesForHtml() throws Exception {
-		String input = "this\nis\r\na\rtest\r\n\r\nof\n\nline\r\rbreaking";
-		String output = "this<br/>is<br/>a<br/>test<br/><br/>of<br/><br/>line<br/><br/>breaking";
+	public void testBreakLinesForHtml() {
+		final String input = "this\nis\r\na\rtest\r\n\r\nof\n\nline\r\rbreaking";
+		final String output = "this<br/>is<br/>a<br/>test<br/><br/>of<br/><br/>line<br/><br/>breaking";
 		assertEquals(output, StringUtils.breakLinesForHtml(input));
 	}
 
 	@Test
-	public void testEncodeUrl() throws Exception {
-		String input = "test /";
-		String output = "test%20%2F";
+	public void testEncodeUrl() {
+		final String input = "test /";
+		final String output = "test%20%2F";
 		assertEquals(output, StringUtils.encodeURL(input));
 	}
 
 	@Test
-	public void testEscapeForHtml() throws Exception {
-		String input = "& < > \" \t";
-		String outputNoChange = "&amp; &lt; &gt; &quot; \t";
-		String outputChange = "&amp;&nbsp;&lt;&nbsp;&gt;&nbsp;&quot;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+	public void testEscapeForHtml() {
+		final String input = "& < > \" \t";
+		final String outputNoChange = "&amp; &lt; &gt; &quot; \t";
+		final String outputChange = "&amp;&nbsp;&lt;&nbsp;&gt;&nbsp;&quot;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 		assertEquals(outputNoChange, StringUtils.escapeForHtml(input, false));
 		assertEquals(outputChange, StringUtils.escapeForHtml(input, true));
 	}
 
 	@Test
-	public void testDecodeForHtml() throws Exception {
-		String input = "&amp; &lt; &gt; &quot;";
-		String output = "& < > \"";
+	public void testDecodeForHtml() {
+		final String input = "&amp; &lt; &gt; &quot;";
+		final String output = "& < > \"";
 		assertEquals(output, StringUtils.decodeFromHtml(input));
 	}
 
 	@Test
-	public void testFlattenStrings() throws Exception {
-		String[] strings = { "A", "B", "C", "D" };
+	public void testFlattenStrings() {
+		final String[] strings = { "A", "B", "C", "D" };
 		assertEquals("A B C D", StringUtils.flattenStrings(Arrays.asList(strings)));
 	}
 
 	@Test
-	public void testTrim() throws Exception {
-		String input = "123456789 123456789 123456789 123456789 123456789 123456789 123456789 ";
-		String output = "123456789 123456789 123456789 123456789 123456789 1234567...";
+	public void testTrim() {
+		final String input = "123456789 123456789 123456789 123456789 123456789 123456789 123456789 ";
+		final String output = "123456789 123456789 123456789 123456789 123456789 1234567...";
 		assertEquals(output, StringUtils.trimString(input, 60));
 		assertEquals(input, StringUtils.trimString(input, input.length()));
 	}
 
 	@Test
-	public void testPadding() throws Exception {
-		String input = "test";
+	public void testPadding() {
+		final String input = "test";
 		assertEquals("      test", StringUtils.leftPad(input, 6 + input.length(), ' '));
 		assertEquals("test      ", StringUtils.rightPad(input, 6 + input.length(), ' '));
 
@@ -87,56 +87,56 @@ public class StringUtilsTest extends GitblitUnitTest {
 	}
 
 	@Test
-	public void testSHA1() throws Exception {
+	public void testSHA1() {
 		assertEquals("bd9dbf5aae1a3862dd1526723246b20206e5fc37",
 				StringUtils.getSHA1("blob 16\000what is up, doc?"));
 	}
 
 	@Test
-	public void testMD5() throws Exception {
+	public void testMD5() {
 		assertEquals("77fb8d95331f0d557472f6776d3aedf6",
 				StringUtils.getMD5("blob 16\000what is up, doc?"));
 	}
 
 	@Test
-	public void testRootPath() throws Exception {
-		String input = "/nested/path/to/repository";
-		String output = "/nested/path/to";
+	public void testRootPath() {
+		final String input = "/nested/path/to/repository";
+		final String output = "/nested/path/to";
 		assertEquals(output, StringUtils.getRootPath(input));
 		assertEquals("", StringUtils.getRootPath("repository"));
 	}
 
 	@Test
-	public void testStringsFromValue() throws Exception {
-        List<String> strings = StringUtils.getStringsFromValue("\"A A \" B \"C C\" D \"\" \"E\"");
-        assertEquals(6, strings.size());
-        assertEquals("A A", strings.get(0));
-        assertEquals("B", strings.get(1));
-        assertEquals("C C", strings.get(2));
-        assertEquals("D", strings.get(3));
-        assertEquals("", strings.get(4));
-        assertEquals("E", strings.get(5));
+	public void testStringsFromValue() {
+		List<String> strings = StringUtils.getStringsFromValue("\"A A \" B \"C C\" D \"\" \"E\"");
+		assertEquals(6, strings.size());
+		assertEquals("A A", strings.get(0));
+		assertEquals("B", strings.get(1));
+		assertEquals("C C", strings.get(2));
+		assertEquals("D", strings.get(3));
+		assertEquals("", strings.get(4));
+		assertEquals("E", strings.get(5));
 
-        strings = StringUtils.getStringsFromValue("\"A A \", B, \"C C\", D, \"\", \"E\"", ",");
-        assertEquals(6, strings.size());
-        assertEquals("A A", strings.get(0));
-        assertEquals("B", strings.get(1));
-        assertEquals("C C", strings.get(2));
-        assertEquals("D", strings.get(3));
-        assertEquals("", strings.get(4));
-        assertEquals("E", strings.get(5));
-    }
+		strings = StringUtils.getStringsFromValue("\"A A \", B, \"C C\", D, \"\", \"E\"", ",");
+		assertEquals(6, strings.size());
+		assertEquals("A A", strings.get(0));
+		assertEquals("B", strings.get(1));
+		assertEquals("C C", strings.get(2));
+		assertEquals("D", strings.get(3));
+		assertEquals("", strings.get(4));
+		assertEquals("E", strings.get(5));
+	}
 
 	@Test
-	public void testStringsFromValue2() throws Exception {
-		List<String> strings = StringUtils.getStringsFromValue("common/* libraries/*");
+	public void testStringsFromValue2() {
+		final List<String> strings = StringUtils.getStringsFromValue("common/* libraries/*");
 		assertEquals(2, strings.size());
 		assertEquals("common/*", strings.get(0));
 		assertEquals("libraries/*", strings.get(1));
 	}
 
 	@Test
-	public void testFuzzyMatching() throws Exception {
+	public void testFuzzyMatching() {
 		assertTrue(StringUtils.fuzzyMatch("12345", "12345"));
 		assertTrue(StringUtils.fuzzyMatch("AbCdEf", "abcdef"));
 		assertTrue(StringUtils.fuzzyMatch("AbCdEf", "abc*"));
@@ -148,9 +148,13 @@ public class StringUtilsTest extends GitblitUnitTest {
 	}
 
 	@Test
-	public void testGetRepositoryPath() throws Exception {
-		assertEquals("gitblit/gitblit.git", StringUtils.extractRepositoryPath("git://github.com/gitblit/gitblit.git", new String [] { ".*?://github.com/(.*)" }));
-		assertEquals("gitblit.git", StringUtils.extractRepositoryPath("git://github.com/gitblit/gitblit.git", new String [] { ".*?://github.com/[^/].*?/(.*)" }));
-		assertEquals("gitblit.git", StringUtils.extractRepositoryPath("git://github.com/gitblit/gitblit.git"));
+	public void testGetRepositoryPath() {
+		assertEquals("gitblit/gitblit.git", StringUtils.extractRepositoryPath(
+				"git://github.com/gitblit/gitblit.git", new String[] { ".*?://github.com/(.*)" }));
+		assertEquals("gitblit.git", StringUtils.extractRepositoryPath(
+				"git://github.com/gitblit/gitblit.git",
+				new String[] { ".*?://github.com/[^/].*?/(.*)" }));
+		assertEquals("gitblit.git",
+				StringUtils.extractRepositoryPath("git://github.com/gitblit/gitblit.git"));
 	}
 }

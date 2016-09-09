@@ -51,16 +51,16 @@ public class UserPreferences implements Serializable {
 	}
 
 	public Locale getLocale() {
-		if (StringUtils.isEmpty(locale)) {
+		if (StringUtils.isEmpty(this.locale)) {
 			return null;
 		}
-		int underscore = locale.indexOf('_');
+		final int underscore = this.locale.indexOf('_');
 		if (underscore > 0) {
-			String lang = locale.substring(0, underscore);
-			String cc = locale.substring(underscore + 1);
+			final String lang = this.locale.substring(0, underscore);
+			final String cc = this.locale.substring(underscore + 1);
 			return new Locale(lang, cc);
 		}
-		return new Locale(locale);
+		return new Locale(this.locale);
 	}
 
 	public void setLocale(String locale) {
@@ -68,36 +68,36 @@ public class UserPreferences implements Serializable {
 	}
 
 	public UserRepositoryPreferences getRepositoryPreferences(String repositoryName) {
-		String key = repositoryName.toLowerCase();
-		if (!repositoryPreferences.containsKey(key)) {
+		final String key = repositoryName.toLowerCase();
+		if (!this.repositoryPreferences.containsKey(key)) {
 			// default preferences
-			UserRepositoryPreferences prefs = new UserRepositoryPreferences();
-			prefs.username = username;
+			final UserRepositoryPreferences prefs = new UserRepositoryPreferences();
+			prefs.username = this.username;
 			prefs.repositoryName = repositoryName;
-			repositoryPreferences.put(key, prefs);
+			this.repositoryPreferences.put(key, prefs);
 		}
-		return repositoryPreferences.get(key);
+		return this.repositoryPreferences.get(key);
 	}
 
 	public void setRepositoryPreferences(UserRepositoryPreferences pref) {
-		repositoryPreferences.put(pref.repositoryName.toLowerCase(), pref);
+		this.repositoryPreferences.put(pref.repositoryName.toLowerCase(), pref);
 	}
 
 	public boolean isStarredRepository(String repository) {
-		if (repositoryPreferences == null) {
+		if (this.repositoryPreferences == null) {
 			return false;
 		}
-		String key = repository.toLowerCase();
-		if (repositoryPreferences.containsKey(key)) {
-			UserRepositoryPreferences pref = repositoryPreferences.get(key);
+		final String key = repository.toLowerCase();
+		if (this.repositoryPreferences.containsKey(key)) {
+			final UserRepositoryPreferences pref = this.repositoryPreferences.get(key);
 			return pref.starred;
 		}
 		return false;
 	}
 
 	public List<String> getStarredRepositories() {
-		List<String> list = new ArrayList<String>();
-		for (UserRepositoryPreferences prefs : repositoryPreferences.values()) {
+		final List<String> list = new ArrayList<String>();
+		for (final UserRepositoryPreferences prefs : this.repositoryPreferences.values()) {
 			if (prefs.starred) {
 				list.add(prefs.repositoryName);
 			}
@@ -107,10 +107,10 @@ public class UserPreferences implements Serializable {
 	}
 
 	public boolean isEmailMeOnMyTicketChanges() {
-		if (emailMeOnMyTicketChanges == null) {
+		if (this.emailMeOnMyTicketChanges == null) {
 			return true;
 		}
-		return emailMeOnMyTicketChanges;
+		return this.emailMeOnMyTicketChanges;
 	}
 
 	public void setEmailMeOnMyTicketChanges(boolean value) {
@@ -118,7 +118,7 @@ public class UserPreferences implements Serializable {
 	}
 
 	public Transport getTransport() {
-		return transport;
+		return this.transport;
 	}
 
 	public void setTransport(Transport transport) {

@@ -28,7 +28,7 @@ import com.gitblit.utils.X509Utils.RevocationReason;
 
 /**
  * Table model of a list of user certificate models.
- *
+ * 
  * @author James Moger
  *
  */
@@ -39,7 +39,11 @@ public class CertificatesTableModel extends AbstractTableModel {
 	UserCertificateModel ucm;
 
 	enum Columns {
-		SerialNumber, Status, Reason, Issued, Expires;
+		SerialNumber,
+		Status,
+		Reason,
+		Issued,
+		Expires;
 
 		@Override
 		public String toString() {
@@ -52,7 +56,7 @@ public class CertificatesTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return ucm == null || ucm.certs == null ? 0 : ucm.certs.size();
+		return (this.ucm == null) || (this.ucm.certs == null) ? 0 : this.ucm.certs.size();
 	}
 
 	@Override
@@ -62,7 +66,7 @@ public class CertificatesTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case SerialNumber:
 			return Translation.get("gb.serialNumber");
@@ -87,7 +91,7 @@ public class CertificatesTableModel extends AbstractTableModel {
 	 */
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		Columns col = Columns.values()[columnIndex];
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Status:
 			return CertificateStatus.class;
@@ -104,7 +108,7 @@ public class CertificatesTableModel extends AbstractTableModel {
 
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		Columns col = Columns.values()[columnIndex];
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		default:
 			return false;
@@ -113,11 +117,11 @@ public class CertificatesTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		X509Certificate cert = ucm.certs.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final X509Certificate cert = this.ucm.certs.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Status:
-			return ucm.getStatus(cert);
+			return this.ucm.getStatus(cert);
 		case SerialNumber:
 			return cert.getSerialNumber();
 		case Issued:
@@ -125,8 +129,8 @@ public class CertificatesTableModel extends AbstractTableModel {
 		case Expires:
 			return cert.getNotAfter();
 		case Reason:
-			if (ucm.getStatus(cert).equals(CertificateStatus.revoked)) {
-				RevocationReason r = ucm.getRevocationReason(cert.getSerialNumber());
+			if (this.ucm.getStatus(cert).equals(CertificateStatus.revoked)) {
+				final RevocationReason r = this.ucm.getRevocationReason(cert.getSerialNumber());
 				return Translation.get("gb." + r.name());
 			}
 		}
@@ -134,7 +138,7 @@ public class CertificatesTableModel extends AbstractTableModel {
 	}
 
 	public X509Certificate get(int modelRow) {
-		return ucm.certs.get(modelRow);
+		return this.ucm.certs.get(modelRow);
 	}
 
 	public void setUserCertificateModel(UserCertificateModel ucm) {
@@ -149,8 +153,10 @@ public class CertificatesTableModel extends AbstractTableModel {
 				int result = o2.getNotBefore().compareTo(o1.getNotBefore());
 				if (result == 0) {
 					// same issue date, show expiring first
-					boolean r1 = CertificatesTableModel.this.ucm.isRevoked(o1.getSerialNumber());
-					boolean r2 = CertificatesTableModel.this.ucm.isRevoked(o2.getSerialNumber());
+					final boolean r1 = CertificatesTableModel.this.ucm.isRevoked(o1
+							.getSerialNumber());
+					final boolean r2 = CertificatesTableModel.this.ucm.isRevoked(o2
+							.getSerialNumber());
 					if ((r1 && r2) || (!r1 && !r2)) {
 						// both revoked or both not revoked
 						// chronlogical order by expiration dates

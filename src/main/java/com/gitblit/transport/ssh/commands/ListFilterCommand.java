@@ -40,24 +40,24 @@ public abstract class ListFilterCommand<T> extends ListCommand<T> {
 	public void run() throws UnloggedFailure {
 		validateOutputFormat();
 
-		List<T> list = getItems();
+		final List<T> list = getItems();
 		List<T> filtered;
-		if (StringUtils.isEmpty(filter)) {
+		if (StringUtils.isEmpty(this.filter)) {
 			// no filter
 			filtered = list;
 		} else {
 			// filter the list
 			filtered = new ArrayList<T>();
-			for (T t : list) {
-				if (matches(filter, t)) {
+			for (final T t : list) {
+				if (matches(this.filter, t)) {
 					filtered.add(t);
 				}
 			}
 		}
 
-		if (tabbed) {
+		if (this.tabbed) {
 			asTabbed(filtered);
-		} else if (json) {
+		} else if (this.json) {
 			asJSON(filtered);
 		} else {
 			asTable(filtered);

@@ -27,37 +27,36 @@ import com.gitblit.models.UserChoice;
  */
 public class UserChoiceTest extends GitblitUnitTest {
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void creatingUserChoiceWithNullAsUserIdIsImpossible() {
 		new UserChoice(null);
 	}
 
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected = IllegalArgumentException.class)
 	public void creatingUserChoiceWithEmptyStringAsUserIdIsImpossible() {
 		new UserChoice("");
 	}
 
 	@Test
 	public void toStringPrintsPlainUserIdWhenDisplayNameIsNull() {
-		String userId = "runnerr";
-		UserChoice userChoice = new UserChoice(userId);
+		final String userId = "runnerr";
+		final UserChoice userChoice = new UserChoice(userId);
 		assertEquals("", userId, userChoice.toString());
 	}
 
 	@Test
 	public void toStringPrintsPlainUserIdWhenDisplayNameIsEmpty() {
-		String userId = "runnerr";
-		UserChoice userChoice = new UserChoice("", userId);
+		final String userId = "runnerr";
+		final UserChoice userChoice = new UserChoice("", userId);
 		assertEquals("", userId, userChoice.toString());
 	}
 
 	@Test
 	public void toStringPrintsDisplaNameWithUserIdInBracketsWhenDisplayNameIsSet() {
-		String userId = "runnerr";
-		String displayName = "The Road Runner";
-		UserChoice userChoice = new UserChoice(displayName, userId);
-		assertEquals(
-				"displayName + userId have to be concatenated to: displayName (userId)",
+		final String userId = "runnerr";
+		final String displayName = "The Road Runner";
+		final UserChoice userChoice = new UserChoice(displayName, userId);
+		assertEquals("displayName + userId have to be concatenated to: displayName (userId)",
 				displayName + " (" + userId + ")", userChoice.toString());
 	}
 }

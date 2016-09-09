@@ -32,14 +32,14 @@ public class SshCommandContext {
 	}
 
 	public IGitblit getGitblit() {
-		return gitblit;
+		return this.gitblit;
 	}
 
 	public SshDaemonClient getClient() {
-		return client;
+		return this.client;
 	}
 
 	public String getCommandLine() {
-		return commandLine;
+		return this.commandLine;
 	}
 }

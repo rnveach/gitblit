@@ -26,8 +26,8 @@ import ro.fortsoft.pf4j.ExtensionPoint;
 public abstract class LifeCycleListener implements ExtensionPoint {
 
 	/**
-	 * Called after all internal managers have been started.
-	 * This may be useful for reporting "server is ready" to a monitoring system.
+	 * Called after all internal managers have been started. This may be useful
+	 * for reporting "server is ready" to a monitoring system.
 	 *
 	 * @since 1.6.0
 	 */
@@ -37,7 +37,7 @@ public abstract class LifeCycleListener implements ExtensionPoint {
 	 * Called when the servlet container is gracefully shutting-down the webapp.
 	 * This is called before the internal managers are stopped.
 	 *
-	 *  @since 1.6.0
+	 * @since 1.6.0
 	 */
 	public abstract void onShutdown();
 }

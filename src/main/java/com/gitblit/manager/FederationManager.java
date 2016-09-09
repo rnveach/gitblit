@@ -74,10 +74,8 @@ public class FederationManager implements IFederationManager {
 	private final IRepositoryManager repositoryManager;
 
 	@Inject
-	public FederationManager(
-			IRuntimeManager runtimeManager,
-			INotificationManager notificationManager,
-			IRepositoryManager repositoryManager) {
+	public FederationManager(IRuntimeManager runtimeManager,
+			INotificationManager notificationManager, IRepositoryManager repositoryManager) {
 
 		this.settings = runtimeManager.getSettings();
 		this.runtimeManager = runtimeManager;
@@ -103,12 +101,13 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public File getProposalsFolder() {
-		return runtimeManager.getFileOrFolder(Keys.federation.proposalsFolder, "${baseFolder}/proposals");
+		return this.runtimeManager.getFileOrFolder(Keys.federation.proposalsFolder,
+				"${baseFolder}/proposals");
 	}
 
 	@Override
 	public boolean canFederate() {
-		String passphrase = settings.getString(Keys.federation.passphrase, "");
+		final String passphrase = this.settings.getString(Keys.federation.passphrase, "");
 		return !StringUtils.isEmpty(passphrase);
 	}
 
@@ -120,7 +119,7 @@ public class FederationManager implements IFederationManager {
 	@Override
 	public UserModel getFederationUser() {
 		// the federation user is an administrator
-		UserModel federationUser = new UserModel(Constants.FEDERATION_USER);
+		final UserModel federationUser = new UserModel(Constants.FEDERATION_USER);
 		federationUser.canAdmin = true;
 		return federationUser;
 	}
@@ -130,18 +129,18 @@ public class FederationManager implements IFederationManager {
 		if (canFederate()) {
 			// try to authenticate federation user for cloning
 			final String authorization = httpRequest.getHeader("Authorization");
-			if (authorization != null && authorization.startsWith("Basic")) {
+			if ((authorization != null) && authorization.startsWith("Basic")) {
 				// Authorization: Basic base64credentials
-				String base64Credentials = authorization.substring("Basic".length()).trim();
-				String credentials = new String(Base64.decode(base64Credentials),
+				final String base64Credentials = authorization.substring("Basic".length()).trim();
+				final String credentials = new String(Base64.decode(base64Credentials),
 						Charset.forName("UTF-8"));
 				// credentials = username:password
 				final String[] values = credentials.split(":", 2);
 				if (values.length == 2) {
-					String username = StringUtils.decodeUsername(values[0]);
-					String password = values[1];
+					final String username = StringUtils.decodeUsername(values[0]);
+					final String password = values[1];
 					if (username.equalsIgnoreCase(Constants.FEDERATION_USER)) {
-						List<String> tokens = getFederationTokens();
+						final List<String> tokens = getFederationTokens();
 						if (tokens.contains(password)) {
 							return getFederationUser();
 						}
@@ -160,10 +159,11 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public List<FederationModel> getFederationRegistrations() {
-		if (federationRegistrations.isEmpty()) {
-			federationRegistrations.addAll(FederationUtils.getFederationRegistrations(settings));
+		if (this.federationRegistrations.isEmpty()) {
+			this.federationRegistrations.addAll(FederationUtils
+					.getFederationRegistrations(this.settings));
 		}
-		return federationRegistrations;
+		return this.federationRegistrations;
 	}
 
 	/**
@@ -176,14 +176,14 @@ public class FederationManager implements IFederationManager {
 	@Override
 	public FederationModel getFederationRegistration(String url, String name) {
 		// check registrations
-		for (FederationModel r : getFederationRegistrations()) {
+		for (final FederationModel r : getFederationRegistrations()) {
 			if (r.name.equals(name) && r.url.equals(url)) {
 				return r;
 			}
 		}
 
 		// check the results
-		for (FederationModel r : getFederationResultRegistrations()) {
+		for (final FederationModel r : getFederationResultRegistrations()) {
 			if (r.name.equals(name) && r.url.equals(url)) {
 				return r;
 			}
@@ -198,16 +198,17 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public List<FederationSet> getFederationSets(String gitblitUrl) {
-		List<FederationSet> list = new ArrayList<FederationSet>();
+		final List<FederationSet> list = new ArrayList<FederationSet>();
 		// generate standard tokens
-		for (FederationToken type : FederationToken.values()) {
-			FederationSet fset = new FederationSet(type.toString(), type, getFederationToken(type));
+		for (final FederationToken type : FederationToken.values()) {
+			final FederationSet fset = new FederationSet(type.toString(), type,
+					getFederationToken(type));
 			fset.repositories = getRepositories(gitblitUrl, fset.token);
 			list.add(fset);
 		}
 		// generate tokens for federation sets
-		for (String set : settings.getStrings(Keys.federation.sets)) {
-			FederationSet fset = new FederationSet(set, FederationToken.REPOSITORIES,
+		for (final String set : this.settings.getStrings(Keys.federation.sets)) {
+			final FederationSet fset = new FederationSet(set, FederationToken.REPOSITORIES,
 					getFederationToken(set));
 			fset.repositories = getRepositories(gitblitUrl, fset.token);
 			list.add(fset);
@@ -222,13 +223,13 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public List<String> getFederationTokens() {
-		List<String> tokens = new ArrayList<String>();
+		final List<String> tokens = new ArrayList<String>();
 		// generate standard tokens
-		for (FederationToken type : FederationToken.values()) {
+		for (final FederationToken type : FederationToken.values()) {
 			tokens.add(getFederationToken(type));
 		}
 		// generate tokens for federation sets
-		for (String set : settings.getStrings(Keys.federation.sets)) {
+		for (final String set : this.settings.getStrings(Keys.federation.sets)) {
 			tokens.add(getFederationToken(set));
 		}
 		return tokens;
@@ -253,7 +254,7 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public String getFederationToken(String value) {
-		String passphrase = settings.getString(Keys.federation.passphrase, "");
+		final String passphrase = this.settings.getString(Keys.federation.passphrase, "");
 		return StringUtils.getSHA1(passphrase + "-" + value);
 	}
 
@@ -267,9 +268,9 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public boolean validateFederationRequest(FederationRequest req, String token) {
-		String all = getFederationToken(FederationToken.ALL);
-		String unr = getFederationToken(FederationToken.USERS_AND_REPOSITORIES);
-		String jur = getFederationToken(FederationToken.REPOSITORIES);
+		final String all = getFederationToken(FederationToken.ALL);
+		final String unr = getFederationToken(FederationToken.USERS_AND_REPOSITORIES);
+		final String jur = getFederationToken(FederationToken.REPOSITORIES);
 		switch (req) {
 		case PULL_REPOSITORIES:
 			return token.equals(all) || token.equals(unr) || token.equals(jur);
@@ -302,7 +303,7 @@ public class FederationManager implements IFederationManager {
 		if (!StringUtils.isEmpty(registration.folder)) {
 			id += "-" + registration.folder;
 		}
-		federationPullResults.put(id, registration);
+		this.federationPullResults.put(id, registration);
 		return true;
 	}
 
@@ -313,7 +314,7 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public List<FederationModel> getFederationResultRegistrations() {
-		return new ArrayList<FederationModel>(federationPullResults.values());
+		return new ArrayList<FederationModel>(this.federationPullResults.values());
 	}
 
 	/**
@@ -330,23 +331,26 @@ public class FederationManager implements IFederationManager {
 	@Override
 	public boolean submitFederationProposal(FederationProposal proposal, String gitblitUrl) {
 		// convert proposal to json
-		String json = JsonUtils.toJsonString(proposal);
+		final String json = JsonUtils.toJsonString(proposal);
 
 		try {
 			// make the proposals folder
-			File proposalsFolder = getProposalsFolder();
+			final File proposalsFolder = getProposalsFolder();
 			proposalsFolder.mkdirs();
 
 			// cache json to a file
-			File file = new File(proposalsFolder, proposal.token + Constants.PROPOSAL_EXT);
+			final File file = new File(proposalsFolder, proposal.token + Constants.PROPOSAL_EXT);
 			com.gitblit.utils.FileUtils.writeContent(file, json);
-		} catch (Exception e) {
-			logger.error(MessageFormat.format("Failed to cache proposal from {0}", proposal.url), e);
+		}
+		catch (final Exception e) {
+			this.logger.error(
+					MessageFormat.format("Failed to cache proposal from {0}", proposal.url), e);
 		}
 
 		// send an email, if possible
-		notificationManager.sendMailToAdministrators("Federation proposal from " + proposal.url,
-				"Please review the proposal @ " + gitblitUrl + "/proposal/" + proposal.token);
+		this.notificationManager.sendMailToAdministrators("Federation proposal from "
+				+ proposal.url, "Please review the proposal @ " + gitblitUrl + "/proposal/"
+				+ proposal.token);
 		return true;
 	}
 
@@ -357,10 +361,10 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public List<FederationProposal> getPendingFederationProposals() {
-		List<FederationProposal> list = new ArrayList<FederationProposal>();
-		File folder = getProposalsFolder();
+		final List<FederationProposal> list = new ArrayList<FederationProposal>();
+		final File folder = getProposalsFolder();
 		if (folder.exists()) {
-			File[] files = folder.listFiles(new FileFilter() {
+			final File[] files = folder.listFiles(new FileFilter() {
 				@Override
 				public boolean accept(File file) {
 					return file.isFile()
@@ -370,10 +374,10 @@ public class FederationManager implements IFederationManager {
 			if (files == null) {
 				return list;
 			}
-				
-			for (File file : files) {
-				String json = com.gitblit.utils.FileUtils.readContent(file, null);
-				FederationProposal proposal = JsonUtils.fromJsonString(json,
+
+			for (final File file : files) {
+				final String json = com.gitblit.utils.FileUtils.readContent(file, null);
+				final FederationProposal proposal = JsonUtils.fromJsonString(json,
 						FederationProposal.class);
 				list.add(proposal);
 			}
@@ -392,25 +396,25 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public Map<String, RepositoryModel> getRepositories(String gitblitUrl, String token) {
-		Map<String, String> federationSets = new HashMap<String, String>();
-		for (String set : settings.getStrings(Keys.federation.sets)) {
+		final Map<String, String> federationSets = new HashMap<String, String>();
+		for (final String set : this.settings.getStrings(Keys.federation.sets)) {
 			federationSets.put(getFederationToken(set), set);
 		}
 
 		// Determine the Gitblit clone url
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(gitblitUrl);
 		sb.append(Constants.R_PATH);
 		sb.append("{0}");
-		String cloneUrl = sb.toString();
+		final String cloneUrl = sb.toString();
 
 		// Retrieve all available repositories
-		UserModel user = getFederationUser();
-		List<RepositoryModel> list = repositoryManager.getRepositoryModels(user);
+		final UserModel user = getFederationUser();
+		final List<RepositoryModel> list = this.repositoryManager.getRepositoryModels(user);
 
 		// create the [cloneurl, repositoryModel] map
-		Map<String, RepositoryModel> repositories = new HashMap<String, RepositoryModel>();
-		for (RepositoryModel model : list) {
+		final Map<String, RepositoryModel> repositories = new HashMap<String, RepositoryModel>();
+		for (final RepositoryModel model : list) {
 			// by default, setup the url for THIS repository
 			String url = MessageFormat.format(cloneUrl, model.name);
 			switch (model.federationStrategy) {
@@ -429,7 +433,7 @@ public class FederationManager implements IFederationManager {
 
 			if (federationSets.containsKey(token)) {
 				// include repositories only for federation set
-				String set = federationSets.get(token);
+				final String set = federationSets.get(token);
 				if (model.federationSets.contains(set)) {
 					repositories.put(url, model);
 				}
@@ -452,14 +456,14 @@ public class FederationManager implements IFederationManager {
 	@Override
 	public FederationProposal createFederationProposal(String gitblitUrl, String token) {
 		FederationToken tokenType = FederationToken.REPOSITORIES;
-		for (FederationToken type : FederationToken.values()) {
+		for (final FederationToken type : FederationToken.values()) {
 			if (token.equals(getFederationToken(type))) {
 				tokenType = type;
 				break;
 			}
 		}
-		Map<String, RepositoryModel> repositories = getRepositories(gitblitUrl, token);
-		FederationProposal proposal = new FederationProposal(gitblitUrl, tokenType, token,
+		final Map<String, RepositoryModel> repositories = getRepositories(gitblitUrl, token);
+		final FederationProposal proposal = new FederationProposal(gitblitUrl, tokenType, token,
 				repositories);
 		return proposal;
 	}
@@ -472,8 +476,8 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public FederationProposal getPendingFederationProposal(String token) {
-		List<FederationProposal> list = getPendingFederationProposals();
-		for (FederationProposal proposal : list) {
+		final List<FederationProposal> list = getPendingFederationProposals();
+		for (final FederationProposal proposal : list) {
 			if (proposal.token.equals(token)) {
 				return proposal;
 			}
@@ -490,8 +494,8 @@ public class FederationManager implements IFederationManager {
 	 */
 	@Override
 	public boolean deletePendingFederationProposal(FederationProposal proposal) {
-		File folder = getProposalsFolder();
-		File file = new File(folder, proposal.token + Constants.PROPOSAL_EXT);
+		final File folder = getProposalsFolder();
+		final File file = new File(folder, proposal.token + Constants.PROPOSAL_EXT);
 		return file.delete();
 	}
 }

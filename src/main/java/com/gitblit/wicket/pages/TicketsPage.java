@@ -67,12 +67,14 @@ public class TicketsPage extends RepositoryPage {
 
 		if (!app().tickets().isReady()) {
 			// tickets prohibited
-			setResponsePage(SummaryPage.class, WicketUtils.newRepositoryParameter(repositoryName));
+			setResponsePage(SummaryPage.class,
+					WicketUtils.newRepositoryParameter(this.repositoryName));
 		} else if (!app().tickets().hasTickets(getRepositoryModel())) {
 			// no tickets for this repository
-			setResponsePage(NoTicketsPage.class, WicketUtils.newRepositoryParameter(repositoryName));
+			setResponsePage(NoTicketsPage.class,
+					WicketUtils.newRepositoryParameter(this.repositoryName));
 		} else {
-			String id = WicketUtils.getObject(params);
+			final String id = WicketUtils.getObject(params);
 			if (id != null) {
 				// view the ticket with the TicketPage
 				setResponsePage(TicketPage.class, params);
@@ -82,21 +84,23 @@ public class TicketsPage extends RepositoryPage {
 		// set stateless page preference
 		setStatelessHint(true);
 
-		any = new TicketResponsible(getString("gb.any"), "[* TO *]", null);
+		this.any = new TicketResponsible(getString("gb.any"), "[* TO *]", null);
 
-		UserModel user = GitBlitWebSession.get().getUser();
-		boolean isAuthenticated = user != null && user.isAuthenticated;
+		final UserModel user = GitBlitWebSession.get().getUser();
+		final boolean isAuthenticated = (user != null) && user.isAuthenticated;
 
-		final String [] statiiParam = params.getStringArray(Lucene.status.name());
+		final String[] statiiParam = params.getStringArray(Lucene.status.name());
 		final String assignedToParam = params.getString(Lucene.responsible.name(), null);
 		final String milestoneParam = params.getString(Lucene.milestone.name(), null);
 		final String queryParam = params.getString("q", null);
 		final String searchParam = params.getString("s", null);
-		final String sortBy = Lucene.fromString(params.getString("sort", Lucene.created.name())).name();
+		final String sortBy = Lucene.fromString(params.getString("sort", Lucene.created.name()))
+				.name();
 		final boolean desc = !"asc".equals(params.getString("direction", "desc"));
 
 		// add search form
-		add(new TicketSearchForm("ticketSearchForm", repositoryName, searchParam, getClass(), params));
+		add(new TicketSearchForm("ticketSearchForm", this.repositoryName, searchParam, getClass(),
+				params));
 
 		final String activeQuery;
 		if (!StringUtils.isEmpty(searchParam)) {
@@ -108,7 +112,7 @@ public class TicketsPage extends RepositoryPage {
 		}
 
 		// build Lucene query from defaults and request parameters
-		QueryBuilder qb = new QueryBuilder(queryParam);
+		final QueryBuilder qb = new QueryBuilder(queryParam);
 		if (!qb.containsField(Lucene.rid.name())) {
 			// specify the repository
 			qb.and(Lucene.rid.matches(getRepositoryModel().getRID()));
@@ -124,8 +128,8 @@ public class TicketsPage extends RepositoryPage {
 		if (!qb.containsField(Lucene.status.name()) && !ArrayUtils.isEmpty(statiiParam)) {
 			// specify the states
 			boolean not = false;
-			QueryBuilder q = new QueryBuilder();
-			for (String state : statiiParam) {
+			final QueryBuilder q = new QueryBuilder();
+			for (final String state : statiiParam) {
 				if (state.charAt(0) == '!') {
 					not = true;
 					q.and(Lucene.status.doesNotMatch(state.substring(1)));
@@ -142,13 +146,15 @@ public class TicketsPage extends RepositoryPage {
 		final String luceneQuery = qb.build();
 
 		// open milestones
-		List<TicketMilestone> milestones = app().tickets().getMilestones(getRepositoryModel(), Status.Open);
+		final List<TicketMilestone> milestones = app().tickets().getMilestones(
+				getRepositoryModel(), Status.Open);
 		TicketMilestone currentMilestone = null;
 		if (!StringUtils.isEmpty(milestoneParam)) {
-			for (TicketMilestone tm : milestones) {
+			for (final TicketMilestone tm : milestones) {
 				if (tm.name.equals(milestoneParam)) {
 					// get the milestone (queries the index)
-					currentMilestone = app().tickets().getMilestone(getRepositoryModel(), milestoneParam);
+					currentMilestone = app().tickets().getMilestone(getRepositoryModel(),
+							milestoneParam);
 					break;
 				}
 			}
@@ -156,8 +162,10 @@ public class TicketsPage extends RepositoryPage {
 			if (currentMilestone == null) {
 				// milestone not found, create a temporary one
 				currentMilestone = new TicketMilestone(milestoneParam);
-				String q = QueryBuilder.q(Lucene.rid.matches(getRepositoryModel().getRID())).and(Lucene.milestone.matches(milestoneParam)).build();
-				currentMilestone.tickets = app().tickets().queryFor(q, 1, 0, Lucene.number.name(), true);
+				final String q = QueryBuilder.q(Lucene.rid.matches(getRepositoryModel().getRID()))
+						.and(Lucene.milestone.matches(milestoneParam)).build();
+				currentMilestone.tickets = app().tickets().queryFor(q, 1, 0, Lucene.number.name(),
+						true);
 				milestones.add(currentMilestone);
 			}
 		}
@@ -172,157 +180,105 @@ public class TicketsPage extends RepositoryPage {
 			if (currentMilestone.due == null) {
 				milestonePanel.add(new Label("currentDueDate", getString("gb.notSpecified")));
 			} else {
-				milestonePanel.add(WicketUtils.createDateLabel("currentDueDate", currentMilestone.due, GitBlitWebSession
-						.get().getTimezone(), getTimeUtils(), false));
+				milestonePanel.add(WicketUtils.createDateLabel("currentDueDate",
+						currentMilestone.due, GitBlitWebSession.get().getTimezone(),
+						getTimeUtils(), false));
 			}
-			Label label = new Label("progress");
+			final Label label = new Label("progress");
 			WicketUtils.setCssStyle(label, "width:" + currentMilestone.getProgress() + "%;");
 			milestonePanel.add(label);
 
-			milestonePanel.add(new LinkPanel("openTickets", null,
-					MessageFormat.format(getString("gb.nOpenTickets"), currentMilestone.getOpenTickets()),
-					TicketsPage.class,
-					queryParameters(null, currentMilestone.name, TicketsUI.openStatii, null, sortBy, desc, 1)));
+			milestonePanel.add(new LinkPanel("openTickets", null, MessageFormat.format(
+					getString("gb.nOpenTickets"), currentMilestone.getOpenTickets()),
+					TicketsPage.class, queryParameters(null, currentMilestone.name,
+							TicketsUI.openStatii, null, sortBy, desc, 1)));
 
-			milestonePanel.add(new LinkPanel("closedTickets", null,
-					MessageFormat.format(getString("gb.nClosedTickets"), currentMilestone.getClosedTickets()),
-					TicketsPage.class,
-					queryParameters(null, currentMilestone.name, TicketsUI.closedStatii, null, sortBy, desc, 1)));
+			milestonePanel.add(new LinkPanel("closedTickets", null, MessageFormat.format(
+					getString("gb.nClosedTickets"), currentMilestone.getClosedTickets()),
+					TicketsPage.class, queryParameters(null, currentMilestone.name,
+							TicketsUI.closedStatii, null, sortBy, desc, 1)));
 
-			milestonePanel.add(new Label("totalTickets", MessageFormat.format(getString("gb.nTotalTickets"), currentMilestone.getTotalTickets())));
+			milestonePanel.add(new Label("totalTickets", MessageFormat.format(
+					getString("gb.nTotalTickets"), currentMilestone.getTotalTickets())));
 			add(milestonePanel);
 		}
 
-		Fragment milestoneDropdown = new Fragment("milestoneDropdown", "milestoneDropdownFragment", this);
-		PageParameters resetMilestone = queryParameters(queryParam, null, statiiParam, assignedToParam, sortBy, desc, 1);
-		milestoneDropdown.add(new BookmarkablePageLink<Void>("resetMilestone", TicketsPage.class, resetMilestone));
+		final Fragment milestoneDropdown = new Fragment("milestoneDropdown",
+				"milestoneDropdownFragment", this);
+		final PageParameters resetMilestone = queryParameters(queryParam, null, statiiParam,
+				assignedToParam, sortBy, desc, 1);
+		milestoneDropdown.add(new BookmarkablePageLink<Void>("resetMilestone", TicketsPage.class,
+				resetMilestone));
 
-		ListDataProvider<TicketMilestone> milestonesDp = new ListDataProvider<TicketMilestone>(milestones);
-		DataView<TicketMilestone> milestonesMenu = new DataView<TicketMilestone>("milestone", milestonesDp) {
+		final ListDataProvider<TicketMilestone> milestonesDp = new ListDataProvider<TicketMilestone>(
+				milestones);
+		final DataView<TicketMilestone> milestonesMenu = new DataView<TicketMilestone>("milestone",
+				milestonesDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<TicketMilestone> item) {
 				final TicketMilestone tm = item.getModelObject();
-				PageParameters params = queryParameters(queryParam, tm.name, statiiParam, assignedToParam, sortBy, desc, 1);
-				item.add(new LinkPanel("milestoneLink", null, tm.name, TicketsPage.class, params).setRenderBodyOnly(true));
+				final PageParameters params = queryParameters(queryParam, tm.name, statiiParam,
+						assignedToParam, sortBy, desc, 1);
+				item.add(new LinkPanel("milestoneLink", null, tm.name, TicketsPage.class, params)
+						.setRenderBodyOnly(true));
 			}
 		};
 		milestoneDropdown.add(milestonesMenu);
 		milestonePanel.add(milestoneDropdown);
 
 		// search or query tickets
-		int page = Math.max(1,  WicketUtils.getPage(params));
-		int pageSize = app().settings().getInteger(Keys.tickets.perPage, 25);
+		final int page = Math.max(1, WicketUtils.getPage(params));
+		final int pageSize = app().settings().getInteger(Keys.tickets.perPage, 25);
 		List<QueryResult> results;
 		if (StringUtils.isEmpty(searchParam)) {
 			results = app().tickets().queryFor(luceneQuery, page, pageSize, sortBy, desc);
 		} else {
 			results = app().tickets().searchFor(getRepositoryModel(), searchParam, page, pageSize);
 		}
-		int totalResults = results.size() == 0 ? 0 : results.get(0).totalResults;
+		final int totalResults = results.size() == 0 ? 0 : results.get(0).totalResults;
 
 		// standard queries
-		add(new BookmarkablePageLink<Void>("changesQuery", TicketsPage.class,
-				queryParameters(
-						Lucene.type.matches(TicketModel.Type.Proposal.name()),
-						milestoneParam,
-						statiiParam,
-						assignedToParam,
-						sortBy,
-						desc,
-						1)));
+		add(new BookmarkablePageLink<Void>("changesQuery", TicketsPage.class, queryParameters(
+				Lucene.type.matches(TicketModel.Type.Proposal.name()), milestoneParam, statiiParam,
+				assignedToParam, sortBy, desc, 1)));
 
-		add(new BookmarkablePageLink<Void>("bugsQuery", TicketsPage.class,
-				queryParameters(
-						Lucene.type.matches(TicketModel.Type.Bug.name()),
-						milestoneParam,
-						statiiParam,
-						assignedToParam,
-						sortBy,
-						desc,
-						1)));
+		add(new BookmarkablePageLink<Void>("bugsQuery", TicketsPage.class, queryParameters(
+				Lucene.type.matches(TicketModel.Type.Bug.name()), milestoneParam, statiiParam,
+				assignedToParam, sortBy, desc, 1)));
 
-		add(new BookmarkablePageLink<Void>("enhancementsQuery", TicketsPage.class,
-				queryParameters(
-						Lucene.type.matches(TicketModel.Type.Enhancement.name()),
-						milestoneParam,
-						statiiParam,
-						assignedToParam,
-						sortBy,
-						desc,
-						1)));
+		add(new BookmarkablePageLink<Void>("enhancementsQuery", TicketsPage.class, queryParameters(
+				Lucene.type.matches(TicketModel.Type.Enhancement.name()), milestoneParam,
+				statiiParam, assignedToParam, sortBy, desc, 1)));
 
-		add(new BookmarkablePageLink<Void>("tasksQuery", TicketsPage.class,
-				queryParameters(
-						Lucene.type.matches(TicketModel.Type.Task.name()),
-						milestoneParam,
-						statiiParam,
-						assignedToParam,
-						sortBy,
-						desc,
-						1)));
+		add(new BookmarkablePageLink<Void>("tasksQuery", TicketsPage.class, queryParameters(
+				Lucene.type.matches(TicketModel.Type.Task.name()), milestoneParam, statiiParam,
+				assignedToParam, sortBy, desc, 1)));
 
-		add(new BookmarkablePageLink<Void>("questionsQuery", TicketsPage.class,
-				queryParameters(
-						Lucene.type.matches(TicketModel.Type.Question.name()),
-						milestoneParam,
-						statiiParam,
-						assignedToParam,
-						sortBy,
-						desc,
-						1)));
-		
-		add(new BookmarkablePageLink<Void>("maintenanceQuery", TicketsPage.class,
-				queryParameters(
-						Lucene.type.matches(TicketModel.Type.Maintenance.name()),
-						milestoneParam,
-						statiiParam,
-						assignedToParam,
-						sortBy,
-						desc,
-						1)));
+		add(new BookmarkablePageLink<Void>("questionsQuery", TicketsPage.class, queryParameters(
+				Lucene.type.matches(TicketModel.Type.Question.name()), milestoneParam, statiiParam,
+				assignedToParam, sortBy, desc, 1)));
 
-		add(new BookmarkablePageLink<Void>("resetQuery", TicketsPage.class,
-				queryParameters(
-						null,
-						milestoneParam,
-						TicketsUI.openStatii,
-						null,
-						null,
-						true,
-						1)));
+		add(new BookmarkablePageLink<Void>("maintenanceQuery", TicketsPage.class, queryParameters(
+				Lucene.type.matches(TicketModel.Type.Maintenance.name()), milestoneParam,
+				statiiParam, assignedToParam, sortBy, desc, 1)));
+
+		add(new BookmarkablePageLink<Void>("resetQuery", TicketsPage.class, queryParameters(null,
+				milestoneParam, TicketsUI.openStatii, null, null, true, 1)));
 
 		if (isAuthenticated) {
 			add(new Label("userDivider"));
-			add(new BookmarkablePageLink<Void>("createdQuery", TicketsPage.class,
-					queryParameters(
-							Lucene.createdby.matches(user.username),
-							milestoneParam,
-							statiiParam,
-							assignedToParam,
-							sortBy,
-							desc,
-							1)));
+			add(new BookmarkablePageLink<Void>("createdQuery", TicketsPage.class, queryParameters(
+					Lucene.createdby.matches(user.username), milestoneParam, statiiParam,
+					assignedToParam, sortBy, desc, 1)));
 
-			add(new BookmarkablePageLink<Void>("watchedQuery", TicketsPage.class,
-					queryParameters(
-							Lucene.watchedby.matches(user.username),
-							milestoneParam,
-							statiiParam,
-							assignedToParam,
-							sortBy,
-							desc,
-							1)));
-			add(new BookmarkablePageLink<Void>("mentionsQuery", TicketsPage.class,
-					queryParameters(
-							Lucene.mentions.matches(user.username),
-							milestoneParam,
-							statiiParam,
-							assignedToParam,
-							sortBy,
-							desc,
-							1)));
+			add(new BookmarkablePageLink<Void>("watchedQuery", TicketsPage.class, queryParameters(
+					Lucene.watchedby.matches(user.username), milestoneParam, statiiParam,
+					assignedToParam, sortBy, desc, 1)));
+			add(new BookmarkablePageLink<Void>("mentionsQuery", TicketsPage.class, queryParameters(
+					Lucene.mentions.matches(user.username), milestoneParam, statiiParam,
+					assignedToParam, sortBy, desc, 1)));
 		} else {
 			add(new Label("userDivider").setVisible(false));
 			add(new Label("createdQuery").setVisible(false));
@@ -330,21 +286,21 @@ public class TicketsPage extends RepositoryPage {
 			add(new Label("mentionsQuery").setVisible(false));
 		}
 
-		Set<TicketQuery> dynamicQueries = new TreeSet<TicketQuery>();
-		for (TicketLabel label : app().tickets().getLabels(getRepositoryModel())) {
-			String q = QueryBuilder.q(Lucene.labels.matches(label.name)).build();
+		final Set<TicketQuery> dynamicQueries = new TreeSet<TicketQuery>();
+		for (final TicketLabel label : app().tickets().getLabels(getRepositoryModel())) {
+			final String q = QueryBuilder.q(Lucene.labels.matches(label.name)).build();
 			dynamicQueries.add(new TicketQuery(label.name, q).color(label.color));
 		}
 
-		for (QueryResult ticket : results) {
+		for (final QueryResult ticket : results) {
 			if (!StringUtils.isEmpty(ticket.topic)) {
-				String q = QueryBuilder.q(Lucene.topic.matches(ticket.topic)).build();
+				final String q = QueryBuilder.q(Lucene.topic.matches(ticket.topic)).build();
 				dynamicQueries.add(new TicketQuery(ticket.topic, q));
 			}
 
 			if (!ArrayUtils.isEmpty(ticket.labels)) {
-				for (String label : ticket.labels) {
-					String q = QueryBuilder.q(Lucene.labels.matches(label)).build();
+				for (final String label : ticket.labels) {
+					final String q = QueryBuilder.q(Lucene.labels.matches(label)).build();
 					dynamicQueries.add(new TicketQuery(label, q));
 				}
 			}
@@ -353,36 +309,45 @@ public class TicketsPage extends RepositoryPage {
 		if (dynamicQueries.size() == 0) {
 			add(new Label("dynamicQueries").setVisible(false));
 		} else {
-			Fragment fragment = new Fragment("dynamicQueries", "dynamicQueriesFragment", this);
-			ListDataProvider<TicketQuery> dynamicQueriesDp = new ListDataProvider<TicketQuery>(new ArrayList<TicketQuery>(dynamicQueries));
-			DataView<TicketQuery> dynamicQueriesList = new DataView<TicketQuery>("dynamicQuery", dynamicQueriesDp) {
+			final Fragment fragment = new Fragment("dynamicQueries", "dynamicQueriesFragment", this);
+			final ListDataProvider<TicketQuery> dynamicQueriesDp = new ListDataProvider<TicketQuery>(
+					new ArrayList<TicketQuery>(dynamicQueries));
+			final DataView<TicketQuery> dynamicQueriesList = new DataView<TicketQuery>(
+					"dynamicQuery", dynamicQueriesDp) {
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void populateItem(final Item<TicketQuery> item) {
 					final TicketQuery tq = item.getModelObject();
-					Component swatch = new Label("swatch", "&nbsp;").setEscapeModelStrings(false);
+					final Component swatch = new Label("swatch", "&nbsp;")
+							.setEscapeModelStrings(false);
 					if (StringUtils.isEmpty(tq.color)) {
 						// calculate a color
 						tq.color = StringUtils.getColor(tq.name);
 					}
-					String background = MessageFormat.format("background-color:{0};", tq.color);
+					final String background = MessageFormat.format("background-color:{0};",
+							tq.color);
 					swatch.add(new SimpleAttributeModifier("style", background));
 					item.add(swatch);
 					if (activeQuery.contains(tq.query)) {
 						// selected
-						String q = QueryBuilder.q(activeQuery).remove(tq.query).build();
-						PageParameters params = queryParameters(q, milestoneParam, statiiParam, assignedToParam, sortBy, desc, 1);
-						item.add(new LinkPanel("link", "active", tq.name, TicketsPage.class, params).setRenderBodyOnly(true));
-						Label checked = new Label("checked");
+						final String q = QueryBuilder.q(activeQuery).remove(tq.query).build();
+						final PageParameters params = queryParameters(q, milestoneParam,
+								statiiParam, assignedToParam, sortBy, desc, 1);
+						item.add(new LinkPanel("link", "active", tq.name, TicketsPage.class, params)
+								.setRenderBodyOnly(true));
+						final Label checked = new Label("checked");
 						WicketUtils.setCssClass(checked, "iconic-o-x");
 						item.add(checked);
 						item.add(new SimpleAttributeModifier("style", background));
 					} else {
 						// unselected
-						String q = QueryBuilder.q(queryParam).toSubquery().and(tq.query).build();
-						PageParameters params = queryParameters(q, milestoneParam, statiiParam, assignedToParam, sortBy, desc, 1);
-						item.add(new LinkPanel("link", null, tq.name, TicketsPage.class, params).setRenderBodyOnly(true));
+						final String q = QueryBuilder.q(queryParam).toSubquery().and(tq.query)
+								.build();
+						final PageParameters params = queryParameters(q, milestoneParam,
+								statiiParam, assignedToParam, sortBy, desc, 1);
+						item.add(new LinkPanel("link", null, tq.name, TicketsPage.class, params)
+								.setRenderBodyOnly(true));
 						item.add(new Label("checked").setVisible(false));
 					}
 				}
@@ -395,123 +360,152 @@ public class TicketsPage extends RepositoryPage {
 		if (ArrayUtils.isEmpty(statiiParam)) {
 			add(new Label("selectedStatii", getString("gb.all")));
 		} else {
-			add(new Label("selectedStatii", StringUtils.flattenStrings(Arrays.asList(statiiParam), ",")));
+			add(new Label("selectedStatii", StringUtils.flattenStrings(Arrays.asList(statiiParam),
+					",")));
 		}
-		add(new BookmarkablePageLink<Void>("openTickets", TicketsPage.class, queryParameters(queryParam, milestoneParam, TicketsUI.openStatii, assignedToParam, sortBy, desc, 1)));
-		add(new BookmarkablePageLink<Void>("closedTickets", TicketsPage.class, queryParameters(queryParam, milestoneParam, TicketsUI.closedStatii, assignedToParam, sortBy, desc, 1)));
-		add(new BookmarkablePageLink<Void>("allTickets", TicketsPage.class, queryParameters(queryParam, milestoneParam, null, assignedToParam, sortBy, desc, 1)));
+		add(new BookmarkablePageLink<Void>("openTickets", TicketsPage.class, queryParameters(
+				queryParam, milestoneParam, TicketsUI.openStatii, assignedToParam, sortBy, desc, 1)));
+		add(new BookmarkablePageLink<Void>("closedTickets", TicketsPage.class, queryParameters(
+				queryParam, milestoneParam, TicketsUI.closedStatii, assignedToParam, sortBy, desc,
+				1)));
+		add(new BookmarkablePageLink<Void>("allTickets", TicketsPage.class, queryParameters(
+				queryParam, milestoneParam, null, assignedToParam, sortBy, desc, 1)));
 
 		// by status
-		List<Status> statii = new ArrayList<Status>(Arrays.asList(Status.values()));
+		final List<Status> statii = new ArrayList<Status>(Arrays.asList(Status.values()));
 		statii.remove(Status.Closed);
-		ListDataProvider<Status> resolutionsDp = new ListDataProvider<Status>(statii);
-		DataView<Status> statiiLinks = new DataView<Status>("statii", resolutionsDp) {
+		final ListDataProvider<Status> resolutionsDp = new ListDataProvider<Status>(statii);
+		final DataView<Status> statiiLinks = new DataView<Status>("statii", resolutionsDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<Status> item) {
 				final Status status = item.getModelObject();
-				PageParameters p = queryParameters(queryParam, milestoneParam, new String [] { status.name().toLowerCase() }, assignedToParam, sortBy, desc, 1);
-				String css = TicketsUI.getStatusClass(status);
-				item.add(new LinkPanel("statusLink", css, status.toString(), TicketsPage.class, p).setRenderBodyOnly(true));
+				final PageParameters p = queryParameters(queryParam, milestoneParam,
+						new String[] { status.name().toLowerCase() }, assignedToParam, sortBy,
+						desc, 1);
+				final String css = TicketsUI.getStatusClass(status);
+				item.add(new LinkPanel("statusLink", css, status.toString(), TicketsPage.class, p)
+						.setRenderBodyOnly(true));
 			}
 		};
 		add(statiiLinks);
 
 		// responsible filter
-		List<TicketResponsible> responsibles = new ArrayList<TicketResponsible>();
-		for (RegistrantAccessPermission perm : app().repositories().getUserAccessPermissions(getRepositoryModel())) {
+		final List<TicketResponsible> responsibles = new ArrayList<TicketResponsible>();
+		for (final RegistrantAccessPermission perm : app().repositories().getUserAccessPermissions(
+				getRepositoryModel())) {
 			if (perm.permission.atLeast(AccessPermission.PUSH)) {
-				UserModel u = app().users().getUserModel(perm.registrant);
+				final UserModel u = app().users().getUserModel(perm.registrant);
 				responsibles.add(new TicketResponsible(u));
 			}
 		}
 		Collections.sort(responsibles);
-		responsibles.add(0, any);
+		responsibles.add(0, this.any);
 
 		TicketResponsible currentResponsible = null;
-		for (TicketResponsible u : responsibles) {
+		for (final TicketResponsible u : responsibles) {
 			if (u.username.equals(assignedToParam)) {
 				currentResponsible = u;
 				break;
 			}
 		}
 
-		add(new Label("currentResponsible", currentResponsible == null ? "" : currentResponsible.displayname));
-		ListDataProvider<TicketResponsible> responsibleDp = new ListDataProvider<TicketResponsible>(responsibles);
-		DataView<TicketResponsible> responsibleMenu = new DataView<TicketResponsible>("responsible", responsibleDp) {
+		add(new Label("currentResponsible", currentResponsible == null ? ""
+				: currentResponsible.displayname));
+		final ListDataProvider<TicketResponsible> responsibleDp = new ListDataProvider<TicketResponsible>(
+				responsibles);
+		final DataView<TicketResponsible> responsibleMenu = new DataView<TicketResponsible>(
+				"responsible", responsibleDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<TicketResponsible> item) {
 				final TicketResponsible u = item.getModelObject();
-				PageParameters params = queryParameters(queryParam, milestoneParam, statiiParam, u.username, sortBy, desc, 1);
-				item.add(new LinkPanel("responsibleLink", null, u.displayname, TicketsPage.class, params).setRenderBodyOnly(true));
+				final PageParameters params = queryParameters(queryParam, milestoneParam,
+						statiiParam, u.username, sortBy, desc, 1);
+				item.add(new LinkPanel("responsibleLink", null, u.displayname, TicketsPage.class,
+						params).setRenderBodyOnly(true));
 			}
 		};
 		add(responsibleMenu);
-		PageParameters resetResponsibleParams = queryParameters(queryParam, milestoneParam, statiiParam, null, sortBy, desc, 1);
-		add(new BookmarkablePageLink<Void>("resetResponsible", TicketsPage.class, resetResponsibleParams));
+		final PageParameters resetResponsibleParams = queryParameters(queryParam, milestoneParam,
+				statiiParam, null, sortBy, desc, 1);
+		add(new BookmarkablePageLink<Void>("resetResponsible", TicketsPage.class,
+				resetResponsibleParams));
 
-		List<TicketSort> sortChoices = new ArrayList<TicketSort>();
+		final List<TicketSort> sortChoices = new ArrayList<TicketSort>();
 		sortChoices.add(new TicketSort(getString("gb.sortNewest"), Lucene.created.name(), true));
 		sortChoices.add(new TicketSort(getString("gb.sortOldest"), Lucene.created.name(), false));
-		sortChoices.add(new TicketSort(getString("gb.sortMostRecentlyUpdated"), Lucene.updated.name(), true));
-		sortChoices.add(new TicketSort(getString("gb.sortLeastRecentlyUpdated"), Lucene.updated.name(), false));
-		sortChoices.add(new TicketSort(getString("gb.sortMostComments"), Lucene.comments.name(), true));
-		sortChoices.add(new TicketSort(getString("gb.sortLeastComments"), Lucene.comments.name(), false));
-		sortChoices.add(new TicketSort(getString("gb.sortMostPatchsetRevisions"), Lucene.patchsets.name(), true));
-		sortChoices.add(new TicketSort(getString("gb.sortLeastPatchsetRevisions"), Lucene.patchsets.name(), false));
+		sortChoices.add(new TicketSort(getString("gb.sortMostRecentlyUpdated"), Lucene.updated
+				.name(), true));
+		sortChoices.add(new TicketSort(getString("gb.sortLeastRecentlyUpdated"), Lucene.updated
+				.name(), false));
+		sortChoices.add(new TicketSort(getString("gb.sortMostComments"), Lucene.comments.name(),
+				true));
+		sortChoices.add(new TicketSort(getString("gb.sortLeastComments"), Lucene.comments.name(),
+				false));
+		sortChoices.add(new TicketSort(getString("gb.sortMostPatchsetRevisions"), Lucene.patchsets
+				.name(), true));
+		sortChoices.add(new TicketSort(getString("gb.sortLeastPatchsetRevisions"), Lucene.patchsets
+				.name(), false));
 		sortChoices.add(new TicketSort(getString("gb.sortMostVotes"), Lucene.votes.name(), true));
 		sortChoices.add(new TicketSort(getString("gb.sortLeastVotes"), Lucene.votes.name(), false));
-		sortChoices.add(new TicketSort(getString("gb.sortHighestPriority"), Lucene.priority.name(), true));
-		sortChoices.add(new TicketSort(getString("gb.sortLowestPriority"), Lucene.priority.name(), false));
-		sortChoices.add(new TicketSort(getString("gb.sortHighestSeverity"), Lucene.severity.name(), true));
-		sortChoices.add(new TicketSort(getString("gb.sortLowestSeverity"), Lucene.severity.name(), false));
-		
+		sortChoices.add(new TicketSort(getString("gb.sortHighestPriority"), Lucene.priority.name(),
+				true));
+		sortChoices.add(new TicketSort(getString("gb.sortLowestPriority"), Lucene.priority.name(),
+				false));
+		sortChoices.add(new TicketSort(getString("gb.sortHighestSeverity"), Lucene.severity.name(),
+				true));
+		sortChoices.add(new TicketSort(getString("gb.sortLowestSeverity"), Lucene.severity.name(),
+				false));
+
 		TicketSort currentSort = sortChoices.get(0);
-		for (TicketSort ts : sortChoices) {
-			if (ts.sortBy.equals(sortBy) && desc == ts.desc) {
+		for (final TicketSort ts : sortChoices) {
+			if (ts.sortBy.equals(sortBy) && (desc == ts.desc)) {
 				currentSort = ts;
 				break;
 			}
 		}
 		add(new Label("currentSort", currentSort.name));
 
-		ListDataProvider<TicketSort> sortChoicesDp = new ListDataProvider<TicketSort>(sortChoices);
-		DataView<TicketSort> sortMenu = new DataView<TicketSort>("sort", sortChoicesDp) {
+		final ListDataProvider<TicketSort> sortChoicesDp = new ListDataProvider<TicketSort>(
+				sortChoices);
+		final DataView<TicketSort> sortMenu = new DataView<TicketSort>("sort", sortChoicesDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<TicketSort> item) {
 				final TicketSort ts = item.getModelObject();
-				PageParameters params = queryParameters(queryParam, milestoneParam, statiiParam, assignedToParam, ts.sortBy, ts.desc, 1);
-				item.add(new LinkPanel("sortLink", null, ts.name, TicketsPage.class, params).setRenderBodyOnly(true));
+				final PageParameters params = queryParameters(queryParam, milestoneParam,
+						statiiParam, assignedToParam, ts.sortBy, ts.desc, 1);
+				item.add(new LinkPanel("sortLink", null, ts.name, TicketsPage.class, params)
+						.setRenderBodyOnly(true));
 			}
 		};
 		add(sortMenu);
 
-
 		// paging links
-		buildPager(queryParam, milestoneParam, statiiParam, assignedToParam, sortBy, desc, page, pageSize, results.size(), totalResults);
+		buildPager(queryParam, milestoneParam, statiiParam, assignedToParam, sortBy, desc, page,
+				pageSize, results.size(), totalResults);
 
 		add(new TicketListPanel("ticketList", results, false, false));
 
 		// new milestone link
-		RepositoryModel repositoryModel = getRepositoryModel();
+		final RepositoryModel repositoryModel = getRepositoryModel();
 		final boolean acceptingUpdates = app().tickets().isAcceptingTicketUpdates(repositoryModel)
-				 && user != null && user.canAdmin(getRepositoryModel());
+				&& (user != null) && user.canAdmin(getRepositoryModel());
 		if (acceptingUpdates) {
 			add(new LinkPanel("newMilestone", null, getString("gb.newMilestone"),
-				NewMilestonePage.class, WicketUtils.newRepositoryParameter(repositoryName)));
+					NewMilestonePage.class, WicketUtils.newRepositoryParameter(this.repositoryName)));
 		} else {
 			add(new Label("newMilestone").setVisible(false));
 		}
 
 		// milestones list
-		List<TicketMilestone> openMilestones = new ArrayList<TicketMilestone>();
-		List<TicketMilestone> closedMilestones = new ArrayList<TicketMilestone>();
-		for (TicketMilestone milestone : app().tickets().getMilestones(repositoryModel)) {
+		final List<TicketMilestone> openMilestones = new ArrayList<TicketMilestone>();
+		final List<TicketMilestone> closedMilestones = new ArrayList<TicketMilestone>();
+		for (final TicketMilestone milestone : app().tickets().getMilestones(repositoryModel)) {
 			if (milestone.isOpen()) {
 				openMilestones.add(milestone);
 			} else {
@@ -532,32 +526,40 @@ public class TicketsPage extends RepositoryPage {
 			}
 		});
 
-		DataView<TicketMilestone> openMilestonesList = milestoneList("openMilestonesList", openMilestones, acceptingUpdates);
+		final DataView<TicketMilestone> openMilestonesList = milestoneList("openMilestonesList",
+				openMilestones, acceptingUpdates);
 		add(openMilestonesList);
 
-		DataView<TicketMilestone> closedMilestonesList = milestoneList("closedMilestonesList", closedMilestones, acceptingUpdates);
+		final DataView<TicketMilestone> closedMilestonesList = milestoneList(
+				"closedMilestonesList", closedMilestones, acceptingUpdates);
 		add(closedMilestonesList);
 	}
 
-	protected DataView<TicketMilestone> milestoneList(String wicketId, List<TicketMilestone> milestones, final boolean acceptingUpdates) {
-		ListDataProvider<TicketMilestone> milestonesDp = new ListDataProvider<TicketMilestone>(milestones);
-		DataView<TicketMilestone> milestonesList = new DataView<TicketMilestone>(wicketId, milestonesDp) {
+	protected DataView<TicketMilestone> milestoneList(String wicketId,
+			List<TicketMilestone> milestones, final boolean acceptingUpdates) {
+		final ListDataProvider<TicketMilestone> milestonesDp = new ListDataProvider<TicketMilestone>(
+				milestones);
+		final DataView<TicketMilestone> milestonesList = new DataView<TicketMilestone>(wicketId,
+				milestonesDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<TicketMilestone> item) {
-				Fragment entryPanel = new Fragment("entryPanel", "milestoneListFragment", this);
+				final Fragment entryPanel = new Fragment("entryPanel", "milestoneListFragment",
+						this);
 				item.add(entryPanel);
 
 				final TicketMilestone tm = item.getModelObject();
-				String [] states;
+				String[] states;
 				if (tm.isOpen()) {
 					states = TicketsUI.openStatii;
 				} else {
 					states = TicketsUI.closedStatii;
 				}
-				PageParameters params = queryParameters(null, tm.name, states, null, null, true, 1);
-				entryPanel.add(new LinkPanel("milestoneName", null, tm.name, TicketsPage.class, params).setRenderBodyOnly(true));
+				final PageParameters params = queryParameters(null, tm.name, states, null, null,
+						true, 1);
+				entryPanel.add(new LinkPanel("milestoneName", null, tm.name, TicketsPage.class,
+						params).setRenderBodyOnly(true));
 
 				String css;
 				String status = tm.status.name();
@@ -574,42 +576,47 @@ public class TicketsPage extends RepositoryPage {
 					css = "aui-lozenge";
 					break;
 				}
-				Label stateLabel = new Label("milestoneState", status);
+				final Label stateLabel = new Label("milestoneState", status);
 				WicketUtils.setCssClass(stateLabel, css);
 				entryPanel.add(stateLabel);
 
 				if (tm.due == null) {
 					entryPanel.add(new Label("milestoneDue", getString("gb.notSpecified")));
 				} else {
-					entryPanel.add(WicketUtils.createDatestampLabel("milestoneDue", tm.due, getTimeZone(), getTimeUtils()));
+					entryPanel.add(WicketUtils.createDatestampLabel("milestoneDue", tm.due,
+							getTimeZone(), getTimeUtils()));
 				}
 				if (acceptingUpdates) {
-					entryPanel.add(new LinkPanel("editMilestone", null, getString("gb.edit"), EditMilestonePage.class,
-						WicketUtils.newObjectParameter(repositoryName, tm.name)));
+					entryPanel.add(new LinkPanel("editMilestone", null, getString("gb.edit"),
+							EditMilestonePage.class, WicketUtils.newObjectParameter(
+									TicketsPage.this.repositoryName, tm.name)));
 				} else {
 					entryPanel.add(new Label("editMilestone").setVisible(false));
 				}
 
 				if (tm.isOpen()) {
 					// re-load milestone with query results
-					TicketMilestone m = app().tickets().getMilestone(getRepositoryModel(), tm.name);
+					final TicketMilestone m = app().tickets().getMilestone(getRepositoryModel(),
+							tm.name);
 
-					Fragment milestonePanel = new Fragment("milestonePanel", "openMilestoneFragment", this);
-					Label label = new Label("progress");
+					final Fragment milestonePanel = new Fragment("milestonePanel",
+							"openMilestoneFragment", this);
+					final Label label = new Label("progress");
 					WicketUtils.setCssStyle(label, "width:" + m.getProgress() + "%;");
 					milestonePanel.add(label);
 
-					milestonePanel.add(new LinkPanel("openTickets", null,
-							MessageFormat.format(getString("gb.nOpenTickets"), m.getOpenTickets()),
-							TicketsPage.class,
-							queryParameters(null, tm.name, TicketsUI.openStatii, null, null, true, 1)));
+					milestonePanel.add(new LinkPanel("openTickets", null, MessageFormat.format(
+							getString("gb.nOpenTickets"), m.getOpenTickets()), TicketsPage.class,
+							queryParameters(null, tm.name, TicketsUI.openStatii, null, null, true,
+									1)));
 
-					milestonePanel.add(new LinkPanel("closedTickets", null,
-							MessageFormat.format(getString("gb.nClosedTickets"), m.getClosedTickets()),
-							TicketsPage.class,
-							queryParameters(null, tm.name, TicketsUI.closedStatii, null, null, true, 1)));
+					milestonePanel.add(new LinkPanel("closedTickets", null, MessageFormat.format(
+							getString("gb.nClosedTickets"), m.getClosedTickets()),
+							TicketsPage.class, queryParameters(null, tm.name,
+									TicketsUI.closedStatii, null, null, true, 1)));
 
-					milestonePanel.add(new Label("totalTickets", MessageFormat.format(getString("gb.nTotalTickets"), m.getTotalTickets())));
+					milestonePanel.add(new Label("totalTickets", MessageFormat.format(
+							getString("gb.nTotalTickets"), m.getTotalTickets())));
 					entryPanel.add(milestonePanel);
 				} else {
 					entryPanel.add(new Label("milestonePanel").setVisible(false));
@@ -619,16 +626,10 @@ public class TicketsPage extends RepositoryPage {
 		return milestonesList;
 	}
 
-	protected PageParameters queryParameters(
-			String query,
-			String milestone,
-			String[] states,
-			String assignedTo,
-			String sort,
-			boolean descending,
-			int page) {
+	protected PageParameters queryParameters(String query, String milestone, String[] states,
+			String assignedTo, String sort, boolean descending, int page) {
 
-		PageParameters params = WicketUtils.newRepositoryParameter(repositoryName);
+		final PageParameters params = WicketUtils.newRepositoryParameter(this.repositoryName);
 		if (!StringUtils.isEmpty(query)) {
 			params.add("q", query);
 		}
@@ -636,7 +637,7 @@ public class TicketsPage extends RepositoryPage {
 			params.add(Lucene.milestone.name(), milestone);
 		}
 		if (!ArrayUtils.isEmpty(states)) {
-			for (String state : states) {
+			for (final String state : states) {
 				params.add(Lucene.status.name(), state);
 			}
 		}
@@ -656,7 +657,7 @@ public class TicketsPage extends RepositoryPage {
 	}
 
 	protected PageParameters newTicketParameter(QueryResult ticket) {
-		return WicketUtils.newObjectParameter(repositoryName, "" + ticket.number);
+		return WicketUtils.newObjectParameter(this.repositoryName, "" + ticket.number);
 	}
 
 	@Override
@@ -664,23 +665,19 @@ public class TicketsPage extends RepositoryPage {
 		return getString("gb.tickets");
 	}
 
-	protected void buildPager(
-			final String query,
-			final String milestone,
-			final String [] states,
-			final String assignedTo,
-			final String sort,
-			final boolean desc,
-			final int page,
-			int pageSize,
-			int count,
-			int total) {
+	protected void buildPager(final String query, final String milestone, final String[] states,
+			final String assignedTo, final String sort, final boolean desc, final int page,
+			int pageSize, int count, int total) {
 
-		boolean showNav = total > (2 * pageSize);
-		boolean allowPrev = page > 1;
-		boolean allowNext = (pageSize * (page - 1) + count) < total;
-		add(new BookmarkablePageLink<Void>("prevLink", TicketsPage.class, queryParameters(query, milestone, states, assignedTo, sort, desc, page - 1)).setEnabled(allowPrev).setVisible(showNav));
-		add(new BookmarkablePageLink<Void>("nextLink", TicketsPage.class, queryParameters(query, milestone, states, assignedTo, sort, desc, page + 1)).setEnabled(allowNext).setVisible(showNav));
+		final boolean showNav = total > (2 * pageSize);
+		final boolean allowPrev = page > 1;
+		final boolean allowNext = ((pageSize * (page - 1)) + count) < total;
+		add(new BookmarkablePageLink<Void>("prevLink", TicketsPage.class, queryParameters(query,
+				milestone, states, assignedTo, sort, desc, page - 1)).setEnabled(allowPrev)
+				.setVisible(showNav));
+		add(new BookmarkablePageLink<Void>("nextLink", TicketsPage.class, queryParameters(query,
+				milestone, states, assignedTo, sort, desc, page + 1)).setEnabled(allowNext)
+				.setVisible(showNav));
 
 		if (total <= pageSize) {
 			add(new Label("pageLink").setVisible(false));
@@ -688,28 +685,29 @@ public class TicketsPage extends RepositoryPage {
 		}
 
 		// determine page numbers to display
-		int pages = count == 0 ? 0 : ((total / pageSize) + (total % pageSize == 0 ? 0 : 1));
+		final int pages = count == 0 ? 0 : ((total / pageSize) + ((total % pageSize) == 0 ? 0 : 1));
 		// preferred number of pagelinks
 		int segments = 5;
 		if (pages < segments) {
 			// not enough data for preferred number of page links
 			segments = pages;
 		}
-		int minpage = Math.min(Math.max(1, page - 2), pages - (segments - 1));
-		int maxpage = Math.min(pages, minpage + (segments - 1));
-		List<Integer> sequence = new ArrayList<Integer>();
+		final int minpage = Math.min(Math.max(1, page - 2), pages - (segments - 1));
+		final int maxpage = Math.min(pages, minpage + (segments - 1));
+		final List<Integer> sequence = new ArrayList<Integer>();
 		for (int i = minpage; i <= maxpage; i++) {
 			sequence.add(i);
 		}
 
-		ListDataProvider<Integer> pagesDp = new ListDataProvider<Integer>(sequence);
-		DataView<Integer> pagesView = new DataView<Integer>("pageLink", pagesDp) {
+		final ListDataProvider<Integer> pagesDp = new ListDataProvider<Integer>(sequence);
+		final DataView<Integer> pagesView = new DataView<Integer>("pageLink", pagesDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<Integer> item) {
 				final Integer i = item.getModelObject();
-				LinkPanel link = new LinkPanel("page", null, "" + i, TicketsPage.class, queryParameters(query, milestone, states, assignedTo, sort, desc, i));
+				final LinkPanel link = new LinkPanel("page", null, "" + i, TicketsPage.class,
+						queryParameters(query, milestone, states, assignedTo, sort, desc, i));
 				link.setRenderBodyOnly(true);
 				if (i == page) {
 					WicketUtils.setCssClass(item, "active");

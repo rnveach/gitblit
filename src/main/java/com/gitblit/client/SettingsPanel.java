@@ -77,7 +77,7 @@ public class SettingsPanel extends JPanel {
 	}
 
 	private void initialize() {
-		JButton refreshSettings = new JButton(Translation.get("gb.refresh"));
+		final JButton refreshSettings = new JButton(Translation.get("gb.refresh"));
 		refreshSettings.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -89,92 +89,92 @@ public class SettingsPanel extends JPanel {
 		editSetting.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int viewRow = table.getSelectedRow();
-				int modelRow = table.convertRowIndexToModel(viewRow);
-				String key = tableModel.keys.get(modelRow);
-				SettingModel setting = tableModel.settings.get(key);
+				final int viewRow = SettingsPanel.this.table.getSelectedRow();
+				final int modelRow = SettingsPanel.this.table.convertRowIndexToModel(viewRow);
+				final String key = SettingsPanel.this.tableModel.keys.get(modelRow);
+				final SettingModel setting = SettingsPanel.this.tableModel.settings.get(key);
 				editSetting(setting);
 			}
 		});
 
-		NameRenderer nameRenderer = new NameRenderer();
+		final NameRenderer nameRenderer = new NameRenderer();
 		final SettingPanel settingPanel = new SettingPanel();
-		tableModel = new SettingsTableModel();
-		defaultSorter = new TableRowSorter<SettingsTableModel>(tableModel);
-		table = Utils.newTable(tableModel, Utils.DATE_FORMAT);
-		table.setDefaultRenderer(SettingModel.class, new SettingCellRenderer());
-		String name = table.getColumnName(UsersTableModel.Columns.Name.ordinal());
-		table.getColumn(name).setCellRenderer(nameRenderer);
-		table.setRowSorter(defaultSorter);
-		table.getRowSorter().toggleSortOrder(SettingsTableModel.Columns.Name.ordinal());
-		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+		this.tableModel = new SettingsTableModel();
+		this.defaultSorter = new TableRowSorter<SettingsTableModel>(this.tableModel);
+		this.table = Utils.newTable(this.tableModel, Utils.DATE_FORMAT);
+		this.table.setDefaultRenderer(SettingModel.class, new SettingCellRenderer());
+		final String name = this.table.getColumnName(UsersTableModel.Columns.Name.ordinal());
+		this.table.getColumn(name).setCellRenderer(nameRenderer);
+		this.table.setRowSorter(this.defaultSorter);
+		this.table.getRowSorter().toggleSortOrder(SettingsTableModel.Columns.Name.ordinal());
+		this.table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
-				boolean singleSelection = table.getSelectedRows().length == 1;
+				final boolean singleSelection = SettingsPanel.this.table.getSelectedRows().length == 1;
 				editSetting.setEnabled(singleSelection);
 				if (singleSelection) {
-					int viewRow = table.getSelectedRow();
-					int modelRow = table.convertRowIndexToModel(viewRow);
-					SettingModel setting = tableModel.get(modelRow);
+					final int viewRow = SettingsPanel.this.table.getSelectedRow();
+					final int modelRow = SettingsPanel.this.table.convertRowIndexToModel(viewRow);
+					final SettingModel setting = SettingsPanel.this.tableModel.get(modelRow);
 					settingPanel.setSetting(setting);
 				} else {
 					settingPanel.clear();
 				}
 			}
 		});
-		table.addMouseListener(new MouseAdapter() {
+		this.table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2) {
-					int viewRow = table.getSelectedRow();
-					int modelRow = table.convertRowIndexToModel(viewRow);
-					SettingModel setting = tableModel.get(modelRow);
+					final int viewRow = SettingsPanel.this.table.getSelectedRow();
+					final int modelRow = SettingsPanel.this.table.convertRowIndexToModel(viewRow);
+					final SettingModel setting = SettingsPanel.this.tableModel.get(modelRow);
 					editSetting(setting);
 				}
 			}
 		});
 
-		filterTextfield = new JTextField();
-		filterTextfield.addActionListener(new ActionListener() {
+		this.filterTextfield = new JTextField();
+		this.filterTextfield.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				filterSettings(filterTextfield.getText());
+				filterSettings(SettingsPanel.this.filterTextfield.getText());
 			}
 		});
-		filterTextfield.addKeyListener(new KeyAdapter() {
+		this.filterTextfield.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				filterSettings(filterTextfield.getText());
+				filterSettings(SettingsPanel.this.filterTextfield.getText());
 			}
 		});
 
-		JPanel settingFilterPanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
+		final JPanel settingFilterPanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
 		settingFilterPanel.add(new JLabel(Translation.get("gb.filter")), BorderLayout.WEST);
-		settingFilterPanel.add(filterTextfield, BorderLayout.CENTER);
+		settingFilterPanel.add(this.filterTextfield, BorderLayout.CENTER);
 
-		JPanel settingsTablePanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
+		final JPanel settingsTablePanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
 		settingsTablePanel.add(settingFilterPanel, BorderLayout.NORTH);
-		settingsTablePanel.add(new JScrollPane(table), BorderLayout.CENTER);
+		settingsTablePanel.add(new JScrollPane(this.table), BorderLayout.CENTER);
 		settingsTablePanel.add(settingPanel, BorderLayout.SOUTH);
 
-		JPanel settingsControls = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+		final JPanel settingsControls = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
 		settingsControls.add(refreshSettings);
 		settingsControls.add(editSetting);
 
 		setLayout(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
-		header = new HeaderPanel(Translation.get("gb.settings"), "settings_16x16.png");
-		add(header, BorderLayout.NORTH);
+		this.header = new HeaderPanel(Translation.get("gb.settings"), "settings_16x16.png");
+		add(this.header, BorderLayout.NORTH);
 		add(settingsTablePanel, BorderLayout.CENTER);
 		add(settingsControls, BorderLayout.SOUTH);
 	}
 
 	@Override
 	public void requestFocus() {
-		filterTextfield.requestFocus();
+		this.filterTextfield.requestFocus();
 	}
 
 	@Override
@@ -183,20 +183,20 @@ public class SettingsPanel extends JPanel {
 	}
 
 	protected void updateTable(boolean pack) {
-		tableModel.setSettings(gitblit.getSettings());
-		tableModel.fireTableDataChanged();
-		header.setText(Translation.get("gb.settings"));
+		this.tableModel.setSettings(this.gitblit.getSettings());
+		this.tableModel.fireTableDataChanged();
+		this.header.setText(Translation.get("gb.settings"));
 		if (pack) {
-			Utils.packColumns(table, Utils.MARGIN);
+			Utils.packColumns(this.table, Utils.MARGIN);
 		}
 	}
 
 	private void filterSettings(final String fragment) {
 		if (StringUtils.isEmpty(fragment)) {
-			table.setRowSorter(defaultSorter);
+			this.table.setRowSorter(this.defaultSorter);
 			return;
 		}
-		RowFilter<SettingsTableModel, Object> containsFilter = new RowFilter<SettingsTableModel, Object>() {
+		final RowFilter<SettingsTableModel, Object> containsFilter = new RowFilter<SettingsTableModel, Object>() {
 			@Override
 			public boolean include(Entry<? extends SettingsTableModel, ? extends Object> entry) {
 				for (int i = entry.getValueCount() - 1; i >= 0; i--) {
@@ -207,17 +207,17 @@ public class SettingsPanel extends JPanel {
 				return false;
 			}
 		};
-		TableRowSorter<SettingsTableModel> sorter = new TableRowSorter<SettingsTableModel>(
-				tableModel);
+		final TableRowSorter<SettingsTableModel> sorter = new TableRowSorter<SettingsTableModel>(
+				this.tableModel);
 		sorter.setRowFilter(containsFilter);
-		table.setRowSorter(sorter);
+		this.table.setRowSorter(sorter);
 	}
 
 	protected void refreshSettings() {
-		GitblitWorker worker = new GitblitWorker(SettingsPanel.this, RpcRequest.LIST_SETTINGS) {
+		final GitblitWorker worker = new GitblitWorker(SettingsPanel.this, RpcRequest.LIST_SETTINGS) {
 			@Override
 			protected Boolean doRequest() throws IOException {
-				gitblit.refreshSettings();
+				SettingsPanel.this.gitblit.refreshSettings();
 				return true;
 			}
 
@@ -231,11 +231,11 @@ public class SettingsPanel extends JPanel {
 
 	protected void editSetting(final SettingModel settingModel) {
 		final JTextField textField = new JTextField(settingModel.currentValue);
-		JPanel editPanel = new JPanel(new GridLayout(0, 1));
+		final JPanel editPanel = new JPanel(new GridLayout(0, 1));
 		editPanel.add(new JLabel("New Value"));
 		editPanel.add(textField);
 
-		JPanel settingPanel = new JPanel(new BorderLayout());
+		final JPanel settingPanel = new JPanel(new BorderLayout());
 		settingPanel.add(new SettingPanel(settingModel), BorderLayout.CENTER);
 		settingPanel.add(editPanel, BorderLayout.SOUTH);
 		settingPanel.setPreferredSize(new Dimension(800, 200));
@@ -247,8 +247,8 @@ public class SettingsPanel extends JPanel {
 			options = new String[] { Translation.get("gb.cancel"),
 					Translation.get("gb.setDefault"), Translation.get("gb.save") };
 		}
-		String defaultOption = options[0];
-		int selection = JOptionPane.showOptionDialog(SettingsPanel.this, settingPanel,
+		final String defaultOption = options[0];
+		final int selection = JOptionPane.showOptionDialog(SettingsPanel.this, settingPanel,
 				settingModel.name, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
 				new ImageIcon(getClass().getResource("/settings_16x16.png")), options,
 				defaultOption);
@@ -260,12 +260,12 @@ public class SettingsPanel extends JPanel {
 		}
 		final Map<String, String> newSettings = new HashMap<String, String>();
 		newSettings.put(settingModel.name, textField.getText().trim());
-		GitblitWorker worker = new GitblitWorker(SettingsPanel.this, RpcRequest.EDIT_SETTINGS) {
+		final GitblitWorker worker = new GitblitWorker(SettingsPanel.this, RpcRequest.EDIT_SETTINGS) {
 			@Override
 			protected Boolean doRequest() throws IOException {
-				boolean success = gitblit.updateSettings(newSettings);
+				final boolean success = SettingsPanel.this.gitblit.updateSettings(newSettings);
 				if (success) {
-					gitblit.refreshSettings();
+					SettingsPanel.this.gitblit.refreshSettings();
 				}
 				return success;
 			}

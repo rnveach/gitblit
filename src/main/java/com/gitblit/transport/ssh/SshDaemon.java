@@ -29,6 +29,7 @@ import org.apache.sshd.common.io.IoServiceFactoryFactory;
 import org.apache.sshd.common.io.mina.MinaServiceFactoryFactory;
 import org.apache.sshd.common.io.nio2.Nio2ServiceFactoryFactory;
 import org.apache.sshd.common.util.SecurityUtils;
+import org.apache.sshd.server.ServerFactoryManager;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.auth.CachingPublicKeyAuthenticator;
 import org.bouncycastle.openssl.PEMWriter;
@@ -56,7 +57,8 @@ public class SshDaemon {
 	private final Logger log = LoggerFactory.getLogger(SshDaemon.class);
 
 	public static enum SshSessionBackend {
-		MINA, NIO2
+		MINA,
+		NIO2
 	}
 
 	/**
@@ -81,38 +83,39 @@ public class SshDaemon {
 	public SshDaemon(IGitblit gitblit, WorkQueue workQueue) {
 		this.gitblit = gitblit;
 
-		IStoredSettings settings = gitblit.getSettings();
+		final IStoredSettings settings = gitblit.getSettings();
 
 		// Ensure that Bouncy Castle is our JCE provider
 		SecurityUtils.setRegisterBouncyCastle(true);
 		if (SecurityUtils.isBouncyCastleRegistered()) {
-			log.debug("BouncyCastle is registered as a JCE provider");
+			this.log.debug("BouncyCastle is registered as a JCE provider");
 		}
 
-		// Generate host RSA and DSA keypairs and create the host keypair provider
-		File rsaKeyStore = new File(gitblit.getBaseFolder(), "ssh-rsa-hostkey.pem");
-		File dsaKeyStore = new File(gitblit.getBaseFolder(), "ssh-dsa-hostkey.pem");
+		// Generate host RSA and DSA keypairs and create the host keypair
+		// provider
+		final File rsaKeyStore = new File(gitblit.getBaseFolder(), "ssh-rsa-hostkey.pem");
+		final File dsaKeyStore = new File(gitblit.getBaseFolder(), "ssh-dsa-hostkey.pem");
 		generateKeyPair(rsaKeyStore, "RSA", 2048);
 		generateKeyPair(dsaKeyStore, "DSA", 0);
-		FileKeyPairProvider hostKeyPairProvider = new FileKeyPairProvider();
-		hostKeyPairProvider.setFiles(new String [] { rsaKeyStore.getPath(), dsaKeyStore.getPath(), dsaKeyStore.getPath() });
+		final FileKeyPairProvider hostKeyPairProvider = new FileKeyPairProvider();
+		hostKeyPairProvider.setFiles(new String[] { rsaKeyStore.getPath(), dsaKeyStore.getPath(),
+				dsaKeyStore.getPath() });
 
 		// Client public key authenticator
-		SshKeyAuthenticator keyAuthenticator =
-				new SshKeyAuthenticator(gitblit.getPublicKeyManager(), gitblit);
+		final SshKeyAuthenticator keyAuthenticator = new SshKeyAuthenticator(
+				gitblit.getPublicKeyManager(), gitblit);
 
 		// Configure the preferred SSHD backend
-		String sshBackendStr = settings.getString(Keys.git.sshBackend,
+		final String sshBackendStr = settings.getString(Keys.git.sshBackend,
 				SshSessionBackend.NIO2.name());
-		SshSessionBackend backend = SshSessionBackend.valueOf(sshBackendStr);
+		final SshSessionBackend backend = SshSessionBackend.valueOf(sshBackendStr);
 		System.setProperty(IoServiceFactoryFactory.class.getName(),
-		    backend == SshSessionBackend.MINA
-		    	? MinaServiceFactoryFactory.class.getName()
-		    	: Nio2ServiceFactoryFactory.class.getName());
+				backend == SshSessionBackend.MINA ? MinaServiceFactoryFactory.class.getName()
+						: Nio2ServiceFactoryFactory.class.getName());
 
 		// Create the socket address for binding the SSH server
-		int port = settings.getInteger(Keys.git.sshPort, 0);
-		String bindInterface = settings.getString(Keys.git.sshBindInterface, "");
+		final int port = settings.getInteger(Keys.git.sshPort, 0);
+		final String bindInterface = settings.getString(Keys.git.sshBindInterface, "");
 		InetSocketAddress addr;
 		if (StringUtils.isEmpty(bindInterface)) {
 			addr = new InetSocketAddress(port);
@@ -121,47 +124,48 @@ public class SshDaemon {
 		}
 
 		// Create the SSH server
-		sshd = SshServer.setUpDefaultServer();
-		sshd.setPort(addr.getPort());
-		sshd.setHost(addr.getHostName());
-		sshd.setKeyPairProvider(hostKeyPairProvider);
-		sshd.setPublickeyAuthenticator(new CachingPublicKeyAuthenticator(keyAuthenticator));
-		sshd.setPasswordAuthenticator(new UsernamePasswordAuthenticator(gitblit));
+		this.sshd = SshServer.setUpDefaultServer();
+		this.sshd.setPort(addr.getPort());
+		this.sshd.setHost(addr.getHostName());
+		this.sshd.setKeyPairProvider(hostKeyPairProvider);
+		this.sshd.setPublickeyAuthenticator(new CachingPublicKeyAuthenticator(keyAuthenticator));
+		this.sshd.setPasswordAuthenticator(new UsernamePasswordAuthenticator(gitblit));
 		if (settings.getBoolean(Keys.git.sshWithKrb5, false)) {
-			sshd.setGSSAuthenticator(new SshKrbAuthenticator(settings, gitblit));
+			this.sshd.setGSSAuthenticator(new SshKrbAuthenticator(settings, gitblit));
 		}
-		sshd.setSessionFactory(new SshServerSessionFactory());
-		sshd.setFileSystemFactory(new DisabledFilesystemFactory());
-		sshd.setTcpipForwardingFilter(new NonForwardingFilter());
-		sshd.setCommandFactory(new SshCommandFactory(gitblit, workQueue));
-		sshd.setShellFactory(new WelcomeShell(settings));
+		this.sshd.setSessionFactory(new SshServerSessionFactory());
+		this.sshd.setFileSystemFactory(new DisabledFilesystemFactory());
+		this.sshd.setTcpipForwardingFilter(new NonForwardingFilter());
+		this.sshd.setCommandFactory(new SshCommandFactory(gitblit, workQueue));
+		this.sshd.setShellFactory(new WelcomeShell(settings));
 
-		// Set the server id.  This can be queried with:
-		//   ssh-keyscan -t rsa,dsa -p 29418 localhost
-		String version = String.format("%s (%s-%s)", Constants.getGitBlitVersion().replace(' ', '_'),
-				sshd.getVersion(), sshBackendStr);
-		sshd.getProperties().put(SshServer.SERVER_IDENTIFICATION, version);
+		// Set the server id. This can be queried with:
+		// ssh-keyscan -t rsa,dsa -p 29418 localhost
+		final String version = String.format("%s (%s-%s)",
+				Constants.getGitBlitVersion().replace(' ', '_'), this.sshd.getVersion(),
+				sshBackendStr);
+		this.sshd.getProperties().put(ServerFactoryManager.SERVER_IDENTIFICATION, version);
 
-		run = new AtomicBoolean(false);
+		this.run = new AtomicBoolean(false);
 	}
 
 	public String formatUrl(String gituser, String servername, String repository) {
-		IStoredSettings settings = gitblit.getSettings();
+		final IStoredSettings settings = this.gitblit.getSettings();
 
-		int port = sshd.getPort();
-		int displayPort = settings.getInteger(Keys.git.sshAdvertisedPort, port);
+		final int port = this.sshd.getPort();
+		final int displayPort = settings.getInteger(Keys.git.sshAdvertisedPort, port);
 		String displayServername = settings.getString(Keys.git.sshAdvertisedHost, "");
-		if(displayServername.isEmpty()) {
+		if (displayServername.isEmpty()) {
 			displayServername = servername;
 		}
 		if (displayPort == DEFAULT_PORT) {
 			// standard port
-			return MessageFormat.format("ssh://{0}@{1}/{2}", gituser, displayServername,
-					repository);
+			return MessageFormat
+					.format("ssh://{0}@{1}/{2}", gituser, displayServername, repository);
 		} else {
 			// non-standard port
-			return MessageFormat.format("ssh://{0}@{1}:{2,number,0}/{3}",
-					gituser, displayServername, displayPort, repository);
+			return MessageFormat.format("ssh://{0}@{1}:{2,number,0}/{3}", gituser,
+					displayServername, displayPort, repository);
 		}
 	}
 
@@ -174,71 +178,73 @@ public class SshDaemon {
 	 *             the daemon is already running.
 	 */
 	public synchronized void start() throws IOException {
-		if (run.get()) {
+		if (this.run.get()) {
 			throw new IllegalStateException(JGitText.get().daemonAlreadyRunning);
 		}
 
-		sshd.start();
-		run.set(true);
+		this.sshd.start();
+		this.run.set(true);
 
-		String sshBackendStr = gitblit.getSettings().getString(Keys.git.sshBackend,
+		final String sshBackendStr = this.gitblit.getSettings().getString(Keys.git.sshBackend,
 				SshSessionBackend.NIO2.name());
 
-		log.info(MessageFormat.format(
-				"SSH Daemon ({0}) is listening on {1}:{2,number,0}",
-				sshBackendStr, sshd.getHost(), sshd.getPort()));
+		this.log.info(MessageFormat.format("SSH Daemon ({0}) is listening on {1}:{2,number,0}",
+				sshBackendStr, this.sshd.getHost(), this.sshd.getPort()));
 	}
 
 	/** @return true if this daemon is receiving connections. */
 	public boolean isRunning() {
-		return run.get();
+		return this.run.get();
 	}
 
 	/** Stop this daemon. */
 	public synchronized void stop() {
-		if (run.get()) {
-			log.info("SSH Daemon stopping...");
-			run.set(false);
+		if (this.run.get()) {
+			this.log.info("SSH Daemon stopping...");
+			this.run.set(false);
 
 			try {
-				((SshCommandFactory) sshd.getCommandFactory()).stop();
-				sshd.stop();
-			} catch (IOException e) {
-				log.error("SSH Daemon stop interrupted", e);
+				((SshCommandFactory) this.sshd.getCommandFactory()).stop();
+				this.sshd.stop();
+			}
+			catch (final IOException e) {
+				this.log.error("SSH Daemon stop interrupted", e);
 			}
 		}
 	}
 
-    private void generateKeyPair(File file, String algorithm, int keySize) {
-    	if (file.exists()) {
-    		return;
-    	}
-        try {
-            KeyPairGenerator generator = SecurityUtils.getKeyPairGenerator(algorithm);
-            if (keySize != 0) {
-            	generator.initialize(keySize);
-                log.info("Generating {}-{} SSH host keypair...", algorithm, keySize);
-            } else {
-                log.info("Generating {} SSH host keypair...", algorithm);
-            }
-            KeyPair kp = generator.generateKeyPair();
+	private void generateKeyPair(File file, String algorithm, int keySize) {
+		if (file.exists()) {
+			return;
+		}
+		try {
+			final KeyPairGenerator generator = SecurityUtils.getKeyPairGenerator(algorithm);
+			if (keySize != 0) {
+				generator.initialize(keySize);
+				this.log.info("Generating {}-{} SSH host keypair...", algorithm, keySize);
+			} else {
+				this.log.info("Generating {} SSH host keypair...", algorithm);
+			}
+			final KeyPair kp = generator.generateKeyPair();
 
-            // create an empty file and set the permissions
-            Files.touch(file);
-            try {
-            	JnaUtils.setFilemode(file, JnaUtils.S_IRUSR | JnaUtils.S_IWUSR);
-            } catch (UnsatisfiedLinkError | UnsupportedOperationException e) {
-            	// Unexpected/Unsupported OS or Architecture
-            }
+			// create an empty file and set the permissions
+			Files.touch(file);
+			try {
+				JnaUtils.setFilemode(file, JnaUtils.S_IRUSR | JnaUtils.S_IWUSR);
+			}
+			catch (UnsatisfiedLinkError | UnsupportedOperationException e) {
+				// Unexpected/Unsupported OS or Architecture
+			}
 
-            FileOutputStream os = new FileOutputStream(file);
-            PEMWriter w = new PEMWriter(new OutputStreamWriter(os));
-            w.writeObject(kp);
-            w.flush();
-            w.close();
-        } catch (Exception e) {
-            log.warn(MessageFormat.format("Unable to generate {0} keypair", algorithm), e);
-            return;
-        }
-    }
+			final FileOutputStream os = new FileOutputStream(file);
+			final PEMWriter w = new PEMWriter(new OutputStreamWriter(os));
+			w.writeObject(kp);
+			w.flush();
+			w.close();
+		}
+		catch (final Exception e) {
+			this.log.warn(MessageFormat.format("Unable to generate {0} keypair", algorithm), e);
+			return;
+		}
+	}
 }

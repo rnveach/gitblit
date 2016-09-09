@@ -25,6 +25,6 @@ public class UsersPage extends RootPage {
 		super();
 		setupPage("", "");
 
-		add(new UsersPanel("usersPanel", showAdmin).setVisible(showAdmin));
+		add(new UsersPanel("usersPanel", this.showAdmin).setVisible(this.showAdmin));
 	}
 }

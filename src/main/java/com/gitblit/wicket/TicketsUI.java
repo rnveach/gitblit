@@ -35,16 +35,18 @@ import com.gitblit.utils.StringUtils;
  */
 public class TicketsUI {
 
-	public static final String [] openStatii = new String [] { Status.New.name().toLowerCase(), Status.Open.name().toLowerCase() };
+	public static final String[] openStatii = new String[] { Status.New.name().toLowerCase(),
+			Status.Open.name().toLowerCase() };
 
-	public static final String [] closedStatii = new String [] { "!" + Status.New.name().toLowerCase(), "!" + Status.Open.name().toLowerCase() };
+	public static final String[] closedStatii = new String[] {
+			"!" + Status.New.name().toLowerCase(), "!" + Status.Open.name().toLowerCase() };
 
 	public static Label getStateIcon(String wicketId, TicketModel ticket) {
 		return getStateIcon(wicketId, ticket.type, ticket.status, ticket.severity);
 	}
 
 	public static Label getStateIcon(String wicketId, Type type, Status state, Severity severity) {
-		Label label = new Label(wicketId);
+		final Label label = new Label(wicketId);
 		if (type == null) {
 			type = Type.defaultType;
 		}
@@ -74,7 +76,7 @@ public class TicketsUI {
 	}
 
 	public static Label getPriorityIcon(String wicketId, Priority priority) {
-		Label label = new Label(wicketId);
+		final Label label = new Label(wicketId);
 		if (priority == null) {
 			priority = Priority.defaultPriority;
 		}
@@ -140,7 +142,8 @@ public class TicketsUI {
 			break;
 		}
 
-		return "aui-lozenge" + (subtle ? " aui-lozenge-subtle": "") + (css.isEmpty() ? "" : " ") + css;
+		return "aui-lozenge" + (subtle ? " aui-lozenge-subtle" : "") + (css.isEmpty() ? "" : " ")
+				+ css;
 	}
 
 	public static String getStatusClass(Status status) {
@@ -209,7 +212,7 @@ public class TicketsUI {
 		}
 
 		public String getTooltip() {
-			return tooltip;
+			return this.tooltip;
 		}
 	}
 
@@ -234,19 +237,19 @@ public class TicketsUI {
 		@Override
 		public boolean equals(Object o) {
 			if (o instanceof TicketQuery) {
-				return ((TicketQuery) o).query.equals(query);
+				return ((TicketQuery) o).query.equals(this.query);
 			}
 			return false;
 		}
 
 		@Override
 		public int hashCode() {
-			return query.hashCode();
+			return this.query.hashCode();
 		}
 
 		@Override
 		public int compareTo(TicketQuery o) {
-			return query.compareTo(o.query);
+			return this.query.compareTo(o.query);
 		}
 	}
 }

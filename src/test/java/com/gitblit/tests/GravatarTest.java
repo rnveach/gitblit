@@ -19,7 +19,7 @@ import com.google.inject.Injector;
 
 public class GravatarTest extends GitblitUnitTest {
 
-	public static  class AvatarModule extends AbstractModule {
+	public static class AvatarModule extends AbstractModule {
 		private final IStoredSettings settings;
 
 		AvatarModule(IStoredSettings settings) {
@@ -28,7 +28,7 @@ public class GravatarTest extends GitblitUnitTest {
 
 		@Override
 		protected void configure() {
-			bind(IStoredSettings.class).toInstance(settings);
+			bind(IStoredSettings.class).toInstance(this.settings);
 			bind(XssFilter.class).to(AllowXssFilter.class);
 			bind(IRuntimeManager.class).to(RuntimeManager.class);
 			bind(AvatarGenerator.class).toProvider(AvatarGeneratorProvider.class);
@@ -37,17 +37,17 @@ public class GravatarTest extends GitblitUnitTest {
 
 	@Test
 	public void gravatarIdenticonTest() {
-		IStoredSettings settings = new MemorySettings();
+		final IStoredSettings settings = new MemorySettings();
 		settings.overrideSetting(Keys.web.avatarClass, GravatarGenerator.class.getName());
 
-		Injector injector = Guice.createInjector(new AvatarModule(settings));
-		AvatarGenerator avatarGenerator = injector.getInstance(AvatarGenerator.class);
+		final Injector injector = Guice.createInjector(new AvatarModule(settings));
+		final AvatarGenerator avatarGenerator = injector.getInstance(AvatarGenerator.class);
 
-		String username = "username";
-		String emailAddress = "emailAddress";
-		int width = 10;
+		final String username = "username";
+		final String emailAddress = "emailAddress";
+		final int width = 10;
 
-		String url = avatarGenerator.getURL(username, emailAddress, true, width);
+		final String url = avatarGenerator.getURL(username, emailAddress, true, width);
 		assertNotNull(url);
 
 		assertEquals(ActivityUtils.getGravatarIdenticonUrl(emailAddress, width), url);
@@ -55,17 +55,17 @@ public class GravatarTest extends GitblitUnitTest {
 
 	@Test
 	public void gravatarThumbnailTest() {
-		IStoredSettings settings = new MemorySettings();
+		final IStoredSettings settings = new MemorySettings();
 		settings.overrideSetting(Keys.web.avatarClass, GravatarGenerator.class.getName());
 
-		Injector injector = Guice.createInjector(new AvatarModule(settings));
-		AvatarGenerator avatarGenerator = injector.getInstance(AvatarGenerator.class);
+		final Injector injector = Guice.createInjector(new AvatarModule(settings));
+		final AvatarGenerator avatarGenerator = injector.getInstance(AvatarGenerator.class);
 
-		String username = "username";
-		String emailAddress = "emailAddress";
-		int width = 10;
+		final String username = "username";
+		final String emailAddress = "emailAddress";
+		final int width = 10;
 
-		String url = avatarGenerator.getURL(username, emailAddress, false, width);
+		final String url = avatarGenerator.getURL(username, emailAddress, false, width);
 		assertNotNull(url);
 
 		assertEquals(ActivityUtils.getGravatarThumbnailUrl(emailAddress, width), url);

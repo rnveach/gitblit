@@ -39,33 +39,38 @@ public class LdapSyncServiceTest {
 	private MemorySettings settings;
 
 	@Before
-	public void init() throws Exception {
-		settings = getSettings();
+	public void init() {
+		this.settings = getSettings();
 	}
 
 	@Test
 	public void defaultOfUnAvailableLdapSynchronizeKeyIsLdapServiceNotReady() {
-		LdapSyncService ldapSyncService = new LdapSyncService(settings, null);
-		assertFalse("When key " + Keys.realm.ldap.synchronize + " is not configured ldap sync is not ready." , ldapSyncService.isReady());
+		final LdapSyncService ldapSyncService = new LdapSyncService(this.settings, null);
+		assertFalse("When key " + Keys.realm.ldap.synchronize
+				+ " is not configured ldap sync is not ready.", ldapSyncService.isReady());
 	}
 
 	@Test
 	public void whenLdapSynchronizeKeyIsFalseLdapServiceNotReady() {
-		LdapSyncService ldapSyncService = new LdapSyncService(settings, null);
-		settings.put(Keys.realm.ldap.synchronize, "false");
-		assertFalse("When key " + Keys.realm.ldap.synchronize + " is configured with value false ldap sync is not ready." , ldapSyncService.isReady());
+		final LdapSyncService ldapSyncService = new LdapSyncService(this.settings, null);
+		this.settings.put(Keys.realm.ldap.synchronize, "false");
+		assertFalse("When key " + Keys.realm.ldap.synchronize
+				+ " is configured with value false ldap sync is not ready.",
+				ldapSyncService.isReady());
 	}
 
 	@Test
 	public void whenLdapSynchronizeKeyIsTrueLdapServiceIsReady() {
-		LdapSyncService ldapSyncService = new LdapSyncService(settings, null);
-		settings.put(Keys.realm.ldap.synchronize, "true");
-		assertTrue("When key " + Keys.realm.ldap.synchronize + " is configured with value true ldap sync is not ready." , ldapSyncService.isReady());
+		final LdapSyncService ldapSyncService = new LdapSyncService(this.settings, null);
+		this.settings.put(Keys.realm.ldap.synchronize, "true");
+		assertTrue("When key " + Keys.realm.ldap.synchronize
+				+ " is configured with value true ldap sync is not ready.",
+				ldapSyncService.isReady());
 	}
 
-	private MemorySettings getSettings() {
-		Map<String, Object> backingMap = new HashMap<String, Object>();
-		MemorySettings ms = new MemorySettings(backingMap);
+	private static MemorySettings getSettings() {
+		final Map<String, Object> backingMap = new HashMap<String, Object>();
+		final MemorySettings ms = new MemorySettings(backingMap);
 		return ms;
 	}
 

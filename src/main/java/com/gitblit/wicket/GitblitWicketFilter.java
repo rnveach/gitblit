@@ -17,8 +17,6 @@ package com.gitblit.wicket;
 
 import java.util.Date;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.wicket.protocol.http.IWebApplicationFactory;
@@ -37,11 +35,13 @@ import com.gitblit.models.ProjectModel;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.StringUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  *
- * Customization of the WicketFilter to allow smart browser-side caching of
- * some pages.
+ * Customization of the WicketFilter to allow smart browser-side caching of some
+ * pages.
  *
  * @author James Moger
  *
@@ -49,22 +49,19 @@ import com.gitblit.utils.StringUtils;
 @Singleton
 public class GitblitWicketFilter extends WicketFilter {
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private IRuntimeManager runtimeManager;
+	private final IRuntimeManager runtimeManager;
 
-	private IRepositoryManager repositoryManager;
+	private final IRepositoryManager repositoryManager;
 
-	private IProjectManager projectManager;
+	private final IProjectManager projectManager;
 
-	private GitBlitWebApp webapp;
+	private final GitBlitWebApp webapp;
 
 	@Inject
-	public GitblitWicketFilter(
-			IStoredSettings settings,
-			IRuntimeManager runtimeManager,
-			IRepositoryManager repositoryManager,
-			IProjectManager projectManager,
+	public GitblitWicketFilter(IStoredSettings settings, IRuntimeManager runtimeManager,
+			IRepositoryManager repositoryManager, IProjectManager projectManager,
 			GitBlitWebApp webapp) {
 
 		this.settings = settings;
@@ -79,7 +76,7 @@ public class GitblitWicketFilter extends WicketFilter {
 		return new IWebApplicationFactory() {
 			@Override
 			public WebApplication createApplication(WicketFilter filter) {
-				return webapp;
+				return GitblitWicketFilter.this.webapp;
 			}
 		};
 	}
@@ -91,20 +88,20 @@ public class GitblitWicketFilter extends WicketFilter {
 	 * @return The last modified time stamp
 	 */
 	@Override
-	protected long getLastModified(final HttpServletRequest servletRequest)	{
+	protected long getLastModified(final HttpServletRequest servletRequest) {
 		final String pathInfo = getRelativePath(servletRequest);
 		if (Strings.isEmpty(pathInfo)) {
 			return -1;
 		}
-		long lastModified = super.getLastModified(servletRequest);
+		final long lastModified = super.getLastModified(servletRequest);
 		if (lastModified > -1) {
 			return lastModified;
 		}
 
 		// try to match request against registered CacheControl pages
-		String [] paths = pathInfo.split("/");
+		final String[] paths = pathInfo.split("/");
 
-		String page = paths[0];
+		final String page = paths[0];
 		String repo = "";
 		String commitId = "";
 		if (paths.length >= 2) {
@@ -121,38 +118,44 @@ public class GitblitWicketFilter extends WicketFilter {
 			commitId = servletRequest.getParameter("h");
 		}
 
-		repo = repo.replace("%2f", "/").replace("%2F", "/").replace(settings.getChar(Keys.web.forwardSlashCharacter, '/'), '/');
+		repo = repo.replace("%2f", "/").replace("%2F", "/")
+				.replace(this.settings.getChar(Keys.web.forwardSlashCharacter, '/'), '/');
 
-		GitBlitWebApp app = (GitBlitWebApp) getWebApplication();
-		int expires = settings.getInteger(Keys.web.pageCacheExpires, 0);
-		if (!StringUtils.isEmpty(page) && app.isCacheablePage(page) && expires > 0) {
+		final GitBlitWebApp app = (GitBlitWebApp) getWebApplication();
+		final int expires = this.settings.getInteger(Keys.web.pageCacheExpires, 0);
+		if (!StringUtils.isEmpty(page) && app.isCacheablePage(page) && (expires > 0)) {
 			// page can be cached by the browser
-			CacheControl cacheControl = app.getCacheControl(page);
-			Date bootDate = runtimeManager.getBootDate();
+			final CacheControl cacheControl = app.getCacheControl(page);
+			final Date bootDate = this.runtimeManager.getBootDate();
 			switch (cacheControl.value()) {
 			case ACTIVITY:
 				// returns the last activity date of the server
-				Date activityDate = repositoryManager.getLastActivityDate();
+				final Date activityDate = this.repositoryManager.getLastActivityDate();
 				if (activityDate != null) {
-					return activityDate.after(bootDate) ? activityDate.getTime() : bootDate.getTime();
+					return activityDate.after(bootDate) ? activityDate.getTime() : bootDate
+							.getTime();
 				}
 				return bootDate.getTime();
 			case BOOT:
 				// return the boot date of the server
 				return bootDate.getTime();
 			case PROJECT:
-				// return the latest change date for the project OR the boot date
-				ProjectModel project = projectManager.getProjectModel(StringUtils.getRootPath(repo));
+				// return the latest change date for the project OR the boot
+				// date
+				final ProjectModel project = this.projectManager.getProjectModel(StringUtils
+						.getRootPath(repo));
 				if (project != null) {
-					return project.lastChange.after(bootDate) ? project.lastChange.getTime() : bootDate.getTime();
+					return project.lastChange.after(bootDate) ? project.lastChange.getTime()
+							: bootDate.getTime();
 				}
 				break;
 			case REPOSITORY:
 				// return the lastest change date for the repository OR the boot
 				// date, whichever is latest
-				RepositoryModel repository = repositoryManager.getRepositoryModel(repo);
-				if (repository != null && repository.lastChange != null) {
-					return repository.lastChange.after(bootDate) ? repository.lastChange.getTime() : bootDate.getTime();
+				final RepositoryModel repository = this.repositoryManager.getRepositoryModel(repo);
+				if ((repository != null) && (repository.lastChange != null)) {
+					return repository.lastChange.after(bootDate) ? repository.lastChange.getTime()
+							: bootDate.getTime();
 				}
 				break;
 			case COMMIT:
@@ -165,15 +168,16 @@ public class GitblitWicketFilter extends WicketFilter {
 					Repository r = null;
 					try {
 						// return the timestamp of the associated commit
-						r = repositoryManager.getRepository(repo);
+						r = this.repositoryManager.getRepository(repo);
 						if (r != null) {
-							RevCommit commit = JGitUtils.getCommit(r, commitId);
+							final RevCommit commit = JGitUtils.getCommit(r, commitId);
 							if (commit != null) {
-								Date date = JGitUtils.getCommitDate(commit);
+								final Date date = JGitUtils.getCommitDate(commit);
 								return date.after(bootDate) ? date.getTime() : bootDate.getTime();
 							}
 						}
-					} finally {
+					}
+					finally {
 						if (r != null) {
 							r.close();
 						}

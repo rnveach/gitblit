@@ -18,8 +18,6 @@ package com.gitblit.servlet;
 import java.io.IOException;
 import java.text.MessageFormat;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -35,11 +33,13 @@ import com.gitblit.manager.IRuntimeManager;
 import com.gitblit.models.ProjectModel;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.UserModel;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * The SyndicationFilter is an AuthenticationFilter which ensures that feed
- * requests for projects or view-restricted repositories have proper authentication
- * credentials and are authorized for the requested feed.
+ * requests for projects or view-restricted repositories have proper
+ * authentication credentials and are authorized for the requested feed.
  *
  * @author James Moger
  *
@@ -47,15 +47,13 @@ import com.gitblit.models.UserModel;
 @Singleton
 public class SyndicationFilter extends AuthenticationFilter {
 
-	private IRuntimeManager runtimeManager;
-	private IRepositoryManager repositoryManager;
-	private IProjectManager projectManager;
+	private final IRuntimeManager runtimeManager;
+	private final IRepositoryManager repositoryManager;
+	private final IProjectManager projectManager;
 
 	@Inject
-	public SyndicationFilter(
-			IRuntimeManager runtimeManager,
-			IAuthenticationManager authenticationManager,
-			IRepositoryManager repositoryManager,
+	public SyndicationFilter(IRuntimeManager runtimeManager,
+			IAuthenticationManager authenticationManager, IRepositoryManager repositoryManager,
 			IProjectManager projectManager) {
 		super(authenticationManager);
 
@@ -88,21 +86,21 @@ public class SyndicationFilter extends AuthenticationFilter {
 	public void doFilter(final ServletRequest request, final ServletResponse response,
 			final FilterChain chain) throws IOException, ServletException {
 
-		HttpServletRequest httpRequest = (HttpServletRequest) request;
-		HttpServletResponse httpResponse = (HttpServletResponse) response;
+		final HttpServletRequest httpRequest = (HttpServletRequest) request;
+		final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-		String fullUrl = getFullUrl(httpRequest);
-		String name = extractRequestedName(fullUrl);
+		final String fullUrl = getFullUrl(httpRequest);
+		final String name = extractRequestedName(fullUrl);
 
-		ProjectModel project = projectManager.getProjectModel(name);
+		final ProjectModel project = this.projectManager.getProjectModel(name);
 		RepositoryModel model = null;
 
 		if (project == null) {
 			// try loading a repository model
-			model = repositoryManager.getRepositoryModel(name);
+			model = this.repositoryManager.getRepositoryModel(name);
 			if (model == null) {
 				// repository not found. send 404.
-				logger.info(MessageFormat.format("ARF: {0} ({1})", fullUrl,
+				this.logger.info(MessageFormat.format("ARF: {0} ({1})", fullUrl,
 						HttpServletResponse.SC_NOT_FOUND));
 				httpResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
@@ -118,8 +116,8 @@ public class SyndicationFilter extends AuthenticationFilter {
 		//
 		// Gitblit must conditionally authenticate users per-repository so just
 		// enabling http.receivepack is insufficient.
-		AuthenticatedRequest authenticatedRequest = new AuthenticatedRequest(httpRequest);
-		UserModel user = getUser(httpRequest);
+		final AuthenticatedRequest authenticatedRequest = new AuthenticatedRequest(httpRequest);
+		final UserModel user = getUser(httpRequest);
 		if (user != null) {
 			authenticatedRequest.setUser(user);
 		}
@@ -129,8 +127,8 @@ public class SyndicationFilter extends AuthenticationFilter {
 			if (model.accessRestriction.atLeast(AccessRestrictionType.VIEW)) {
 				if (user == null) {
 					// challenge client to provide credentials. send 401.
-					if (runtimeManager.isDebugMode()) {
-						logger.info(MessageFormat.format("ARF: CHALLENGE {0}", fullUrl));
+					if (this.runtimeManager.isDebugMode()) {
+						this.logger.info(MessageFormat.format("ARF: CHALLENGE {0}", fullUrl));
 					}
 					httpResponse.setHeader("WWW-Authenticate", CHALLENGE);
 					httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -141,14 +139,14 @@ public class SyndicationFilter extends AuthenticationFilter {
 						// authenticated request permitted.
 						// pass processing to the restricted servlet.
 						newSession(authenticatedRequest, httpResponse);
-						logger.info(MessageFormat.format("ARF: {0} ({1}) authenticated", fullUrl,
-								HttpServletResponse.SC_CONTINUE));
+						this.logger.info(MessageFormat.format("ARF: {0} ({1}) authenticated",
+								fullUrl, HttpServletResponse.SC_CONTINUE));
 						chain.doFilter(authenticatedRequest, httpResponse);
 						return;
 					}
 					// valid user, but not for requested access. send 403.
-					if (runtimeManager.isDebugMode()) {
-						logger.info(MessageFormat.format("ARF: {0} forbidden to access {1}",
+					if (this.runtimeManager.isDebugMode()) {
+						this.logger.info(MessageFormat.format("ARF: {0} forbidden to access {1}",
 								user.username, fullUrl));
 					}
 					httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -157,8 +155,8 @@ public class SyndicationFilter extends AuthenticationFilter {
 			}
 		}
 
-		if (runtimeManager.isDebugMode()) {
-			logger.info(MessageFormat.format("ARF: {0} ({1}) unauthenticated", fullUrl,
+		if (this.runtimeManager.isDebugMode()) {
+			this.logger.info(MessageFormat.format("ARF: {0} ({1}) unauthenticated", fullUrl,
 					HttpServletResponse.SC_CONTINUE));
 		}
 		// unauthenticated request permitted.

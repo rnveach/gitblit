@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package com.gitblit.transport.ssh.commands;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -44,6 +43,7 @@ import com.gitblit.utils.WorkQueue;
 import com.google.common.util.concurrent.Atomics;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+
 public class SshCommandFactory implements CommandFactory {
 	private static final Logger logger = LoggerFactory.getLogger(SshCommandFactory.class);
 
@@ -56,21 +56,18 @@ public class SshCommandFactory implements CommandFactory {
 		this.gitblit = gitblit;
 		this.workQueue = workQueue;
 
-		int threads = gitblit.getSettings().getInteger(Keys.git.sshCommandStartThreads, 2);
-		startExecutor = workQueue.createQueue(threads, "SshCommandStart");
-		destroyExecutor = Executors.newSingleThreadExecutor(
-				new ThreadFactoryBuilder()
-					.setNameFormat("SshCommandDestroy-%s")
-					.setDaemon(true)
-					.build());
+		final int threads = gitblit.getSettings().getInteger(Keys.git.sshCommandStartThreads, 2);
+		this.startExecutor = workQueue.createQueue(threads, "SshCommandStart");
+		this.destroyExecutor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+				.setNameFormat("SshCommandDestroy-%s").setDaemon(true).build());
 	}
 
 	public void stop() {
-		destroyExecutor.shutdownNow();
+		this.destroyExecutor.shutdownNow();
 	}
 
 	public RootDispatcher createRootDispatcher(SshDaemonClient client, String commandLine) {
-		return new RootDispatcher(gitblit, client, commandLine, workQueue);
+		return new RootDispatcher(this.gitblit, client, commandLine, this.workQueue);
 	}
 
 	@Override
@@ -86,7 +83,7 @@ public class SshCommandFactory implements CommandFactory {
 		private OutputStream err;
 		private ExitCallback exit;
 		private Environment env;
-		private String cmdLine;
+		private final String cmdLine;
 		private DispatchCommand cmd;
 		private final AtomicBoolean logged;
 		private final AtomicReference<Future<?>> task;
@@ -95,10 +92,10 @@ public class SshCommandFactory implements CommandFactory {
 			if (line.startsWith("git-")) {
 				line = "git " + line;
 			}
-			cmdLine = line;
-			argv = split(line);
-			logged = new AtomicBoolean();
-			task = Atomics.newReference();
+			this.cmdLine = line;
+			this.argv = split(line);
+			this.logged = new AtomicBoolean();
+			this.task = Atomics.newReference();
 		}
 
 		@Override
@@ -129,47 +126,49 @@ public class SshCommandFactory implements CommandFactory {
 		@Override
 		public void start(final Environment env) throws IOException {
 			this.env = env;
-			task.set(startExecutor.submit(new Runnable() {
+			this.task.set(SshCommandFactory.this.startExecutor.submit(new Runnable() {
 				@Override
 				public void run() {
 					try {
 						onStart();
-					} catch (Exception e) {
+					}
+					catch (final Exception e) {
 						logger.warn("Cannot start command ", e);
 					}
 				}
 
 				@Override
 				public String toString() {
-					return "start (user " + session.getUsername() + ")";
+					return "start (user " + Trampoline.this.session.getUsername() + ")";
 				}
 			}));
 		}
 
 		private void onStart() throws IOException {
 			synchronized (this) {
-				SshDaemonClient client = session.getAttribute(SshDaemonClient.KEY);
+				SshDaemonClient client = this.session.getAttribute(SshDaemonClient.KEY);
 				try {
-					cmd = createRootDispatcher(client, cmdLine);
-					cmd.setArguments(argv);
-					cmd.setInputStream(in);
-					cmd.setOutputStream(out);
-					cmd.setErrorStream(err);
-					cmd.setExitCallback(new ExitCallback() {
+					this.cmd = createRootDispatcher(client, this.cmdLine);
+					this.cmd.setArguments(this.argv);
+					this.cmd.setInputStream(this.in);
+					this.cmd.setOutputStream(this.out);
+					this.cmd.setErrorStream(this.err);
+					this.cmd.setExitCallback(new ExitCallback() {
 						@Override
 						public void onExit(int rc, String exitMessage) {
-							exit.onExit(translateExit(rc), exitMessage);
+							Trampoline.this.exit.onExit(translateExit(rc), exitMessage);
 							log(rc);
 						}
 
 						@Override
 						public void onExit(int rc) {
-							exit.onExit(translateExit(rc));
+							Trampoline.this.exit.onExit(translateExit(rc));
 							log(rc);
 						}
 					});
-					cmd.start(env);
-				} finally {
+					this.cmd.start(this.env);
+				}
+				finally {
 					client = null;
 				}
 			}
@@ -192,17 +191,17 @@ public class SshCommandFactory implements CommandFactory {
 		}
 
 		private void log(final int rc) {
-			if (logged.compareAndSet(false, true)) {
-				logger.info("onExecute: {} exits with: {}", cmd.getClass().getSimpleName(), rc);
+			if (this.logged.compareAndSet(false, true)) {
+				logger.info("onExecute: {} exits with: {}", this.cmd.getClass().getSimpleName(), rc);
 			}
 		}
 
 		@Override
 		public void destroy() {
-			Future<?> future = task.getAndSet(null);
+			final Future<?> future = this.task.getAndSet(null);
 			if (future != null) {
 				future.cancel(true);
-				destroyExecutor.execute(new Runnable() {
+				SshCommandFactory.this.destroyExecutor.execute(new Runnable() {
 					@Override
 					public void run() {
 						onDestroy();
@@ -213,11 +212,12 @@ public class SshCommandFactory implements CommandFactory {
 
 		private void onDestroy() {
 			synchronized (this) {
-				if (cmd != null) {
+				if (this.cmd != null) {
 					try {
-						cmd.destroy();
-					} finally {
-						cmd = null;
+						this.cmd.destroy();
+					}
+					finally {
+						this.cmd = null;
 					}
 				}
 			}
@@ -235,30 +235,33 @@ public class SshCommandFactory implements CommandFactory {
 			switch (b) {
 			case '\t':
 			case ' ':
-				if (inquote || inDblQuote)
+				if (inquote || inDblQuote) {
 					r.append(b);
-				else if (r.length() > 0) {
+				} else if (r.length() > 0) {
 					list.add(r.toString());
 					r = new StringBuilder();
 				}
 				continue;
 			case '\"':
-				if (inquote)
+				if (inquote) {
 					r.append(b);
-				else
+				} else {
 					inDblQuote = !inDblQuote;
+				}
 				continue;
 			case '\'':
-				if (inDblQuote)
+				if (inDblQuote) {
 					r.append(b);
-				else
+				} else {
 					inquote = !inquote;
+				}
 				continue;
 			case '\\':
-				if (inquote || ip == commandLine.length())
+				if (inquote || (ip == commandLine.length())) {
 					r.append(b); // literal within a quote
-				else
+				} else {
 					r.append(commandLine.charAt(ip++));
+				}
 				continue;
 			default:
 				r.append(b);

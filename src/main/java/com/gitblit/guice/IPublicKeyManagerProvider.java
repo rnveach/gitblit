@@ -30,7 +30,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 /**
- * Provides a lazily-instantiated IPublicKeyManager configured from IStoredSettings.
+ * Provides a lazily-instantiated IPublicKeyManager configured from
+ * IStoredSettings.
  *
  * @author James Moger
  *
@@ -51,22 +52,25 @@ public class IPublicKeyManagerProvider implements Provider<IPublicKeyManager> {
 
 	@Override
 	public synchronized IPublicKeyManager get() {
-		if (manager != null) {
-			return manager;
+		if (this.manager != null) {
+			return this.manager;
 		}
 
-		IStoredSettings settings = runtimeManager.getSettings();
+		final IStoredSettings settings = this.runtimeManager.getSettings();
 		String clazz = settings.getString(Keys.git.sshKeysManager, FileKeyManager.class.getName());
 		if (StringUtils.isEmpty(clazz)) {
 			clazz = FileKeyManager.class.getName();
 		}
 		try {
-			Class<? extends IPublicKeyManager> mgrClass = (Class<? extends IPublicKeyManager>) Class.forName(clazz);
-			manager = runtimeManager.getInjector().getInstance(mgrClass);
-		} catch (Exception e) {
-			logger.error("failed to create public key manager", e);
-			manager = new NullKeyManager();
+			@SuppressWarnings("unchecked")
+			final Class<? extends IPublicKeyManager> mgrClass = (Class<? extends IPublicKeyManager>) Class
+					.forName(clazz);
+			this.manager = this.runtimeManager.getInjector().getInstance(mgrClass);
 		}
-		return manager;
+		catch (final Exception e) {
+			this.logger.error("failed to create public key manager", e);
+			this.manager = new NullKeyManager();
+		}
+		return this.manager;
 	}
 }

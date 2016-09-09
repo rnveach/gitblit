@@ -46,53 +46,58 @@ public class BlobDiffPage extends RepositoryPage {
 		final String baseObjectId = WicketUtils.getBaseObjectId(params);
 		final DiffComparator diffComparator = WicketUtils.getDiffComparator(params);
 
-		Repository r = getRepository();
-		RevCommit commit = getCommit();
+		final Repository r = getRepository();
+		final RevCommit commit = getCommit();
 
 		final List<String> imageExtensions = app().settings().getStrings(Keys.web.imageExtensions);
 
 		String diff;
 		if (StringUtils.isEmpty(baseObjectId)) {
 			// use first parent
-			RevCommit parent = commit.getParentCount() == 0 ? null : commit.getParent(0);
-			ImageDiffHandler handler = new ImageDiffHandler(this, repositoryName,
+			final RevCommit parent = commit.getParentCount() == 0 ? null : commit.getParent(0);
+			final ImageDiffHandler handler = new ImageDiffHandler(this, this.repositoryName,
 					parent.getName(), commit.getName(), imageExtensions);
-			diff = DiffUtils.getDiff(r, commit, blobPath, diffComparator, DiffOutputType.HTML, handler, 3).content;
+			diff = DiffUtils.getDiff(r, commit, blobPath, diffComparator, DiffOutputType.HTML,
+					handler, 3).content;
 			if (handler.getImgDiffCount() > 0) {
-				addBottomScript("scripts/imgdiff.js"); // Tiny support script for image diffs
+				addBottomScript("scripts/imgdiff.js"); // Tiny support script
+														// for image diffs
 			}
 			add(new BookmarkablePageLink<Void>("patchLink", PatchPage.class,
-					WicketUtils.newPathParameter(repositoryName, objectId, blobPath)));
+					WicketUtils.newPathParameter(this.repositoryName, this.objectId, blobPath)));
 		} else {
 			// base commit specified
-			RevCommit baseCommit = JGitUtils.getCommit(r, baseObjectId);
-			ImageDiffHandler handler = new ImageDiffHandler(this, repositoryName,
+			final RevCommit baseCommit = JGitUtils.getCommit(r, baseObjectId);
+			final ImageDiffHandler handler = new ImageDiffHandler(this, this.repositoryName,
 					baseCommit.getName(), commit.getName(), imageExtensions);
-			diff = DiffUtils.getDiff(r, baseCommit, commit, blobPath, diffComparator, DiffOutputType.HTML, handler, 3).content;
+			diff = DiffUtils.getDiff(r, baseCommit, commit, blobPath, diffComparator,
+					DiffOutputType.HTML, handler, 3).content;
 			if (handler.getImgDiffCount() > 0) {
-				addBottomScript("scripts/imgdiff.js"); // Tiny support script for image diffs
+				addBottomScript("scripts/imgdiff.js"); // Tiny support script
+														// for image diffs
 			}
 			add(new BookmarkablePageLink<Void>("patchLink", PatchPage.class,
-					WicketUtils.newBlobDiffParameter(repositoryName, baseObjectId, objectId,
-							blobPath)));
+					WicketUtils.newBlobDiffParameter(this.repositoryName, baseObjectId,
+							this.objectId, blobPath)));
 		}
 
 		add(new BookmarkablePageLink<Void>("commitLink", CommitPage.class,
-				WicketUtils.newObjectParameter(repositoryName, objectId)));
+				WicketUtils.newObjectParameter(this.repositoryName, this.objectId)));
 		add(new BookmarkablePageLink<Void>("commitDiffLink", CommitDiffPage.class,
-				WicketUtils.newObjectParameter(repositoryName, objectId)));
-		add(new LinkPanel("whitespaceLink", null, getString(diffComparator.getOpposite().getTranslationKey()),
-				BlobDiffPage.class, WicketUtils.newDiffParameter(repositoryName, objectId, diffComparator.getOpposite(), blobPath)));
+				WicketUtils.newObjectParameter(this.repositoryName, this.objectId)));
+		add(new LinkPanel("whitespaceLink", null, getString(diffComparator.getOpposite()
+				.getTranslationKey()), BlobDiffPage.class, WicketUtils.newDiffParameter(
+				this.repositoryName, this.objectId, diffComparator.getOpposite(), blobPath)));
 
 		// diff page links
 		add(new BookmarkablePageLink<Void>("blameLink", BlamePage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, blobPath)));
+				WicketUtils.newPathParameter(this.repositoryName, this.objectId, blobPath)));
 		add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, blobPath)));
+				WicketUtils.newPathParameter(this.repositoryName, this.objectId, blobPath)));
 
-		add(new CommitHeaderPanel("commitHeader", repositoryName, commit));
+		add(new CommitHeaderPanel("commitHeader", this.repositoryName, commit));
 
-		add(new PathBreadcrumbsPanel("breadcrumbs", repositoryName, blobPath, objectId));
+		add(new PathBreadcrumbsPanel("breadcrumbs", this.repositoryName, blobPath, this.objectId));
 
 		add(new Label("diffText", diff).setEscapeModelStrings(false));
 	}

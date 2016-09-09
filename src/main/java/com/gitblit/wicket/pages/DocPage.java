@@ -31,8 +31,8 @@ import com.gitblit.utils.BugtraqProcessor;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.StringUtils;
 import com.gitblit.wicket.CacheControl;
-import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.CacheControl.LastModified;
+import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.MarkupProcessor;
 import com.gitblit.wicket.MarkupProcessor.MarkupDocument;
 import com.gitblit.wicket.MarkupProcessor.MarkupSyntax;
@@ -45,13 +45,14 @@ public class DocPage extends RepositoryPage {
 		super(params);
 
 		final String path = WicketUtils.getPath(params).replace("%2f", "/").replace("%2F", "/");
-		MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
-		UserModel currentUser = (GitBlitWebSession.get().getUser() != null) ? GitBlitWebSession.get().getUser() : UserModel.ANONYMOUS;
+		final MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
+		final UserModel currentUser = (GitBlitWebSession.get().getUser() != null) ? GitBlitWebSession
+				.get().getUser() : UserModel.ANONYMOUS;
 		final boolean userCanEdit = currentUser.canEdit(getRepositoryModel());
-		
-		Repository r = getRepository();
-		RevCommit commit = JGitUtils.getCommit(r, objectId);
-		String [] encodings = getEncodings();
+
+		final Repository r = getRepository();
+		final RevCommit commit = JGitUtils.getCommit(r, this.objectId);
+		final String[] encodings = getEncodings();
 
 		// Read raw markup content and transform it to html
 		String documentPath = path;
@@ -59,11 +60,11 @@ public class DocPage extends RepositoryPage {
 
 		// Hunt for document
 		if (StringUtils.isEmpty(markupText)) {
-			String name = StringUtils.stripFileExtension(path);
+			final String name = StringUtils.stripFileExtension(path);
 
-			List<String> docExtensions = processor.getAllExtensions();
-			for (String ext : docExtensions) {
-				String checkName = name + "." + ext;
+			final List<String> docExtensions = processor.getAllExtensions();
+			for (final String ext : docExtensions) {
+				final String checkName = name + "." + ext;
 				markupText = JGitUtils.getStringContent(r, commit.getTree(), checkName, encodings);
 				if (!StringUtils.isEmpty(markupText)) {
 					// found it
@@ -77,11 +78,12 @@ public class DocPage extends RepositoryPage {
 			markupText = "";
 		}
 
-		BugtraqProcessor bugtraq = new BugtraqProcessor(app().settings());
-		markupText = bugtraq.processText(getRepository(), repositoryName, markupText);
+		final BugtraqProcessor bugtraq = new BugtraqProcessor(app().settings());
+		markupText = bugtraq.processText(getRepository(), this.repositoryName, markupText);
 
 		Fragment fragment;
-		MarkupDocument markupDoc = processor.parse(repositoryName, getBestCommitId(commit), documentPath, markupText);
+		final MarkupDocument markupDoc = processor.parse(this.repositoryName,
+				getBestCommitId(commit), documentPath, markupText);
 		if (MarkupSyntax.PLAIN.equals(markupDoc.syntax)) {
 			fragment = new Fragment("doc", "plainContent", this);
 		} else {
@@ -89,14 +91,15 @@ public class DocPage extends RepositoryPage {
 		}
 
 		// document page links
-		fragment.add(new BookmarkablePageLink<Void>("editLink", EditFilePage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, documentPath))
+		fragment.add(new BookmarkablePageLink<Void>("editLink", EditFilePage.class, WicketUtils
+				.newPathParameter(this.repositoryName, this.objectId, documentPath))
 				.setEnabled(userCanEdit));
-		fragment.add(new BookmarkablePageLink<Void>("blameLink", BlamePage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, documentPath)));
-		fragment.add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, documentPath)));
-		String rawUrl = RawServlet.asLink(getContextUrl(), repositoryName, objectId, documentPath);
+		fragment.add(new BookmarkablePageLink<Void>("blameLink", BlamePage.class, WicketUtils
+				.newPathParameter(this.repositoryName, this.objectId, documentPath)));
+		fragment.add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class, WicketUtils
+				.newPathParameter(this.repositoryName, this.objectId, documentPath)));
+		final String rawUrl = RawServlet.asLink(getContextUrl(), this.repositoryName,
+				this.objectId, documentPath);
 		fragment.add(new ExternalLink("rawLink", rawUrl));
 
 		fragment.add(new Label("content", markupDoc.html).setEscapeModelStrings(false));

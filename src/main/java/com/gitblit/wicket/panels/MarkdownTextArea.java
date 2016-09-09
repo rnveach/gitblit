@@ -66,16 +66,17 @@ public class MarkdownTextArea extends TextArea {
 	}
 
 	protected void renderPreview(IModel<String> previewModel) {
-		if (text == null) {
+		if (this.text == null) {
 			return;
 		}
-		String html = MarkdownUtils.transformGFM(GitBlitWebApp.get().settings(), text, repositoryName);
-		String safeHtml = GitBlitWebApp.get().xssFilter().relaxed(html);
+		final String html = MarkdownUtils.transformGFM(GitBlitWebApp.get().settings(), this.text,
+				this.repositoryName);
+		final String safeHtml = GitBlitWebApp.get().xssFilter().relaxed(html);
 		previewModel.setObject(safeHtml);
 	}
 
 	public String getText() {
-		return text;
+		return this.text;
 	}
 
 	public void setText(String text) {
@@ -86,20 +87,22 @@ public class MarkdownTextArea extends TextArea {
 		this.repositoryName = repositoryName;
 	}
 
-//	@Override
-//	protected void onBeforeRender() {
-//		super.onBeforeRender();
-//		add(new RichTextSetActiveTextFieldAttributeModifier(this.getMarkupId()));
-//	}
-//
-//	private class RichTextSetActiveTextFieldAttributeModifier extends AttributeModifier {
-//
-//		private static final long serialVersionUID = 1L;
-//
-//		public RichTextSetActiveTextFieldAttributeModifier(String markupId) {
-//			super("onClick", true, new Model("richTextSetActiveTextField('" + markupId + "');"));
-//		}
-//	}
+	// @Override
+	// protected void onBeforeRender() {
+	// super.onBeforeRender();
+	// add(new RichTextSetActiveTextFieldAttributeModifier(this.getMarkupId()));
+	// }
+	//
+	// private class RichTextSetActiveTextFieldAttributeModifier extends
+	// AttributeModifier {
+	//
+	// private static final long serialVersionUID = 1L;
+	//
+	// public RichTextSetActiveTextFieldAttributeModifier(String markupId) {
+	// super("onClick", true, new Model("richTextSetActiveTextField('" +
+	// markupId + "');"));
+	// }
+	// }
 
 	private class KeepAliveBehavior extends AbstractAjaxTimerBehavior {
 

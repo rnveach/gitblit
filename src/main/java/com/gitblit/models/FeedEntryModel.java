@@ -43,12 +43,12 @@ public class FeedEntryModel implements Serializable, Comparable<FeedEntryModel> 
 
 	@Override
 	public int compareTo(FeedEntryModel o) {
-		return o.published.compareTo(published);
+		return o.published.compareTo(this.published);
 	}
 
 	@Override
 	public int hashCode() {
-		return link.hashCode();
+		return this.link.hashCode();
 	}
 
 	@Override

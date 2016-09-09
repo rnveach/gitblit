@@ -41,7 +41,6 @@ public abstract class NavLink implements Serializable {
 		this.hiddenPhone = hiddenPhone;
 	}
 
-
 	/**
 	 * Represents a Wicket page link.
 	 *
@@ -89,7 +88,7 @@ public abstract class NavLink implements Serializable {
 		}
 
 		public ExternalNavLink(String keyOrText, String url, boolean hiddenPhone) {
-			super(keyOrText,  hiddenPhone);
+			super(keyOrText, hiddenPhone);
 			this.url = url;
 		}
 	}
@@ -110,9 +109,10 @@ public abstract class NavLink implements Serializable {
 			this(keyOrText, pageClass, false);
 		}
 
-		public DropDownPageMenuNavLink(String keyOrText, Class<? extends WebPage> pageClass, boolean hiddenPhone) {
+		public DropDownPageMenuNavLink(String keyOrText, Class<? extends WebPage> pageClass,
+				boolean hiddenPhone) {
 			super(keyOrText, pageClass, null, hiddenPhone);
-			menuItems = new ArrayList<MenuItem>();
+			this.menuItems = new ArrayList<MenuItem>();
 		}
 	}
 
@@ -134,7 +134,7 @@ public abstract class NavLink implements Serializable {
 
 		public DropDownMenuNavLink(String keyOrText, boolean hiddenPhone) {
 			super(keyOrText, hiddenPhone);
-			menuItems = new ArrayList<MenuItem>();
+			this.menuItems = new ArrayList<MenuItem>();
 		}
 	}
 }

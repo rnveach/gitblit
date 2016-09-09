@@ -93,85 +93,92 @@ public abstract class RepositoryPage extends RootPage {
 	private Map<String, SubmoduleModel> submodules;
 
 	private boolean showAdmin;
-	private boolean isOwner;
+	private final boolean isOwner;
 
 	public RepositoryPage(PageParameters params) {
 		super(params);
-		repositoryName = WicketUtils.getRepositoryName(params);
-		String root = StringUtils.getFirstPathElement(repositoryName);
+		this.repositoryName = WicketUtils.getRepositoryName(params);
+		final String root = StringUtils.getFirstPathElement(this.repositoryName);
 		if (StringUtils.isEmpty(root)) {
-			projectName = app().settings().getString(Keys.web.repositoryRootGroupName, "main");
+			this.projectName = app().settings().getString(Keys.web.repositoryRootGroupName, "main");
 		} else {
-			projectName = root;
+			this.projectName = root;
 		}
-		objectId = WicketUtils.getObject(params);
+		this.objectId = WicketUtils.getObject(params);
 
-		if (StringUtils.isEmpty(repositoryName)) {
-			error(MessageFormat.format(getString("gb.repositoryNotSpecifiedFor"), getPageName()), true);
+		if (StringUtils.isEmpty(this.repositoryName)) {
+			error(MessageFormat.format(getString("gb.repositoryNotSpecifiedFor"), getPageName()),
+					true);
 		}
 
-		if (!getRepositoryModel().hasCommits && getClass() != EmptyRepositoryPage.class) {
+		if (!getRepositoryModel().hasCommits && (getClass() != EmptyRepositoryPage.class)) {
 			throw new RestartResponseException(EmptyRepositoryPage.class, params);
 		}
 
 		if (getRepositoryModel().isCollectingGarbage) {
-			error(MessageFormat.format(getString("gb.busyCollectingGarbage"), getRepositoryModel().name), true);
+			error(MessageFormat.format(getString("gb.busyCollectingGarbage"),
+					getRepositoryModel().name), true);
 		}
 
-		if (objectId != null) {
+		if (this.objectId != null) {
 			RefModel branch = null;
-			if ((branch = JGitUtils.getBranch(getRepository(), objectId)) != null) {
+			if ((branch = JGitUtils.getBranch(getRepository(), this.objectId)) != null) {
 				UserModel user = GitBlitWebSession.get().getUser();
 				if (user == null) {
-					// workaround until get().getUser() is reviewed throughout the app
+					// workaround until get().getUser() is reviewed throughout
+					// the app
 					user = UserModel.ANONYMOUS;
 				}
-				boolean canAccess = user.canView(getRepositoryModel(),
-								branch.reference.getName());
+				final boolean canAccess = user.canView(getRepositoryModel(),
+						branch.reference.getName());
 				if (!canAccess) {
 					error(getString("gb.accessDenied"), true);
 				}
 			}
 		}
 
-		if (params.containsKey(PARAM_STAR)) {
+		if (params.containsKey(this.PARAM_STAR)) {
 			// set starred state
-			boolean star = params.getBoolean(PARAM_STAR);
-			UserModel user = GitBlitWebSession.get().getUser();
-			if (user != null && user.isAuthenticated) {
-				UserRepositoryPreferences prefs = user.getPreferences().getRepositoryPreferences(getRepositoryModel().name);
+			final boolean star = params.getBoolean(this.PARAM_STAR);
+			final UserModel user = GitBlitWebSession.get().getUser();
+			if ((user != null) && user.isAuthenticated) {
+				final UserRepositoryPreferences prefs = user.getPreferences()
+						.getRepositoryPreferences(getRepositoryModel().name);
 				prefs.starred = star;
 				try {
 					app().gitblit().reviseUser(user.username, user);
-				} catch (GitBlitException e) {
-					logger.error("Failed to update user " + user.username, e);
+				}
+				catch (final GitBlitException e) {
+					this.logger.error("Failed to update user " + user.username, e);
 					error(getString("gb.failedToUpdateUser"), false);
 				}
 			}
 		}
 
-		showAdmin = false;
+		this.showAdmin = false;
 		if (app().settings().getBoolean(Keys.web.authenticateAdminPages, true)) {
-			boolean allowAdmin = app().settings().getBoolean(Keys.web.allowAdministration, false);
-			showAdmin = allowAdmin && GitBlitWebSession.get().canAdmin();
+			final boolean allowAdmin = app().settings().getBoolean(Keys.web.allowAdministration,
+					false);
+			this.showAdmin = allowAdmin && GitBlitWebSession.get().canAdmin();
 		} else {
-			showAdmin = app().settings().getBoolean(Keys.web.allowAdministration, false);
+			this.showAdmin = app().settings().getBoolean(Keys.web.allowAdministration, false);
 		}
-		isOwner = GitBlitWebSession.get().isLoggedIn()
+		this.isOwner = GitBlitWebSession.get().isLoggedIn()
 				&& (getRepositoryModel().isOwner(GitBlitWebSession.get().getUsername()));
 
 		// register the available navigation links for this page and user
-		List<NavLink> navLinks = registerNavLinks();
+		final List<NavLink> navLinks = registerNavLinks();
 
 		// standard navigation links
-		NavigationPanel navigationPanel = new NavigationPanel("repositoryNavPanel", getRepoNavPageClass(), navLinks);
+		final NavigationPanel navigationPanel = new NavigationPanel("repositoryNavPanel",
+				getRepoNavPageClass(), navLinks);
 		add(navigationPanel);
 
 		add(new ExternalLink("syndication", SyndicationServlet.asLink(getRequest()
 				.getRelativePathPrefixToContextRoot(), getRepositoryName(), null, 0)));
 
 		// add floating search form
-		SearchForm searchForm = new SearchForm("searchForm", getRepositoryName());
+		final SearchForm searchForm = new SearchForm("searchForm", getRepositoryName());
 		add(searchForm);
 		searchForm.setTranslatedAttributes();
 
@@ -193,35 +200,36 @@ public abstract class RepositoryPage extends RootPage {
 	}
 
 	private List<NavLink> registerNavLinks() {
-		Repository r = getRepository();
-		RepositoryModel model = getRepositoryModel();
+		final Repository r = getRepository();
+		final RepositoryModel model = getRepositoryModel();
 
 		PageParameters params = null;
 		PageParameters objectParams = null;
-		if (!StringUtils.isEmpty(repositoryName)) {
+		if (!StringUtils.isEmpty(this.repositoryName)) {
 			params = WicketUtils.newRepositoryParameter(getRepositoryName());
 			objectParams = params;
 
-			// preserve the objectid iff the objectid directly (or indirectly) refers to a ref
-			if (isCommitPage() && !StringUtils.isEmpty(objectId)) {
-				RevCommit commit = JGitUtils.getCommit(r, objectId);
+			// preserve the objectid iff the objectid directly (or indirectly)
+			// refers to a ref
+			if (isCommitPage() && !StringUtils.isEmpty(this.objectId)) {
+				final RevCommit commit = JGitUtils.getCommit(r, this.objectId);
 				if (commit != null) {
-					String bestId = getBestCommitId(commit);
+					final String bestId = getBestCommitId(commit);
 					if (!commit.getName().equals(bestId)) {
 						objectParams = WicketUtils.newObjectParameter(getRepositoryName(), bestId);
 					}
 				}
 			}
 		}
-		List<NavLink> navLinks = new ArrayList<NavLink>();
-
+		final List<NavLink> navLinks = new ArrayList<NavLink>();
 
 		// standard links
 		if (RefLogUtils.getRefLogBranch(r) == null) {
 			navLinks.add(new PageNavLink("gb.summary", SummaryPage.class, params));
 		} else {
 			navLinks.add(new PageNavLink("gb.summary", SummaryPage.class, params));
-			//			pages.put("overview", new PageRegistration("gb.overview", OverviewPage.class, params));
+			// pages.put("overview", new PageRegistration("gb.overview",
+			// OverviewPage.class, params));
 			navLinks.add(new PageNavLink("gb.reflog", ReflogPage.class, params));
 		}
 
@@ -231,8 +239,10 @@ public abstract class RepositoryPage extends RootPage {
 
 		navLinks.add(new PageNavLink("gb.commits", LogPage.class, objectParams));
 		navLinks.add(new PageNavLink("gb.tree", TreePage.class, objectParams));
-		if (app().tickets().isReady() && (app().tickets().isAcceptingNewTickets(model) || app().tickets().hasTickets(model))) {
-			PageParameters tParams = WicketUtils.newOpenTicketsParameter(getRepositoryName());
+		if (app().tickets().isReady()
+				&& (app().tickets().isAcceptingNewTickets(model) || app().tickets().hasTickets(
+						model))) {
+			final PageParameters tParams = WicketUtils.newOpenTicketsParameter(getRepositoryName());
 			navLinks.add(new PageNavLink("gb.tickets", TicketsPage.class, tParams));
 		}
 		navLinks.add(new PageNavLink("gb.docs", DocsPage.class, objectParams, true));
@@ -244,8 +254,9 @@ public abstract class RepositoryPage extends RootPage {
 		// conditional links
 		// per-repository extra navlinks
 		if (JGitUtils.getPagesBranch(r) != null) {
-			ExternalNavLink pagesLink = new ExternalNavLink("gb.pages", PagesServlet.asLink(
-					getRequest().getRelativePathPrefixToContextRoot(), getRepositoryName(), null), true);
+			final ExternalNavLink pagesLink = new ExternalNavLink("gb.pages", PagesServlet.asLink(
+					getRequest().getRelativePathPrefixToContextRoot(), getRepositoryName(), null),
+					true);
 			navLinks.add(pagesLink);
 		}
 
@@ -255,8 +266,9 @@ public abstract class RepositoryPage extends RootPage {
 		}
 
 		// add repository nav link extensions
-		List<RepositoryNavLinkExtension> extensions = app().plugins().getExtensions(RepositoryNavLinkExtension.class);
-		for (RepositoryNavLinkExtension ext : extensions) {
+		final List<RepositoryNavLinkExtension> extensions = app().plugins().getExtensions(
+				RepositoryNavLinkExtension.class);
+		for (final RepositoryNavLinkExtension ext : extensions) {
 			navLinks.addAll(ext.getNavLinks(user, model));
 		}
 
@@ -269,23 +281,27 @@ public abstract class RepositoryPage extends RootPage {
 
 	@Override
 	protected void setupPage(String repositoryName, String pageName) {
-		
-		//This method should only be called once in the page lifecycle.
-		//However, it must be called after the constructor has run, hence not in onInitialize
-		//It may be attempted to be called again if an info or error message is displayed.
-		if (get("projectTitle") != null) { return; }
-		
-		String projectName = StringUtils.getFirstPathElement(repositoryName);
-		ProjectModel project = app().projects().getProjectModel(projectName);
+
+		// This method should only be called once in the page lifecycle.
+		// However, it must be called after the constructor has run, hence not
+		// in onInitialize
+		// It may be attempted to be called again if an info or error message is
+		// displayed.
+		if (get("projectTitle") != null) {
+			return;
+		}
+
+		final String projectName = StringUtils.getFirstPathElement(repositoryName);
+		final ProjectModel project = app().projects().getProjectModel(projectName);
 
 		if (project.isUserProject()) {
 			// user-as-project
-			add(new LinkPanel("projectTitle", null, project.getDisplayName(),
-					UserPage.class, WicketUtils.newUsernameParameter(project.name.substring(1))));
+			add(new LinkPanel("projectTitle", null, project.getDisplayName(), UserPage.class,
+					WicketUtils.newUsernameParameter(project.name.substring(1))));
 		} else {
 			// project
-			add(new LinkPanel("projectTitle", null, project.name,
-					ProjectPage.class, WicketUtils.newProjectParameter(project.name)));
+			add(new LinkPanel("projectTitle", null, project.name, ProjectPage.class,
+					WicketUtils.newProjectParameter(project.name)));
 		}
 
 		String name = StringUtils.stripDotGit(repositoryName);
@@ -301,12 +317,13 @@ public abstract class RepositoryPage extends RootPage {
 		}
 
 		// indicate origin repository
-		RepositoryModel model = getRepositoryModel();
+		final RepositoryModel model = getRepositoryModel();
 		if (StringUtils.isEmpty(model.originRepository)) {
 			if (model.isMirror) {
 				add(new Fragment("repoIcon", "mirrorIconFragment", this));
-				Fragment mirrorFrag = new Fragment("originRepository", "mirrorFragment", this);
-				Label lbl = new Label("originRepository", MessageFormat.format(getString("gb.mirrorOf"), "<b>" + model.origin + "</b>"));
+				final Fragment mirrorFrag = new Fragment("originRepository", "mirrorFragment", this);
+				final Label lbl = new Label("originRepository", MessageFormat.format(
+						getString("gb.mirrorOf"), "<b>" + model.origin + "</b>"));
 				mirrorFrag.add(lbl.setEscapeModelStrings(false));
 				add(mirrorFrag);
 			} else {
@@ -318,7 +335,8 @@ public abstract class RepositoryPage extends RootPage {
 				add(new Label("originRepository", Optional.of(model.description).or("")));
 			}
 		} else {
-			RepositoryModel origin = app().repositories().getRepositoryModel(model.originRepository);
+			final RepositoryModel origin = app().repositories().getRepositoryModel(
+					model.originRepository);
 			if (origin == null) {
 				// no origin repository, show description if available
 				if (model.isBare) {
@@ -330,22 +348,25 @@ public abstract class RepositoryPage extends RootPage {
 			} else if (!user.canView(origin)) {
 				// show origin repository without link
 				add(new Fragment("repoIcon", "forkIconFragment", this));
-				Fragment forkFrag = new Fragment("originRepository", "originFragment", this);
-				forkFrag.add(new Label("originRepository", StringUtils.stripDotGit(model.originRepository)));
+				final Fragment forkFrag = new Fragment("originRepository", "originFragment", this);
+				forkFrag.add(new Label("originRepository", StringUtils
+						.stripDotGit(model.originRepository)));
 				add(forkFrag);
 			} else {
 				// link to origin repository
 				add(new Fragment("repoIcon", "forkIconFragment", this));
-				Fragment forkFrag = new Fragment("originRepository", "originFragment", this);
-				forkFrag.add(new LinkPanel("originRepository", null, StringUtils.stripDotGit(model.originRepository),
-						SummaryPage.class, WicketUtils.newRepositoryParameter(model.originRepository)));
+				final Fragment forkFrag = new Fragment("originRepository", "originFragment", this);
+				forkFrag.add(new LinkPanel("originRepository", null, StringUtils
+						.stripDotGit(model.originRepository), SummaryPage.class, WicketUtils
+						.newRepositoryParameter(model.originRepository)));
 				add(forkFrag);
 			}
 		}
 
 		// new ticket button
 		if (user.isAuthenticated && app().tickets().isAcceptingNewTickets(getRepositoryModel())) {
-			String newTicketUrl = getRequestCycle().urlFor(NewTicketPage.class, WicketUtils.newRepositoryParameter(repositoryName)).toString();
+			final String newTicketUrl = getRequestCycle().urlFor(NewTicketPage.class,
+					WicketUtils.newRepositoryParameter(repositoryName)).toString();
 			addToolbarButton("newTicketLink", "fa fa-ticket", getString("gb.new"), newTicketUrl);
 		} else {
 			add(new Label("newTicketLink").setVisible(false));
@@ -353,13 +374,15 @@ public abstract class RepositoryPage extends RootPage {
 
 		// (un)star link allows a user to star a repository
 		if (user.isAuthenticated && model.hasCommits) {
-			PageParameters starParams = DeepCopier.copy(getPageParameters());
-			starParams.put(PARAM_STAR, !user.getPreferences().isStarredRepository(model.name));
-			String toggleStarUrl = getRequestCycle().urlFor(getClass(), starParams).toString();
+			final PageParameters starParams = DeepCopier.copy(getPageParameters());
+			starParams.put(this.PARAM_STAR, !user.getPreferences().isStarredRepository(model.name));
+			final String toggleStarUrl = getRequestCycle().urlFor(getClass(), starParams)
+					.toString();
 			if (user.getPreferences().isStarredRepository(model.name)) {
 				// show unstar button
 				add(new Label("starLink").setVisible(false));
-				addToolbarButton("unstarLink", "icon-star-empty", getString("gb.unstar"), toggleStarUrl);
+				addToolbarButton("unstarLink", "icon-star-empty", getString("gb.unstar"),
+						toggleStarUrl);
 			} else {
 				// show star button
 				addToolbarButton("starLink", "icon-star", getString("gb.star"), toggleStarUrl);
@@ -377,19 +400,22 @@ public abstract class RepositoryPage extends RootPage {
 			add(new ExternalLink("forkLink", "").setVisible(false));
 			add(new ExternalLink("myForkLink", "").setVisible(false));
 		} else {
-			String fork = app().repositories().getFork(user.username, model.name);
-			String userRepo = ModelUtils.getPersonalPath(user.username) + "/" + StringUtils.stripDotGit(StringUtils.getLastPathElement(model.name));
-			boolean hasUserRepo = app().repositories().hasRepository(userRepo);
-			boolean hasFork = fork != null;
-			boolean canFork = user.canFork(model) && model.hasCommits && !hasUserRepo;
+			final String fork = app().repositories().getFork(user.username, model.name);
+			final String userRepo = ModelUtils.getPersonalPath(user.username) + "/"
+					+ StringUtils.stripDotGit(StringUtils.getLastPathElement(model.name));
+			final boolean hasUserRepo = app().repositories().hasRepository(userRepo);
+			final boolean hasFork = fork != null;
+			final boolean canFork = user.canFork(model) && model.hasCommits && !hasUserRepo;
 
 			if (hasFork || !canFork) {
-				// user not allowed to fork or fork already exists or repo forbids forking
+				// user not allowed to fork or fork already exists or repo
+				// forbids forking
 				add(new ExternalLink("forkLink", "").setVisible(false));
 
 				if (hasFork && !fork.equals(model.name)) {
 					// user has fork, view my fork link
-					String url = getRequestCycle().urlFor(SummaryPage.class, WicketUtils.newRepositoryParameter(fork)).toString();
+					final String url = getRequestCycle().urlFor(SummaryPage.class,
+							WicketUtils.newRepositoryParameter(fork)).toString();
 					add(new ExternalLink("myForkLink", url));
 				} else {
 					// no fork, hide view my fork link
@@ -398,13 +424,15 @@ public abstract class RepositoryPage extends RootPage {
 			} else if (canFork) {
 				// can fork and we do not have one
 				add(new ExternalLink("myForkLink", "").setVisible(false));
-				String url = getRequestCycle().urlFor(ForkPage.class, WicketUtils.newRepositoryParameter(model.name)).toString();
+				final String url = getRequestCycle().urlFor(ForkPage.class,
+						WicketUtils.newRepositoryParameter(model.name)).toString();
 				add(new ExternalLink("forkLink", url));
 			}
 		}
 
-		if (showAdmin || isOwner) {
-			String url = getRequestCycle().urlFor(EditRepositoryPage.class, WicketUtils.newRepositoryParameter(model.name)).toString();
+		if (this.showAdmin || this.isOwner) {
+			final String url = getRequestCycle().urlFor(EditRepositoryPage.class,
+					WicketUtils.newRepositoryParameter(model.name)).toString();
 			add(new ExternalLink("editLink", url));
 		} else {
 			add(new Label("editLink").setVisible(false));
@@ -414,8 +442,8 @@ public abstract class RepositoryPage extends RootPage {
 	}
 
 	protected void addToolbarButton(String wicketId, String iconClass, String label, String url) {
-		Fragment button = new Fragment(wicketId, "toolbarLinkFragment", this);
-		Label icon = new Label("icon");
+		final Fragment button = new Fragment(wicketId, "toolbarLinkFragment", this);
+		final Label icon = new Label("icon");
 		WicketUtils.setCssClass(icon, iconClass);
 		button.add(icon);
 		button.add(new Label("label", label));
@@ -424,40 +452,41 @@ public abstract class RepositoryPage extends RootPage {
 	}
 
 	protected void addSyndicationDiscoveryLink() {
-		add(WicketUtils.syndicationDiscoveryLink(SyndicationServlet.getTitle(repositoryName,
-				objectId), SyndicationServlet.asLink(getRequest()
-				.getRelativePathPrefixToContextRoot(), repositoryName, objectId, 0)));
+		add(WicketUtils.syndicationDiscoveryLink(SyndicationServlet.getTitle(this.repositoryName,
+				this.objectId), SyndicationServlet.asLink(getRequest()
+				.getRelativePathPrefixToContextRoot(), this.repositoryName, this.objectId, 0)));
 	}
 
 	protected Repository getRepository() {
-		if (r == null) {
-			Repository r = app().repositories().getRepository(repositoryName);
+		if (this.r == null) {
+			final Repository r = app().repositories().getRepository(this.repositoryName);
 			if (r == null) {
-				error(getString("gb.canNotLoadRepository") + " " + repositoryName, true);
+				error(getString("gb.canNotLoadRepository") + " " + this.repositoryName, true);
 				return null;
 			}
 			this.r = r;
 		}
-		return r;
+		return this.r;
 	}
 
 	protected RepositoryModel getRepositoryModel() {
-		if (m == null) {
-			RepositoryModel model = app().repositories().getRepositoryModel(
-					GitBlitWebSession.get().getUser(), repositoryName);
+		if (this.m == null) {
+			final RepositoryModel model = app().repositories().getRepositoryModel(
+					GitBlitWebSession.get().getUser(), this.repositoryName);
 			if (model == null) {
-				if (app().repositories().hasRepository(repositoryName, true)) {
+				if (app().repositories().hasRepository(this.repositoryName, true)) {
 					// has repository, but unauthorized
-					authenticationError(getString("gb.unauthorizedAccessForRepository") + " " + repositoryName);
+					authenticationError(getString("gb.unauthorizedAccessForRepository") + " "
+							+ this.repositoryName);
 				} else {
 					// does not have repository
-					error(getString("gb.canNotLoadRepository") + " " + repositoryName, true);
+					error(getString("gb.canNotLoadRepository") + " " + this.repositoryName, true);
 				}
 				return null;
 			}
-			m = model;
+			this.m = model;
 		}
-		return m;
+		return this.m;
 	}
 
 	protected String getRepositoryName() {
@@ -465,11 +494,11 @@ public abstract class RepositoryPage extends RootPage {
 	}
 
 	protected RevCommit getCommit() {
-		RevCommit commit = JGitUtils.getCommit(r, objectId);
+		final RevCommit commit = JGitUtils.getCommit(this.r, this.objectId);
 		if (commit == null) {
-			error(MessageFormat.format(getString("gb.failedToFindCommit"),
-					objectId, repositoryName, getPageName()), null, LogPage.class,
-					WicketUtils.newRepositoryParameter(repositoryName));
+			error(MessageFormat.format(getString("gb.failedToFindCommit"), this.objectId,
+					this.repositoryName, getPageName()), null, LogPage.class,
+					WicketUtils.newRepositoryParameter(this.repositoryName));
 		}
 		getSubmodules(commit);
 		return commit;
@@ -478,18 +507,19 @@ public abstract class RepositoryPage extends RootPage {
 	protected String getBestCommitId(RevCommit commit) {
 		String head = null;
 		try {
-			head = r.resolve(getRepositoryModel().HEAD).getName();
-		} catch (Exception e) {
+			head = this.r.resolve(getRepositoryModel().HEAD).getName();
+		}
+		catch (final Exception e) {
 		}
 
-		String id = commit.getName();
+		final String id = commit.getName();
 		if (!StringUtils.isEmpty(head) && head.equals(id)) {
 			// match default branch
 			return Repository.shortenRefName(getRepositoryModel().HEAD);
 		}
 
 		// find first branch match
-		for (RefModel ref : JGitUtils.getLocalBranches(r, false, -1)) {
+		for (final RefModel ref : JGitUtils.getLocalBranches(this.r, false, -1)) {
 			if (ref.getObjectId().getName().equals(id)) {
 				return Repository.shortenRefName(ref.getName());
 			}
@@ -500,19 +530,19 @@ public abstract class RepositoryPage extends RootPage {
 	}
 
 	protected Map<String, SubmoduleModel> getSubmodules(RevCommit commit) {
-		if (submodules == null) {
-			submodules = new HashMap<String, SubmoduleModel>();
-			for (SubmoduleModel model : JGitUtils.getSubmodules(r, commit.getTree())) {
-				submodules.put(model.path, model);
+		if (this.submodules == null) {
+			this.submodules = new HashMap<String, SubmoduleModel>();
+			for (final SubmoduleModel model : JGitUtils.getSubmodules(this.r, commit.getTree())) {
+				this.submodules.put(model.path, model);
 			}
 		}
-		return submodules;
+		return this.submodules;
 	}
 
 	protected SubmoduleModel getSubmodule(String path) {
 		SubmoduleModel model = null;
-		if (submodules != null) {
-			model = submodules.get(path);
+		if (this.submodules != null) {
+			model = this.submodules.get(path);
 		}
 		if (model == null) {
 			// undefined submodule?!
@@ -522,19 +552,22 @@ public abstract class RepositoryPage extends RootPage {
 			return model;
 		} else {
 			// extract the repository name from the clone url
-			List<String> patterns = app().settings().getStrings(Keys.git.submoduleUrlPatterns);
-			String submoduleName = StringUtils.extractRepositoryPath(model.url, patterns.toArray(new String[0]));
+			final List<String> patterns = app().settings()
+					.getStrings(Keys.git.submoduleUrlPatterns);
+			final String submoduleName = StringUtils.extractRepositoryPath(model.url,
+					patterns.toArray(new String[0]));
 
 			// determine the current path for constructing paths relative
 			// to the current repository
 			String currentPath = "";
-			if (repositoryName.indexOf('/') > -1) {
-				currentPath = repositoryName.substring(0, repositoryName.lastIndexOf('/') + 1);
+			if (this.repositoryName.indexOf('/') > -1) {
+				currentPath = this.repositoryName.substring(0,
+						this.repositoryName.lastIndexOf('/') + 1);
 			}
 
 			// try to locate the submodule repository
 			// prefer bare to non-bare names
-			List<String> candidates = new ArrayList<String>();
+			final List<String> candidates = new ArrayList<String>();
 
 			// relative
 			candidates.add(currentPath + StringUtils.stripDotGit(submoduleName));
@@ -542,7 +575,7 @@ public abstract class RepositoryPage extends RootPage {
 
 			// relative, no subfolder
 			if (submoduleName.lastIndexOf('/') > -1) {
-				String name = submoduleName.substring(submoduleName.lastIndexOf('/') + 1);
+				final String name = submoduleName.substring(submoduleName.lastIndexOf('/') + 1);
 				candidates.add(currentPath + StringUtils.stripDotGit(name));
 				candidates.add(candidates.get(candidates.size() - 1) + ".git");
 			}
@@ -553,14 +586,14 @@ public abstract class RepositoryPage extends RootPage {
 
 			// absolute, no subfolder
 			if (submoduleName.lastIndexOf('/') > -1) {
-				String name = submoduleName.substring(submoduleName.lastIndexOf('/') + 1);
+				final String name = submoduleName.substring(submoduleName.lastIndexOf('/') + 1);
 				candidates.add(StringUtils.stripDotGit(name));
 				candidates.add(candidates.get(candidates.size() - 1) + ".git");
 			}
 
 			// create a unique, ordered set of candidate paths
-			Set<String> paths = new LinkedHashSet<String>(candidates);
-			for (String candidate : paths) {
+			final Set<String> paths = new LinkedHashSet<String>(candidates);
+			for (final String candidate : paths) {
 				if (app().repositories().hasRepository(candidate)) {
 					model.hasSubmodule = true;
 					model.gitblitPath = candidate;
@@ -579,16 +612,17 @@ public abstract class RepositoryPage extends RootPage {
 	}
 
 	protected void addRefs(Repository r, RevCommit c) {
-		add(new RefsPanel("refsPanel", repositoryName, c, JGitUtils.getAllRefs(r, getRepositoryModel().showRemoteBranches)));
+		add(new RefsPanel("refsPanel", this.repositoryName, c, JGitUtils.getAllRefs(r,
+				getRepositoryModel().showRemoteBranches)));
 	}
 
 	protected void addFullText(String wicketId, String text) {
-		RepositoryModel model = getRepositoryModel();
-		String content = bugtraqProcessor().processCommitMessage(r, model, text);
+		final RepositoryModel model = getRepositoryModel();
+		final String content = bugtraqProcessor().processCommitMessage(this.r, model, text);
 		String html;
 		switch (model.commitMessageRenderer) {
 		case MARKDOWN:
-			String safeContent = app().xssFilter().relaxed(content);
+			final String safeContent = app().xssFilter().relaxed(content);
 			html = MessageFormat.format("<div class='commit_message'>{0}</div>", safeContent);
 			break;
 		default:
@@ -610,7 +644,7 @@ public abstract class RepositoryPage extends RootPage {
 		String address = identity == null ? "" : identity.getEmailAddress();
 		name = StringUtils.removeNewlines(name);
 		address = StringUtils.removeNewlines(address);
-		boolean showEmail = app().settings().getBoolean(Keys.web.showEmailAddresses, false);
+		final boolean showEmail = app().settings().getBoolean(Keys.web.showEmailAddresses, false);
 		if (!showEmail || StringUtils.isEmpty(name) || StringUtils.isEmpty(address)) {
 			String value = name;
 			if (StringUtils.isEmpty(value)) {
@@ -620,22 +654,24 @@ public abstract class RepositoryPage extends RootPage {
 					value = getString("gb.missingUsername");
 				}
 			}
-			Fragment partial = new Fragment(wicketId, "partialPersonIdent", this);
-			LinkPanel link = new LinkPanel("personName", "list", value, GitSearchPage.class,
-					WicketUtils.newSearchParameter(repositoryName, objectId, value, searchType));
+			final Fragment partial = new Fragment(wicketId, "partialPersonIdent", this);
+			final LinkPanel link = new LinkPanel("personName", "list", value, GitSearchPage.class,
+					WicketUtils.newSearchParameter(this.repositoryName, this.objectId, value,
+							searchType));
 			setPersonSearchTooltip(link, value, searchType);
 			partial.add(link);
 			return partial;
 		} else {
-			Fragment fullPerson = new Fragment(wicketId, "fullPersonIdent", this);
-			LinkPanel nameLink = new LinkPanel("personName", "list", name, GitSearchPage.class,
-					WicketUtils.newSearchParameter(repositoryName, objectId, name, searchType));
+			final Fragment fullPerson = new Fragment(wicketId, "fullPersonIdent", this);
+			final LinkPanel nameLink = new LinkPanel("personName", "list", name,
+					GitSearchPage.class, WicketUtils.newSearchParameter(this.repositoryName,
+							this.objectId, name, searchType));
 			setPersonSearchTooltip(nameLink, name, searchType);
 			fullPerson.add(nameLink);
 
-			LinkPanel addressLink = new LinkPanel("personAddress", "hidden-phone list", "<" + address + ">",
-					GitSearchPage.class, WicketUtils.newSearchParameter(repositoryName, objectId,
-							address, searchType));
+			final LinkPanel addressLink = new LinkPanel("personAddress", "hidden-phone list", "<"
+					+ address + ">", GitSearchPage.class, WicketUtils.newSearchParameter(
+					this.repositoryName, this.objectId, address, searchType));
 			setPersonSearchTooltip(addressLink, address, searchType);
 			fullPerson.add(addressLink);
 			return fullPerson;
@@ -669,15 +705,14 @@ public abstract class RepositoryPage extends RootPage {
 		}
 	}
 
-
 	@Override
 	protected void onBeforeRender() {
 		// dispose of repository object
-		if (r != null) {
-			r.close();
-			r = null;
+		if (this.r != null) {
+			this.r.close();
+			this.r = null;
 		}
-		
+
 		// setup page header and footer
 		setupPage(getRepositoryName(), "/ " + getPageName());
 
@@ -687,18 +722,18 @@ public abstract class RepositoryPage extends RootPage {
 	@Override
 	protected void setLastModified() {
 		if (getClass().isAnnotationPresent(CacheControl.class)) {
-			CacheControl cacheControl = getClass().getAnnotation(CacheControl.class);
+			final CacheControl cacheControl = getClass().getAnnotation(CacheControl.class);
 			switch (cacheControl.value()) {
 			case REPOSITORY:
-				RepositoryModel repository = getRepositoryModel();
+				final RepositoryModel repository = getRepositoryModel();
 				if (repository != null) {
 					setLastModified(repository.lastChange);
 				}
 				break;
 			case COMMIT:
-				RevCommit commit = getCommit();
+				final RevCommit commit = getCommit();
 				if (commit != null) {
-					Date commitDate = JGitUtils.getCommitDate(commit);
+					final Date commitDate = JGitUtils.getCommitDate(commit);
 					setLastModified(commitDate);
 				}
 				break;
@@ -709,23 +744,23 @@ public abstract class RepositoryPage extends RootPage {
 	}
 
 	protected PageParameters newRepositoryParameter() {
-		return WicketUtils.newRepositoryParameter(repositoryName);
+		return WicketUtils.newRepositoryParameter(this.repositoryName);
 	}
 
 	protected PageParameters newCommitParameter() {
-		return WicketUtils.newObjectParameter(repositoryName, objectId);
+		return WicketUtils.newObjectParameter(this.repositoryName, this.objectId);
 	}
 
 	protected PageParameters newCommitParameter(String commitId) {
-		return WicketUtils.newObjectParameter(repositoryName, commitId);
+		return WicketUtils.newObjectParameter(this.repositoryName, commitId);
 	}
 
 	public boolean isShowAdmin() {
-		return showAdmin;
+		return this.showAdmin;
 	}
 
 	public boolean isOwner() {
-		return isOwner;
+		return this.isOwner;
 	}
 
 	private class SearchForm extends SessionlessForm<Void> implements Serializable {
@@ -739,34 +774,36 @@ public abstract class RepositoryPage extends RootPage {
 				Constants.SearchType.COMMIT);
 
 		public SearchForm(String id, String repositoryName) {
-			super(id, RepositoryPage.this.getClass(), RepositoryPage.this.getPageParameters());
+			super(id, RepositoryPage.this.getClass(), getPageParameters());
 			this.repositoryName = repositoryName;
-			DropDownChoice<Constants.SearchType> searchType = new DropDownChoice<Constants.SearchType>(
+			final DropDownChoice<Constants.SearchType> searchType = new DropDownChoice<Constants.SearchType>(
 					"searchType", Arrays.asList(Constants.SearchType.values()));
-			searchType.setModel(searchTypeModel);
-			add(searchType.setVisible(app().settings().getBoolean(Keys.web.showSearchTypeSelection, false)));
-			TextField<String> searchBox = new TextField<String>("searchBox", searchBoxModel);
+			searchType.setModel(this.searchTypeModel);
+			add(searchType.setVisible(app().settings().getBoolean(Keys.web.showSearchTypeSelection,
+					false)));
+			final TextField<String> searchBox = new TextField<String>("searchBox",
+					this.searchBoxModel);
 			add(searchBox);
 		}
 
 		void setTranslatedAttributes() {
 			WicketUtils.setHtmlTooltip(get("searchType"), getString("gb.searchTypeTooltip"));
 			WicketUtils.setHtmlTooltip(get("searchBox"),
-					MessageFormat.format(getString("gb.searchTooltip"), repositoryName));
+					MessageFormat.format(getString("gb.searchTooltip"), this.repositoryName));
 			WicketUtils.setInputPlaceholder(get("searchBox"), getString("gb.search"));
 		}
 
 		@Override
 		public void onSubmit() {
-			Constants.SearchType searchType = searchTypeModel.getObject();
-			String searchString = searchBoxModel.getObject();
+			Constants.SearchType searchType = this.searchTypeModel.getObject();
+			String searchString = this.searchBoxModel.getObject();
 			if (StringUtils.isEmpty(searchString)) {
 				// redirect to self to avoid wicket page update bug
-				String absoluteUrl = getCanonicalUrl();
+				final String absoluteUrl = getCanonicalUrl();
 				getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
 				return;
 			}
-			for (Constants.SearchType type : Constants.SearchType.values()) {
+			for (final Constants.SearchType type : Constants.SearchType.values()) {
 				if (searchString.toLowerCase().startsWith(type.name().toLowerCase() + ":")) {
 					searchType = type;
 					searchString = searchString.substring(type.name().toLowerCase().length() + 1)
@@ -775,7 +812,8 @@ public abstract class RepositoryPage extends RootPage {
 				}
 			}
 			Class<? extends BasePage> searchPageClass = GitSearchPage.class;
-			RepositoryModel model = app().repositories().getRepositoryModel(repositoryName);
+			final RepositoryModel model = app().repositories().getRepositoryModel(
+					this.repositoryName);
 			if (app().settings().getBoolean(Keys.web.allowLuceneIndexing, true)
 					&& !ArrayUtils.isEmpty(model.indexedBranches)) {
 				// this repository is Lucene-indexed
@@ -783,8 +821,9 @@ public abstract class RepositoryPage extends RootPage {
 			}
 			// use an absolute url to workaround Wicket-Tomcat problems with
 			// mounted url parameters (issue-111)
-			PageParameters params = WicketUtils.newSearchParameter(repositoryName, null, searchString, searchType);
-			String absoluteUrl = getCanonicalUrl(searchPageClass, params);
+			final PageParameters params = WicketUtils.newSearchParameter(this.repositoryName, null,
+					searchString, searchType);
+			final String absoluteUrl = getCanonicalUrl(searchPageClass, params);
 			getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
 		}
 	}

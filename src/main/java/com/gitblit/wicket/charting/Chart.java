@@ -30,7 +30,7 @@ import com.gitblit.wicket.GitBlitWebSession;
  * Abstract parent class for different type of chart: bar, pie & line
  *
  * @author James Moger
- *
+ * 
  */
 public abstract class Chart implements Serializable {
 
@@ -54,9 +54,9 @@ public abstract class Chart implements Serializable {
 		this.title = title;
 		this.keyName = keyName;
 		this.valueName = valueName;
-		values = new ArrayList<ChartValue>();
-		highlights = new ArrayList<ChartValue>();
-		showLegend = true;
+		this.values = new ArrayList<ChartValue>();
+		this.highlights = new ArrayList<ChartValue>();
+		this.showLegend = true;
 	}
 
 	public void setWidth(int width) {
@@ -72,23 +72,23 @@ public abstract class Chart implements Serializable {
 	}
 
 	public void addValue(String name, int value) {
-		values.add(new ChartValue(name, value));
+		this.values.add(new ChartValue(name, value));
 	}
 
 	public void addValue(String name, float value) {
-		values.add(new ChartValue(name, value));
+		this.values.add(new ChartValue(name, value));
 	}
 
 	public void addValue(String name, double value) {
-		values.add(new ChartValue(name, (float) value));
+		this.values.add(new ChartValue(name, (float) value));
 	}
-	
+
 	public void addValue(Date date, int value) {
-		values.add(new ChartValue(String.valueOf(date.getTime()), value));
+		this.values.add(new ChartValue(String.valueOf(date.getTime()), value));
 	}
-	
+
 	public void addHighlight(Date date, int value) {
-		highlights.add(new ChartValue(String.valueOf(date.getTime()), value));
+		this.highlights.add(new ChartValue(String.valueOf(date.getTime()), value));
 	}
 
 	protected abstract void appendChart(StringBuilder sb);
@@ -97,10 +97,10 @@ public abstract class Chart implements Serializable {
 		sb.append(line);
 		sb.append('\n');
 	}
-	
+
 	protected TimeZone getTimeZone() {
-		return  GitBlitWebApp.get().settings().getBoolean(Keys.web.useClientTimezone, false) ? GitBlitWebSession.get()
-				.getTimezone() :  GitBlitWebApp.get().getTimezone();
+		return GitBlitWebApp.get().settings().getBoolean(Keys.web.useClientTimezone, false) ? GitBlitWebSession
+				.get().getTimezone() : GitBlitWebApp.get().getTimezone();
 	}
 
 	protected class ChartValue implements Serializable, Comparable<ChartValue> {
@@ -118,9 +118,9 @@ public abstract class Chart implements Serializable {
 		@Override
 		public int compareTo(ChartValue o) {
 			// sorts the dataset by largest value first
-			if (value > o.value) {
+			if (this.value > o.value) {
 				return -1;
-			} else if (value < o.value) {
+			} else if (this.value < o.value) {
 				return 1;
 			}
 			return 0;
@@ -128,7 +128,7 @@ public abstract class Chart implements Serializable {
 	}
 
 	public String getDateFormat() {
-		return dateFormat;
+		return this.dateFormat;
 	}
 
 	public void setDateFormat(String dateFormat) {
@@ -136,7 +136,7 @@ public abstract class Chart implements Serializable {
 	}
 
 	public String getClickUrl() {
-		return clickUrl;
+		return this.clickUrl;
 	}
 
 	public void setClickUrl(String clickUrl) {

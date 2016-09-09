@@ -16,7 +16,6 @@
 package com.gitblit.client;
 
 import java.awt.Component;
-import java.io.Serializable;
 
 import javax.swing.JCheckBox;
 import javax.swing.JTable;
@@ -29,7 +28,7 @@ import javax.swing.table.TableCellRenderer;
  * @author James Moger
  *
  */
-public class BooleanCellRenderer extends JCheckBox implements TableCellRenderer, Serializable {
+public class BooleanCellRenderer extends JCheckBox implements TableCellRenderer {
 
 	private static final long serialVersionUID = 1L;
 
@@ -43,8 +42,8 @@ public class BooleanCellRenderer extends JCheckBox implements TableCellRenderer,
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 			boolean hasFocus, int row, int column) {
 		if (value instanceof Boolean) {
-			boolean checked = (Boolean) value;
-			this.setSelected(checked);
+			final boolean checked = (Boolean) value;
+			setSelected(checked);
 		}
 		return this;
 	}

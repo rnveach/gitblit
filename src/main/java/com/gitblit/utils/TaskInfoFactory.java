@@ -15,5 +15,5 @@
 package com.gitblit.utils;
 
 public interface TaskInfoFactory<T> {
-  T getTaskInfo(WorkQueue.Task<?> task);
+	T getTaskInfo(WorkQueue.Task<?> task);
 }

@@ -65,8 +65,8 @@ public abstract class SubscriptionsDialog extends JDialog {
 
 	@Override
 	protected JRootPane createRootPane() {
-		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-		JRootPane rootPane = new JRootPane();
+		final KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+		final JRootPane rootPane = new JRootPane();
 		rootPane.registerKeyboardAction(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -77,38 +77,42 @@ public abstract class SubscriptionsDialog extends JDialog {
 	}
 
 	private void initialize() {
-		NameRenderer nameRenderer = new NameRenderer();
-		model = new FeedsTableModel(feeds);
-		feedsTable = Utils.newTable(model, Utils.DATE_FORMAT);
-		feedsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+		final NameRenderer nameRenderer = new NameRenderer();
+		this.model = new FeedsTableModel(this.feeds);
+		this.feedsTable = Utils.newTable(this.model, Utils.DATE_FORMAT);
+		this.feedsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
-				int viewRow = feedsTable.getSelectedRow();
+				final int viewRow = SubscriptionsDialog.this.feedsTable.getSelectedRow();
 				if (viewRow == -1) {
 					return;
 				}
-				int modelRow = feedsTable.convertRowIndexToModel(viewRow);
-				FeedModel feed = model.get(modelRow);
+				final int modelRow = SubscriptionsDialog.this.feedsTable
+						.convertRowIndexToModel(viewRow);
+				final FeedModel feed = SubscriptionsDialog.this.model.get(modelRow);
 				feed.subscribed = !feed.subscribed;
-				model.fireTableDataChanged();
+				SubscriptionsDialog.this.model.fireTableDataChanged();
 			}
 		});
 
-		String repository = feedsTable.getColumnName(FeedsTableModel.Columns.Repository.ordinal());
-		feedsTable.getColumn(repository).setCellRenderer(nameRenderer);
+		final String repository = this.feedsTable.getColumnName(FeedsTableModel.Columns.Repository
+				.ordinal());
+		this.feedsTable.getColumn(repository).setCellRenderer(nameRenderer);
 
-		String branch = feedsTable.getColumnName(FeedsTableModel.Columns.Branch.ordinal());
-		feedsTable.getColumn(branch).setCellRenderer(new BranchRenderer());
+		final String branch = this.feedsTable.getColumnName(FeedsTableModel.Columns.Branch
+				.ordinal());
+		this.feedsTable.getColumn(branch).setCellRenderer(new BranchRenderer<String>());
 
-		String subscribed = feedsTable.getColumnName(FeedsTableModel.Columns.Subscribed.ordinal());
-		feedsTable.getColumn(subscribed).setCellRenderer(new BooleanCellRenderer());
-		feedsTable.getColumn(subscribed).setMinWidth(30);
-		feedsTable.getColumn(subscribed).setMaxWidth(30);
+		final String subscribed = this.feedsTable.getColumnName(FeedsTableModel.Columns.Subscribed
+				.ordinal());
+		this.feedsTable.getColumn(subscribed).setCellRenderer(new BooleanCellRenderer());
+		this.feedsTable.getColumn(subscribed).setMinWidth(30);
+		this.feedsTable.getColumn(subscribed).setMaxWidth(30);
 
-		Utils.packColumns(feedsTable, 5);
+		Utils.packColumns(this.feedsTable, 5);
 
 		final JButton cancel = new JButton(Translation.get("gb.cancel"));
 		cancel.addActionListener(new ActionListener() {
@@ -126,7 +130,7 @@ public abstract class SubscriptionsDialog extends JDialog {
 			}
 		});
 
-		feedsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+		this.feedsTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (e.getValueIsAdjusting()) {
@@ -135,12 +139,12 @@ public abstract class SubscriptionsDialog extends JDialog {
 			}
 		});
 
-		JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+		final JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
 		controls.add(cancel);
 		controls.add(save);
 
 		final Insets insets = new Insets(5, 5, 5, 5);
-		JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
+		final JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -151,7 +155,7 @@ public abstract class SubscriptionsDialog extends JDialog {
 		};
 		centerPanel.add(new HeaderPanel(Translation.get("gb.subscribe") + "...", "feed_16x16.png"),
 				BorderLayout.NORTH);
-		centerPanel.add(new JScrollPane(feedsTable), BorderLayout.CENTER);
+		centerPanel.add(new JScrollPane(this.feedsTable), BorderLayout.CENTER);
 		centerPanel.add(controls, BorderLayout.SOUTH);
 
 		getContentPane().setLayout(new BorderLayout(5, 5));

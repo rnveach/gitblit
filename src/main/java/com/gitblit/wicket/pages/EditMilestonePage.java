@@ -66,10 +66,11 @@ public class EditMilestonePage extends RepositoryPage {
 	public EditMilestonePage(PageParameters params) {
 		super(params);
 
-		RepositoryModel model = getRepositoryModel();
+		final RepositoryModel model = getRepositoryModel();
 		if (!app().tickets().isAcceptingTicketUpdates(model)) {
 			// ticket service is read-only
-			throw new RestartResponseException(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+			throw new RestartResponseException(TicketsPage.class,
+					WicketUtils.newOpenTicketsParameter(this.repositoryName));
 		}
 
 		UserModel currentUser = GitBlitWebSession.get().getUser();
@@ -79,41 +80,44 @@ public class EditMilestonePage extends RepositoryPage {
 
 		if (!currentUser.isAuthenticated || !currentUser.canAdmin(model)) {
 			// administration prohibited
-			throw new RestartResponseException(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+			throw new RestartResponseException(TicketsPage.class,
+					WicketUtils.newOpenTicketsParameter(this.repositoryName));
 		}
 
-		oldName = WicketUtils.getObject(params);
-		if (StringUtils.isEmpty(oldName)) {
+		this.oldName = WicketUtils.getObject(params);
+		if (StringUtils.isEmpty(this.oldName)) {
 			// milestone not specified
-			throw new RestartResponseException(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+			throw new RestartResponseException(TicketsPage.class,
+					WicketUtils.newOpenTicketsParameter(this.repositoryName));
 		}
 
-		TicketMilestone tm = app().tickets().getMilestone(getRepositoryModel(), oldName);
+		final TicketMilestone tm = app().tickets().getMilestone(getRepositoryModel(), this.oldName);
 		if (tm == null) {
 			// milestone does not exist
-			throw new RestartResponseException(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+			throw new RestartResponseException(TicketsPage.class,
+					WicketUtils.newOpenTicketsParameter(this.repositoryName));
 		}
 
 		setStatelessHint(false);
 		setOutputMarkupId(true);
 
-		Form<Void> form = new Form<Void>("editForm");
+		final Form<Void> form = new Form<Void>("editForm");
 		add(form);
 
-		nameModel = Model.of(tm.name);
-		dueModel = Model.of(tm.due);
-		statusModel = Model.of(tm.status);
-		notificationModel = Model.of(true);
+		this.nameModel = Model.of(tm.name);
+		this.dueModel = Model.of(tm.due);
+		this.statusModel = Model.of(tm.status);
+		this.notificationModel = Model.of(true);
 
-		form.add(new TextField<String>("name", nameModel));
-		form.add(new Html5DateField("due", dueModel, "yyyy-MM-dd"));
+		form.add(new TextField<String>("name", this.nameModel));
+		form.add(new Html5DateField("due", this.dueModel, "yyyy-MM-dd"));
 		form.add(new Label("dueFormat", "yyyy-MM-dd"));
-		form.add(new CheckBox("notify", notificationModel));
+		form.add(new CheckBox("notify", this.notificationModel));
 		addBottomScriptInline("{var e=document.createElement('input');e.type='date';if(e.type=='date'){$('[name=\"due\"]~.help-inline').hide()}}");
 		addBottomScript("scripts/wicketHtml5Patch.js");
-		
-		List<Status> statusChoices = Arrays.asList(Status.Open, Status.Closed);
-		form.add(new DropDownChoice<TicketModel.Status>("status", statusModel, statusChoices));
+
+		final List<Status> statusChoices = Arrays.asList(Status.Open, Status.Closed);
+		form.add(new DropDownChoice<TicketModel.Status>("status", this.statusModel, statusChoices));
 
 		form.add(new AjaxButton("save") {
 
@@ -121,67 +125,75 @@ public class EditMilestonePage extends RepositoryPage {
 
 			@Override
 			protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
-				String name = nameModel.getObject();
+				final String name = EditMilestonePage.this.nameModel.getObject();
 				if (StringUtils.isEmpty(name)) {
 					return;
 				}
 
-				Date due = dueModel.getObject();
-				Status status = statusModel.getObject();
-				boolean rename = !name.equals(oldName);
-				boolean notify = notificationModel.getObject();
+				final Date due = EditMilestonePage.this.dueModel.getObject();
+				final Status status = EditMilestonePage.this.statusModel.getObject();
+				final boolean rename = !name.equals(EditMilestonePage.this.oldName);
+				final boolean notify = EditMilestonePage.this.notificationModel.getObject();
 
-				UserModel currentUser = GitBlitWebSession.get().getUser();
-				String createdBy = currentUser.username;
+				final UserModel currentUser = GitBlitWebSession.get().getUser();
+				final String createdBy = currentUser.username;
 
-				TicketMilestone tm = app().tickets().getMilestone(getRepositoryModel(), oldName);
+				final TicketMilestone tm = app().tickets().getMilestone(getRepositoryModel(),
+						EditMilestonePage.this.oldName);
 				tm.setName(name);
 				tm.setDue(due);
 				tm.status = status;
 
 				boolean success = true;
 				if (rename) {
-					success = app().tickets().renameMilestone(getRepositoryModel(), oldName, name, createdBy, notify);
+					success = app().tickets().renameMilestone(getRepositoryModel(),
+							EditMilestonePage.this.oldName, name, createdBy, notify);
 				}
 
 				if (success && app().tickets().updateMilestone(getRepositoryModel(), tm, createdBy)) {
-					redirectTo(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+					redirectTo(TicketsPage.class, WicketUtils
+							.newOpenTicketsParameter(EditMilestonePage.this.repositoryName));
 				} else {
 					// TODO error
 				}
 			}
 		});
-		Button cancel = new Button("cancel") {
+		final Button cancel = new Button("cancel") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onSubmit() {
-				setResponsePage(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+				setResponsePage(TicketsPage.class,
+						WicketUtils.newOpenTicketsParameter(EditMilestonePage.this.repositoryName));
 			}
 		};
 		cancel.setDefaultFormProcessing(false);
 		form.add(cancel);
 
-		Link<Void> delete = new Link<Void>("delete") {
+		final Link<Void> delete = new Link<Void>("delete") {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onClick() {
-				UserModel currentUser = GitBlitWebSession.get().getUser();
-				String createdBy = currentUser.username;
-				boolean notify = notificationModel.getObject();
+				final UserModel currentUser = GitBlitWebSession.get().getUser();
+				final String createdBy = currentUser.username;
+				final boolean notify = EditMilestonePage.this.notificationModel.getObject();
 
-				if (app().tickets().deleteMilestone(getRepositoryModel(), oldName, createdBy, notify)) {
-					setResponsePage(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+				if (app().tickets().deleteMilestone(getRepositoryModel(),
+						EditMilestonePage.this.oldName, createdBy, notify)) {
+					setResponsePage(TicketsPage.class,
+							WicketUtils
+									.newOpenTicketsParameter(EditMilestonePage.this.repositoryName));
 				} else {
-					error(MessageFormat.format(getString("gb.milestoneDeleteFailed"), oldName));
+					error(MessageFormat.format(getString("gb.milestoneDeleteFailed"),
+							EditMilestonePage.this.oldName));
 				}
 			}
 		};
 
 		delete.add(new JavascriptEventConfirmation("onclick", MessageFormat.format(
-			getString("gb.deleteMilestone"), oldName)));
+				getString("gb.deleteMilestone"), this.oldName)));
 
 		form.add(delete);
 	}

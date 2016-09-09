@@ -15,19 +15,15 @@
  */
 package com.gitblit.models;
 
-import java.io.IOException;
 import java.io.Serializable;
 
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-import com.gitblit.manager.FilestoreManager;
 import com.gitblit.utils.JGitUtils;
 
 /**
@@ -49,8 +45,9 @@ public class PathModel implements Serializable, Comparable<PathModel> {
 	public final String objectId;
 	public final String commitId;
 	public boolean isParentPath;
-	
-	public PathModel(String name, String path, FilestoreModel filestoreItem, long size, int mode, String objectId, String commitId) {
+
+	public PathModel(String name, String path, FilestoreModel filestoreItem, long size, int mode,
+			String objectId, String commitId) {
 		this.name = name;
 		this.path = path;
 		this.filestoreItem = filestoreItem;
@@ -61,44 +58,44 @@ public class PathModel implements Serializable, Comparable<PathModel> {
 	}
 
 	public boolean isSymlink() {
-		return FileMode.SYMLINK.equals(mode);
+		return FileMode.SYMLINK.equals(this.mode);
 	}
 
 	public boolean isSubmodule() {
-		return FileMode.GITLINK.equals(mode);
+		return FileMode.GITLINK.equals(this.mode);
 	}
 
 	public boolean isTree() {
-		return FileMode.TREE.equals(mode);
+		return FileMode.TREE.equals(this.mode);
 	}
 
 	public boolean isFile() {
-		return FileMode.REGULAR_FILE.equals(mode)
-				|| FileMode.EXECUTABLE_FILE.equals(mode)
-				|| (FileMode.MISSING.equals(mode) && !isSymlink() && !isSubmodule() && !isTree());
+		return FileMode.REGULAR_FILE.equals(this.mode)
+				|| FileMode.EXECUTABLE_FILE.equals(this.mode)
+				|| (FileMode.MISSING.equals(this.mode) && !isSymlink() && !isSubmodule() && !isTree());
 	}
-	
+
 	public boolean isFilestoreItem() {
-		return filestoreItem != null;
+		return this.filestoreItem != null;
 	}
-	
+
 	public String getFilestoreOid() {
-		if (filestoreItem != null) {
-			return filestoreItem.oid;
+		if (this.filestoreItem != null) {
+			return this.filestoreItem.oid;
 		}
-		
+
 		return null;
 	}
 
 	@Override
 	public int hashCode() {
-		return commitId.hashCode() + path.hashCode();
+		return this.commitId.hashCode() + this.path.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof PathModel) {
-			PathModel other = (PathModel) o;
+			final PathModel other = (PathModel) o;
 			return this.path.equals(other.path);
 		}
 		return super.equals(o);
@@ -106,19 +103,19 @@ public class PathModel implements Serializable, Comparable<PathModel> {
 
 	@Override
 	public int compareTo(PathModel o) {
-		boolean isTree = isTree();
-		boolean otherTree = o.isTree();
+		final boolean isTree = isTree();
+		final boolean otherTree = o.isTree();
 		if (isTree && otherTree) {
-			return path.compareTo(o.path);
+			return this.path.compareTo(o.path);
 		} else if (!isTree && !otherTree) {
 			if (isSubmodule() && o.isSubmodule()) {
-				return path.compareTo(o.path);
+				return this.path.compareTo(o.path);
 			} else if (isSubmodule()) {
 				return -1;
 			} else if (o.isSubmodule()) {
 				return 1;
 			}
-			return path.compareTo(o.path);
+			return this.path.compareTo(o.path);
 		} else if (isTree && !otherTree) {
 			return -1;
 		}
@@ -142,8 +139,8 @@ public class PathModel implements Serializable, Comparable<PathModel> {
 
 		public int deletions;
 
-		public PathChangeModel(String name, String path, FilestoreModel filestoreItem, long size, int mode, String objectId,
-				String commitId, ChangeType type) {
+		public PathChangeModel(String name, String path, FilestoreModel filestoreItem, long size,
+				int mode, String objectId, String commitId, ChangeType type) {
 			super(name, path, filestoreItem, size, mode, objectId, commitId);
 			this.changeType = type;
 		}
@@ -151,10 +148,10 @@ public class PathModel implements Serializable, Comparable<PathModel> {
 		public void update(char op) {
 			switch (op) {
 			case '+':
-				insertions++;
+				this.insertions++;
 				break;
 			case '-':
-				deletions++;
+				this.deletions++;
 				break;
 			default:
 				break;
@@ -178,28 +175,31 @@ public class PathModel implements Serializable, Comparable<PathModel> {
 
 			if (repository != null) {
 				try (RevWalk revWalk = new RevWalk(repository)) {
-					size = revWalk.getObjectReader().getObjectSize(diff.getNewId().toObjectId(), Constants.OBJ_BLOB);
-	
+					size = revWalk.getObjectReader().getObjectSize(diff.getNewId().toObjectId(),
+							Constants.OBJ_BLOB);
+
 					if (JGitUtils.isPossibleFilestoreItem(size)) {
-						filestoreItem = JGitUtils.getFilestoreItem(revWalk.getObjectReader().open(diff.getNewId().toObjectId()));
+						filestoreItem = JGitUtils.getFilestoreItem(revWalk.getObjectReader().open(
+								diff.getNewId().toObjectId()));
 					}
-				} catch (Exception e) {
-						e.printStackTrace();
+				}
+				catch (final Exception e) {
+					e.printStackTrace();
 				}
 			}
-			
+
 			if (diff.getChangeType().equals(ChangeType.DELETE)) {
-				pcm = new PathChangeModel(diff.getOldPath(), diff.getOldPath(), filestoreItem, size, diff
-						.getNewMode().getBits(), diff.getOldId().name(), commitId, diff
-						.getChangeType());
+				pcm = new PathChangeModel(diff.getOldPath(), diff.getOldPath(), filestoreItem,
+						size, diff.getNewMode().getBits(), diff.getOldId().name(), commitId,
+						diff.getChangeType());
 			} else if (diff.getChangeType().equals(ChangeType.RENAME)) {
-				pcm = new PathChangeModel(diff.getOldPath(), diff.getNewPath(), filestoreItem, size, diff
-						.getNewMode().getBits(), diff.getNewId().name(), commitId, diff
-						.getChangeType());
+				pcm = new PathChangeModel(diff.getOldPath(), diff.getNewPath(), filestoreItem,
+						size, diff.getNewMode().getBits(), diff.getNewId().name(), commitId,
+						diff.getChangeType());
 			} else {
-				pcm = new PathChangeModel(diff.getNewPath(), diff.getNewPath(), filestoreItem, size, diff
-						.getNewMode().getBits(), diff.getNewId().name(), commitId, diff
-						.getChangeType());
+				pcm = new PathChangeModel(diff.getNewPath(), diff.getNewPath(), filestoreItem,
+						size, diff.getNewMode().getBits(), diff.getNewId().name(), commitId,
+						diff.getChangeType());
 			}
 			return pcm;
 		}

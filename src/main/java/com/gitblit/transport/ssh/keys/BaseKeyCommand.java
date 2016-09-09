@@ -33,13 +33,13 @@ import com.google.common.base.Charsets;
  */
 abstract class BaseKeyCommand extends SshCommand {
 
-	protected List<String> readKeys(List<String> sshKeys)
-			throws UnsupportedEncodingException, IOException {
+	protected List<String> readKeys(List<String> sshKeys) throws UnsupportedEncodingException,
+			IOException {
 		int idx = -1;
-		if (sshKeys.isEmpty() || (idx = sshKeys.indexOf("-")) >= 0) {
+		if (sshKeys.isEmpty() || ((idx = sshKeys.indexOf("-")) >= 0)) {
 			String content = "";
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					in, Charsets.UTF_8));
+			final BufferedReader br = new BufferedReader(new InputStreamReader(this.in,
+					Charsets.UTF_8));
 			String line;
 			while ((line = br.readLine()) != null) {
 				content += line + "\n";
@@ -62,9 +62,9 @@ abstract class BaseKeyCommand extends SshCommand {
 
 	protected SshKey parseKey(String rawData) throws UnloggedFailure {
 		if (rawData.contains("PRIVATE")) {
-			throw new UnloggedFailure(1,  "Please provide a PUBLIC key, not a PRIVATE key!");
+			throw new UnloggedFailure(1, "Please provide a PUBLIC key, not a PRIVATE key!");
 		}
-		SshKey key = new SshKey(rawData);
+		final SshKey key = new SshKey(rawData);
 		return key;
 	}
 }

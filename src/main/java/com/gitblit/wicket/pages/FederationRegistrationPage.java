@@ -35,10 +35,11 @@ public class FederationRegistrationPage extends RootSubPage {
 
 		setStatelessHint(true);
 
-		String url = WicketUtils.getUrlParameter(params);
-		String name = WicketUtils.getNameParameter(params);
+		final String url = WicketUtils.getUrlParameter(params);
+		final String name = WicketUtils.getNameParameter(params);
 
-		FederationModel registration = app().federation().getFederationRegistration(url, name);
+		final FederationModel registration = app().federation()
+				.getFederationRegistration(url, name);
 		if (registration == null) {
 			error(getString("gb.couldNotFindFederationRegistration"), true);
 		}
@@ -50,16 +51,18 @@ public class FederationRegistrationPage extends RootSubPage {
 		add(WicketUtils.getRegistrationImage("typeIcon", registration, this));
 		add(new Label("frequency", registration.frequency));
 		add(new Label("folder", registration.folder));
-		add(new Label("token", showAdmin ? registration.token : "--"));
-		add(WicketUtils.createTimestampLabel("lastPull", registration.lastPull, getTimeZone(), getTimeUtils()));
-		add(WicketUtils.createTimestampLabel("nextPull", registration.nextPull, getTimeZone(), getTimeUtils()));
+		add(new Label("token", this.showAdmin ? registration.token : "--"));
+		add(WicketUtils.createTimestampLabel("lastPull", registration.lastPull, getTimeZone(),
+				getTimeUtils()));
+		add(WicketUtils.createTimestampLabel("nextPull", registration.nextPull, getTimeZone(),
+				getTimeUtils()));
 
-		StringBuilder inclusions = new StringBuilder();
-		for (String inc : registration.inclusions) {
+		final StringBuilder inclusions = new StringBuilder();
+		for (final String inc : registration.inclusions) {
 			inclusions.append(inc).append("<br/>");
 		}
-		StringBuilder exclusions = new StringBuilder();
-		for (String ex : registration.exclusions) {
+		final StringBuilder exclusions = new StringBuilder();
+		for (final String ex : registration.exclusions) {
 			exclusions.append(ex).append("<br/>");
 		}
 
@@ -67,9 +70,9 @@ public class FederationRegistrationPage extends RootSubPage {
 
 		add(new Label("exclusions", exclusions.toString()).setEscapeModelStrings(false));
 
-		List<RepositoryStatus> list = registration.getStatusList();
+		final List<RepositoryStatus> list = registration.getStatusList();
 		Collections.sort(list);
-		DataView<RepositoryStatus> dataView = new DataView<RepositoryStatus>("row",
+		final DataView<RepositoryStatus> dataView = new DataView<RepositoryStatus>("row",
 				new ListDataProvider<RepositoryStatus>(list)) {
 			private static final long serialVersionUID = 1L;
 			private int counter;
@@ -77,7 +80,7 @@ public class FederationRegistrationPage extends RootSubPage {
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
@@ -86,8 +89,8 @@ public class FederationRegistrationPage extends RootSubPage {
 				item.add(WicketUtils.getPullStatusImage("statusIcon", entry.status));
 				item.add(new Label("name", entry.name));
 				item.add(new Label("status", entry.status.name()));
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(dataView);

@@ -68,7 +68,7 @@ public class WicketUtils {
 	}
 
 	public static void setCssBackground(Component container, String value) {
-		String background = MessageFormat.format("background-color:{0};",
+		final String background = MessageFormat.format("background-color:{0};",
 				StringUtils.getColor(value));
 		container.add(new SimpleAttributeModifier("style", background));
 	}
@@ -123,12 +123,12 @@ public class WicketUtils {
 	}
 
 	public static void setAlternatingBackground(Component c, int i) {
-		String clazz = i % 2 == 0 ? "light" : "dark";
+		final String clazz = (i % 2) == 0 ? "light" : "dark";
 		setCssClass(c, clazz);
 	}
 
 	public static Label createAuthorLabel(String wicketId, String author) {
-		Label label = new Label(wicketId, author);
+		final Label label = new Label(wicketId, author);
 		WicketUtils.setHtmlTooltip(label, author);
 		return label;
 	}
@@ -194,8 +194,8 @@ public class WicketUtils {
 			return newImage(wicketId, "file_settings_16x16.png");
 		}
 
-		String ext = StringUtils.getFileExtension(filename).toLowerCase();
-		IStoredSettings settings = GitBlitWebApp.get().settings();
+		final String ext = StringUtils.getFileExtension(filename).toLowerCase();
+		final IStoredSettings settings = GitBlitWebApp.get().settings();
 		if (MarkupProcessor.getMarkupExtensions(settings).contains(ext)) {
 			return newImage(wicketId, "file_world_16x16.png");
 		}
@@ -226,7 +226,7 @@ public class WicketUtils {
 	}
 
 	public static ContextImage newImage(String wicketId, String file, String tooltip) {
-		ContextImage img = new ContextImage(wicketId, file);
+		final ContextImage img = new ContextImage(wicketId, file);
 		if (!StringUtils.isEmpty(tooltip)) {
 			setHtmlTooltip(img, tooltip);
 		}
@@ -234,13 +234,13 @@ public class WicketUtils {
 	}
 
 	public static Label newIcon(String wicketId, String css) {
-		Label lbl = new Label(wicketId);
+		final Label lbl = new Label(wicketId);
 		setCssClass(lbl, css);
 		return lbl;
 	}
 
 	public static Label newBlankIcon(String wicketId) {
-		Label lbl = new Label(wicketId);
+		final Label lbl = new Label(wicketId);
 		setCssClass(lbl, "");
 		lbl.setRenderBodyOnly(true);
 		return lbl;
@@ -251,7 +251,7 @@ public class WicketUtils {
 	}
 
 	public static String getGitblitURL(Request request) {
-		HttpServletRequest req = ((WebRequest) request).getHttpServletRequest();
+		final HttpServletRequest req = ((WebRequest) request).getHttpServletRequest();
 		return HttpUtils.getGitblitURL(req);
 	}
 
@@ -262,9 +262,9 @@ public class WicketUtils {
 
 			@Override
 			public void renderHead(IHeaderResponse response) {
-				String contentType = "application/rss+xml";
+				final String contentType = "application/rss+xml";
 
-				StringBuilder buffer = new StringBuilder();
+				final StringBuilder buffer = new StringBuilder();
 				buffer.append("<link rel=\"alternate\" ");
 				buffer.append("type=\"").append(contentType).append("\" ");
 				buffer.append("title=\"").append(feedTitle).append("\" ");
@@ -275,39 +275,38 @@ public class WicketUtils {
 	}
 
 	public static PageParameters newTokenParameter(String token) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		parameterMap.put("t", token);
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newRegistrationParameter(String url,
-			String name) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newRegistrationParameter(String url, String name) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		parameterMap.put("u", url);
 		parameterMap.put("n", name);
 		return new PageParameters(parameterMap);
 	}
 
 	public static PageParameters newUsernameParameter(String username) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		parameterMap.put("user", username);
 		return new PageParameters(parameterMap);
 	}
 
 	public static PageParameters newTeamnameParameter(String teamname) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		parameterMap.put("team", teamname);
 		return new PageParameters(parameterMap);
 	}
 
 	public static PageParameters newProjectParameter(String projectName) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		parameterMap.put("p", projectName);
 		return new PageParameters(parameterMap);
 	}
 
 	public static PageParameters newRepositoryParameter(String repositoryName) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (!StringUtils.isEmpty(repositoryName)) {
 			parameterMap.put("r", repositoryName);
 		}
@@ -315,14 +314,13 @@ public class WicketUtils {
 	}
 
 	public static PageParameters newObjectParameter(String objectId) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		parameterMap.put("h", objectId);
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newObjectParameter(String repositoryName,
-			String objectId) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newObjectParameter(String repositoryName, String objectId) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (StringUtils.isEmpty(objectId)) {
 			return newRepositoryParameter(repositoryName);
 		}
@@ -331,9 +329,9 @@ public class WicketUtils {
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newDiffParameter(String repositoryName,
-			String objectId, DiffComparator diffComparator) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newDiffParameter(String repositoryName, String objectId,
+			DiffComparator diffComparator) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (StringUtils.isEmpty(objectId)) {
 			return newRepositoryParameter(repositoryName);
 		}
@@ -343,9 +341,9 @@ public class WicketUtils {
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newDiffParameter(String repositoryName,
-			String objectId, DiffComparator diffComparator, String blobPath) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newDiffParameter(String repositoryName, String objectId,
+			DiffComparator diffComparator, String blobPath) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (StringUtils.isEmpty(objectId)) {
 			return newRepositoryParameter(repositoryName);
 		}
@@ -356,17 +354,17 @@ public class WicketUtils {
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newRangeParameter(String repositoryName,
-			String startRange, String endRange) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newRangeParameter(String repositoryName, String startRange,
+			String endRange) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		parameterMap.put("r", repositoryName);
 		parameterMap.put("h", startRange + ".." + endRange);
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newPathParameter(String repositoryName,
-			String objectId, String path) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newPathParameter(String repositoryName, String objectId,
+			String path) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (StringUtils.isEmpty(path)) {
 			return newObjectParameter(repositoryName, objectId);
 		}
@@ -381,9 +379,9 @@ public class WicketUtils {
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newLogPageParameter(String repositoryName,
-			String objectId, int pageNumber) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newLogPageParameter(String repositoryName, String objectId,
+			int pageNumber) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (pageNumber <= 1) {
 			return newObjectParameter(repositoryName, objectId);
 		}
@@ -398,9 +396,9 @@ public class WicketUtils {
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newHistoryPageParameter(String repositoryName,
-			String objectId, String path, int pageNumber) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newHistoryPageParameter(String repositoryName, String objectId,
+			String path, int pageNumber) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (pageNumber <= 1) {
 			return newObjectParameter(repositoryName, objectId);
 		}
@@ -418,21 +416,21 @@ public class WicketUtils {
 	}
 
 	public static PageParameters newFilestorePageParameter(int pageNumber, String filter) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
-		
+		final Map<String, String> parameterMap = new HashMap<String, String>();
+
 		if (pageNumber > 1) {
 			parameterMap.put("pg", String.valueOf(pageNumber));
 		}
 		if (filter != null) {
 			parameterMap.put("s", String.valueOf(filter));
 		}
-		
+
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newBlobDiffParameter(String repositoryName,
-			String baseCommitId, String commitId, String path) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newBlobDiffParameter(String repositoryName, String baseCommitId,
+			String commitId, String path) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (StringUtils.isEmpty(commitId)) {
 			parameterMap.put("r", repositoryName);
 			parameterMap.put("f", path);
@@ -446,9 +444,9 @@ public class WicketUtils {
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newSearchParameter(String repositoryName,
-			String commitId, String search, Constants.SearchType type) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newSearchParameter(String repositoryName, String commitId,
+			String search, Constants.SearchType type) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (StringUtils.isEmpty(commitId)) {
 			parameterMap.put("r", repositoryName);
 			parameterMap.put("s", search);
@@ -462,10 +460,9 @@ public class WicketUtils {
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newSearchParameter(String repositoryName,
-			String commitId, String search, Constants.SearchType type,
-			int pageNumber) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newSearchParameter(String repositoryName, String commitId,
+			String search, Constants.SearchType type, int pageNumber) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		if (StringUtils.isEmpty(commitId)) {
 			parameterMap.put("r", repositoryName);
 			parameterMap.put("s", search);
@@ -481,9 +478,9 @@ public class WicketUtils {
 		return new PageParameters(parameterMap);
 	}
 
-	public static PageParameters newBlameTypeParameter(String repositoryName,
-			String commitId, String path, String blameType) {
-		Map<String, String> parameterMap = new HashMap<String, String>();
+	public static PageParameters newBlameTypeParameter(String repositoryName, String commitId,
+			String path, String blameType) {
+		final Map<String, String> parameterMap = new HashMap<String, String>();
 		parameterMap.put("r", repositoryName);
 		parameterMap.put("h", commitId);
 		parameterMap.put("f", path);
@@ -492,9 +489,9 @@ public class WicketUtils {
 	}
 
 	public static PageParameters newTicketsParameters(String repositoryName, String... states) {
-		PageParameters tParams = newRepositoryParameter(repositoryName);
+		final PageParameters tParams = newRepositoryParameter(repositoryName);
 		if (states != null) {
-			for (String state : states) {
+			for (final String state : states) {
 				tParams.add("status", state);
 			}
 		}
@@ -534,7 +531,7 @@ public class WicketUtils {
 	}
 
 	public static DiffComparator getDiffComparator(PageParameters params) {
-		int ordinal = params.getInt("w", 0);
+		final int ordinal = params.getInt("w", 0);
 		return DiffComparator.values()[ordinal];
 	}
 
@@ -579,13 +576,16 @@ public class WicketUtils {
 		return params.getString("n", "");
 	}
 
-	public static Label createDateLabel(String wicketId, Date date, TimeZone timeZone, TimeUtils timeUtils) {
+	public static Label createDateLabel(String wicketId, Date date, TimeZone timeZone,
+			TimeUtils timeUtils) {
 		return createDateLabel(wicketId, date, timeZone, timeUtils, true);
 	}
 
-	public static Label createDateLabel(String wicketId, Date date, TimeZone timeZone, TimeUtils timeUtils, boolean setCss) {
-		String format = GitBlitWebApp.get().settings().getString(Keys.web.datestampShortFormat, "MM/dd/yy");
-		DateFormat df = new SimpleDateFormat(format);
+	public static Label createDateLabel(String wicketId, Date date, TimeZone timeZone,
+			TimeUtils timeUtils, boolean setCss) {
+		final String format = GitBlitWebApp.get().settings()
+				.getString(Keys.web.datestampShortFormat, "MM/dd/yy");
+		final DateFormat df = new SimpleDateFormat(format);
 		if (timeZone == null) {
 			timeZone = GitBlitWebApp.get().getTimezone();
 		}
@@ -601,12 +601,13 @@ public class WicketUtils {
 			// past
 			title = timeUtils.timeAgo(date);
 		}
-		if (title != null && (System.currentTimeMillis() - date.getTime()) < 10 * 24 * 60 * 60 * 1000L) {
-			String tmp = dateString;
+		if ((title != null)
+				&& ((System.currentTimeMillis() - date.getTime()) < (10 * 24 * 60 * 60 * 1000L))) {
+			final String tmp = dateString;
 			dateString = title;
 			title = tmp;
 		}
-		Label label = new Label(wicketId, dateString);
+		final Label label = new Label(wicketId, dateString);
 		if (setCss) {
 			WicketUtils.setCssClass(label, timeUtils.timeAgoCss(date));
 		}
@@ -616,9 +617,11 @@ public class WicketUtils {
 		return label;
 	}
 
-	public static Label createTimeLabel(String wicketId, Date date, TimeZone timeZone, TimeUtils timeUtils) {
-		String format = GitBlitWebApp.get().settings().getString(Keys.web.timeFormat, "HH:mm");
-		DateFormat df = new SimpleDateFormat(format);
+	public static Label createTimeLabel(String wicketId, Date date, TimeZone timeZone,
+			TimeUtils timeUtils) {
+		final String format = GitBlitWebApp.get().settings()
+				.getString(Keys.web.timeFormat, "HH:mm");
+		final DateFormat df = new SimpleDateFormat(format);
 		if (timeZone == null) {
 			timeZone = GitBlitWebApp.get().getTimezone();
 		}
@@ -629,17 +632,19 @@ public class WicketUtils {
 		} else {
 			timeString = df.format(date);
 		}
-		String title = timeUtils.timeAgo(date);
-		Label label = new Label(wicketId, timeString);
+		final String title = timeUtils.timeAgo(date);
+		final Label label = new Label(wicketId, timeString);
 		if (!StringUtils.isEmpty(title)) {
 			WicketUtils.setHtmlTooltip(label, title);
 		}
 		return label;
 	}
 
-	public static Label createDatestampLabel(String wicketId, Date date, TimeZone timeZone, TimeUtils timeUtils) {
-		String format = GitBlitWebApp.get().settings().getString(Keys.web.datestampLongFormat, "EEEE, MMMM d, yyyy");
-		DateFormat df = new SimpleDateFormat(format);
+	public static Label createDatestampLabel(String wicketId, Date date, TimeZone timeZone,
+			TimeUtils timeUtils) {
+		final String format = GitBlitWebApp.get().settings()
+				.getString(Keys.web.datestampLongFormat, "EEEE, MMMM d, yyyy");
+		final DateFormat df = new SimpleDateFormat(format);
 		if (timeZone == null) {
 			timeZone = GitBlitWebApp.get().getTimezone();
 		}
@@ -662,22 +667,23 @@ public class WicketUtils {
 			// future
 			title = timeUtils.inFuture(date);
 		}
-		if ((System.currentTimeMillis() - date.getTime()) < 10 * 24 * 60 * 60 * 1000L) {
-			String tmp = dateString;
+		if ((System.currentTimeMillis() - date.getTime()) < (10 * 24 * 60 * 60 * 1000L)) {
+			final String tmp = dateString;
 			dateString = title;
 			title = tmp;
 		}
-		Label label = new Label(wicketId, dateString);
+		final Label label = new Label(wicketId, dateString);
 		if (!StringUtils.isEmpty(title)) {
 			WicketUtils.setHtmlTooltip(label, title);
 		}
 		return label;
 	}
 
-	public static Label createTimestampLabel(String wicketId, Date date, TimeZone timeZone, TimeUtils timeUtils) {
-		String format = GitBlitWebApp.get().settings().getString(Keys.web.datetimestampLongFormat,
-				"EEEE, MMMM d, yyyy HH:mm Z");
-		DateFormat df = new SimpleDateFormat(format);
+	public static Label createTimestampLabel(String wicketId, Date date, TimeZone timeZone,
+			TimeUtils timeUtils) {
+		final String format = GitBlitWebApp.get().settings()
+				.getString(Keys.web.datetimestampLongFormat, "EEEE, MMMM d, yyyy HH:mm Z");
+		final DateFormat df = new SimpleDateFormat(format);
 		if (timeZone == null) {
 			timeZone = GitBlitWebApp.get().getTimezone();
 		}
@@ -693,7 +699,7 @@ public class WicketUtils {
 			// past
 			title = timeUtils.timeAgo(date);
 		}
-		Label label = new Label(wicketId, dateString);
+		final Label label = new Label(wicketId, dateString);
 		if (!StringUtils.isEmpty(title)) {
 			WicketUtils.setHtmlTooltip(label, title);
 		}
@@ -702,7 +708,7 @@ public class WicketUtils {
 
 	public static double maxValue(Collection<Metric> metrics) {
 		double max = Double.MIN_VALUE;
-		for (Metric m : metrics) {
+		for (final Metric m : metrics) {
 			if (m.count > max) {
 				max = m.count;
 			}

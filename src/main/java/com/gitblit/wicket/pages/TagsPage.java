@@ -27,7 +27,7 @@ public class TagsPage extends RepositoryPage {
 	public TagsPage(PageParameters params) {
 		super(params);
 
-		add(new TagsPanel("tagsPanel", repositoryName, getRepository(), -1));
+		add(new TagsPanel("tagsPanel", this.repositoryName, getRepository(), -1));
 
 	}
 

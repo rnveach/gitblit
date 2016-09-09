@@ -65,18 +65,20 @@ public class FederationProposal implements Serializable {
 		this.repositories = repositories;
 		try {
 			// determine server name and set that as the proposal name
-			name = url.substring(url.indexOf("//") + 2);
-			if (name.contains("/")) {
-				name = name.substring(0, name.indexOf('/'));
+			this.name = url.substring(url.indexOf("//") + 2);
+			if (this.name.contains("/")) {
+				this.name = this.name.substring(0, this.name.indexOf('/'));
 			}
-			name = name.replace(".", "").replace(";", "").replace(":", "").replace("-", "");
-		} catch (Exception e) {
-			name = Long.toHexString(System.currentTimeMillis());
+			this.name = this.name.replace(".", "").replace(";", "").replace(":", "")
+					.replace("-", "");
+		}
+		catch (final Exception e) {
+			this.name = Long.toHexString(System.currentTimeMillis());
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "Federation Proposal (" + url + ")";
+		return "Federation Proposal (" + this.url + ")";
 	}
 }

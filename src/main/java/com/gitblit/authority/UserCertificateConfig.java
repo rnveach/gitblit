@@ -44,24 +44,28 @@ public class UserCertificateConfig {
 	public final List<UserCertificateModel> list;
 
 	private UserCertificateConfig(final Config c) {
-		SimpleDateFormat df = new SimpleDateFormat(Constants.ISO8601);
-		list = new ArrayList<UserCertificateModel>();
-		for (String username : c.getSubsections("user")) {
-			UserCertificateModel uc = new UserCertificateModel(new UserModel(username));
+		final SimpleDateFormat df = new SimpleDateFormat(Constants.ISO8601);
+		this.list = new ArrayList<UserCertificateModel>();
+		for (final String username : c.getSubsections("user")) {
+			final UserCertificateModel uc = new UserCertificateModel(new UserModel(username));
 			try {
 				uc.expires = df.parse(c.getString("user", username, "expires"));
-			} catch (ParseException e) {
-				LoggerFactory.getLogger(UserCertificateConfig.class).error("Failed to parse date!", e);
-			} catch (NullPointerException e) {
+			}
+			catch (final ParseException e) {
+				LoggerFactory.getLogger(UserCertificateConfig.class).error("Failed to parse date!",
+						e);
+			}
+			catch (final NullPointerException e) {
 			}
 			uc.notes = c.getString("user", username, "notes");
-			uc.revoked = new ArrayList<String>(Arrays.asList(c.getStringList("user", username, "revoked")));
-			list.add(uc);
+			uc.revoked = new ArrayList<String>(Arrays.asList(c.getStringList("user", username,
+					"revoked")));
+			this.list.add(uc);
 		}
 	}
 
 	public UserCertificateModel getUserCertificateModel(String username) {
-		for (UserCertificateModel ucm : list) {
+		for (final UserCertificateModel ucm : this.list) {
 			if (ucm.user.username.equalsIgnoreCase(username)) {
 				return ucm;
 			}

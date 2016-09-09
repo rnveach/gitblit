@@ -54,10 +54,8 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 
 	protected IRepositoryManager repositoryManager;
 
-	protected AccessRestrictionFilter(
-			IRuntimeManager runtimeManager,
-			IAuthenticationManager authenticationManager,
-			IRepositoryManager repositoryManager) {
+	protected AccessRestrictionFilter(IRuntimeManager runtimeManager,
+			IAuthenticationManager authenticationManager, IRepositoryManager repositoryManager) {
 
 		super(authenticationManager);
 
@@ -96,7 +94,8 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 	 * @param method
 	 * @return true if the action may be performed
 	 */
-	protected abstract boolean isActionAllowed(RepositoryModel repository, String action, String method);
+	protected abstract boolean isActionAllowed(RepositoryModel repository, String action,
+			String method);
 
 	/**
 	 * Determine if the repository requires authentication.
@@ -105,7 +104,8 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 	 * @param action
 	 * @return true if authentication required
 	 */
-	protected abstract boolean requiresAuthentication(RepositoryModel repository, String action, String method);
+	protected abstract boolean requiresAuthentication(RepositoryModel repository, String action,
+			String method);
 
 	/**
 	 * Determine if the user can access the repository and perform the specified
@@ -129,10 +129,11 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 	protected RepositoryModel createRepository(UserModel user, String repository, String action) {
 		return null;
 	}
-	
+
 	/**
 	 * Allows authentication header to be altered based on the action requested
 	 * Default is WWW-Authenticate
+	 * 
 	 * @param httpRequest
 	 * @param action
 	 * @return authentication type header
@@ -140,16 +141,17 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 	protected String getAuthenticationHeader(HttpServletRequest httpRequest, String action) {
 		return "WWW-Authenticate";
 	}
-	
+
 	/**
 	 * Allows request headers to be used as part of filtering
+	 * 
 	 * @param request
 	 * @return true (default) if headers are valid, false otherwise
 	 */
 	protected boolean hasValidRequestHeader(String action, HttpServletRequest request) {
 		return true;
 	}
-	
+
 	/**
 	 * doFilter does the actual work of preprocessing the request to ensure that
 	 * the user may proceed.
@@ -161,39 +163,43 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 	public void doFilter(final ServletRequest request, final ServletResponse response,
 			final FilterChain chain) throws IOException, ServletException {
 
-		HttpServletRequest httpRequest = (HttpServletRequest) request;
-		HttpServletResponse httpResponse = (HttpServletResponse) response;
+		final HttpServletRequest httpRequest = (HttpServletRequest) request;
+		final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-		String fullUrl = getFullUrl(httpRequest);
-		String repository = extractRepositoryName(fullUrl);
+		final String fullUrl = getFullUrl(httpRequest);
+		final String repository = extractRepositoryName(fullUrl);
 		if (StringUtils.isEmpty(repository)) {
 			httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}
 
-		if (repositoryManager.isCollectingGarbage(repository)) {
-			logger.info(MessageFormat.format("ARF: Rejecting request for {0}, busy collecting garbage!", repository));
+		if (this.repositoryManager.isCollectingGarbage(repository)) {
+			this.logger.info(MessageFormat.format(
+					"ARF: Rejecting request for {0}, busy collecting garbage!", repository));
 			httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
 		}
 
 		// Determine if the request URL is restricted
-		String fullSuffix = fullUrl.substring(repository.length());
-		String urlRequestType = getUrlRequestAction(fullSuffix);
+		final String fullSuffix = fullUrl.substring(repository.length());
+		final String urlRequestType = getUrlRequestAction(fullSuffix);
 
-		UserModel user = getUser(httpRequest);
+		final UserModel user = getUser(httpRequest);
 
 		// Load the repository model
-		RepositoryModel model = repositoryManager.getRepositoryModel(repository);
+		RepositoryModel model = this.repositoryManager.getRepositoryModel(repository);
 		if (model == null) {
 			if (isCreationAllowed(urlRequestType)) {
 				if (user == null) {
-					// challenge client to provide credentials for creation. send 401.
-					if (runtimeManager.isDebugMode()) {
-						logger.info(MessageFormat.format("ARF: CREATE CHALLENGE {0}", fullUrl));
+					// challenge client to provide credentials for creation.
+					// send 401.
+					if (this.runtimeManager.isDebugMode()) {
+						this.logger
+								.info(MessageFormat.format("ARF: CREATE CHALLENGE {0}", fullUrl));
 					}
-					
-					httpResponse.setHeader(getAuthenticationHeader(httpRequest, urlRequestType), CHALLENGE);
+
+					httpResponse.setHeader(getAuthenticationHeader(httpRequest, urlRequestType),
+							CHALLENGE);
 					httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 					return;
 				} else {
@@ -204,7 +210,7 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 
 			if (model == null) {
 				// repository not found. send 404.
-				logger.info(MessageFormat.format("ARF: {0} ({1})", fullUrl,
+				this.logger.info(MessageFormat.format("ARF: {0} ({1})", fullUrl,
 						HttpServletResponse.SC_NOT_FOUND));
 				httpResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;
@@ -213,7 +219,7 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 
 		// Confirm that the action may be executed on the repository
 		if (!isActionAllowed(model, urlRequestType, httpRequest.getMethod())) {
-			logger.info(MessageFormat.format("ARF: action {0} on {1} forbidden ({2})",
+			this.logger.info(MessageFormat.format("ARF: action {0} on {1} forbidden ({2})",
 					urlRequestType, model, HttpServletResponse.SC_FORBIDDEN));
 			httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
@@ -228,19 +234,21 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 		//
 		// Gitblit must conditionally authenticate users per-repository so just
 		// enabling http.receivepack is insufficient.
-		AuthenticatedRequest authenticatedRequest = new AuthenticatedRequest(httpRequest);
+		final AuthenticatedRequest authenticatedRequest = new AuthenticatedRequest(httpRequest);
 		if (user != null) {
 			authenticatedRequest.setUser(user);
 		}
 
 		// BASIC authentication challenge and response processing
-		if (!StringUtils.isEmpty(urlRequestType) && requiresAuthentication(model, urlRequestType,  httpRequest.getMethod())) {
+		if (!StringUtils.isEmpty(urlRequestType)
+				&& requiresAuthentication(model, urlRequestType, httpRequest.getMethod())) {
 			if (user == null) {
 				// challenge client to provide credentials. send 401.
-				if (runtimeManager.isDebugMode()) {
-					logger.info(MessageFormat.format("ARF: CHALLENGE {0}", fullUrl));
+				if (this.runtimeManager.isDebugMode()) {
+					this.logger.info(MessageFormat.format("ARF: CHALLENGE {0}", fullUrl));
 				}
-				httpResponse.setHeader(getAuthenticationHeader(httpRequest, urlRequestType), CHALLENGE);
+				httpResponse.setHeader(getAuthenticationHeader(httpRequest, urlRequestType),
+						CHALLENGE);
 				httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
 				return;
 			} else {
@@ -249,14 +257,14 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 					// authenticated request permitted.
 					// pass processing to the restricted servlet.
 					newSession(authenticatedRequest, httpResponse);
-					logger.info(MessageFormat.format("ARF: authenticated {0} to {1} ({2})", user.username,
-							fullUrl, HttpServletResponse.SC_CONTINUE));
+					this.logger.info(MessageFormat.format("ARF: authenticated {0} to {1} ({2})",
+							user.username, fullUrl, HttpServletResponse.SC_CONTINUE));
 					chain.doFilter(authenticatedRequest, httpResponse);
 					return;
 				}
 				// valid user, but not for requested access. send 403.
-				if (runtimeManager.isDebugMode()) {
-					logger.info(MessageFormat.format("ARF: {0} forbidden to access {1}",
+				if (this.runtimeManager.isDebugMode()) {
+					this.logger.info(MessageFormat.format("ARF: {0} forbidden to access {1}",
 							user.username, fullUrl));
 				}
 				httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -264,19 +272,20 @@ public abstract class AccessRestrictionFilter extends AuthenticationFilter {
 			}
 		}
 
-		if (runtimeManager.isDebugMode()) {
-			logger.info(MessageFormat.format("ARF: {0} ({1}) unauthenticated", fullUrl,
+		if (this.runtimeManager.isDebugMode()) {
+			this.logger.info(MessageFormat.format("ARF: {0} ({1}) unauthenticated", fullUrl,
 					HttpServletResponse.SC_CONTINUE));
 		}
 		// unauthenticated request permitted.
 		// pass processing to the restricted servlet.
 		chain.doFilter(authenticatedRequest, httpResponse);
 	}
-	
-	public static boolean hasContentInRequestHeader(HttpServletRequest request, String headerName, String content)
-	{
-		Iterator<String> headerItr = Collections.list(request.getHeaders(headerName)).iterator();
-		
+
+	public static boolean hasContentInRequestHeader(HttpServletRequest request, String headerName,
+			String content) {
+		final Iterator<String> headerItr = Collections.list(request.getHeaders(headerName))
+				.iterator();
+
 		while (headerItr.hasNext()) {
 			if (headerItr.next().contains(content)) {
 				return true;

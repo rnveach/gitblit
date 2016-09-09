@@ -49,24 +49,26 @@ public class ExportTicketPage extends SessionPage {
 
 			@Override
 			public void respond(RequestCycle requestCycle) {
-				WebResponse response = (WebResponse) requestCycle.getResponse();
+				final WebResponse response = (WebResponse) requestCycle.getResponse();
 
 				final String repositoryName = WicketUtils.getRepositoryName(params);
-				RepositoryModel repository = app().repositories().getRepositoryModel(repositoryName);
+				final RepositoryModel repository = app().repositories().getRepositoryModel(
+						repositoryName);
 				String objectId = WicketUtils.getObject(params).toLowerCase();
 				if (objectId.endsWith(".json")) {
 					objectId = objectId.substring(0, objectId.length() - ".json".length());
 				}
-				long id = Long.parseLong(objectId);
-				TicketModel ticket = app().tickets().getTicket(repository, id);
+				final long id = Long.parseLong(objectId);
+				final TicketModel ticket = app().tickets().getTicket(repository, id);
 
-				String content = TicketSerializer.serialize(ticket);
-				contentType = "application/json; charset=UTF-8";
-				response.setContentType(contentType);
+				final String content = TicketSerializer.serialize(ticket);
+				ExportTicketPage.this.contentType = "application/json; charset=UTF-8";
+				response.setContentType(ExportTicketPage.this.contentType);
 				try {
 					response.getOutputStream().write(content.getBytes("UTF-8"));
-				} catch (Exception e) {
-					logger.error("Failed to write text response", e);
+				}
+				catch (final Exception e) {
+					ExportTicketPage.this.logger.error("Failed to write text response", e);
 				}
 			}
 		});
@@ -75,8 +77,8 @@ public class ExportTicketPage extends SessionPage {
 	@Override
 	protected void setHeaders(WebResponse response) {
 		super.setHeaders(response);
-		if (!StringUtils.isEmpty(contentType)) {
-			response.setContentType(contentType);
+		if (!StringUtils.isEmpty(this.contentType)) {
+			response.setContentType(this.contentType);
 		}
 	}
 }

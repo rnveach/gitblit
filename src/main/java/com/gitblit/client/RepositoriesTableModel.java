@@ -38,7 +38,12 @@ public class RepositoriesTableModel extends AbstractTableModel {
 	List<RepositoryModel> list;
 
 	enum Columns {
-		Name, Description, Owner, Indicators, Last_Change, Size;
+		Name,
+		Description,
+		Owner,
+		Indicators,
+		Last_Change,
+		Size;
 
 		@Override
 		public String toString() {
@@ -57,7 +62,7 @@ public class RepositoriesTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return list.size();
+		return this.list.size();
 	}
 
 	@Override
@@ -67,7 +72,7 @@ public class RepositoriesTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Name:
 			return Translation.get("gb.name");
@@ -79,6 +84,8 @@ public class RepositoriesTableModel extends AbstractTableModel {
 			return Translation.get("gb.lastChange");
 		case Size:
 			return Translation.get("gb.size");
+		case Indicators:
+			break;
 		}
 		return "";
 	}
@@ -92,21 +99,25 @@ public class RepositoriesTableModel extends AbstractTableModel {
 	 */
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		Columns col = Columns.values()[columnIndex];
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Name:
 		case Indicators:
 			return RepositoryModel.class;
 		case Last_Change:
 			return Date.class;
+		case Description:
+		case Owner:
+		case Size:
+			break;
 		}
 		return String.class;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		RepositoryModel model = list.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final RepositoryModel model = this.list.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Name:
 			return model;

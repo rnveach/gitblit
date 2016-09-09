@@ -72,15 +72,15 @@ public class BranchesPanel extends BasePanel {
 			user = UserModel.ANONYMOUS;
 		}
 
-		List<RefModel> localBranches = JGitUtils.getLocalBranches(r, false, -1);
-		for (RefModel refModel : localBranches) {
+		final List<RefModel> localBranches = JGitUtils.getLocalBranches(r, false, -1);
+		for (final RefModel refModel : localBranches) {
 			if (user.canView(model, refModel.reference.getName())) {
 				branches.add(refModel);
 			}
 		}
 		if (model.showRemoteBranches) {
-			List<RefModel> remoteBranches = JGitUtils.getRemoteBranches(r, false, -1);
-			for (RefModel refModel : remoteBranches) {
+			final List<RefModel> remoteBranches = JGitUtils.getRemoteBranches(r, false, -1);
+			for (final RefModel refModel : remoteBranches) {
 				if (user.canView(model, refModel.reference.getName())) {
 					branches.add(refModel);
 				}
@@ -88,7 +88,7 @@ public class BranchesPanel extends BasePanel {
 		}
 		Collections.sort(branches);
 		Collections.reverse(branches);
-		if (maxCount > 0 && branches.size() > maxCount) {
+		if ((maxCount > 0) && (branches.size() > maxCount)) {
 			branches = new ArrayList<RefModel>(branches.subList(0, maxCount));
 		}
 
@@ -103,10 +103,10 @@ public class BranchesPanel extends BasePanel {
 		}
 
 		// only allow delete if we have multiple branches
-		final boolean showDelete = showAdmin && branches.size() > 1;
+		final boolean showDelete = showAdmin && (branches.size() > 1);
 
-		ListDataProvider<RefModel> branchesDp = new ListDataProvider<RefModel>(branches);
-		DataView<RefModel> branchesView = new DataView<RefModel>("branch", branchesDp) {
+		final ListDataProvider<RefModel> branchesDp = new ListDataProvider<RefModel>(branches);
+		final DataView<RefModel> branchesView = new DataView<RefModel>("branch", branchesDp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
@@ -114,38 +114,44 @@ public class BranchesPanel extends BasePanel {
 			public void populateItem(final Item<RefModel> item) {
 				final RefModel entry = item.getModelObject();
 
-				PageParameters shortUniqRef = WicketUtils.newObjectParameter(model.name,
+				final PageParameters shortUniqRef = WicketUtils.newObjectParameter(model.name,
 						Repository.shortenRefName(entry.getName()));
 
-				item.add(WicketUtils.createDateLabel("branchDate", entry.getDate(), getTimeZone(), getTimeUtils()));
+				item.add(WicketUtils.createDateLabel("branchDate", entry.getDate(), getTimeZone(),
+						getTimeUtils()));
 
 				item.add(new LinkPanel("branchName", "list name", StringUtils.trimString(
 						entry.displayName, 28), LogPage.class, shortUniqRef));
 
-				String author = entry.getAuthorIdent().getName();
-				LinkPanel authorLink = new LinkPanel("branchAuthor", "list", author,
+				final String author = entry.getAuthorIdent().getName();
+				final LinkPanel authorLink = new LinkPanel("branchAuthor", "list", author,
 						GitSearchPage.class, WicketUtils.newSearchParameter(model.name,
 								entry.getName(), author, Constants.SearchType.AUTHOR));
 				setPersonSearchTooltip(authorLink, author, Constants.SearchType.AUTHOR);
 				item.add(authorLink);
 
 				// short message
-				String shortMessage = entry.getShortMessage();
-				String trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG);
-				LinkPanel shortlog = new LinkPanel("branchLog", "list subject", trimmedMessage,
-						CommitPage.class, shortUniqRef);
+				final String shortMessage = entry.getShortMessage();
+				final String trimmedMessage = StringUtils.trimString(shortMessage,
+						Constants.LEN_SHORTLOG);
+				final LinkPanel shortlog = new LinkPanel("branchLog", "list subject",
+						trimmedMessage, CommitPage.class, shortUniqRef);
 				if (!shortMessage.equals(trimmedMessage)) {
 					shortlog.setTooltip(shortMessage);
 				}
 				item.add(shortlog);
 
 				if (maxCount <= 0) {
-					Fragment fragment = new Fragment("branchLinks", showDelete? "branchPageAdminLinks" : "branchPageLinks", this);
+					final Fragment fragment = new Fragment("branchLinks",
+							showDelete ? "branchPageAdminLinks" : "branchPageLinks", this);
 					fragment.add(new BookmarkablePageLink<Void>("log", LogPage.class, shortUniqRef));
-					fragment.add(new BookmarkablePageLink<Void>("tree", TreePage.class, shortUniqRef));
-					String rawUrl = RawServlet.asLink(getContextUrl(), model.name, Repository.shortenRefName(entry.getName()), null);
+					fragment.add(new BookmarkablePageLink<Void>("tree", TreePage.class,
+							shortUniqRef));
+					final String rawUrl = RawServlet.asLink(getContextUrl(), model.name,
+							Repository.shortenRefName(entry.getName()), null);
 					fragment.add(new ExternalLink("raw", rawUrl));
-					fragment.add(new BookmarkablePageLink<Void>("metrics", MetricsPage.class, shortUniqRef));
+					fragment.add(new BookmarkablePageLink<Void>("metrics", MetricsPage.class,
+							shortUniqRef));
 					fragment.add(new ExternalLink("syndication", SyndicationServlet.asLink(
 							getRequest().getRelativePathPrefixToContextRoot(), model.name,
 							Repository.shortenRefName(entry.getName()), 0)));
@@ -154,48 +160,52 @@ public class BranchesPanel extends BasePanel {
 					}
 					item.add(fragment);
 				} else {
-					Fragment fragment = new Fragment("branchLinks", "branchPanelLinks", this);
+					final Fragment fragment = new Fragment("branchLinks", "branchPanelLinks", this);
 					fragment.add(new BookmarkablePageLink<Void>("log", LogPage.class, shortUniqRef));
-					fragment.add(new BookmarkablePageLink<Void>("tree", TreePage.class, shortUniqRef));
-					String rawUrl = RawServlet.asLink(getContextUrl(), model.name, Repository.shortenRefName(entry.getName()), null);
-					fragment.add(new ExternalLink("raw",  rawUrl));
+					fragment.add(new BookmarkablePageLink<Void>("tree", TreePage.class,
+							shortUniqRef));
+					final String rawUrl = RawServlet.asLink(getContextUrl(), model.name,
+							Repository.shortenRefName(entry.getName()), null);
+					fragment.add(new ExternalLink("raw", rawUrl));
 					item.add(fragment);
 				}
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(branchesView);
-		if (branches.size() < maxCount || maxCount <= 0) {
+		if ((branches.size() < maxCount) || (maxCount <= 0)) {
 			add(new Label("allBranches", "").setVisible(false));
 		} else {
 			add(new LinkPanel("allBranches", "link", new StringResourceModel("gb.allBranches",
 					this, null), BranchesPage.class, WicketUtils.newRepositoryParameter(model.name)));
 		}
 		// We always have 1 branch
-		hasBranches = (branches.size() > 1)
+		this.hasBranches = (branches.size() > 1)
 				|| ((branches.size() == 1) && !branches.get(0).displayName
 						.equalsIgnoreCase("master"));
 	}
 
 	public BranchesPanel hideIfEmpty() {
-		setVisible(hasBranches);
+		setVisible(this.hasBranches);
 		return this;
 	}
 
-	private Link<Void> createDeleteBranchLink(final RepositoryModel repositoryModel, final RefModel entry)
-	{
-		Link<Void> deleteLink = new Link<Void>("deleteBranch") {
+	private Link<Void> createDeleteBranchLink(final RepositoryModel repositoryModel,
+			final RefModel entry) {
+		final Link<Void> deleteLink = new Link<Void>("deleteBranch") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onClick() {
-				Repository r = app().repositories().getRepository(repositoryModel.name);
+				final Repository r = app().repositories().getRepository(repositoryModel.name);
 				if (r == null) {
 					if (app().repositories().isCollectingGarbage(repositoryModel.name)) {
-						error(MessageFormat.format(getString("gb.busyCollectingGarbage"), repositoryModel.name));
+						error(MessageFormat.format(getString("gb.busyCollectingGarbage"),
+								repositoryModel.name));
 					} else {
-						error(MessageFormat.format("Failed to find repository {0}", repositoryModel.name));
+						error(MessageFormat.format("Failed to find repository {0}",
+								repositoryModel.name));
 					}
 					return;
 				}
@@ -203,20 +213,21 @@ public class BranchesPanel extends BasePanel {
 				Ref ref = null;
 				try {
 					ref = r.getRef(branch);
-					if (ref == null && !branch.startsWith(Constants.R_HEADS)) {
+					if ((ref == null) && !branch.startsWith(Constants.R_HEADS)) {
 						ref = r.getRef(Constants.R_HEADS + branch);
 					}
-				} catch (IOException e) {
+				}
+				catch (final IOException e) {
 				}
 				if (ref != null) {
-					boolean success = JGitUtils.deleteBranchRef(r, ref.getName());
+					final boolean success = JGitUtils.deleteBranchRef(r, ref.getName());
 					if (success) {
 						// clear commit cache
 						CommitCache.instance().clear(repositoryModel.name, branch);
 
 						// optionally update reflog
 						if (RefLogUtils.hasRefLogBranch(r)) {
-							UserModel user = GitBlitWebSession.get().getUser();
+							final UserModel user = GitBlitWebSession.get().getUser();
 							RefLogUtils.deleteRef(user, r, ref);
 						}
 					}
@@ -230,15 +241,16 @@ public class BranchesPanel extends BasePanel {
 				r.close();
 
 				// redirect to the owning page
-				PageParameters params = WicketUtils.newRepositoryParameter(repositoryModel.name);
-				String relativeUrl = urlFor(getPage().getClass(), params).toString();
-				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+				final PageParameters params = WicketUtils
+						.newRepositoryParameter(repositoryModel.name);
+				final String relativeUrl = urlFor(getPage().getClass(), params).toString();
+				final String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
 				getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
 			}
 		};
 
 		deleteLink.add(new JavascriptEventConfirmation("onclick", MessageFormat.format(
-				"Delete branch \"{0}\"?", entry.displayName )));
+				"Delete branch \"{0}\"?", entry.displayName)));
 		return deleteLink;
 	}
 }

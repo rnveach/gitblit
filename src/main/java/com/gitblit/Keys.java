@@ -1,5 +1,6 @@
 package com.gitblit;
 
+@SuppressWarnings("hiding")
 public final class Keys {
 
 	public static final class execution {
@@ -405,6 +406,8 @@ public final class Keys {
 		public static final String requireApproval = "tickets.requireApproval";
 
 		public static final String service = "tickets.service";
+
+		public static final String mergeType = "tickets.mergeType";
 
 		public static final class redis {
 

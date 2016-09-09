@@ -64,24 +64,24 @@ public class LuceneSearchPage extends RootPage {
 		setupPage("", "");
 
 		// default values
-		ArrayList<String> repositories = new ArrayList<String>();
+		final ArrayList<String> repositories = new ArrayList<String>();
 		String query = "";
 		boolean allRepos = false;
 
 		int page = 1;
-		int pageSize = app().settings().getInteger(Keys.web.itemsPerPage, 50);
+		final int pageSize = app().settings().getInteger(Keys.web.itemsPerPage, 50);
 
 		// display user-accessible selections
-		UserModel user = GitBlitWebSession.get().getUser();
-		List<String> availableRepositories = new ArrayList<String>();
-		for (RepositoryModel model : app().repositories().getRepositoryModels(user)) {
+		final UserModel user = GitBlitWebSession.get().getUser();
+		final List<String> availableRepositories = new ArrayList<String>();
+		for (final RepositoryModel model : app().repositories().getRepositoryModels(user)) {
 			if (model.hasCommits && !ArrayUtils.isEmpty(model.indexedBranches)) {
 				availableRepositories.add(model.name);
 			}
 		}
 
 		if (params != null) {
-			String repository = WicketUtils.getRepositoryName(params);
+			final String repository = WicketUtils.getRepositoryName(params);
 			if (!StringUtils.isEmpty(repository)) {
 				repositories.add(repository);
 			}
@@ -89,8 +89,8 @@ public class LuceneSearchPage extends RootPage {
 			page = WicketUtils.getPage(params);
 
 			if (params.containsKey("repositories")) {
-				String value = params.getString("repositories", "");
-				List<String> list = StringUtils.getStringsFromValue(value);
+				final String value = params.getString("repositories", "");
+				final List<String> list = StringUtils.getStringsFromValue(value);
 				repositories.addAll(list);
 			}
 
@@ -102,12 +102,14 @@ public class LuceneSearchPage extends RootPage {
 			if (params.containsKey("query")) {
 				query = params.getString("query", "");
 			} else {
-				String value = WicketUtils.getSearchString(params);
-				String type = WicketUtils.getSearchType(params);
-				com.gitblit.Constants.SearchType searchType = com.gitblit.Constants.SearchType.forName(type);
+				final String value = WicketUtils.getSearchString(params);
+				final String type = WicketUtils.getSearchType(params);
+				final com.gitblit.Constants.SearchType searchType = com.gitblit.Constants.SearchType
+						.forName(type);
 				if (!StringUtils.isEmpty(value)) {
 					if (searchType == SearchType.COMMIT) {
-						query = "type:" + searchType.name().toLowerCase() + " AND \"" + value + "\"";
+						query = "type:" + searchType.name().toLowerCase() + " AND \"" + value
+								+ "\"";
 					} else {
 						query = searchType.name().toLowerCase() + ":\"" + value + "\"";
 					}
@@ -115,7 +117,8 @@ public class LuceneSearchPage extends RootPage {
 			}
 		}
 
-		boolean luceneEnabled = app().settings().getBoolean(Keys.web.allowLuceneIndexing, true);
+		final boolean luceneEnabled = app().settings().getBoolean(Keys.web.allowLuceneIndexing,
+				true);
 		if (luceneEnabled) {
 			if (availableRepositories.size() == 0) {
 				info(getString("gb.noIndexedRepositoriesWarning"));
@@ -125,44 +128,47 @@ public class LuceneSearchPage extends RootPage {
 		}
 
 		// enforce user-accessible repository selections
-		Set<String> uniqueRepositories = new LinkedHashSet<String>();
-		for (String selectedRepository : repositories) {
+		final Set<String> uniqueRepositories = new LinkedHashSet<String>();
+		for (final String selectedRepository : repositories) {
 			if (availableRepositories.contains(selectedRepository)) {
 				uniqueRepositories.add(selectedRepository);
 			}
 		}
-		ArrayList<String> searchRepositories = new ArrayList<String>(uniqueRepositories);
+		final ArrayList<String> searchRepositories = new ArrayList<String>(uniqueRepositories);
 
 		// search form
 		final Model<String> queryModel = new Model<String>(query);
-		final Model<ArrayList<String>> repositoriesModel = new Model<ArrayList<String>>(searchRepositories);
+		final Model<ArrayList<String>> repositoriesModel = new Model<ArrayList<String>>(
+				searchRepositories);
 		final Model<Boolean> allreposModel = new Model<Boolean>(allRepos);
-		SessionlessForm<Void> form = new SessionlessForm<Void>("searchForm", getClass()) {
+		final SessionlessForm<Void> form = new SessionlessForm<Void>("searchForm", getClass()) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onSubmit() {
-				String q = queryModel.getObject();
+				final String q = queryModel.getObject();
 				if (StringUtils.isEmpty(q)) {
 					error(getString("gb.undefinedQueryWarning"));
 					return;
 				}
-				if (repositoriesModel.getObject().size() == 0 && !allreposModel.getObject()) {
+				if ((repositoriesModel.getObject().size() == 0) && !allreposModel.getObject()) {
 					error(getString("gb.noSelectedRepositoriesWarning"));
 					return;
 				}
-				PageParameters params = new PageParameters();
-				params.put("repositories", StringUtils.flattenStrings(repositoriesModel.getObject()));
+				final PageParameters params = new PageParameters();
+				params.put("repositories",
+						StringUtils.flattenStrings(repositoriesModel.getObject()));
 				params.put("query", queryModel.getObject());
 				params.put("allrepos", allreposModel.getObject());
-				LuceneSearchPage page = new LuceneSearchPage(params);
+				final LuceneSearchPage page = new LuceneSearchPage(params);
 				setResponsePage(page);
 			}
 		};
 
-		ListMultipleChoice<String> selections = new ListMultipleChoice<String>("repositories",
-				repositoriesModel, availableRepositories, new StringChoiceRenderer());
+		final ListMultipleChoice<String> selections = new ListMultipleChoice<String>(
+				"repositories", repositoriesModel, availableRepositories,
+				new StringChoiceRenderer());
 		selections.setMaxRows(8);
 		form.add(selections.setEnabled(luceneEnabled));
 		form.add(new TextField<String>("query", queryModel).setEnabled(luceneEnabled));
@@ -187,37 +193,43 @@ public class LuceneSearchPage extends RootPage {
 		} else {
 			add(new Label("resultsHeader", query).setRenderBodyOnly(true));
 			add(new Label("resultsCount", MessageFormat.format(getString("gb.queryResults"),
-					results.get(0).hitId, results.get(results.size() - 1).hitId, results.get(0).totalHits)).
-					setRenderBodyOnly(true));
+					results.get(0).hitId, results.get(results.size() - 1).hitId,
+					results.get(0).totalHits)).setRenderBodyOnly(true));
 		}
 
 		// search results view
-		ListDataProvider<SearchResult> resultsDp = new ListDataProvider<SearchResult>(results);
-		final DataView<SearchResult> resultsView = new DataView<SearchResult>("searchResults", resultsDp) {
+		final ListDataProvider<SearchResult> resultsDp = new ListDataProvider<SearchResult>(results);
+		final DataView<SearchResult> resultsView = new DataView<SearchResult>("searchResults",
+				resultsDp) {
 			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void populateItem(final Item<SearchResult> item) {
 				final SearchResult sr = item.getModelObject();
-				switch(sr.type) {
+				switch (sr.type) {
 				case commit: {
-					Label icon = WicketUtils.newIcon("type", "icon-refresh");
+					final Label icon = WicketUtils.newIcon("type", "icon-refresh");
 					WicketUtils.setHtmlTooltip(icon, "commit");
 					item.add(icon);
-					item.add(new LinkPanel("summary", null, sr.summary, CommitPage.class, WicketUtils.newObjectParameter(sr.repository, sr.commitId)));
+					item.add(new LinkPanel("summary", null, sr.summary, CommitPage.class,
+							WicketUtils.newObjectParameter(sr.repository, sr.commitId)));
 					// show tags
-					Fragment fragment = new Fragment("tags", "tagsPanel", LuceneSearchPage.this);
+					final Fragment fragment = new Fragment("tags", "tagsPanel",
+							LuceneSearchPage.this);
 					List<String> tags = sr.tags;
 					if (tags == null) {
 						tags = new ArrayList<String>();
 					}
-					ListDataProvider<String> tagsDp = new ListDataProvider<String>(tags);
+					final ListDataProvider<String> tagsDp = new ListDataProvider<String>(tags);
 					final DataView<String> tagsView = new DataView<String>("tag", tagsDp) {
 						private static final long serialVersionUID = 1L;
+
 						@Override
 						public void populateItem(final Item<String> item) {
-							String tag = item.getModelObject();
-							Component c = new LinkPanel("tagLink", null, tag, TagPage.class,
-									WicketUtils.newObjectParameter(sr.repository, Constants.R_TAGS + tag));
+							final String tag = item.getModelObject();
+							final Component c = new LinkPanel("tagLink", null, tag, TagPage.class,
+									WicketUtils.newObjectParameter(sr.repository, Constants.R_TAGS
+											+ tag));
 							WicketUtils.setCssClass(c, "tagRef");
 							item.add(c);
 						}
@@ -227,39 +239,48 @@ public class LuceneSearchPage extends RootPage {
 					break;
 				}
 				case blob: {
-					Label icon = WicketUtils.newIcon("type", "icon-file");
+					final Label icon = WicketUtils.newIcon("type", "icon-file");
 					WicketUtils.setHtmlTooltip(icon, "blob");
 					item.add(icon);
-					item.add(new LinkPanel("summary", null, sr.path, BlobPage.class, WicketUtils.newPathParameter(sr.repository, sr.branch, sr.path)));
+					item.add(new LinkPanel("summary", null, sr.path, BlobPage.class, WicketUtils
+							.newPathParameter(sr.repository, sr.branch, sr.path)));
 					item.add(new Label("tags").setVisible(false));
 					break;
 				}
 				}
-				item.add(new Label("fragment", sr.fragment).setEscapeModelStrings(false).setVisible(!StringUtils.isEmpty(sr.fragment)));
-				item.add(new LinkPanel("repository", null, sr.repository, SummaryPage.class, WicketUtils.newRepositoryParameter(sr.repository)));
+				item.add(new Label("fragment", sr.fragment).setEscapeModelStrings(false)
+						.setVisible(!StringUtils.isEmpty(sr.fragment)));
+				item.add(new LinkPanel("repository", null, sr.repository, SummaryPage.class,
+						WicketUtils.newRepositoryParameter(sr.repository)));
 				if (StringUtils.isEmpty(sr.branch)) {
 					item.add(new Label("branch", "null"));
 				} else {
-					item.add(new LinkPanel("branch", "branch", StringUtils.getRelativePath(Constants.R_HEADS, sr.branch), LogPage.class, WicketUtils.newObjectParameter(sr.repository, sr.branch)));
+					item.add(new LinkPanel("branch", "branch", StringUtils.getRelativePath(
+							Constants.R_HEADS, sr.branch), LogPage.class, WicketUtils
+							.newObjectParameter(sr.repository, sr.branch)));
 				}
 				item.add(new Label("author", sr.author));
-				item.add(WicketUtils.createDatestampLabel("date", sr.date, getTimeZone(), getTimeUtils()));
+				item.add(WicketUtils.createDatestampLabel("date", sr.date, getTimeZone(),
+						getTimeUtils()));
 			}
 		};
 		add(resultsView.setVisible(results.size() > 0));
 
-		PageParameters pagerParams = new PageParameters();
+		final PageParameters pagerParams = new PageParameters();
 		pagerParams.put("repositories", StringUtils.flattenStrings(repositoriesModel.getObject()));
 		pagerParams.put("query", queryModel.getObject());
 
 		boolean showPager = false;
 		int totalPages = 0;
 		if (results.size() > 0) {
-			totalPages = (results.get(0).totalHits / pageSize) + (results.get(0).totalHits % pageSize > 0 ? 1 : 0);
+			totalPages = (results.get(0).totalHits / pageSize)
+					+ ((results.get(0).totalHits % pageSize) > 0 ? 1 : 0);
 			showPager = results.get(0).totalHits > pageSize;
 		}
 
-		add(new PagerPanel("topPager", page, totalPages, LuceneSearchPage.class, pagerParams).setVisible(showPager));
-		add(new PagerPanel("bottomPager", page, totalPages, LuceneSearchPage.class, pagerParams).setVisible(showPager));
+		add(new PagerPanel("topPager", page, totalPages, LuceneSearchPage.class, pagerParams)
+				.setVisible(showPager));
+		add(new PagerPanel("bottomPager", page, totalPages, LuceneSearchPage.class, pagerParams)
+				.setVisible(showPager));
 	}
 }

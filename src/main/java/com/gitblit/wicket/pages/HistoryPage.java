@@ -29,35 +29,36 @@ public class HistoryPage extends RepositoryPage {
 	public HistoryPage(PageParameters params) {
 		super(params);
 
-		String path = WicketUtils.getPath(params);
-		int pageNumber = WicketUtils.getPage(params);
-		int prevPage = Math.max(0, pageNumber - 1);
-		int nextPage = pageNumber + 1;
+		final String path = WicketUtils.getPath(params);
+		final int pageNumber = WicketUtils.getPage(params);
+		final int prevPage = Math.max(0, pageNumber - 1);
+		final int nextPage = pageNumber + 1;
 
-		HistoryPanel history = new HistoryPanel("historyPanel", repositoryName, objectId, path,
-				getRepository(), -1, pageNumber - 1, getRepositoryModel().showRemoteBranches);
-		boolean hasMore = history.hasMore();
+		final HistoryPanel history = new HistoryPanel("historyPanel", this.repositoryName,
+				this.objectId, path, getRepository(), -1, pageNumber - 1,
+				getRepositoryModel().showRemoteBranches);
+		final boolean hasMore = history.hasMore();
 		add(history);
 
 		add(new BookmarkablePageLink<Void>("firstPageTop", HistoryPage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, path))
+				WicketUtils.newPathParameter(this.repositoryName, this.objectId, path))
 				.setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("prevPageTop", HistoryPage.class,
-				WicketUtils.newHistoryPageParameter(repositoryName, objectId, path, prevPage))
-				.setEnabled(pageNumber > 1));
+				WicketUtils.newHistoryPageParameter(this.repositoryName, this.objectId, path,
+						prevPage)).setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("nextPageTop", HistoryPage.class,
-				WicketUtils.newHistoryPageParameter(repositoryName, objectId, path, nextPage))
-				.setEnabled(hasMore));
+				WicketUtils.newHistoryPageParameter(this.repositoryName, this.objectId, path,
+						nextPage)).setEnabled(hasMore));
 
 		add(new BookmarkablePageLink<Void>("firstPageBottom", HistoryPage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, path))
+				WicketUtils.newPathParameter(this.repositoryName, this.objectId, path))
 				.setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("prevPageBottom", HistoryPage.class,
-				WicketUtils.newHistoryPageParameter(repositoryName, objectId, path, prevPage))
-				.setEnabled(pageNumber > 1));
+				WicketUtils.newHistoryPageParameter(this.repositoryName, this.objectId, path,
+						prevPage)).setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("nextPageBottom", HistoryPage.class,
-				WicketUtils.newHistoryPageParameter(repositoryName, objectId, path, nextPage))
-				.setEnabled(hasMore));
+				WicketUtils.newHistoryPageParameter(this.repositoryName, this.objectId, path,
+						nextPage)).setEnabled(hasMore));
 
 	}
 

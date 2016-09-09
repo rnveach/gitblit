@@ -32,7 +32,8 @@ import java.util.TreeSet;
 public class Mailing {
 
 	public enum Type {
-		plain, html
+		plain,
+		html
 	}
 
 	public final Type type;
@@ -61,7 +62,7 @@ public class Mailing {
 	}
 
 	public boolean hasRecipients() {
-		return (toAddresses.size() + ccAddresses.size()) > 0;
+		return (this.toAddresses.size() + this.ccAddresses.size()) > 0;
 	}
 
 	public void setRecipients(String... addrs) {
@@ -69,15 +70,15 @@ public class Mailing {
 	}
 
 	public void setRecipients(Collection<String> addrs) {
-		toAddresses.clear();
-		for (String addr : addrs) {
-			toAddresses.add(addr.toLowerCase());
+		this.toAddresses.clear();
+		for (final String addr : addrs) {
+			this.toAddresses.add(addr.toLowerCase());
 		}
 		cleanup();
 	}
 
 	public boolean hasCCs() {
-		return ccAddresses.size() > 0;
+		return this.ccAddresses.size() > 0;
 	}
 
 	public void setCCs(String... addrs) {
@@ -85,27 +86,27 @@ public class Mailing {
 	}
 
 	public void setCCs(Collection<String> addrs) {
-		ccAddresses.clear();
-		for (String addr : addrs) {
-			ccAddresses.add(addr.toLowerCase());
+		this.ccAddresses.clear();
+		for (final String addr : addrs) {
+			this.ccAddresses.add(addr.toLowerCase());
 		}
 		cleanup();
 	}
 
 	private void cleanup() {
-		ccAddresses.removeAll(toAddresses);
+		this.ccAddresses.removeAll(this.toAddresses);
 	}
 
 	public boolean hasAttachments() {
-		return attachments.size() > 0;
+		return this.attachments.size() > 0;
 	}
 
 	public void addAttachment(File file) {
-		attachments.add(file);
+		this.attachments.add(file);
 	}
 
 	@Override
 	public String toString() {
-		return subject + "\n\n" + content;
+		return this.subject + "\n\n" + this.content;
 	}
 }

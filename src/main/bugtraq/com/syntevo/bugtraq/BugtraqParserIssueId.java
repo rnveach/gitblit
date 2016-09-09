@@ -48,14 +48,14 @@ final class BugtraqParserIssueId {
 	// Accessing ==============================================================
 
 	public int getFrom() {
-		return from;
+		return this.from;
 	}
 
 	public int getTo() {
-		return to;
+		return this.to;
 	}
 
 	public String getId() {
-		return id;
+		return this.id;
 	}
 }

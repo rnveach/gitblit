@@ -30,38 +30,35 @@ public class SalesforceAuthProvider extends UsernamePasswordAuthenticationProvid
 
 	@Override
 	public UserModel authenticate(String username, char[] password) {
-		ConnectorConfig config = new ConnectorConfig();
+		final ConnectorConfig config = new ConnectorConfig();
 		config.setUsername(username);
 		config.setPassword(new String(password));
 
 		try {
-			PartnerConnection connection = Connector.newConnection(config);
+			final PartnerConnection connection = Connector.newConnection(config);
 
-			GetUserInfoResult info = connection.getUserInfo();
+			final GetUserInfoResult info = connection.getUserInfo();
 
-			String org = settings.getString(Keys.realm.salesforce.orgId, "0")
-					.trim();
+			final String org = this.settings.getString(Keys.realm.salesforce.orgId, "0").trim();
 
 			if (!org.equals("0")) {
 				if (!org.equals(info.getOrganizationId())) {
-					logger.warn("Access attempted by user of an invalid org: "
-							+ info.getUserName() + ", org: "
-							+ info.getOrganizationName() + "("
+					this.logger.warn("Access attempted by user of an invalid org: "
+							+ info.getUserName() + ", org: " + info.getOrganizationName() + "("
 							+ info.getOrganizationId() + ")");
 
 					return null;
 				}
 			}
 
-			logger.info("Authenticated user " + info.getUserName()
-					+ " using org " + info.getOrganizationName() + "("
-					+ info.getOrganizationId() + ")");
+			this.logger.info("Authenticated user " + info.getUserName() + " using org "
+					+ info.getOrganizationName() + "(" + info.getOrganizationId() + ")");
 
-			String simpleUsername = getSimpleUsername(info);
+			final String simpleUsername = getSimpleUsername(info);
 
 			UserModel user = null;
 			synchronized (this) {
-				user = userManager.getUserModel(simpleUsername);
+				user = this.userManager.getUserModel(simpleUsername);
 				if (user == null) {
 					user = new UserModel(simpleUsername);
 				}
@@ -73,8 +70,9 @@ public class SalesforceAuthProvider extends UsernamePasswordAuthenticationProvid
 			}
 
 			return user;
-		} catch (ConnectionException e) {
-			logger.error("Failed to authenticate", e);
+		}
+		catch (final ConnectionException e) {
+			this.logger.error("Failed to authenticate", e);
 		}
 
 		return null;
@@ -95,12 +93,11 @@ public class SalesforceAuthProvider extends UsernamePasswordAuthenticationProvid
 	/**
 	 * Simple user name is the first part of the email address.
 	 */
-	private String getSimpleUsername(GetUserInfoResult info) {
-		String email = info.getUserEmail();
+	private static String getSimpleUsername(GetUserInfoResult info) {
+		final String email = info.getUserEmail();
 
 		return email.split("@")[0];
 	}
-
 
 	@Override
 	public boolean supportsCredentialChanges() {
@@ -122,10 +119,10 @@ public class SalesforceAuthProvider extends UsernamePasswordAuthenticationProvid
 		return true;
 	}
 
-    @Override
-    public boolean supportsRoleChanges(UserModel user, Role role) {
-        return true;
-    }
+	@Override
+	public boolean supportsRoleChanges(UserModel user, Role role) {
+		return true;
+	}
 
 	@Override
 	public boolean supportsRoleChanges(TeamModel team, Role role) {

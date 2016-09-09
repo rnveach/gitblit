@@ -40,14 +40,12 @@ public abstract class IPublicKeyManager implements IManager {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	protected final LoadingCache<String, List<SshKey>> keyCache = CacheBuilder
-			.newBuilder().
-			expireAfterAccess(15, TimeUnit.MINUTES).
-			maximumSize(100)
+	protected final LoadingCache<String, List<SshKey>> keyCache = CacheBuilder.newBuilder()
+			.expireAfterAccess(15, TimeUnit.MINUTES).maximumSize(100)
 			.build(new CacheLoader<String, List<SshKey>>() {
 				@Override
 				public List<SshKey> load(String username) {
-					List<SshKey> keys = getKeysImpl(username);
+					final List<SshKey> keys = getKeysImpl(username);
 					if (keys == null) {
 						return Collections.emptyList();
 					}
@@ -66,26 +64,28 @@ public abstract class IPublicKeyManager implements IManager {
 	public final List<SshKey> getKeys(String username) {
 		try {
 			if (isStale(username)) {
-				keyCache.invalidate(username);
+				this.keyCache.invalidate(username);
 			}
-			return keyCache.get(username);
-		} catch (InvalidCacheLoadException e) {
-			if (e.getMessage() == null || !e.getMessage().contains("returned null")) {
-				log.error(MessageFormat.format("failed to retrieve keys for {0}", username), e);
+			return this.keyCache.get(username);
+		}
+		catch (final InvalidCacheLoadException e) {
+			if ((e.getMessage() == null) || !e.getMessage().contains("returned null")) {
+				this.log.error(MessageFormat.format("failed to retrieve keys for {0}", username), e);
 			}
-		} catch (ExecutionException e) {
-			log.error(MessageFormat.format("failed to retrieve keys for {0}", username), e);
+		}
+		catch (final ExecutionException e) {
+			this.log.error(MessageFormat.format("failed to retrieve keys for {0}", username), e);
 		}
 		return null;
 	}
 
 	public final void renameUser(String oldName, String newName) {
-		List<SshKey> keys = getKeys(oldName);
-		if (keys == null || keys.isEmpty()) {
+		final List<SshKey> keys = getKeys(oldName);
+		if ((keys == null) || keys.isEmpty()) {
 			return;
 		}
 		removeAllKeys(oldName);
-		for (SshKey key : keys) {
+		for (final SshKey key : keys) {
 			addKey(newName, key);
 		}
 	}

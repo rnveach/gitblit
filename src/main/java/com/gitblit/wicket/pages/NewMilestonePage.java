@@ -52,10 +52,11 @@ public class NewMilestonePage extends RepositoryPage {
 	public NewMilestonePage(PageParameters params) {
 		super(params);
 
-		RepositoryModel model = getRepositoryModel();
+		final RepositoryModel model = getRepositoryModel();
 		if (!app().tickets().isAcceptingTicketUpdates(model)) {
 			// ticket service is read-only
-			throw new RestartResponseException(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+			throw new RestartResponseException(TicketsPage.class,
+					WicketUtils.newOpenTicketsParameter(this.repositoryName));
 		}
 
 		UserModel currentUser = GitBlitWebSession.get().getUser();
@@ -65,20 +66,21 @@ public class NewMilestonePage extends RepositoryPage {
 
 		if (!currentUser.isAuthenticated || !currentUser.canAdmin(model)) {
 			// administration prohibited
-			throw new RestartResponseException(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+			throw new RestartResponseException(TicketsPage.class,
+					WicketUtils.newOpenTicketsParameter(this.repositoryName));
 		}
 
 		setStatelessHint(false);
 		setOutputMarkupId(true);
 
-		Form<Void> form = new Form<Void>("editForm");
+		final Form<Void> form = new Form<Void>("editForm");
 		add(form);
 
-		nameModel = Model.of("");
-		dueModel = Model.of(new Date(System.currentTimeMillis() + TimeUtils.ONEDAY));
+		this.nameModel = Model.of("");
+		this.dueModel = Model.of(new Date(System.currentTimeMillis() + TimeUtils.ONEDAY));
 
-		form.add(new TextField<String>("name", nameModel));
-		form.add(new Html5DateField("due", dueModel, "yyyy-MM-dd"));
+		form.add(new TextField<String>("name", this.nameModel));
+		form.add(new Html5DateField("due", this.dueModel, "yyyy-MM-dd"));
 		form.add(new Label("dueFormat", "yyyy-MM-dd"));
 		addBottomScriptInline("{var e=document.createElement('input');e.type='date';if(e.type=='date'){$('[name=\"due\"]~.help-inline').hide()}}");
 		addBottomScript("scripts/wicketHtml5Patch.js");
@@ -88,40 +90,43 @@ public class NewMilestonePage extends RepositoryPage {
 
 			@Override
 			protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
-				String name = nameModel.getObject();
+				final String name = NewMilestonePage.this.nameModel.getObject();
 				if (StringUtils.isEmpty(name)) {
 					// invalid name
 					return;
 				}
 
-				TicketMilestone milestone = app().tickets().getMilestone(getRepositoryModel(), name);
+				TicketMilestone milestone = app().tickets()
+						.getMilestone(getRepositoryModel(), name);
 				if (milestone != null) {
 					// milestone already exists
 					return;
 				}
 
-				Date due = dueModel.getObject();
+				final Date due = NewMilestonePage.this.dueModel.getObject();
 
-				UserModel currentUser = GitBlitWebSession.get().getUser();
-				String createdBy = currentUser.username;
+				final UserModel currentUser = GitBlitWebSession.get().getUser();
+				final String createdBy = currentUser.username;
 
 				milestone = app().tickets().createMilestone(getRepositoryModel(), name, createdBy);
 				if (milestone != null) {
 					milestone.due = due;
 					app().tickets().updateMilestone(getRepositoryModel(), milestone, createdBy);
-					redirectTo(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+					redirectTo(TicketsPage.class, WicketUtils
+							.newOpenTicketsParameter(NewMilestonePage.this.repositoryName));
 				} else {
 					// TODO error
 				}
 			}
 		});
 
-		Button cancel = new Button("cancel") {
+		final Button cancel = new Button("cancel") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onSubmit() {
-				setResponsePage(TicketsPage.class, WicketUtils.newOpenTicketsParameter(repositoryName));
+				setResponsePage(TicketsPage.class,
+						WicketUtils.newOpenTicketsParameter(NewMilestonePage.this.repositoryName));
 			}
 		};
 		cancel.setDefaultFormProcessing(false);

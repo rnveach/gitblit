@@ -48,7 +48,7 @@ public class FanoutStats implements Serializable {
 
 	public String info() {
 		int i = 0;
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(infoStr(i++, "boot date"));
 		sb.append(infoStr(i++, "strict request termination"));
 		sb.append(infoStr(i++, "allow connection \"all\" announcements"));
@@ -65,33 +65,24 @@ public class FanoutStats implements Serializable {
 		sb.append(infoInt(i++, "total subscribes"));
 		sb.append(infoInt(i++, "total unsubscribes"));
 		sb.append(infoInt(i++, "total pings"));
-		String template = sb.toString();
+		final String template = sb.toString();
 
-		String info = MessageFormat.format(template,
-				bootDate.toString(),
-				Boolean.toString(strictRequestTermination),
-				Boolean.toString(allowAllChannelAnnouncements),
-				concurrentConnectionLimit,
-				rejectedConnectionCount,
-				peakConnectionCount,
-				currentConnections,
-				currentChannels,
-				currentSubscriptions,
-				currentSubscriptions == 0 ? 0 : (currentSubscriptions - currentConnections),
-						totalConnections,
-						totalAnnouncements,
-						totalMessages,
-						totalSubscribes,
-						totalUnsubscribes,
-						totalPings);
+		final String info = MessageFormat.format(template, this.bootDate.toString(), Boolean
+				.toString(this.strictRequestTermination), Boolean
+				.toString(this.allowAllChannelAnnouncements), this.concurrentConnectionLimit,
+				this.rejectedConnectionCount, this.peakConnectionCount, this.currentConnections,
+				this.currentChannels, this.currentSubscriptions, this.currentSubscriptions == 0 ? 0
+						: (this.currentSubscriptions - this.currentConnections),
+				this.totalConnections, this.totalAnnouncements, this.totalMessages,
+				this.totalSubscribes, this.totalUnsubscribes, this.totalPings);
 		return info;
 	}
 
-	private String infoStr(int index, String label) {
+	private static String infoStr(int index, String label) {
 		return label + ": {" + index + "}\n";
 	}
 
-	private String infoInt(int index, String label) {
+	private static String infoInt(int index, String label) {
 		return label + ": {" + index + ",number,0}\n";
 	}
 

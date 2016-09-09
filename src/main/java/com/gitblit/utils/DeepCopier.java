@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 package com.gitblit.utils;
-
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,36 +26,41 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+
 public class DeepCopier {
 
 	/**
 	 * Utility method to calculate the checksum of an object.
-	 * @param sourceObject The object from which to establish the checksum.
+	 * 
+	 * @param sourceObject
+	 *            The object from which to establish the checksum.
 	 * @return The checksum
 	 * @throws IOException
 	 */
 	public static BigInteger checksum(Object sourceObject) {
 
-	    if (sourceObject == null) {
-	      return BigInteger.ZERO;
-	    }
+		if (sourceObject == null) {
+			return BigInteger.ZERO;
+		}
 
-	    try {
-		    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		    ObjectOutputStream oos = new ObjectOutputStream(baos);
-		    oos.writeObject(sourceObject);
-		    oos.close();
+		try {
+			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			final ObjectOutputStream oos = new ObjectOutputStream(baos);
+			oos.writeObject(sourceObject);
+			oos.close();
 
-	    	MessageDigest m = MessageDigest.getInstance("SHA-1");
-	    	m.update(baos.toByteArray());
-	    	return new BigInteger(1, m.digest());
-	    } catch (IOException e) {
-	    	throw new RuntimeException(e);
-	    } catch (NoSuchAlgorithmException e) {
-	    	// impossible
-	    }
+			final MessageDigest m = MessageDigest.getInstance("SHA-1");
+			m.update(baos.toByteArray());
+			return new BigInteger(1, m.digest());
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+		catch (final NoSuchAlgorithmException e) {
+			// impossible
+		}
 
-	    return BigInteger.ZERO;
+		return BigInteger.ZERO;
 	}
 
 	/**
@@ -67,17 +71,19 @@ public class DeepCopier {
 	public static <T> T copy(T original) {
 		T o = null;
 		try {
-			ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream(byteOut);
+			final ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+			final ObjectOutputStream oos = new ObjectOutputStream(byteOut);
 			oos.writeObject(original);
-			ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
-			ObjectInputStream ois = new ObjectInputStream(byteIn);
+			final ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
+			final ObjectInputStream ois = new ObjectInputStream(byteIn);
 			try {
 				o = (T) ois.readObject();
-			} catch (ClassNotFoundException cex) {
+			}
+			catch (final ClassNotFoundException cex) {
 				// actually can not happen in this instance
 			}
-		} catch (IOException iox) {
+		}
+		catch (final IOException iox) {
 			// doesn't seem likely to happen as these streams are in memory
 			throw new RuntimeException(iox);
 		}
@@ -94,17 +100,19 @@ public class DeepCopier {
 	 */
 	public static <T> T copyParallel(T original) {
 		try {
-			PipedOutputStream outputStream = new PipedOutputStream();
-			PipedInputStream inputStream = new PipedInputStream(outputStream);
-			ObjectOutputStream ois = new ObjectOutputStream(outputStream);
-			Receiver<T> receiver = new Receiver<T>(inputStream);
+			final PipedOutputStream outputStream = new PipedOutputStream();
+			final PipedInputStream inputStream = new PipedInputStream(outputStream);
+			final ObjectOutputStream ois = new ObjectOutputStream(outputStream);
+			final Receiver<T> receiver = new Receiver<T>(inputStream);
 			try {
 				ois.writeObject(original);
-			} finally {
+			}
+			finally {
 				ois.close();
 			}
 			return receiver.getResult();
-		} catch (IOException iox) {
+		}
+		catch (final IOException iox) {
 			// doesn't seem likely to happen as these streams are in memory
 			throw new RuntimeException(iox);
 		}
@@ -126,44 +134,48 @@ public class DeepCopier {
 		public void run() {
 
 			try {
-				ObjectInputStream ois = new ObjectInputStream(inputStream);
+				final ObjectInputStream ois = new ObjectInputStream(this.inputStream);
 				try {
-					result = (T) ois.readObject();
+					this.result = (T) ois.readObject();
 					try {
 						// Some serializers may write more than they actually
 						// need to deserialize the object, but if we don't
 						// read it all the PipedOutputStream will choke.
-						while (inputStream.read() != -1) {
+						while (this.inputStream.read() != -1) {
 						}
-					} catch (IOException e) {
+					}
+					catch (final IOException e) {
 						// The object has been successfully deserialized, so
 						// ignore problems at this point (for example, the
 						// serializer may have explicitly closed the inputStream
 						// itself, causing this read to fail).
 					}
-				} finally {
+				}
+				finally {
 					ois.close();
 				}
-			} catch (Throwable t) {
-				throwable = t;
+			}
+			catch (final Throwable t) {
+				this.throwable = t;
 			}
 		}
 
-		public T getResult() throws IOException {
+		public T getResult() {
 			try {
 				join();
-			} catch (InterruptedException e) {
+			}
+			catch (final InterruptedException e) {
 				throw new RuntimeException("Unexpected InterruptedException", e);
 			}
 			// join() guarantees that all shared memory is synchronized between
 			// the two threads
-			if (throwable != null) {
-				if (throwable instanceof ClassNotFoundException) {
+			if (this.throwable != null) {
+				if (this.throwable instanceof ClassNotFoundException) {
 					// actually can not happen in this instance
 				}
-				throw new RuntimeException(throwable);
+				throw new RuntimeException(this.throwable);
 			}
-			return result;
+			return this.result;
 		}
 	}
 }

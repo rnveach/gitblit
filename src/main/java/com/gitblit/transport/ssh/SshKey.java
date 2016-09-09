@@ -1,4 +1,4 @@
-/*
+/* 
  * Copyright 2014 gitblit.com.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -65,20 +65,21 @@ public class SshKey implements Serializable {
 	}
 
 	public PublicKey getPublicKey() {
-		if (publicKey == null && rawData != null) {
+		if ((this.publicKey == null) && (this.rawData != null)) {
 			// instantiate the public key from the raw key data
-			final String[] parts = rawData.split(" ", 3);
-			if (comment == null && parts.length == 3) {
-				comment = parts[2];
+			final String[] parts = this.rawData.split(" ", 3);
+			if ((this.comment == null) && (parts.length == 3)) {
+				this.comment = parts[2];
 			}
 			final byte[] bin = Base64.decodeBase64(Constants.encodeASCII(parts[1]));
 			try {
-				publicKey = new ByteArrayBuffer(bin).getRawPublicKey();
-			} catch (SshException e) {
+				this.publicKey = new ByteArrayBuffer(bin).getRawPublicKey();
+			}
+			catch (final SshException e) {
 				throw new RuntimeException(e);
 			}
 		}
-		return publicKey;
+		return this.publicKey;
 	}
 
 	public String getAlgorithm() {
@@ -86,20 +87,20 @@ public class SshKey implements Serializable {
 	}
 
 	public String getComment() {
-		if (comment == null && rawData != null) {
+		if ((this.comment == null) && (this.rawData != null)) {
 			// extract comment from the raw data
-			final String[] parts = rawData.split(" ", 3);
+			final String[] parts = this.rawData.split(" ", 3);
 			if (parts.length == 3) {
-				comment = parts[2];
+				this.comment = parts[2];
 			}
 		}
-		return comment;
+		return this.comment;
 	}
 
 	public void setComment(String comment) {
 		this.comment = comment;
-		if (rawData != null) {
-			rawData = null;
+		if (this.rawData != null) {
+			this.rawData = null;
 		}
 	}
 
@@ -109,7 +110,7 @@ public class SshKey implements Serializable {
 	 * @return true if this key can be used to clone or fetch
 	 */
 	public boolean canClone() {
-		return permission.atLeast(AccessPermission.CLONE);
+		return this.permission.atLeast(AccessPermission.CLONE);
 	}
 
 	/**
@@ -118,7 +119,7 @@ public class SshKey implements Serializable {
 	 * @return true if this key can be used to push changes
 	 */
 	public boolean canPush() {
-		return permission.atLeast(AccessPermission.PUSH);
+		return this.permission.atLeast(AccessPermission.PUSH);
 	}
 
 	/**
@@ -127,7 +128,7 @@ public class SshKey implements Serializable {
 	 * @return the access permission for the key
 	 */
 	public AccessPermission getPermission() {
-		return permission;
+		return this.permission;
 	}
 
 	/**
@@ -136,41 +137,42 @@ public class SshKey implements Serializable {
 	 * @param value
 	 */
 	public void setPermission(AccessPermission value) throws IllegalArgumentException {
-		List<AccessPermission> permitted = Arrays.asList(AccessPermission.SSHPERMISSIONS);
+		final List<AccessPermission> permitted = Arrays.asList(AccessPermission.SSHPERMISSIONS);
 		if (!permitted.contains(value)) {
-			throw new IllegalArgumentException("Illegal SSH public key permission specified: " + value);
+			throw new IllegalArgumentException("Illegal SSH public key permission specified: "
+					+ value);
 		}
 		this.permission = value;
 	}
 
 	public String getRawData() {
-		if (rawData == null && publicKey != null) {
+		if ((this.rawData == null) && (this.publicKey != null)) {
 			// build the raw data manually from the public key
-			Buffer buf = new ByteArrayBuffer();
+			final Buffer buf = new ByteArrayBuffer();
 
 			// 1: identify the algorithm
-			buf.putRawPublicKey(publicKey);
-			String alg = buf.getString();
+			buf.putRawPublicKey(this.publicKey);
+			final String alg = buf.getString();
 
 			// 2: encode the key
 			buf.clear();
-			buf.putPublicKey(publicKey);
-			String b64 = Base64.encodeBase64String(buf.getBytes());
+			buf.putPublicKey(this.publicKey);
+			final String b64 = Base64.encodeBase64String(buf.getBytes());
 
-			String c = getComment();
-			rawData = alg + " " + b64 + (StringUtils.isEmpty(c) ? "" : (" " + c));
+			final String c = getComment();
+			this.rawData = alg + " " + b64 + (StringUtils.isEmpty(c) ? "" : (" " + c));
 		}
-		return rawData;
+		return this.rawData;
 	}
 
 	public String getFingerprint() {
-		if (fingerprint == null) {
-			StringBuilder sb = new StringBuilder();
+		if (this.fingerprint == null) {
+			final StringBuilder sb = new StringBuilder();
 			// append the key hash as colon-separated pairs
 			String hash;
-			if (rawData != null) {
-				final String[] parts = rawData.split(" ", 3);
-				final byte [] bin = Base64.decodeBase64(Constants.encodeASCII(parts[1]));
+			if (this.rawData != null) {
+				final String[] parts = this.rawData.split(" ", 3);
+				final byte[] bin = Base64.decodeBase64(Constants.encodeASCII(parts[1]));
 				hash = StringUtils.getMD5(bin);
 			} else {
 				// TODO calculate the correct hash from a PublicKey instance
@@ -180,9 +182,9 @@ public class SshKey implements Serializable {
 				sb.append(hash.charAt(i)).append(hash.charAt(i + 1)).append(':');
 			}
 			sb.setLength(sb.length() - 1);
-			fingerprint = sb.toString();
+			this.fingerprint = sb.toString();
 		}
-		return fingerprint;
+		return this.fingerprint;
 	}
 
 	@Override
@@ -202,29 +204,29 @@ public class SshKey implements Serializable {
 
 	@Override
 	public String toString() {
-		if (toString == null) {
-			StringBuilder sb = new StringBuilder();
+		if (this.toString == null) {
+			final StringBuilder sb = new StringBuilder();
 			// TODO append the keysize
-			int keySize = 0;
-			if (keySize > 0) {
-				sb.append(keySize).append(' ');
-			}
+			// final int keySize = 0;
+			// if (keySize > 0) {
+			// sb.append(keySize).append(' ');
+			// }
 			// append fingerprint
 			sb.append(' ');
 			sb.append(getFingerprint());
 			// append the comment
-			String c = getComment();
+			final String c = getComment();
 			if (!StringUtils.isEmpty(c)) {
 				sb.append(' ');
 				sb.append(c);
 			}
 			// append algorithm
-			String alg = getAlgorithm();
+			final String alg = getAlgorithm();
 			if (!StringUtils.isEmpty(alg)) {
 				sb.append(" (").append(alg).append(")");
 			}
-			toString = sb.toString();
+			this.toString = sb.toString();
 		}
-		return toString;
+		return this.toString;
 	}
 }

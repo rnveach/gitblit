@@ -42,36 +42,36 @@ public class ForkModel implements Serializable {
 	}
 
 	public boolean isRoot() {
-		return StringUtils.isEmpty(repository.originRepository);
+		return StringUtils.isEmpty(this.repository.originRepository);
 	}
 
 	public boolean isNode() {
-		return !ArrayUtils.isEmpty(forks);
+		return !ArrayUtils.isEmpty(this.forks);
 	}
 
 	public boolean isLeaf() {
-		return ArrayUtils.isEmpty(forks);
+		return ArrayUtils.isEmpty(this.forks);
 	}
 
 	public boolean isPersonalRepository() {
-		return repository.isPersonalRepository();
+		return this.repository.isPersonalRepository();
 	}
 
 	@Override
 	public int hashCode() {
-		return repository.hashCode();
+		return this.repository.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof ForkModel) {
-			return repository.equals(((ForkModel) o).repository);
+			return this.repository.equals(((ForkModel) o).repository);
 		}
 		return false;
 	}
 
 	@Override
 	public String toString() {
-		return repository.toString();
+		return this.repository.toString();
 	}
 }

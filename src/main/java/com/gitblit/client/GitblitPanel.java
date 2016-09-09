@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -43,7 +44,7 @@ public class GitblitPanel extends JPanel implements CloseTabListener {
 
 	private GitblitClient gitblit;
 
-	private JTabbedPane tabs;
+	private final JTabbedPane tabs;
 
 	private RepositoriesPanel repositoriesPanel;
 
@@ -61,26 +62,26 @@ public class GitblitPanel extends JPanel implements CloseTabListener {
 		this.gitblit = new GitblitClient(reg);
 		this.listener = listener;
 
-		tabs = new JTabbedPane(JTabbedPane.BOTTOM);
-		tabs.addTab(Translation.get("gb.repositories"), createRepositoriesPanel());
-		tabs.addTab(Translation.get("gb.activity"), createFeedsPanel());
-		tabs.addTab(Translation.get("gb.teams"), createTeamsPanel());
-		tabs.addTab(Translation.get("gb.users"), createUsersPanel());
-		tabs.addTab(Translation.get("gb.settings"), createSettingsPanel());
-		tabs.addTab(Translation.get("gb.status"), createStatusPanel());
-		tabs.addChangeListener(new ChangeListener() {
+		this.tabs = new JTabbedPane(SwingConstants.BOTTOM);
+		this.tabs.addTab(Translation.get("gb.repositories"), createRepositoriesPanel());
+		this.tabs.addTab(Translation.get("gb.activity"), createFeedsPanel());
+		this.tabs.addTab(Translation.get("gb.teams"), createTeamsPanel());
+		this.tabs.addTab(Translation.get("gb.users"), createUsersPanel());
+		this.tabs.addTab(Translation.get("gb.settings"), createSettingsPanel());
+		this.tabs.addTab(Translation.get("gb.status"), createStatusPanel());
+		this.tabs.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				tabs.getSelectedComponent().requestFocus();
+				GitblitPanel.this.tabs.getSelectedComponent().requestFocus();
 			}
 		});
 
 		setLayout(new BorderLayout());
-		add(tabs, BorderLayout.CENTER);
+		add(this.tabs, BorderLayout.CENTER);
 	}
 
 	private JPanel createRepositoriesPanel() {
-		repositoriesPanel = new RepositoriesPanel(gitblit) {
+		this.repositoriesPanel = new RepositoriesPanel(this.gitblit) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -91,20 +92,20 @@ public class GitblitPanel extends JPanel implements CloseTabListener {
 
 			@Override
 			protected void updateUsersTable() {
-				usersPanel.updateTable(false);
+				GitblitPanel.this.usersPanel.updateTable(false);
 			}
 
 			@Override
 			protected void updateTeamsTable() {
-				teamsPanel.updateTable(false);
+				GitblitPanel.this.teamsPanel.updateTable(false);
 			}
 
 		};
-		return repositoriesPanel;
+		return this.repositoriesPanel;
 	}
 
 	private JPanel createFeedsPanel() {
-		feedsPanel = new FeedsPanel(gitblit) {
+		this.feedsPanel = new FeedsPanel(this.gitblit) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -112,87 +113,87 @@ public class GitblitPanel extends JPanel implements CloseTabListener {
 				GitblitPanel.this.subscribeFeeds(feeds);
 			}
 		};
-		return feedsPanel;
+		return this.feedsPanel;
 	}
 
 	private JPanel createUsersPanel() {
-		usersPanel = new UsersPanel(gitblit) {
+		this.usersPanel = new UsersPanel(this.gitblit) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			protected void updateTeamsTable() {
-				teamsPanel.updateTable(false);
+				GitblitPanel.this.teamsPanel.updateTable(false);
 			}
 		};
-		return usersPanel;
+		return this.usersPanel;
 	}
 
 	private JPanel createTeamsPanel() {
-		teamsPanel = new TeamsPanel(gitblit) {
+		this.teamsPanel = new TeamsPanel(this.gitblit) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			protected void updateUsersTable() {
-				usersPanel.updateTable(false);
+				GitblitPanel.this.usersPanel.updateTable(false);
 			}
 		};
-		return teamsPanel;
+		return this.teamsPanel;
 	}
 
 	private JPanel createSettingsPanel() {
-		settingsPanel = new SettingsPanel(gitblit);
-		return settingsPanel;
+		this.settingsPanel = new SettingsPanel(this.gitblit);
+		return this.settingsPanel;
 	}
 
 	private JPanel createStatusPanel() {
-		statusPanel = new StatusPanel(gitblit);
-		return statusPanel;
+		this.statusPanel = new StatusPanel(this.gitblit);
+		return this.statusPanel;
 	}
 
 	public void login() throws IOException {
-		gitblit.login();
+		this.gitblit.login();
 
-		repositoriesPanel.updateTable(true);
-		feedsPanel.updateTable(true);
+		this.repositoriesPanel.updateTable(true);
+		this.feedsPanel.updateTable(true);
 
-		if (gitblit.allowManagement()) {
-			if (gitblit.getProtocolVersion() >= 2) {
+		if (this.gitblit.allowManagement()) {
+			if (this.gitblit.getProtocolVersion() >= 2) {
 				// refresh teams panel
-				teamsPanel.updateTable(false);
+				this.teamsPanel.updateTable(false);
 			} else {
 				// remove teams panel
-				String teams = Translation.get("gb.teams");
-				for (int i = 0; i < tabs.getTabCount(); i++) {
-					if (teams.equals(tabs.getTitleAt(i))) {
-						tabs.removeTabAt(i);
+				final String teams = Translation.get("gb.teams");
+				for (int i = 0; i < this.tabs.getTabCount(); i++) {
+					if (teams.equals(this.tabs.getTitleAt(i))) {
+						this.tabs.removeTabAt(i);
 						break;
 					}
 				}
 			}
-			usersPanel.updateTable(false);
+			this.usersPanel.updateTable(false);
 		} else {
 			// user does not have administrator privileges
 			// hide admin repository buttons
-			repositoriesPanel.disableManagement();
+			this.repositoriesPanel.disableManagement();
 
-			while (tabs.getTabCount() > 2) {
+			while (this.tabs.getTabCount() > 2) {
 				// remove all management/administration tabs
-				tabs.removeTabAt(2);
+				this.tabs.removeTabAt(2);
 			}
 		}
 
-		if (gitblit.allowAdministration()) {
-			settingsPanel.updateTable(true);
-			statusPanel.updateTable(false);
+		if (this.gitblit.allowAdministration()) {
+			this.settingsPanel.updateTable(true);
+			this.statusPanel.updateTable(false);
 		} else {
 			// remove the settings and status tab
-			String[] titles = { Translation.get("gb.settings"), Translation.get("gb.status") };
-			for (String title : titles) {
-				for (int i = 0; i < tabs.getTabCount(); i++) {
-					if (tabs.getTitleAt(i).equals(title)) {
-						tabs.removeTabAt(i);
+			final String[] titles = { Translation.get("gb.settings"), Translation.get("gb.status") };
+			for (final String title : titles) {
+				for (int i = 0; i < this.tabs.getTabCount(); i++) {
+					if (this.tabs.getTitleAt(i).equals(title)) {
+						this.tabs.removeTabAt(i);
 						break;
 					}
 				}
@@ -207,20 +208,21 @@ public class GitblitPanel extends JPanel implements CloseTabListener {
 
 	@Override
 	public void closeTab(Component c) {
-		gitblit = null;
+		this.gitblit = null;
 	}
 
 	protected void subscribeFeeds(final List<FeedModel> feeds) {
-		SubscriptionsDialog dialog = new SubscriptionsDialog(feeds) {
+		final SubscriptionsDialog dialog = new SubscriptionsDialog(feeds) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void save() {
-				gitblit.updateSubscribedFeeds(feeds);
-				listener.saveRegistration(gitblit.reg.name, gitblit.reg);
+				GitblitPanel.this.gitblit.updateSubscribedFeeds(feeds);
+				GitblitPanel.this.listener.saveRegistration(GitblitPanel.this.gitblit.reg.name,
+						GitblitPanel.this.gitblit.reg);
 				setVisible(false);
-				repositoriesPanel.updateTable(false);
+				GitblitPanel.this.repositoriesPanel.updateTable(false);
 			}
 		};
 		dialog.setLocationRelativeTo(GitblitPanel.this);

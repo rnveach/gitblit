@@ -64,16 +64,14 @@ public class SyndicationServlet extends HttpServlet {
 
 	private transient Logger logger = LoggerFactory.getLogger(SyndicationServlet.class);
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private IRepositoryManager repositoryManager;
+	private final IRepositoryManager repositoryManager;
 
-	private IProjectManager projectManager;
+	private final IProjectManager projectManager;
 
 	@Inject
-	public SyndicationServlet(
-			IStoredSettings settings,
-			IRepositoryManager repositoryManager,
+	public SyndicationServlet(IStoredSettings settings, IRepositoryManager repositoryManager,
 			IProjectManager projectManager) {
 
 		this.settings = settings;
@@ -94,15 +92,15 @@ public class SyndicationServlet extends HttpServlet {
 	 * @return an RSS feed url
 	 */
 	public static String asLink(String baseURL, String repository, String objectId, int length) {
-		if (baseURL.length() > 0 && baseURL.charAt(baseURL.length() - 1) == '/') {
+		if ((baseURL.length() > 0) && (baseURL.charAt(baseURL.length() - 1) == '/')) {
 			baseURL = baseURL.substring(0, baseURL.length() - 1);
 		}
-		StringBuilder url = new StringBuilder();
+		final StringBuilder url = new StringBuilder();
 		url.append(baseURL);
 		url.append(Constants.SYNDICATION_PATH);
 		url.append(repository);
-		if (!StringUtils.isEmpty(objectId) || length > 0) {
-			StringBuilder parameters = new StringBuilder("?");
+		if (!StringUtils.isEmpty(objectId) || (length > 0)) {
+			final StringBuilder parameters = new StringBuilder("?");
 			if (StringUtils.isEmpty(objectId)) {
 				parameters.append("l=");
 				parameters.append(length);
@@ -149,22 +147,22 @@ public class SyndicationServlet extends HttpServlet {
 	 * @throws java.io.IOException
 	 */
 	private void processRequest(javax.servlet.http.HttpServletRequest request,
-			javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException,
-			java.io.IOException {
+			javax.servlet.http.HttpServletResponse response) {
 
-		String servletUrl = request.getContextPath() + request.getServletPath();
+		final String servletUrl = request.getContextPath() + request.getServletPath();
 		String url = request.getRequestURI().substring(servletUrl.length());
-		if (url.length() > 1 && url.charAt(0) == '/') {
+		if ((url.length() > 1) && (url.charAt(0) == '/')) {
 			url = url.substring(1);
 		}
-		String repositoryName = url;
+		final String repositoryName = url;
 		String objectId = request.getParameter("h");
-		String l = request.getParameter("l");
-		String page = request.getParameter("pg");
-		String searchString = request.getParameter("s");
+		final String l = request.getParameter("l");
+		final String page = request.getParameter("pg");
+		final String searchString = request.getParameter("s");
 		Constants.SearchType searchType = Constants.SearchType.COMMIT;
 		if (!StringUtils.isEmpty(request.getParameter("st"))) {
-			Constants.SearchType type = Constants.SearchType.forName(request.getParameter("st"));
+			final Constants.SearchType type = Constants.SearchType.forName(request
+					.getParameter("st"));
 			if (type != null) {
 				searchType = type;
 			}
@@ -172,27 +170,30 @@ public class SyndicationServlet extends HttpServlet {
 
 		Constants.FeedObjectType objectType = Constants.FeedObjectType.COMMIT;
 		if (!StringUtils.isEmpty(request.getParameter("ot"))) {
-			Constants.FeedObjectType type = Constants.FeedObjectType.forName(request.getParameter("ot"));
+			final Constants.FeedObjectType type = Constants.FeedObjectType.forName(request
+					.getParameter("ot"));
 			if (type != null) {
 				objectType = type;
 			}
 		}
 
-		int length = settings.getInteger(Keys.web.syndicationEntries, 25);
+		int length = this.settings.getInteger(Keys.web.syndicationEntries, 25);
 		if (StringUtils.isEmpty(objectId)) {
 			objectId = org.eclipse.jgit.lib.Constants.HEAD;
 		}
 		if (!StringUtils.isEmpty(l)) {
 			try {
 				length = Integer.parseInt(l);
-			} catch (NumberFormatException x) {
+			}
+			catch (final NumberFormatException x) {
 			}
 		}
 		int offset = 0;
 		if (!StringUtils.isEmpty(page)) {
 			try {
 				offset = length * Integer.parseInt(page);
-			} catch (NumberFormatException x) {
+			}
+			catch (final NumberFormatException x) {
 			}
 		}
 
@@ -204,13 +205,13 @@ public class SyndicationServlet extends HttpServlet {
 		String feedDescription = null;
 
 		List<String> repositories = null;
-		if (repositoryName.indexOf('/') == -1 && !repositoryName.toLowerCase().endsWith(".git")) {
+		if ((repositoryName.indexOf('/') == -1) && !repositoryName.toLowerCase().endsWith(".git")) {
 			// try to find a project
 			UserModel user = null;
 			if (request instanceof AuthenticatedRequest) {
 				user = ((AuthenticatedRequest) request).getUser();
 			}
-			ProjectModel project = projectManager.getProjectModel(repositoryName, user);
+			final ProjectModel project = this.projectManager.getProjectModel(repositoryName, user);
 			if (project != null) {
 				isProjectFeed = true;
 				repositories = new ArrayList<String>(project.repositories);
@@ -227,24 +228,24 @@ public class SyndicationServlet extends HttpServlet {
 			repositories = Arrays.asList(repositoryName);
 		}
 
+		final boolean mountParameters = this.settings.getBoolean(Keys.web.mountParameters, true);
 
-		boolean mountParameters = settings.getBoolean(Keys.web.mountParameters, true);
-
-		String gitblitUrl = settings.getString(Keys.web.canonicalUrl, null);
+		String gitblitUrl = this.settings.getString(Keys.web.canonicalUrl, null);
 		if (StringUtils.isEmpty(gitblitUrl)) {
 			gitblitUrl = HttpUtils.getGitblitURL(request);
 		}
-		char fsc = settings.getChar(Keys.web.forwardSlashCharacter, '/');
+		final char fsc = this.settings.getChar(Keys.web.forwardSlashCharacter, '/');
 
 		List<FeedEntryModel> entries = new ArrayList<FeedEntryModel>();
 
-		for (String name : repositories) {
-			Repository repository = repositoryManager.getRepository(name);
-			RepositoryModel model = repositoryManager.getRepositoryModel(name);
+		for (final String name : repositories) {
+			final Repository repository = this.repositoryManager.getRepository(name);
+			final RepositoryModel model = this.repositoryManager.getRepositoryModel(name);
 
 			if (repository == null) {
-				if (model != null && model.isCollectingGarbage) {
-					logger.warn(MessageFormat.format("Temporarily excluding {0} from feed, busy collecting garbage", name));
+				if ((model != null) && model.isCollectingGarbage) {
+					this.logger.warn(MessageFormat.format(
+							"Temporarily excluding {0} from feed, busy collecting garbage", name));
 				}
 				continue;
 			}
@@ -266,14 +267,14 @@ public class SyndicationServlet extends HttpServlet {
 					urlPattern = "{0}/tag/?r={1}&h={2}";
 				}
 
-				List<RefModel> tags = JGitUtils.getTags(repository, false, length, offset);
+				final List<RefModel> tags = JGitUtils.getTags(repository, false, length, offset);
 
-				for (RefModel tag : tags) {
-					FeedEntryModel entry = new FeedEntryModel();
+				for (final RefModel tag : tags) {
+					final FeedEntryModel entry = new FeedEntryModel();
 					entry.title = tag.getName();
 					entry.author = tag.getAuthorIdent().getName();
-					entry.link = MessageFormat.format(urlPattern, gitblitUrl,
-							StringUtils.encodeURL(model.name.replace('/', fsc)), tag.getObjectId().getName());
+					entry.link = MessageFormat.format(urlPattern, gitblitUrl, StringUtils
+							.encodeURL(model.name.replace('/', fsc)), tag.getObjectId().getName());
 					entry.published = tag.getDate();
 					entry.contentType = "text/html";
 					entry.content = tag.getFullMessage();
@@ -305,22 +306,24 @@ public class SyndicationServlet extends HttpServlet {
 					commits = JGitUtils.getRevLog(repository, objectId, offset, length);
 				} else {
 					// repository search
-					commits = JGitUtils.searchRevlogs(repository, objectId, searchString, searchType,
-							offset, length);
+					commits = JGitUtils.searchRevlogs(repository, objectId, searchString,
+							searchType, offset, length);
 				}
-				Map<ObjectId, List<RefModel>> allRefs = JGitUtils.getAllRefs(repository, model.showRemoteBranches);
-				BugtraqProcessor processor = new BugtraqProcessor(settings);
+				final Map<ObjectId, List<RefModel>> allRefs = JGitUtils.getAllRefs(repository,
+						model.showRemoteBranches);
+				final BugtraqProcessor processor = new BugtraqProcessor(this.settings);
 
 				// convert RevCommit to SyndicatedEntryModel
-				for (RevCommit commit : commits) {
-					FeedEntryModel entry = new FeedEntryModel();
+				for (final RevCommit commit : commits) {
+					final FeedEntryModel entry = new FeedEntryModel();
 					entry.title = commit.getShortMessage();
 					entry.author = commit.getAuthorIdent().getName();
 					entry.link = MessageFormat.format(urlPattern, gitblitUrl,
 							StringUtils.encodeURL(model.name.replace('/', fsc)), commit.getName());
 					entry.published = commit.getCommitterIdent().getWhen();
 					entry.contentType = "text/html";
-					String message = processor.processCommitMessage(repository, model, commit.getFullMessage());
+					final String message = processor.processCommitMessage(repository, model,
+							commit.getFullMessage());
 					entry.content = message;
 					entry.repository = model.name;
 					entry.branch = objectId;
@@ -328,14 +331,14 @@ public class SyndicationServlet extends HttpServlet {
 
 					// add commit id and parent commit ids
 					entry.tags.add("commit:" + commit.getName());
-					for (RevCommit parent : commit.getParents()) {
+					for (final RevCommit parent : commit.getParents()) {
 						entry.tags.add("parent:" + parent.getName());
 					}
 
 					// add refs to tabs list
-					List<RefModel> refs = allRefs.get(commit.getId());
-					if (refs != null && refs.size() > 0) {
-						for (RefModel ref : refs) {
+					final List<RefModel> refs = allRefs.get(commit.getId());
+					if ((refs != null) && (refs.size() > 0)) {
+						for (final RefModel ref : refs) {
 							entry.tags.add("ref:" + ref.getName());
 						}
 					}
@@ -379,8 +382,9 @@ public class SyndicationServlet extends HttpServlet {
 		try {
 			SyndicationUtils.toRSS(gitblitUrl, feedLink, getTitle(feedTitle, objectId),
 					feedDescription, entries, response.getOutputStream());
-		} catch (Exception e) {
-			logger.error("An error occurred during feed generation", e);
+		}
+		catch (final Exception e) {
+			this.logger.error("An error occurred during feed generation", e);
 		}
 	}
 

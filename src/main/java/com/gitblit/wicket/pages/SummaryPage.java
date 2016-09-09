@@ -66,9 +66,9 @@ public class SummaryPage extends RepositoryPage {
 		if (numberCommits <= 0) {
 			numberCommits = 20;
 		}
-		int numberRefs = app().settings().getInteger(Keys.web.summaryRefsCount, 5);
+		final int numberRefs = app().settings().getInteger(Keys.web.summaryRefsCount, 5);
 
-		Repository r = getRepository();
+		final Repository r = getRepository();
 		final RepositoryModel model = getRepositoryModel();
 		UserModel user = GitBlitWebSession.get().getUser();
 		if (user == null) {
@@ -77,7 +77,8 @@ public class SummaryPage extends RepositoryPage {
 
 		List<Metric> metrics = null;
 		Metric metricsTotal = null;
-		if (!model.skipSummaryMetrics && app().settings().getBoolean(Keys.web.generateActivityGraph, true)) {
+		if (!model.skipSummaryMetrics
+				&& app().settings().getBoolean(Keys.web.generateActivityGraph, true)) {
 			metrics = app().repositories().getRepositoryDefaultMetrics(model, r);
 			metricsTotal = metrics.remove(0);
 		}
@@ -89,25 +90,28 @@ public class SummaryPage extends RepositoryPage {
 
 		// owner links
 		final List<String> owners = new ArrayList<String>(getRepositoryModel().owners);
-		ListDataProvider<String> ownersDp = new ListDataProvider<String>(owners);
-		DataView<String> ownersView = new DataView<String>("repositoryOwners", ownersDp) {
+		final ListDataProvider<String> ownersDp = new ListDataProvider<String>(owners);
+		final DataView<String> ownersView = new DataView<String>("repositoryOwners", ownersDp) {
 			private static final long serialVersionUID = 1L;
 			int counter = 0;
+
 			@Override
 			public void populateItem(final Item<String> item) {
-				String ownername = item.getModelObject();
-				UserModel ownerModel = app().users().getUserModel(ownername);
+				final String ownername = item.getModelObject();
+				final UserModel ownerModel = app().users().getUserModel(ownername);
 				if (ownerModel != null) {
-					item.add(new LinkPanel("owner", null, ownerModel.getDisplayName(), UserPage.class,
-							WicketUtils.newUsernameParameter(ownerModel.username)).setRenderBodyOnly(true));
+					item.add(new LinkPanel("owner", null, ownerModel.getDisplayName(),
+							UserPage.class, WicketUtils.newUsernameParameter(ownerModel.username))
+							.setRenderBodyOnly(true));
 				} else {
-					Label owner = new Label("owner", ownername);
+					final Label owner = new Label("owner", ownername);
 					WicketUtils.setCssStyle(owner, "text-decoration: line-through;");
-					WicketUtils.setHtmlTooltip(owner,  MessageFormat.format(getString("gb.failedToFindAccount"), ownername));
+					WicketUtils.setHtmlTooltip(owner,
+							MessageFormat.format(getString("gb.failedToFindAccount"), ownername));
 					item.add(owner);
 				}
-				counter++;
-				item.add(new Label("comma", ",").setVisible(counter < owners.size()));
+				this.counter++;
+				item.add(new Label("comma", ",").setVisible(this.counter < owners.size()));
 				item.setRenderBodyOnly(true);
 			}
 		};
@@ -120,34 +124,40 @@ public class SummaryPage extends RepositoryPage {
 		if (metricsTotal == null) {
 			add(new Label("branchStats", ""));
 		} else {
-			add(new Label("branchStats",
-					MessageFormat.format(getString("gb.branchStats"), metricsTotal.count,
-							metricsTotal.tag, getTimeUtils().duration(metricsTotal.duration))));
+			add(new Label("branchStats", MessageFormat.format(getString("gb.branchStats"),
+					metricsTotal.count, metricsTotal.tag,
+					getTimeUtils().duration(metricsTotal.duration))));
 		}
 		add(new BookmarkablePageLink<Void>("metrics", MetricsPage.class,
-				WicketUtils.newRepositoryParameter(repositoryName)));
+				WicketUtils.newRepositoryParameter(this.repositoryName)));
 
 		add(new RepositoryUrlPanel("repositoryUrlPanel", false, user, model));
 
-		add(new LogPanel("commitsPanel", repositoryName, getRepositoryModel().HEAD, r, numberCommits, 0, getRepositoryModel().showRemoteBranches));
-		add(new TagsPanel("tagsPanel", repositoryName, r, numberRefs).hideIfEmpty());
-		add(new BranchesPanel("branchesPanel", getRepositoryModel(), r, numberRefs, false).hideIfEmpty());
+		add(new LogPanel("commitsPanel", this.repositoryName, getRepositoryModel().HEAD, r,
+				numberCommits, 0, getRepositoryModel().showRemoteBranches));
+		add(new TagsPanel("tagsPanel", this.repositoryName, r, numberRefs).hideIfEmpty());
+		add(new BranchesPanel("branchesPanel", getRepositoryModel(), r, numberRefs, false)
+				.hideIfEmpty());
 
 		if (app().settings().getBoolean(Keys.web.summaryShowReadme, false)) {
 			// show a readme on the summary page
 			MarkupDocument markupDoc = null;
-			RevCommit head = JGitUtils.getCommit(r, null);
+			final RevCommit head = JGitUtils.getCommit(r, null);
 			if (head != null) {
-				MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
-				markupDoc = processor.getReadme(r, repositoryName, getBestCommitId(head));
+				final MarkupProcessor processor = new MarkupProcessor(app().settings(), app()
+						.xssFilter());
+				markupDoc = processor.getReadme(r, this.repositoryName, getBestCommitId(head));
 			}
-			if (markupDoc == null || markupDoc.markup == null) {
+			if ((markupDoc == null) || (markupDoc.markup == null)) {
 				add(new Label("readme").setVisible(false));
 			} else {
-				Fragment fragment = new Fragment("readme", MarkupSyntax.PLAIN.equals(markupDoc.syntax) ? "plaintextPanel" : "markdownPanel", this);
+				final Fragment fragment = new Fragment("readme",
+						MarkupSyntax.PLAIN.equals(markupDoc.syntax) ? "plaintextPanel"
+								: "markdownPanel", this);
 				fragment.add(new Label("readmeFile", markupDoc.documentPath));
 				// Add the html to the page
-				Component content = new Label("readmeContent", markupDoc.html).setEscapeModelStrings(false);
+				final Component content = new Label("readmeContent", markupDoc.html)
+						.setEscapeModelStrings(false);
 				fragment.add(content.setVisible(!StringUtils.isEmpty(markupDoc.html)));
 				add(fragment);
 			}
@@ -156,10 +166,10 @@ public class SummaryPage extends RepositoryPage {
 			add(new Label("readme").setVisible(false));
 		}
 
-		if (metrics == null || metrics.isEmpty()) {
+		if ((metrics == null) || metrics.isEmpty()) {
 			add(new Label("commitsChart").setVisible(false));
 		} else {
-			Charts charts = createCharts(metrics);
+			final Charts charts = createCharts(metrics);
 			add(new HeaderContributor(charts));
 		}
 	}
@@ -171,31 +181,33 @@ public class SummaryPage extends RepositoryPage {
 
 	private Charts createCharts(List<Metric> metrics) {
 
-		Charts charts = new Flotr2Charts();
+		final Charts charts = new Flotr2Charts();
 
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		String displayFormat = "MMM dd";
-		if(metrics.size() > 0 && metrics.get(0).name.length() == 7){
+		if ((metrics.size() > 0) && (metrics.get(0).name.length() == 7)) {
 			df = new SimpleDateFormat("yyyy-MM");
 			displayFormat = "yyyy MMM";
 		}
 		df.setTimeZone(getTimeZone());
 
 		// build google charts
-		Chart chart = charts.createLineChart("commitsChart", getString("gb.activity"), "day", getString("gb.commits"));
+		final Chart chart = charts.createLineChart("commitsChart", getString("gb.activity"), "day",
+				getString("gb.commits"));
 		chart.setDateFormat(displayFormat);
 
-		for (Metric metric : metrics) {
+		for (final Metric metric : metrics) {
 			Date date;
 			try {
 				date = df.parse(metric.name);
-			} catch (ParseException e) {
-				logger.error("Unable to parse date: " + metric.name);
+			}
+			catch (final ParseException e) {
+				this.logger.error("Unable to parse date: " + metric.name);
 				return charts;
 			}
-			chart.addValue(date, (int)metric.count);
-			if(metric.tag > 0 ){
-				chart.addHighlight(date, (int)metric.count);
+			chart.addValue(date, (int) metric.count);
+			if (metric.tag > 0) {
+				chart.addHighlight(date, (int) metric.count);
 			}
 		}
 		charts.addChart(chart);

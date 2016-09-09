@@ -74,7 +74,7 @@ public class NewRepositoryPage extends RootSubPage {
 	public NewRepositoryPage() {
 		// create constructor
 		super();
-		repositoryModel = new RepositoryModel();
+		this.repositoryModel = new RepositoryModel();
 
 		setupPage(getString("gb.newRepository"), "");
 
@@ -96,125 +96,137 @@ public class NewRepositoryPage extends RootSubPage {
 	protected void onInitialize() {
 		super.onInitialize();
 
-		CompoundPropertyModel<RepositoryModel> rModel = new CompoundPropertyModel<>(repositoryModel);
-		Form<RepositoryModel> form = new Form<RepositoryModel>("editForm", rModel) {
+		final CompoundPropertyModel<RepositoryModel> rModel = new CompoundPropertyModel<>(
+				this.repositoryModel);
+		final Form<RepositoryModel> form = new Form<RepositoryModel>("editForm", rModel) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			protected void onSubmit() {
 				try {
-					if (!namePanel.updateModel(repositoryModel)) {
+					if (!NewRepositoryPage.this.namePanel
+							.updateModel(NewRepositoryPage.this.repositoryModel)) {
 						return;
 					}
-					accessPolicyPanel.updateModel(repositoryModel);
+					NewRepositoryPage.this.accessPolicyPanel
+							.updateModel(NewRepositoryPage.this.repositoryModel);
 
-					repositoryModel.owners = new ArrayList<String>();
-					repositoryModel.owners.add(GitBlitWebSession.get().getUsername());
+					NewRepositoryPage.this.repositoryModel.owners = new ArrayList<String>();
+					NewRepositoryPage.this.repositoryModel.owners.add(GitBlitWebSession.get()
+							.getUsername());
 
 					// setup branch defaults
-					boolean useGitFlow = addGitflowModel.getObject();
+					final boolean useGitFlow = NewRepositoryPage.this.addGitflowModel.getObject();
 
-					repositoryModel.HEAD = Constants.R_MASTER;
-					repositoryModel.mergeTo = Constants.MASTER;
+					NewRepositoryPage.this.repositoryModel.HEAD = Constants.R_MASTER;
+					NewRepositoryPage.this.repositoryModel.mergeTo = Constants.MASTER;
 					if (useGitFlow) {
-						// tickets normally merge to develop unless they are hotfixes
-						repositoryModel.mergeTo = Constants.DEVELOP;
+						// tickets normally merge to develop unless they are
+						// hotfixes
+						NewRepositoryPage.this.repositoryModel.mergeTo = Constants.DEVELOP;
 					}
 
-					repositoryModel.allowForks = app().settings().getBoolean(Keys.web.allowForking, true);
+					NewRepositoryPage.this.repositoryModel.allowForks = app().settings()
+							.getBoolean(Keys.web.allowForking, true);
 
 					// optionally generate an initial commit
-					boolean addReadme = addReadmeModel.getObject();
+					final boolean addReadme = NewRepositoryPage.this.addReadmeModel.getObject();
 					String gitignore = null;
-					boolean addGitignore = addGitignoreModel.getObject();
+					final boolean addGitignore = NewRepositoryPage.this.addGitignoreModel
+							.getObject();
 					if (addGitignore) {
-						gitignore = gitignoreModel.getObject();
+						gitignore = NewRepositoryPage.this.gitignoreModel.getObject();
 						if (StringUtils.isEmpty(gitignore)) {
 							throw new GitBlitException(getString("gb.pleaseSelectGitIgnore"));
 						}
 					}
 
 					// init the repository
-					app().gitblit().updateRepositoryModel(repositoryModel.name, repositoryModel, true);
+					app().gitblit().updateRepositoryModel(
+							NewRepositoryPage.this.repositoryModel.name,
+							NewRepositoryPage.this.repositoryModel, true);
 
 					// optionally create an initial commit
-					initialCommit(repositoryModel, addReadme, gitignore, useGitFlow);
+					initialCommit(NewRepositoryPage.this.repositoryModel, addReadme, gitignore,
+							useGitFlow);
 
-				} catch (GitBlitException e) {
+				}
+				catch (final GitBlitException e) {
 					error(e.getMessage());
 					return;
 				}
 				setRedirect(true);
-				setResponsePage(SummaryPage.class, WicketUtils.newRepositoryParameter(repositoryModel.name));
+				setResponsePage(
+						SummaryPage.class,
+						WicketUtils
+								.newRepositoryParameter(NewRepositoryPage.this.repositoryModel.name));
 			}
 		};
 
 		// do not let the browser pre-populate these fields
 		form.add(new SimpleAttributeModifier("autocomplete", "off"));
 
-		namePanel = new RepositoryNamePanel("namePanel", repositoryModel);
-		form.add(namePanel);
+		this.namePanel = new RepositoryNamePanel("namePanel", this.repositoryModel);
+		form.add(this.namePanel);
 
 		// prepare the default access controls
-		AccessRestrictionType defaultRestriction = AccessRestrictionType.fromName(
-				app().settings().getString(Keys.git.defaultAccessRestriction, AccessRestrictionType.PUSH.name()));
+		AccessRestrictionType defaultRestriction = AccessRestrictionType.fromName(app().settings()
+				.getString(Keys.git.defaultAccessRestriction, AccessRestrictionType.PUSH.name()));
 		if (AccessRestrictionType.NONE == defaultRestriction) {
 			defaultRestriction = AccessRestrictionType.PUSH;
 		}
-		AuthorizationControl defaultControl = AuthorizationControl.fromName(
-				app().settings().getString(Keys.git.defaultAuthorizationControl, AuthorizationControl.NAMED.name()));
+		final AuthorizationControl defaultControl = AuthorizationControl
+				.fromName(app().settings().getString(Keys.git.defaultAuthorizationControl,
+						AuthorizationControl.NAMED.name()));
 
 		if (AuthorizationControl.AUTHENTICATED == defaultControl) {
 			defaultRestriction = AccessRestrictionType.PUSH;
 		}
 
-		repositoryModel.authorizationControl = defaultControl;
-		repositoryModel.accessRestriction = defaultRestriction;
+		this.repositoryModel.authorizationControl = defaultControl;
+		this.repositoryModel.accessRestriction = defaultRestriction;
 
-		accessPolicyPanel = new AccessPolicyPanel("accessPolicyPanel", repositoryModel);
-		form.add(accessPolicyPanel);
+		this.accessPolicyPanel = new AccessPolicyPanel("accessPolicyPanel", this.repositoryModel);
+		form.add(this.accessPolicyPanel);
 
 		//
 		// initial commit options
 		//
 
 		// add README
-		addReadmeModel = Model.of(false);
-		form.add(new BooleanOption("addReadme",
-				getString("gb.initWithReadme"),
-				getString("gb.initWithReadmeDescription"),
-				addReadmeModel));
+		this.addReadmeModel = Model.of(false);
+		form.add(new BooleanOption("addReadme", getString("gb.initWithReadme"),
+				getString("gb.initWithReadmeDescription"), this.addReadmeModel));
 
 		// add .gitignore
-		File gitignoreDir = app().runtime().getFileOrFolder(Keys.git.gitignoreFolder, "${baseFolder}/gitignore");
-		File [] files = gitignoreDir.listFiles();
+		final File gitignoreDir = app().runtime().getFileOrFolder(Keys.git.gitignoreFolder,
+				"${baseFolder}/gitignore");
+		File[] files = gitignoreDir.listFiles();
 		if (files == null) {
 			files = new File[0];
 		}
-		List<String> gitignores = new ArrayList<String>();
-		for (File file : files) {
+		final List<String> gitignores = new ArrayList<String>();
+		for (final File file : files) {
 			if (file.isFile() && file.getName().endsWith(".gitignore")) {
 				gitignores.add(StringUtils.stripFileExtension(file.getName()));
 			}
 		}
 		Collections.sort(gitignores);
 
-		gitignoreModel = Model.of("");
-		addGitignoreModel = Model.of(false);
-		form.add(new BooleanChoiceOption<String>("addGitIgnore",
-				getString("gb.initWithGitignore"),
-				getString("gb.initWithGitignoreDescription"),
-				addGitignoreModel,
-				gitignoreModel,
-				gitignores).setVisible(gitignores.size() > 0));
+		this.gitignoreModel = Model.of("");
+		this.addGitignoreModel = Model.of(false);
+		form.add(new BooleanChoiceOption<String>("addGitIgnore", getString("gb.initWithGitignore"),
+				getString("gb.initWithGitignoreDescription"), this.addGitignoreModel,
+				this.gitignoreModel, gitignores).setVisible(gitignores.size() > 0));
 
 		// TODO consider gitflow at creation (ticket-55)
-		addGitflowModel = Model.of(false);
-		form.add(new BooleanOption("addGitFlow",
+		this.addGitflowModel = Model.of(false);
+		form.add(new BooleanOption(
+				"addGitFlow",
 				"Include a .gitflow file",
 				"This will generate a config file which guides Git clients in setting up Gitflow branches.",
-				addGitflowModel).setVisible(false));
+				this.addGitflowModel).setVisible(false));
 
 		form.add(new Button("create"));
 
@@ -230,34 +242,37 @@ public class NewRepositoryPage extends RootSubPage {
 	 * @param addGitFlow
 	 * @return true if an initial commit was created
 	 */
-	protected boolean initialCommit(RepositoryModel repository, boolean addReadme, String gitignore,
-			boolean addGitFlow) {
-		boolean initialCommit = addReadme || !StringUtils.isEmpty(gitignore) || addGitFlow;
+	protected boolean initialCommit(RepositoryModel repository, boolean addReadme,
+			String gitignore, boolean addGitFlow) {
+		final boolean initialCommit = addReadme || !StringUtils.isEmpty(gitignore) || addGitFlow;
 		if (!initialCommit) {
 			return false;
 		}
 
 		// build an initial commit
 		boolean success = false;
-		Repository db = app().repositories().getRepository(repositoryModel.name);
-		ObjectInserter odi = db.newObjectInserter();
+		final Repository db = app().repositories().getRepository(this.repositoryModel.name);
+		final ObjectInserter odi = db.newObjectInserter();
 		try {
 
-			UserModel user = GitBlitWebSession.get().getUser();
-			String email = Optional.fromNullable(user.emailAddress).or(user.username + "@" + "gitblit");
-			PersonIdent author = new PersonIdent(user.getDisplayName(), email);
+			final UserModel user = GitBlitWebSession.get().getUser();
+			final String email = Optional.fromNullable(user.emailAddress).or(
+					user.username + "@" + "gitblit");
+			final PersonIdent author = new PersonIdent(user.getDisplayName(), email);
 
-			DirCache newIndex = DirCache.newInCore();
-			DirCacheBuilder indexBuilder = newIndex.builder();
+			final DirCache newIndex = DirCache.newInCore();
+			final DirCacheBuilder indexBuilder = newIndex.builder();
 
 			if (addReadme) {
 				// insert a README
-				String title = StringUtils.stripDotGit(StringUtils.getLastPathElement(repositoryModel.name));
-				String description = repositoryModel.description == null ? "" : repositoryModel.description;
-				String readme = String.format("## %s\n\n%s\n\n", title, description);
-				byte [] bytes = readme.getBytes(Constants.ENCODING);
+				final String title = StringUtils.stripDotGit(StringUtils
+						.getLastPathElement(this.repositoryModel.name));
+				final String description = this.repositoryModel.description == null ? ""
+						: this.repositoryModel.description;
+				final String readme = String.format("## %s\n\n%s\n\n", title, description);
+				final byte[] bytes = readme.getBytes(Constants.ENCODING);
 
-				DirCacheEntry entry = new DirCacheEntry("README.md");
+				final DirCacheEntry entry = new DirCacheEntry("README.md");
 				entry.setLength(bytes.length);
 				entry.setLastModified(System.currentTimeMillis());
 				entry.setFileMode(FileMode.REGULAR_FILE);
@@ -268,16 +283,18 @@ public class NewRepositoryPage extends RootSubPage {
 
 			if (!StringUtils.isEmpty(gitignore)) {
 				// insert a .gitignore file
-				File dir = app().runtime().getFileOrFolder(Keys.git.gitignoreFolder, "${baseFolder}/gitignore");
-				File file = new File(dir, gitignore + ".gitignore");
-				if (file.exists() && file.length() > 0) {
-					byte [] bytes = FileUtils.readContent(file);
+				final File dir = app().runtime().getFileOrFolder(Keys.git.gitignoreFolder,
+						"${baseFolder}/gitignore");
+				final File file = new File(dir, gitignore + ".gitignore");
+				if (file.exists() && (file.length() > 0)) {
+					final byte[] bytes = FileUtils.readContent(file);
 					if (!ArrayUtils.isEmpty(bytes)) {
-						DirCacheEntry entry = new DirCacheEntry(".gitignore");
+						final DirCacheEntry entry = new DirCacheEntry(".gitignore");
 						entry.setLength(bytes.length);
 						entry.setLastModified(System.currentTimeMillis());
 						entry.setFileMode(FileMode.REGULAR_FILE);
-						entry.setObjectId(odi.insert(org.eclipse.jgit.lib.Constants.OBJ_BLOB, bytes));
+						entry.setObjectId(odi
+								.insert(org.eclipse.jgit.lib.Constants.OBJ_BLOB, bytes));
 
 						indexBuilder.add(entry);
 					}
@@ -286,7 +303,7 @@ public class NewRepositoryPage extends RootSubPage {
 
 			if (addGitFlow) {
 				// insert a .gitflow file
-				Config config = new Config();
+				final Config config = new Config();
 				config.setString("gitflow", null, "masterBranch", Constants.MASTER);
 				config.setString("gitflow", null, "developBranch", Constants.DEVELOP);
 				config.setString("gitflow", null, "featureBranchPrefix", "feature/");
@@ -295,9 +312,9 @@ public class NewRepositoryPage extends RootSubPage {
 				config.setString("gitflow", null, "supportBranchPrefix", "support/");
 				config.setString("gitflow", null, "versionTagPrefix", "");
 
-				byte [] bytes = config.toText().getBytes(Constants.ENCODING);
+				final byte[] bytes = config.toText().getBytes(Constants.ENCODING);
 
-				DirCacheEntry entry = new DirCacheEntry(".gitflow");
+				final DirCacheEntry entry = new DirCacheEntry(".gitflow");
 				entry.setLength(bytes.length);
 				entry.setLastModified(System.currentTimeMillis());
 				entry.setFileMode(FileMode.REGULAR_FILE);
@@ -313,10 +330,10 @@ public class NewRepositoryPage extends RootSubPage {
 				return false;
 			}
 
-			ObjectId treeId = newIndex.writeTree(odi);
+			final ObjectId treeId = newIndex.writeTree(odi);
 
 			// Create a commit object
-			CommitBuilder commit = new CommitBuilder();
+			final CommitBuilder commit = new CommitBuilder();
 			commit.setAuthor(author);
 			commit.setCommitter(author);
 			commit.setEncoding(Constants.ENCODING);
@@ -324,18 +341,18 @@ public class NewRepositoryPage extends RootSubPage {
 			commit.setTreeId(treeId);
 
 			// Insert the commit into the repository
-			ObjectId commitId = odi.insert(commit);
+			final ObjectId commitId = odi.insert(commit);
 			odi.flush();
 
 			// set the branch refs
-			RevWalk revWalk = new RevWalk(db);
+			final RevWalk revWalk = new RevWalk(db);
 			try {
 				// set the master branch
-				RevCommit revCommit = revWalk.parseCommit(commitId);
-				RefUpdate masterRef = db.updateRef(Constants.R_MASTER);
+				final RevCommit revCommit = revWalk.parseCommit(commitId);
+				final RefUpdate masterRef = db.updateRef(Constants.R_MASTER);
 				masterRef.setNewObjectId(commitId);
 				masterRef.setRefLogMessage("commit: " + revCommit.getShortMessage(), false);
-				Result masterRC = masterRef.update();
+				final Result masterRC = masterRef.update();
 				switch (masterRC) {
 				case NEW:
 					success = true;
@@ -346,10 +363,10 @@ public class NewRepositoryPage extends RootSubPage {
 
 				if (addGitFlow) {
 					// set the develop branch for git-flow
-					RefUpdate developRef = db.updateRef(Constants.R_DEVELOP);
+					final RefUpdate developRef = db.updateRef(Constants.R_DEVELOP);
 					developRef.setNewObjectId(commitId);
 					developRef.setRefLogMessage("commit: " + revCommit.getShortMessage(), false);
-					Result developRC = developRef.update();
+					final Result developRC = developRef.update();
 					switch (developRC) {
 					case NEW:
 						success = true;
@@ -358,14 +375,18 @@ public class NewRepositoryPage extends RootSubPage {
 						success = false;
 					}
 				}
-			} finally {
+			}
+			finally {
 				revWalk.close();
 			}
-		} catch (UnsupportedEncodingException e) {
+		}
+		catch (final UnsupportedEncodingException e) {
 			logger().error(null, e);
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			logger().error(null, e);
-		} finally {
+		}
+		finally {
 			odi.close();
 			db.close();
 		}

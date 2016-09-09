@@ -19,27 +19,23 @@ import org.apache.wicket.markup.html.form.PasswordTextField;
 import org.apache.wicket.model.IModel;
 
 /**
- * PasswordText field which will not trim spaces from the input field. This 
- * ensures the password trimming behaviour is everywhere (ui/ssh/git) the same 
+ * PasswordText field which will not trim spaces from the input field. This
+ * ensures the password trimming behaviour is everywhere (ui/ssh/git) the same
  * (#932).
  */
-public class NonTrimmedPasswordTextField extends PasswordTextField
-{
+public class NonTrimmedPasswordTextField extends PasswordTextField {
 	private static final long serialVersionUID = 1L;
-	
-	public NonTrimmedPasswordTextField(final String id)
-	{
+
+	public NonTrimmedPasswordTextField(final String id) {
 		super(id);
 	}
-	
-	public NonTrimmedPasswordTextField(final String id, final IModel<String> model)
-	{
+
+	public NonTrimmedPasswordTextField(final String id, final IModel<String> model) {
 		super(id, model);
 	}
 
 	@Override
-	protected boolean shouldTrimInput()
-	{
+	protected boolean shouldTrimInput() {
 		return false;
 	}
 

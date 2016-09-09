@@ -35,7 +35,7 @@ import com.gitblit.utils.StringUtils;
  */
 public class FileSettings extends IStoredSettings {
 
-	protected File propertiesFile;
+	private File propertiesFile;
 
 	private final Properties properties = new Properties();
 
@@ -57,16 +57,16 @@ public class FileSettings extends IStoredSettings {
 	}
 
 	/**
-	 * Merges the provided settings into this instance.  This will also
-	 * set the target file for this instance IFF it is unset AND the merge
-	 * source is also a FileSettings.  This is a little sneaky.
+	 * Merges the provided settings into this instance. This will also set the
+	 * target file for this instance IFF it is unset AND the merge source is
+	 * also a FileSettings. This is a little sneaky.
 	 */
 	@Override
 	public void merge(IStoredSettings settings) {
 		super.merge(settings);
 
 		// sneaky: set the target file from the merge source
-		if (propertiesFile == null && settings instanceof FileSettings) {
+		if ((this.propertiesFile == null) && (settings instanceof FileSettings)) {
 			this.propertiesFile = ((FileSettings) settings).propertiesFile;
 		}
 	}
@@ -77,37 +77,42 @@ public class FileSettings extends IStoredSettings {
 	 */
 	@Override
 	protected synchronized Properties read() {
-		if (propertiesFile != null && propertiesFile.exists() && (forceReload || (propertiesFile.lastModified() > lastModified))) {
+		if ((this.propertiesFile != null) && this.propertiesFile.exists()
+				&& (this.forceReload || (this.propertiesFile.lastModified() > this.lastModified))) {
 			FileInputStream is = null;
 			try {
-				logger.debug("loading {}", propertiesFile);
+				this.logger.debug("loading {}", this.propertiesFile);
 				Properties props = new Properties();
-				is = new FileInputStream(propertiesFile);
+				is = new FileInputStream(this.propertiesFile);
 				props.load(is);
 
 				// ticket-110
 				props = readIncludes(props);
 
 				// load properties after we have successfully read file
-				properties.clear();
-				properties.putAll(props);
-				lastModified = propertiesFile.lastModified();
-				forceReload = false;
-			} catch (FileNotFoundException f) {
+				this.properties.clear();
+				this.properties.putAll(props);
+				this.lastModified = this.propertiesFile.lastModified();
+				this.forceReload = false;
+			}
+			catch (final FileNotFoundException f) {
 				// IGNORE - won't happen because file.exists() check above
-			} catch (Throwable t) {
-				logger.error("Failed to read " + propertiesFile.getName(), t);
-			} finally {
+			}
+			catch (final Throwable t) {
+				this.logger.error("Failed to read " + this.propertiesFile.getName(), t);
+			}
+			finally {
 				if (is != null) {
 					try {
 						is.close();
-					} catch (Throwable t) {
+					}
+					catch (final Throwable t) {
 						// IGNORE
 					}
 				}
 			}
 		}
-		return properties;
+		return this.properties;
 	}
 
 	/**
@@ -121,31 +126,31 @@ public class FileSettings extends IStoredSettings {
 
 		Properties baseProperties = new Properties();
 
-		String include = (String) properties.remove("include");
+		final String include = (String) properties.remove("include");
 		if (!StringUtils.isEmpty(include)) {
 
 			// allow for multiples
-			List<String> names = StringUtils.getStringsFromValue(include, ",");
-			for (String name : names) {
+			final List<String> names = StringUtils.getStringsFromValue(include, ",");
+			for (final String name : names) {
 
 				if (StringUtils.isEmpty(name)) {
 					continue;
 				}
 
 				// try co-located
-				File file = new File(propertiesFile.getParentFile(), name.trim());
+				File file = new File(this.propertiesFile.getParentFile(), name.trim());
 				if (!file.exists()) {
 					// try absolute path
 					file = new File(name.trim());
 				}
 
 				if (!file.exists()) {
-					logger.warn("failed to locate {}", file);
+					this.logger.warn("failed to locate {}", file);
 					continue;
 				}
 
 				// load properties
-				logger.debug("loading {}", file);
+				this.logger.debug("loading {}", file);
 				try (FileInputStream iis = new FileInputStream(file)) {
 					baseProperties.load(iis);
 				}
@@ -159,7 +164,7 @@ public class FileSettings extends IStoredSettings {
 
 		// includes are "default" properties, they must be set first and the
 		// props which specified the "includes" must override
-		Properties merged = new Properties();
+		final Properties merged = new Properties();
 		merged.putAll(baseProperties);
 		merged.putAll(properties);
 
@@ -168,18 +173,18 @@ public class FileSettings extends IStoredSettings {
 
 	@Override
 	public boolean saveSettings() {
-		String content = FileUtils.readContent(propertiesFile, "\n");
-		for (String key : removals) {
-			String regex = "(?m)^(" + regExEscape(key) + "\\s*+=\\s*+)"
+		String content = FileUtils.readContent(this.propertiesFile, "\n");
+		for (final String key : this.removals) {
+			final String regex = "(?m)^(" + regExEscape(key) + "\\s*+=\\s*+)"
 					+ "(?:[^\r\n\\\\]++|\\\\(?:\r?\n|\r|.))*+$";
 			content = content.replaceAll(regex, "");
 		}
-		removals.clear();
+		this.removals.clear();
 
-		FileUtils.writeContent(propertiesFile, content);
+		FileUtils.writeContent(this.propertiesFile, content);
 		// manually set the forceReload flag because not all JVMs support real
 		// millisecond resolution of lastModified. (issue-55)
-		forceReload = true;
+		this.forceReload = true;
 		return true;
 	}
 
@@ -188,11 +193,11 @@ public class FileSettings extends IStoredSettings {
 	 */
 	@Override
 	public synchronized boolean saveSettings(Map<String, String> settings) {
-		String content = FileUtils.readContent(propertiesFile, "\n");
-		for (Map.Entry<String, String> setting:settings.entrySet()) {
-			String regex = "(?m)^(" + regExEscape(setting.getKey()) + "\\s*+=\\s*+)"
+		String content = FileUtils.readContent(this.propertiesFile, "\n");
+		for (final Map.Entry<String, String> setting : settings.entrySet()) {
+			final String regex = "(?m)^(" + regExEscape(setting.getKey()) + "\\s*+=\\s*+)"
 					+ "(?:[^\r\n\\\\]++|\\\\(?:\r?\n|\r|.))*+$";
-			String oldContent = content;
+			final String oldContent = content;
 			content = content.replaceAll(regex, setting.getKey() + " = " + setting.getValue());
 			if (content.equals(oldContent)) {
 				// did not replace value because it does not exist in the file
@@ -200,33 +205,19 @@ public class FileSettings extends IStoredSettings {
 				content += "\n" + setting.getKey() + " = " + setting.getValue();
 			}
 		}
-		FileUtils.writeContent(propertiesFile, content);
+		FileUtils.writeContent(this.propertiesFile, content);
 		// manually set the forceReload flag because not all JVMs support real
 		// millisecond resolution of lastModified. (issue-55)
-		forceReload = true;
+		this.forceReload = true;
 		return true;
 	}
 
-	private String regExEscape(String input) {
+	private static String regExEscape(String input) {
 		return input.replace(".", "\\.").replace("$", "\\$").replace("{", "\\{");
-	}
-
-	/**
-	 * @return the last modification date of the properties file
-	 */
-	protected long lastModified() {
-		return lastModified;
-	}
-
-	/**
-	 * @return the state of the force reload flag
-	 */
-	protected boolean forceReload() {
-		return forceReload;
 	}
 
 	@Override
 	public String toString() {
-		return propertiesFile.getAbsolutePath();
+		return this.propertiesFile.getAbsolutePath();
 	}
 }

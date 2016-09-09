@@ -18,8 +18,6 @@ package com.gitblit.servlet;
 import java.io.File;
 import java.io.IOException;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -28,6 +26,8 @@ import javax.servlet.http.HttpServletResponse;
 import com.gitblit.Keys;
 import com.gitblit.manager.IRuntimeManager;
 import com.gitblit.utils.FileUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Handles requests for robots.txt
@@ -40,7 +40,7 @@ public class RobotsTxtServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	private IRuntimeManager runtimeManager;
+	private final IRuntimeManager runtimeManager;
 
 	@Inject
 	public RobotsTxtServlet(IRuntimeManager runtimeManager) {
@@ -60,9 +60,8 @@ public class RobotsTxtServlet extends HttpServlet {
 	}
 
 	protected void processRequest(javax.servlet.http.HttpServletRequest request,
-			javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException,
-			java.io.IOException {
-		File file = runtimeManager.getFileOrFolder(Keys.web.robots.txt, null);
+			javax.servlet.http.HttpServletResponse response) throws java.io.IOException {
+		final File file = this.runtimeManager.getFileOrFolder(Keys.web.robots.txt, null);
 		String content = "";
 		if (file.exists()) {
 			content = FileUtils.readContent(file, "\n");

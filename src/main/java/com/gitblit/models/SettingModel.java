@@ -59,8 +59,8 @@ public class SettingModel implements Serializable {
 	 * @return true if current value is the default value
 	 */
 	public boolean isDefaultValue() {
-		return (currentValue != null && currentValue.equals(defaultValue))
-				|| currentValue.trim().length() == 0;
+		return ((this.currentValue != null) && this.currentValue.equals(this.defaultValue))
+				|| (this.currentValue.trim().length() == 0);
 	}
 
 	/**
@@ -71,8 +71,8 @@ public class SettingModel implements Serializable {
 	 * @return key value or defaultValue
 	 */
 	public boolean getBoolean(boolean defaultValue) {
-		if (!StringUtils.isEmpty(currentValue)) {
-			return Boolean.parseBoolean(currentValue.trim());
+		if (!StringUtils.isEmpty(this.currentValue)) {
+			return Boolean.parseBoolean(this.currentValue.trim());
 		}
 		return defaultValue;
 	}
@@ -86,10 +86,11 @@ public class SettingModel implements Serializable {
 	 */
 	public int getInteger(int defaultValue) {
 		try {
-			if (!StringUtils.isEmpty(currentValue)) {
-				return Integer.parseInt(currentValue.trim());
+			if (!StringUtils.isEmpty(this.currentValue)) {
+				return Integer.parseInt(this.currentValue.trim());
 			}
-		} catch (NumberFormatException e) {
+		}
+		catch (final NumberFormatException e) {
 		}
 		return defaultValue;
 	}
@@ -102,8 +103,8 @@ public class SettingModel implements Serializable {
 	 * @return key value or defaultValue
 	 */
 	public char getChar(char defaultValue) {
-		if (!StringUtils.isEmpty(currentValue)) {
-			return currentValue.trim().charAt(0);
+		if (!StringUtils.isEmpty(this.currentValue)) {
+			return this.currentValue.trim().charAt(0);
 		}
 		return defaultValue;
 	}
@@ -116,8 +117,8 @@ public class SettingModel implements Serializable {
 	 * @return key value or defaultValue
 	 */
 	public String getString(String defaultValue) {
-		if (currentValue != null) {
-			return currentValue.trim();
+		if (this.currentValue != null) {
+			return this.currentValue.trim();
 		}
 		return defaultValue;
 	}
@@ -140,7 +141,7 @@ public class SettingModel implements Serializable {
 	 */
 	public List<String> getStrings(String separator) {
 		List<String> strings = new ArrayList<String>();
-		strings = StringUtils.getStringsFromValue(currentValue, separator);
+		strings = StringUtils.getStringsFromValue(this.currentValue, separator);
 		return strings;
 	}
 
@@ -150,12 +151,12 @@ public class SettingModel implements Serializable {
 	 * @return map of string, string
 	 */
 	public Map<String, String> getMap() {
-		Map<String, String> map = new LinkedHashMap<String, String>();
-		for (String string : getStrings()) {
-			String[] kvp = string.split("=", 2);
-			String key = kvp[0];
-			String value = kvp[1];
-			map.put(key,  value);
+		final Map<String, String> map = new LinkedHashMap<String, String>();
+		for (final String string : getStrings()) {
+			final String[] kvp = string.split("=", 2);
+			final String key = kvp[0];
+			final String value = kvp[1];
+			map.put(key, value);
 		}
 		return map;
 	}

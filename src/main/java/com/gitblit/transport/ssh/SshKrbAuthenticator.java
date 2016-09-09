@@ -33,17 +33,17 @@ public class SshKrbAuthenticator extends GSSAuthenticator {
 	protected final IAuthenticationManager authManager;
 	protected final boolean stripDomain;
 
-
 	public SshKrbAuthenticator(IStoredSettings settings, IAuthenticationManager authManager) {
 		this.authManager = authManager;
 
-		String keytabString = settings.getString(Keys.git.sshKrb5Keytab, "");
-		if(! keytabString.isEmpty()) {
+		final String keytabString = settings.getString(Keys.git.sshKrb5Keytab, "");
+		if (!keytabString.isEmpty()) {
 			setKeytabFile(keytabString);
 		}
 
-		String servicePrincipalName = settings.getString(Keys.git.sshKrb5ServicePrincipalName, "");
-		if(! servicePrincipalName.isEmpty()) {
+		final String servicePrincipalName = settings.getString(
+				Keys.git.sshKrb5ServicePrincipalName, "");
+		if (!servicePrincipalName.isEmpty()) {
 			setServicePrincipalName(servicePrincipalName);
 		}
 
@@ -52,25 +52,25 @@ public class SshKrbAuthenticator extends GSSAuthenticator {
 
 	@Override
 	public boolean validateIdentity(ServerSession session, String identity) {
-		log.info("identify with kerberos {}", identity);
-		SshDaemonClient client = session.getAttribute(SshDaemonClient.KEY);
+		this.log.info("identify with kerberos {}", identity);
+		final SshDaemonClient client = session.getAttribute(SshDaemonClient.KEY);
 		if (client.getUser() != null) {
-			log.info("{} has already authenticated!", identity);
+			this.log.info("{} has already authenticated!", identity);
 			return true;
 		}
 		String username = identity.toLowerCase(Locale.US);
-		if (stripDomain) {
-			int p = username.indexOf('@');
+		if (this.stripDomain) {
+			final int p = username.indexOf('@');
 			if (p > 0) {
 				username = username.substring(0, p);
 			}
 		}
-		UserModel user = authManager.authenticate(username);
+		final UserModel user = this.authManager.authenticate(username);
 		if (user != null) {
 			client.setUser(user);
 			return true;
 		}
-		log.warn("could not authenticate {} for SSH", username);
+		this.log.warn("could not authenticate {} for SSH", username);
 		return false;
 	}
 }

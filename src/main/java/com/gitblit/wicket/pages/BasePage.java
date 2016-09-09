@@ -86,10 +86,10 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected Logger logger() {
-		if (logger == null) {
-			logger = LoggerFactory.getLogger(getClass());
+		if (this.logger == null) {
+			this.logger = LoggerFactory.getLogger(getClass());
 		}
-		return logger;
+		return this.logger;
 	}
 
 	private void customizeHeader() {
@@ -110,8 +110,8 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected String getCanonicalUrl(Class<? extends BasePage> clazz, PageParameters params) {
-		String relativeUrl = urlFor(clazz, params).toString();
-		String canonicalUrl = RequestUtils.toAbsolutePath(relativeUrl);
+		final String relativeUrl = urlFor(clazz, params).toString();
+		final String canonicalUrl = RequestUtils.toAbsolutePath(relativeUrl);
 		return canonicalUrl;
 	}
 
@@ -120,7 +120,7 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected void redirectTo(Class<? extends BasePage> pageClass, PageParameters parameters) {
-		String absoluteUrl = getCanonicalUrl(pageClass, parameters);
+		final String absoluteUrl = getCanonicalUrl(pageClass, parameters);
 		getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
 	}
 
@@ -133,16 +133,18 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected TimeUtils getTimeUtils() {
-		if (timeUtils == null) {
+		if (this.timeUtils == null) {
 			ResourceBundle bundle;
 			try {
-				bundle = ResourceBundle.getBundle("com.gitblit.wicket.GitBlitWebApp", GitBlitWebSession.get().getLocale());
-			} catch (Throwable t) {
+				bundle = ResourceBundle.getBundle("com.gitblit.wicket.GitBlitWebApp",
+						GitBlitWebSession.get().getLocale());
+			}
+			catch (final Throwable t) {
 				bundle = ResourceBundle.getBundle("com.gitblit.wicket.GitBlitWebApp");
 			}
-			timeUtils = new TimeUtils(bundle, getTimeZone());
+			this.timeUtils = new TimeUtils(bundle, getTimeZone());
 		}
-		return timeUtils;
+		return this.timeUtils;
 	}
 
 	@Override
@@ -164,11 +166,12 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	@Override
-	protected void setHeaders(WebResponse response)	{
+	protected void setHeaders(WebResponse response) {
 		// set canonical link as http header for SEO (issue-304)
 		// https://support.google.com/webmasters/answer/139394?hl=en
-		response.setHeader("Link", MessageFormat.format("<{0}>; rel=\"canonical\"", getCanonicalUrl()));
-		int expires = app().settings().getInteger(Keys.web.pageCacheExpires, 0);
+		response.setHeader("Link",
+				MessageFormat.format("<{0}>; rel=\"canonical\"", getCanonicalUrl()));
+		final int expires = app().settings().getInteger(Keys.web.pageCacheExpires, 0);
 		if (expires > 0) {
 			// pages are personalized for the authenticated user so they must be
 			// marked private to prohibit proxy servers from caching them
@@ -184,13 +187,13 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	/**
-	 * Sets the last-modified header date, if appropriate, for this page.  The
+	 * Sets the last-modified header date, if appropriate, for this page. The
 	 * date used is determined by the CacheControl annotation.
 	 *
 	 */
 	protected void setLastModified() {
 		if (getClass().isAnnotationPresent(CacheControl.class)) {
-			CacheControl cacheControl = getClass().getAnnotation(CacheControl.class);
+			final CacheControl cacheControl = getClass().getAnnotation(CacheControl.class);
 			switch (cacheControl.value()) {
 			case ACTIVITY:
 				setLastModified(app().getLastActivityDate());
@@ -201,7 +204,9 @@ public abstract class BasePage extends SessionPage {
 			case NONE:
 				break;
 			default:
-				logger().warn(getClass().getSimpleName() + ": unhandled LastModified type " + cacheControl.value());
+				logger().warn(
+						getClass().getSimpleName() + ": unhandled LastModified type "
+								+ cacheControl.value());
 				break;
 			}
 		}
@@ -224,10 +229,11 @@ public abstract class BasePage extends SessionPage {
 			when = app().getBootDate();
 		}
 
-		int expires = app().settings().getInteger(Keys.web.pageCacheExpires, 0);
-		WebResponse response = (WebResponse) getResponse();
+		final int expires = app().settings().getInteger(Keys.web.pageCacheExpires, 0);
+		final WebResponse response = (WebResponse) getResponse();
 		response.setLastModifiedTime(Time.valueOf(when));
-		response.setDateHeader("Expires", System.currentTimeMillis() + Duration.minutes(expires).getMilliseconds());
+		response.setDateHeader("Expires", System.currentTimeMillis()
+				+ Duration.minutes(expires).getMilliseconds());
 	}
 
 	protected String getPageTitle(String repositoryName) {
@@ -235,7 +241,7 @@ public abstract class BasePage extends SessionPage {
 		if (StringUtils.isEmpty(siteName)) {
 			siteName = Constants.NAME;
 		}
-		if (repositoryName != null && repositoryName.trim().length() > 0) {
+		if ((repositoryName != null) && (repositoryName.trim().length() > 0)) {
 			return repositoryName + " - " + siteName;
 		} else {
 			return siteName;
@@ -245,9 +251,11 @@ public abstract class BasePage extends SessionPage {
 	protected void setupPage(String repositoryName, String pageName) {
 		add(new Label("title", getPageTitle(repositoryName)));
 		getBottomScriptContainer();
-		String rootLinkUrl = app().settings().getString(Keys.web.rootLink, urlFor(GitBlitWebApp.get().getHomePage(), null).toString());
-		ExternalLink rootLink = new ExternalLink("rootLink", rootLinkUrl);
-		WicketUtils.setHtmlTooltip(rootLink, app().settings().getString(Keys.web.siteName, Constants.NAME));
+		final String rootLinkUrl = app().settings().getString(Keys.web.rootLink,
+				urlFor(GitBlitWebApp.get().getHomePage(), null).toString());
+		final ExternalLink rootLink = new ExternalLink("rootLink", rootLinkUrl);
+		WicketUtils.setHtmlTooltip(rootLink,
+				app().settings().getString(Keys.web.siteName, Constants.NAME));
 		add(rootLink);
 
 		// Feedback panel for info, warning, and non-fatal error messages
@@ -260,8 +268,8 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected Map<AccessRestrictionType, String> getAccessRestrictions() {
-		Map<AccessRestrictionType, String> map = new LinkedHashMap<AccessRestrictionType, String>();
-		for (AccessRestrictionType type : AccessRestrictionType.values()) {
+		final Map<AccessRestrictionType, String> map = new LinkedHashMap<AccessRestrictionType, String>();
+		for (final AccessRestrictionType type : AccessRestrictionType.values()) {
 			switch (type) {
 			case NONE:
 				map.put(type, getString("gb.notRestricted"));
@@ -281,8 +289,8 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected Map<AccessPermission, String> getAccessPermissions() {
-		Map<AccessPermission, String> map = new LinkedHashMap<AccessPermission, String>();
-		for (AccessPermission type : AccessPermission.values()) {
+		final Map<AccessPermission, String> map = new LinkedHashMap<AccessPermission, String>();
+		for (final AccessPermission type : AccessPermission.values()) {
 			switch (type) {
 			case NONE:
 				map.put(type, MessageFormat.format(getString("gb.noPermission"), type.code));
@@ -308,14 +316,16 @@ public abstract class BasePage extends SessionPage {
 			case REWIND:
 				map.put(type, MessageFormat.format(getString("gb.rewindPermission"), type.code));
 				break;
+			case OWNER:
+				break;
 			}
 		}
 		return map;
 	}
 
 	protected Map<FederationStrategy, String> getFederationTypes() {
-		Map<FederationStrategy, String> map = new LinkedHashMap<FederationStrategy, String>();
-		for (FederationStrategy type : FederationStrategy.values()) {
+		final Map<FederationStrategy, String> map = new LinkedHashMap<FederationStrategy, String>();
+		for (final FederationStrategy type : FederationStrategy.values()) {
 			switch (type) {
 			case EXCLUDE:
 				map.put(type, getString("gb.excludeFromFederation"));
@@ -332,8 +342,8 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected Map<AuthorizationControl, String> getAuthorizationControls() {
-		Map<AuthorizationControl, String> map = new LinkedHashMap<AuthorizationControl, String>();
-		for (AuthorizationControl type : AuthorizationControl.values()) {
+		final Map<AuthorizationControl, String> map = new LinkedHashMap<AuthorizationControl, String>();
+		for (final AuthorizationControl type : AuthorizationControl.values()) {
 			switch (type) {
 			case AUTHENTICATED:
 				map.put(type, getString("gb.allowAuthenticatedDescription"));
@@ -347,19 +357,19 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected TimeZone getTimeZone() {
-		return app().settings().getBoolean(Keys.web.useClientTimezone, false) ? GitBlitWebSession.get()
-				.getTimezone() : app().getTimezone();
+		return app().settings().getBoolean(Keys.web.useClientTimezone, false) ? GitBlitWebSession
+				.get().getTimezone() : app().getTimezone();
 	}
 
 	protected String getServerName() {
-		ServletWebRequest servletWebRequest = (ServletWebRequest) getRequest();
-		HttpServletRequest req = servletWebRequest.getHttpServletRequest();
+		final ServletWebRequest servletWebRequest = (ServletWebRequest) getRequest();
+		final HttpServletRequest req = servletWebRequest.getHttpServletRequest();
 		return req.getServerName();
 	}
 
 	protected List<ProjectModel> getProjectModels() {
 		final UserModel user = GitBlitWebSession.get().getUser();
-		List<ProjectModel> projects = app().projects().getProjectModels(user, true);
+		final List<ProjectModel> projects = app().projects().getProjectModels(user, true);
 		return projects;
 	}
 
@@ -369,19 +379,19 @@ public abstract class BasePage extends SessionPage {
 		}
 
 		boolean hasParameter = false;
-		String regex = WicketUtils.getRegEx(params);
-		String team = WicketUtils.getTeam(params);
+		final String regex = WicketUtils.getRegEx(params);
+		final String team = WicketUtils.getTeam(params);
 		int daysBack = params.getInt("db", 0);
-		int maxDaysBack = app().settings().getInteger(Keys.web.activityDurationMaximum, 30);
+		final int maxDaysBack = app().settings().getInteger(Keys.web.activityDurationMaximum, 30);
 
-		List<ProjectModel> availableModels = getProjectModels();
+		final List<ProjectModel> availableModels = getProjectModels();
 		Set<ProjectModel> models = new HashSet<ProjectModel>();
 
 		if (!StringUtils.isEmpty(regex)) {
 			// filter the projects by the regex
 			hasParameter = true;
-			Pattern pattern = Pattern.compile(regex);
-			for (ProjectModel model : availableModels) {
+			final Pattern pattern = Pattern.compile(regex);
+			for (final ProjectModel model : availableModels) {
 				if (pattern.matcher(model.name).find()) {
 					models.add(model);
 				}
@@ -391,21 +401,21 @@ public abstract class BasePage extends SessionPage {
 		if (!StringUtils.isEmpty(team)) {
 			// filter the projects by the specified teams
 			hasParameter = true;
-			List<String> teams = StringUtils.getStringsFromValue(team, ",");
+			final List<String> teams = StringUtils.getStringsFromValue(team, ",");
 
 			// need TeamModels first
-			List<TeamModel> teamModels = new ArrayList<TeamModel>();
-			for (String name : teams) {
-				TeamModel teamModel = app().users().getTeamModel(name);
+			final List<TeamModel> teamModels = new ArrayList<TeamModel>();
+			for (final String name : teams) {
+				final TeamModel teamModel = app().users().getTeamModel(name);
 				if (teamModel != null) {
 					teamModels.add(teamModel);
 				}
 			}
 
 			// brute-force our way through finding the matching models
-			for (ProjectModel projectModel : availableModels) {
-				for (String repositoryName : projectModel.repositories) {
-					for (TeamModel teamModel : teamModels) {
+			for (final ProjectModel projectModel : availableModels) {
+				for (final String repositoryName : projectModel.repositories) {
+					for (final TeamModel teamModel : teamModels) {
 						if (teamModel.hasRepositoryPermission(repositoryName)) {
 							models.add(projectModel);
 						}
@@ -420,18 +430,18 @@ public abstract class BasePage extends SessionPage {
 
 		// time-filter the list
 		if (daysBack > 0) {
-			if (maxDaysBack > 0 && daysBack > maxDaysBack) {
+			if ((maxDaysBack > 0) && (daysBack > maxDaysBack)) {
 				daysBack = maxDaysBack;
 			}
-			Calendar cal = Calendar.getInstance();
+			final Calendar cal = Calendar.getInstance();
 			cal.set(Calendar.HOUR_OF_DAY, 0);
 			cal.set(Calendar.MINUTE, 0);
 			cal.set(Calendar.SECOND, 0);
 			cal.set(Calendar.MILLISECOND, 0);
 			cal.add(Calendar.DATE, -1 * daysBack);
-			Date threshold = cal.getTime();
-			Set<ProjectModel> timeFiltered = new HashSet<ProjectModel>();
-			for (ProjectModel model : models) {
+			final Date threshold = cal.getTime();
+			final Set<ProjectModel> timeFiltered = new HashSet<ProjectModel>();
+			for (final ProjectModel model : models) {
 				if (model.lastChange.after(threshold)) {
 					timeFiltered.add(model);
 				}
@@ -439,7 +449,7 @@ public abstract class BasePage extends SessionPage {
 			models = timeFiltered;
 		}
 
-		List<ProjectModel> list = new ArrayList<ProjectModel>(models);
+		final List<ProjectModel> list = new ArrayList<ProjectModel>(models);
 		Collections.sort(list);
 		return list;
 	}
@@ -460,16 +470,17 @@ public abstract class BasePage extends SessionPage {
 		error(message, t, toPage, null);
 	}
 
-	public void error(String message, Throwable t, Class<? extends Page> toPage, PageParameters params) {
+	public void error(String message, Throwable t, Class<? extends Page> toPage,
+			PageParameters params) {
 		if (t == null) {
-			logger().error(message  + " for " + GitBlitWebSession.get().getUsername());
+			logger().error(message + " for " + GitBlitWebSession.get().getUsername());
 		} else {
-			logger().error(message  + " for " + GitBlitWebSession.get().getUsername(), t);
+			logger().error(message + " for " + GitBlitWebSession.get().getUsername(), t);
 		}
 		if (toPage != null) {
 			GitBlitWebSession.get().cacheErrorMessage(message);
-			String relativeUrl = urlFor(toPage, params).toString();
-			String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+			final String relativeUrl = urlFor(toPage, params).toString();
+			final String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
 			throw new RedirectToUrlException(absoluteUrl);
 		} else {
 			super.error(message);
@@ -487,21 +498,24 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	protected String readResource(String resource) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		InputStream is = null;
 		try {
 			is = getClass().getResourceAsStream(resource);
-			List<String> lines = IOUtils.readLines(is);
-			for (String line : lines) {
+			final List<String> lines = IOUtils.readLines(is);
+			for (final String line : lines) {
 				sb.append(line).append('\n');
 			}
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 
-		} finally {
+		}
+		finally {
 			if (is != null) {
 				try {
 					is.close();
-				} catch (IOException e) {
+				}
+				catch (final IOException e) {
 				}
 			}
 		}
@@ -519,15 +533,19 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	/**
-	 * Adds a HTML script element loading the javascript designated by the given path.
+	 * Adds a HTML script element loading the javascript designated by the given
+	 * path.
 	 *
 	 * @param scriptPath
-	 *            page-relative path to the Javascript resource; normally starts with "scripts/"
+	 *            page-relative path to the Javascript resource; normally starts
+	 *            with "scripts/"
 	 */
 	protected void addBottomScript(String scriptPath) {
-		RepeatingView bottomScripts = getBottomScriptContainer();
-		Label script = new Label(bottomScripts.newChildId(), "<script type='text/javascript' src='"
-				+ urlFor(new JavascriptResourceReference(this.getClass(), scriptPath)) + "'></script>\n");
+		final RepeatingView bottomScripts = getBottomScriptContainer();
+		final Label script = new Label(bottomScripts.newChildId(),
+				"<script type='text/javascript' src='"
+						+ urlFor(new JavascriptResourceReference(this.getClass(), scriptPath))
+						+ "'></script>\n");
 		bottomScripts.add(script.setEscapeModelStrings(false).setRenderBodyOnly(true));
 	}
 
@@ -538,8 +556,8 @@ public abstract class BasePage extends SessionPage {
 	 *            inline script code
 	 */
 	protected void addBottomScriptInline(String code) {
-		RepeatingView bottomScripts = getBottomScriptContainer();
-		Label script = new Label(bottomScripts.newChildId(),
+		final RepeatingView bottomScripts = getBottomScriptContainer();
+		final Label script = new Label(bottomScripts.newChildId(),
 				"<script type='text/javascript'>/*<![CDATA[*/\n" + code + "\n//]]>\n</script>\n");
 		bottomScripts.add(script.setEscapeModelStrings(false).setRenderBodyOnly(true));
 	}

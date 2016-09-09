@@ -51,11 +51,11 @@ public class RegistrantPermissionsPanel extends JPanel {
 
 	private RegistrantPermissionsTableModel tableModel;
 
-	private DefaultComboBoxModel registrantModel;
+	private DefaultComboBoxModel<String> registrantModel;
 
-	private JComboBox registrantSelector;
+	private JComboBox<String> registrantSelector;
 
-	private JComboBox permissionSelector;
+	private JComboBox<AccessPermission> permissionSelector;
 
 	private JButton addButton;
 
@@ -63,53 +63,60 @@ public class RegistrantPermissionsPanel extends JPanel {
 
 	public RegistrantPermissionsPanel(final RegistrantType registrantType) {
 		super(new BorderLayout(5, 5));
-		tableModel = new RegistrantPermissionsTableModel();
-		permissionsTable = Utils.newTable(tableModel, Utils.DATE_FORMAT, new RowRenderer() {
-			Color clear = new Color(0, 0, 0, 0);
-			Color iceGray = new Color(0xf0, 0xf0, 0xf0);
+		this.tableModel = new RegistrantPermissionsTableModel();
+		this.permissionsTable = Utils.newTable(this.tableModel, Utils.DATE_FORMAT,
+				new RowRenderer() {
+					Color clear = new Color(0, 0, 0, 0);
+					Color iceGray = new Color(0xf0, 0xf0, 0xf0);
 
-			@Override
-			public void prepareRow(Component c, boolean isSelected, int row, int column) {
-				if (isSelected) {
-					c.setBackground(permissionsTable.getSelectionBackground());
-				} else {
-					if (tableModel.permissions.get(row).mutable) {
-						c.setBackground(clear);
-					} else {
-						c.setBackground(iceGray);
+					@Override
+					public void prepareRow(Component c, boolean isSelected, int row, int column) {
+						if (isSelected) {
+							c.setBackground(RegistrantPermissionsPanel.this.permissionsTable
+									.getSelectionBackground());
+						} else {
+							if (RegistrantPermissionsPanel.this.tableModel.permissions.get(row).mutable) {
+								c.setBackground(this.clear);
+							} else {
+								c.setBackground(this.iceGray);
+							}
+						}
 					}
-				}
-			}
-		});
-		permissionsTable.setModel(tableModel);
-		permissionsTable.setPreferredScrollableViewportSize(new Dimension(400, 150));
-		JScrollPane jsp = new JScrollPane(permissionsTable);
+				});
+		this.permissionsTable.setModel(this.tableModel);
+		this.permissionsTable.setPreferredScrollableViewportSize(new Dimension(400, 150));
+		final JScrollPane jsp = new JScrollPane(this.permissionsTable);
 		add(jsp, BorderLayout.CENTER);
 
-		permissionsTable.getColumnModel().getColumn(RegistrantPermissionsTableModel.Columns.Registrant.ordinal())
-		.setCellRenderer(new NameRenderer());
-		permissionsTable.getColumnModel().getColumn(RegistrantPermissionsTableModel.Columns.Type.ordinal())
+		this.permissionsTable.getColumnModel()
+				.getColumn(RegistrantPermissionsTableModel.Columns.Registrant.ordinal())
+				.setCellRenderer(new NameRenderer());
+		this.permissionsTable.getColumnModel()
+				.getColumn(RegistrantPermissionsTableModel.Columns.Type.ordinal())
 				.setCellRenderer(new PermissionTypeRenderer());
-		permissionsTable.getColumnModel().getColumn(RegistrantPermissionsTableModel.Columns.Permission.ordinal())
-		.setCellEditor(new AccessPermissionEditor());
+		this.permissionsTable.getColumnModel()
+				.getColumn(RegistrantPermissionsTableModel.Columns.Permission.ordinal())
+				.setCellEditor(new AccessPermissionEditor());
 
-		registrantModel = new DefaultComboBoxModel();
-		registrantSelector = new JComboBox(registrantModel);
-		permissionSelector = new JComboBox(AccessPermission.NEWPERMISSIONS);
-		addButton = new JButton(Translation.get("gb.add"));
-		addButton.addActionListener(new ActionListener() {
+		this.registrantModel = new DefaultComboBoxModel<String>();
+		this.registrantSelector = new JComboBox<String>(this.registrantModel);
+		this.permissionSelector = new JComboBox<AccessPermission>(AccessPermission.NEWPERMISSIONS);
+		this.addButton = new JButton(Translation.get("gb.add"));
+		this.addButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if (registrantSelector.getSelectedIndex() < 0) {
+				if (RegistrantPermissionsPanel.this.registrantSelector.getSelectedIndex() < 0) {
 					return;
 				}
-				if (permissionSelector.getSelectedIndex() < 0) {
+				if (RegistrantPermissionsPanel.this.permissionSelector.getSelectedIndex() < 0) {
 					return;
 				}
 
-				RegistrantAccessPermission rp = new RegistrantAccessPermission(registrantType);
-				rp.registrant = registrantSelector.getSelectedItem().toString();
-				rp.permission = (AccessPermission) permissionSelector.getSelectedItem();
+				final RegistrantAccessPermission rp = new RegistrantAccessPermission(registrantType);
+				rp.registrant = RegistrantPermissionsPanel.this.registrantSelector
+						.getSelectedItem().toString();
+				rp.permission = (AccessPermission) RegistrantPermissionsPanel.this.permissionSelector
+						.getSelectedItem();
 				if (StringUtils.findInvalidCharacter(rp.registrant) != null) {
 					rp.permissionType = PermissionType.REGEX;
 					rp.source = rp.registrant;
@@ -117,33 +124,34 @@ public class RegistrantPermissionsPanel extends JPanel {
 					rp.permissionType = PermissionType.EXPLICIT;
 				}
 
-				tableModel.permissions.add(rp);
+				RegistrantPermissionsPanel.this.tableModel.permissions.add(rp);
 				// resort permissions after insert to convey idea of eval order
-				Collections.sort(tableModel.permissions);
+				Collections.sort(RegistrantPermissionsPanel.this.tableModel.permissions);
 
-				registrantModel.removeElement(rp.registrant);
-				registrantSelector.setSelectedIndex(-1);
-				registrantSelector.invalidate();
-				addPanel.setVisible(registrantModel.getSize() > 0);
+				RegistrantPermissionsPanel.this.registrantModel.removeElement(rp.registrant);
+				RegistrantPermissionsPanel.this.registrantSelector.setSelectedIndex(-1);
+				RegistrantPermissionsPanel.this.registrantSelector.invalidate();
+				RegistrantPermissionsPanel.this.addPanel
+						.setVisible(RegistrantPermissionsPanel.this.registrantModel.getSize() > 0);
 
-				tableModel.fireTableDataChanged();
+				RegistrantPermissionsPanel.this.tableModel.fireTableDataChanged();
 			}
 		});
 
-		addPanel = new JPanel();
-		addPanel.add(registrantSelector);
-		addPanel.add(permissionSelector);
-		addPanel.add(addButton);
-		add(addPanel, BorderLayout.SOUTH);
+		this.addPanel = new JPanel();
+		this.addPanel.add(this.registrantSelector);
+		this.addPanel.add(this.permissionSelector);
+		this.addPanel.add(this.addButton);
+		add(this.addPanel, BorderLayout.SOUTH);
 	}
 
 	@Override
 	public void setEnabled(boolean enabled) {
 		super.setEnabled(enabled);
-		permissionsTable.setEnabled(enabled);
-		registrantSelector.setEnabled(enabled);
-		permissionSelector.setEnabled(enabled);
-		addButton.setEnabled(enabled);
+		this.permissionsTable.setEnabled(enabled);
+		this.registrantSelector.setEnabled(enabled);
+		this.permissionSelector.setEnabled(enabled);
+		this.addButton.setEnabled(enabled);
 	}
 
 	public void setObjects(List<String> registrants, List<RegistrantAccessPermission> permissions) {
@@ -156,7 +164,7 @@ public class RegistrantPermissionsPanel extends JPanel {
 		if (permissions == null) {
 			permissions = new ArrayList<RegistrantAccessPermission>();
 		}
-		for (RegistrantAccessPermission rp : permissions) {
+		for (final RegistrantAccessPermission rp : permissions) {
 			if (rp.mutable) {
 				// only remove editable duplicates
 				// this allows for specifying an explicit permission
@@ -169,18 +177,18 @@ public class RegistrantPermissionsPanel extends JPanel {
 				filtered.remove(rp.registrant);
 			}
 		}
-		for (String registrant : filtered) {
-			registrantModel.addElement(registrant);
+		for (final String registrant : filtered) {
+			this.registrantModel.addElement(registrant);
 		}
-		tableModel.setPermissions(permissions);
+		this.tableModel.setPermissions(permissions);
 
-		registrantSelector.setSelectedIndex(-1);
-		permissionSelector.setSelectedIndex(-1);
-		addPanel.setVisible(filtered.size() > 0);
+		this.registrantSelector.setSelectedIndex(-1);
+		this.permissionSelector.setSelectedIndex(-1);
+		this.addPanel.setVisible(filtered.size() > 0);
 	}
 
 	public List<RegistrantAccessPermission> getPermissions() {
-		return tableModel.permissions;
+		return this.tableModel.permissions;
 	}
 
 	private class AccessPermissionEditor extends DefaultCellEditor {
@@ -188,8 +196,8 @@ public class RegistrantPermissionsPanel extends JPanel {
 		private static final long serialVersionUID = 1L;
 
 		public AccessPermissionEditor() {
-	        super(new JComboBox(AccessPermission.values()));
-	    }
+			super(new JComboBox<AccessPermission>(AccessPermission.values()));
+		}
 	}
 
 	private class PermissionTypeRenderer extends DefaultTableCellRenderer {
@@ -203,7 +211,7 @@ public class RegistrantPermissionsPanel extends JPanel {
 
 		@Override
 		protected void setValue(Object value) {
-			RegistrantAccessPermission ap = (RegistrantAccessPermission) value;
+			final RegistrantAccessPermission ap = (RegistrantAccessPermission) value;
 			switch (ap.permissionType) {
 			case ADMINISTRATOR:
 				setText(ap.source == null ? Translation.get("gb.administrator") : ap.source);
@@ -215,11 +223,13 @@ public class RegistrantPermissionsPanel extends JPanel {
 				break;
 			case TEAM:
 				setText(ap.source == null ? Translation.get("gb.team") : ap.source);
-				setToolTipText(MessageFormat.format(Translation.get("gb.teamPermission"), ap.source));
+				setToolTipText(MessageFormat
+						.format(Translation.get("gb.teamPermission"), ap.source));
 				break;
 			case REGEX:
 				setText("regex");
-				setToolTipText(MessageFormat.format(Translation.get("gb.regexPermission"), ap.source));
+				setToolTipText(MessageFormat.format(Translation.get("gb.regexPermission"),
+						ap.source));
 				break;
 			default:
 				if (ap.isMissing()) {

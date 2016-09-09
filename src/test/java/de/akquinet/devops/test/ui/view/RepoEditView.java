@@ -50,37 +50,34 @@ public class RepoEditView extends GitblitDashboardView {
 	}
 
 	public void changeName(String newName) {
-		String pathName = "//input[@id = \"name\" ]";
-		WebElement field = getDriver().findElement(By.xpath(pathName));
+		final String pathName = "//input[@id = \"name\" ]";
+		final WebElement field = getDriver().findElement(By.xpath(pathName));
 		field.clear();
 		field.sendKeys(newName);
 	}
 
 	public boolean navigateToPermissionsTab() {
-		String linkText = "access permissions";
-		List<WebElement> found = getDriver().findElements(
-				By.partialLinkText(linkText));
-		if (found != null && found.size() == 1) {
+		final String linkText = "access permissions";
+		final List<WebElement> found = getDriver().findElements(By.partialLinkText(linkText));
+		if ((found != null) && (found.size() == 1)) {
 			found.get(0).click();
 			return true;
 		}
 		return false;
 	}
 
-	private void changeOwners(String action,
-			String affectedSelection, String username) {
-		String xpath = "//select[@name=\"" + affectedSelection
-				+ "\"]/option[@value = \"" + username + "\" ]";
-		WebElement option = getDriver().findElement(By.xpath(xpath));
+	private void changeOwners(String action, String affectedSelection, String username) {
+		final String xpath = "//select[@name=\"" + affectedSelection + "\"]/option[@value = \""
+				+ username + "\" ]";
+		final WebElement option = getDriver().findElement(By.xpath(xpath));
 		option.click();
-		String buttonPath = "//button[@class=\"button " + action + "\"]";
-		WebElement button = getDriver().findElement(By.xpath(buttonPath));
+		final String buttonPath = "//button[@class=\"button " + action + "\"]";
+		final WebElement button = getDriver().findElement(By.xpath(buttonPath));
 		button.click();
 	}
 
 	public void removeOwner(String username) {
-		changeOwners("remove", "owners:selection",
-				username);
+		changeOwners("remove", "owners:selection", username);
 	}
 
 	public void addOwner(String username) {
@@ -88,25 +85,25 @@ public class RepoEditView extends GitblitDashboardView {
 	}
 
 	public WebElement getAccessRestrictionSelection() {
-		String xpath = "//select[@name =\"accessRestriction\"]";
-		List<WebElement> found = getDriver().findElements(By.xpath(xpath));
-		if (found != null && found.size() == 1) {
+		final String xpath = "//select[@name =\"accessRestriction\"]";
+		final List<WebElement> found = getDriver().findElements(By.xpath(xpath));
+		if ((found != null) && (found.size() == 1)) {
 			return found.get(0);
 		}
 		return null;
 	}
 
 	public boolean changeAccessRestriction(int option) {
-		WebElement accessRestrictionSelection = getAccessRestrictionSelection();
+		final WebElement accessRestrictionSelection = getAccessRestrictionSelection();
 		if (accessRestrictionSelection == null) {
 			return false;
 		}
 		accessRestrictionSelection.click();
 		sleep(100);
-		String xpath = "//select[@name =\"accessRestriction\"]/option[@value=\""
-				+ option + "\"]";
-		List<WebElement> found = getDriver().findElements(By.xpath(xpath));
-		if (found == null || found.size() == 0 || found.size() > 1) {
+		final String xpath = "//select[@name =\"accessRestriction\"]/option[@value=\"" + option
+				+ "\"]";
+		final List<WebElement> found = getDriver().findElements(By.xpath(xpath));
+		if ((found == null) || (found.size() == 0) || (found.size() > 1)) {
 			return false;
 		}
 		found.get(0).click();
@@ -115,10 +112,10 @@ public class RepoEditView extends GitblitDashboardView {
 
 	public boolean changeAuthorizationControl(int option) {
 		System.out.println("try to change auth control");
-		String xpath = "//input[@name =\"authorizationControl\" and @value=\""
-				+ option + "\"]";
-		List<WebElement> found = getDriver().findElements(By.xpath(xpath));
-		if (found != null && found.size() == 1) {
+		final String xpath = "//input[@name =\"authorizationControl\" and @value=\"" + option
+				+ "\"]";
+		final List<WebElement> found = getDriver().findElements(By.xpath(xpath));
+		if ((found != null) && (found.size() == 1)) {
 			found.get(0).click();
 			return true;
 		}
@@ -126,12 +123,12 @@ public class RepoEditView extends GitblitDashboardView {
 	}
 
 	private boolean isPermissionViewDisabled(String prefix, String view) {
-		String xpath = "//[@name =\"" + prefix + view + "\"]";
-		List<WebElement> found = getDriver().findElements(By.xpath(xpath));
-		if (found == null || found.size() == 0 || found.size() > 1) {
+		final String xpath = "//[@name =\"" + prefix + view + "\"]";
+		final List<WebElement> found = getDriver().findElements(By.xpath(xpath));
+		if ((found == null) || (found.size() == 0) || (found.size() > 1)) {
 			return false;
 		}
-		String attrValue = found.get(0).getAttribute("disabled");
+		final String attrValue = found.get(0).getAttribute("disabled");
 		return (attrValue != null) && (attrValue.equals("disabled"));
 	}
 
@@ -142,14 +139,13 @@ public class RepoEditView extends GitblitDashboardView {
 	}
 
 	public boolean save() {
-		String xpath = "//div[@class=\"form-actions\"]/input[@name =\""
-				+ "save" + "\"]";
-		List<WebElement> found = getDriver().findElements(By.xpath(xpath));
-		if (found == null || found.size() == 0 || found.size() > 1) {
+		final String xpath = "//div[@class=\"form-actions\"]/input[@name =\"" + "save" + "\"]";
+		final List<WebElement> found = getDriver().findElements(By.xpath(xpath));
+		if ((found == null) || (found.size() == 0) || (found.size() > 1)) {
 			return false;
 		}
 		found.get(0).click();
-		WebDriverWait webDriverWait = new WebDriverWait(getDriver(), 1);
+		final WebDriverWait webDriverWait = new WebDriverWait(getDriver(), 1);
 		webDriverWait.until(new Exp.RepoListViewLoaded());
 		return true;
 	}

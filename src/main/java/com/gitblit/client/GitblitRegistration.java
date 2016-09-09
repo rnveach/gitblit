@@ -45,28 +45,28 @@ public class GitblitRegistration implements Serializable, Comparable<GitblitRegi
 		this.url = url;
 		this.account = account;
 		this.password = password;
-		this.savePassword = password != null && password.length > 0;
+		this.savePassword = (password != null) && (password.length > 0);
 		if (StringUtils.isEmpty(name)) {
 			this.name = url.substring(url.indexOf("//") + 2);
 		} else {
 			this.name = name;
 		}
-		feeds = new ArrayList<FeedModel>();
+		this.feeds = new ArrayList<FeedModel>();
 	}
 
 	public void updateSubscribedFeeds(List<FeedModel> list) {
-		for (FeedModel feed : list) {
-			if (feeds.contains(feed)) {
+		for (final FeedModel feed : list) {
+			if (this.feeds.contains(feed)) {
 				// possibly unsubscribe/remove feed
-				int index = feeds.indexOf(feed);
-				FeedModel existingFeed = feeds.get(index);
+				final int index = this.feeds.indexOf(feed);
+				final FeedModel existingFeed = this.feeds.get(index);
 				existingFeed.subscribed = feed.subscribed;
 				if (!existingFeed.subscribed) {
-					feeds.remove(index);
+					this.feeds.remove(index);
 				}
 			} else if (feed.subscribed) {
 				// new subscription
-				feeds.add(feed);
+				this.feeds.add(feed);
 			}
 		}
 	}
@@ -76,11 +76,11 @@ public class GitblitRegistration implements Serializable, Comparable<GitblitRegi
 
 	@Override
 	public int compareTo(GitblitRegistration o) {
-		return name.toLowerCase().compareTo(o.name.toLowerCase());
+		return this.name.toLowerCase().compareTo(o.name.toLowerCase());
 	}
 
 	@Override
 	public String toString() {
-		return name + " (" + url + ")";
+		return this.name + " (" + this.url + ")";
 	}
 }

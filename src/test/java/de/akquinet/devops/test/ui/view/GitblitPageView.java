@@ -38,21 +38,22 @@ public class GitblitPageView {
 	public void sleep(int miliseconds) {
 		try {
 			Thread.sleep(miliseconds);
-		} catch (InterruptedException e) {
+		}
+		catch (final InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
 
 	public WebElement getElementWithFocus() {
-		String elScript = "return document.activeElement;";
+		final String elScript = "return document.activeElement;";
 
-		WebElement focuseedEl = (WebElement) ((JavascriptExecutor) getDriver())
+		final WebElement focuseedEl = (WebElement) ((JavascriptExecutor) getDriver())
 				.executeScript(elScript);
 		return focuseedEl;
 	}
 
 	public void navigateToPreviousPageOfBrowserHistory() {
-		driver.navigate().back();
+		this.driver.navigate().back();
 	}
 
 	public void setDriver(WebDriver driver) {
@@ -60,7 +61,7 @@ public class GitblitPageView {
 	}
 
 	public WebDriver getDriver() {
-		return driver;
+		return this.driver;
 	}
 
 	public void setBaseUrl(String baseUrl) {
@@ -68,6 +69,6 @@ public class GitblitPageView {
 	}
 
 	public String getBaseUrl() {
-		return baseUrl;
+		return this.baseUrl;
 	}
 }

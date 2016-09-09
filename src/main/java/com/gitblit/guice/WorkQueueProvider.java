@@ -44,14 +44,15 @@ public class WorkQueueProvider implements Provider<WorkQueue> {
 
 	@Override
 	public synchronized WorkQueue get() {
-		if (workQueue != null) {
-			return workQueue;
+		if (this.workQueue != null) {
+			return this.workQueue;
 		}
 
-		IStoredSettings settings = runtimeManager.getSettings();
-		int defaultThreadPoolSize = settings.getInteger(Keys.execution.defaultThreadPoolSize, 1);
-		IdGenerator idGenerator = new IdGenerator();
-		workQueue = new WorkQueue(idGenerator, defaultThreadPoolSize);
-		return workQueue;
+		final IStoredSettings settings = this.runtimeManager.getSettings();
+		final int defaultThreadPoolSize = settings.getInteger(Keys.execution.defaultThreadPoolSize,
+				1);
+		final IdGenerator idGenerator = new IdGenerator();
+		this.workQueue = new WorkQueue(idGenerator, defaultThreadPoolSize);
+		return this.workQueue;
 	}
 }

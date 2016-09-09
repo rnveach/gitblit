@@ -62,7 +62,7 @@ public class CommentPanel extends BasePanel {
 	protected void onInitialize() {
 		super.onInitialize();
 
-		Form<String> form = new Form<String>("editorForm");
+		final Form<String> form = new Form<String>("editorForm");
 		add(form);
 
 		form.add(new AjaxButton("submit", new Model<String>(getString("gb.comment")), form) {
@@ -70,19 +70,24 @@ public class CommentPanel extends BasePanel {
 
 			@Override
 			public void onSubmit(AjaxRequestTarget target, Form<?> form) {
-				String txt = markdownEditor.getText();
-				if (change == null) {
+				final String txt = CommentPanel.this.markdownEditor.getText();
+				if (CommentPanel.this.change == null) {
 					// new comment
-					Change newComment = new Change(user.username);
+					final Change newComment = new Change(CommentPanel.this.user.username);
 					newComment.comment(txt);
-					if (!ticket.isWatching(user.username)) {
-						newComment.watch(user.username);
+					if (!CommentPanel.this.ticket.isWatching(CommentPanel.this.user.username)) {
+						newComment.watch(CommentPanel.this.user.username);
 					}
-					RepositoryModel repository = app().repositories().getRepositoryModel(ticket.repository);
-					TicketModel updatedTicket = app().tickets().updateTicket(repository, ticket.number, newComment);
+					final RepositoryModel repository = app().repositories().getRepositoryModel(
+							CommentPanel.this.ticket.repository);
+					final TicketModel updatedTicket = app().tickets().updateTicket(repository,
+							CommentPanel.this.ticket.number, newComment);
 					if (updatedTicket != null) {
 						app().tickets().createNotifier().sendMailing(updatedTicket);
-						redirectTo(pageClass, WicketUtils.newObjectParameter(updatedTicket.repository, "" + ticket.number));
+						redirectTo(
+								CommentPanel.this.pageClass,
+								WicketUtils.newObjectParameter(updatedTicket.repository, ""
+										+ CommentPanel.this.ticket.number));
 					} else {
 						error("Failed to add comment!");
 					}
@@ -90,42 +95,42 @@ public class CommentPanel extends BasePanel {
 					// TODO update comment
 				}
 			}
-			
-            /**
-             * Steal from BasePage to realize redirection.
-             * 
-             * @see BasePage
-             * @author krulls@GitHub; ECG Leipzig GmbH, Germany, 2015
-             * 
-             * @param pageClass
-             * @param parameters
-             * @return
-             */
-            private void redirectTo(Class<? extends BasePage> pageClass, PageParameters parameters)
-            {
-                String relativeUrl = urlFor(pageClass, parameters).toString();
-                String canonicalUrl = RequestUtils.toAbsolutePath(relativeUrl);
-                getRequestCycle().setRequestTarget(new RedirectRequestTarget(canonicalUrl));
-            }
-			
-		}.setVisible(ticket != null && ticket.number > 0));
+
+			/**
+			 * Steal from BasePage to realize redirection.
+			 * 
+			 * @see BasePage
+			 * @author krulls@GitHub; ECG Leipzig GmbH, Germany, 2015
+			 * 
+			 * @param pageClass
+			 * @param parameters
+			 * @return
+			 */
+			private void redirectTo(Class<? extends BasePage> pageClass, PageParameters parameters) {
+				final String relativeUrl = urlFor(pageClass, parameters).toString();
+				final String canonicalUrl = RequestUtils.toAbsolutePath(relativeUrl);
+				getRequestCycle().setRequestTarget(new RedirectRequestTarget(canonicalUrl));
+			}
+
+		}.setVisible((this.ticket != null) && (this.ticket.number > 0)));
 
 		final IModel<String> markdownPreviewModel = Model.of();
-		markdownPreview = new Label("markdownPreview", markdownPreviewModel);
-		markdownPreview.setEscapeModelStrings(false);
-		markdownPreview.setOutputMarkupId(true);
-		add(markdownPreview);
+		this.markdownPreview = new Label("markdownPreview", markdownPreviewModel);
+		this.markdownPreview.setEscapeModelStrings(false);
+		this.markdownPreview.setOutputMarkupId(true);
+		add(this.markdownPreview);
 
-		markdownEditor = new MarkdownTextArea("markdownEditor", markdownPreviewModel, markdownPreview);
-		markdownEditor.setRepository(repositoryName);
-		WicketUtils.setInputPlaceholder(markdownEditor, getString("gb.leaveComment"));
-		add(markdownEditor);
+		this.markdownEditor = new MarkdownTextArea("markdownEditor", markdownPreviewModel,
+				this.markdownPreview);
+		this.markdownEditor.setRepository(this.repositoryName);
+		WicketUtils.setInputPlaceholder(this.markdownEditor, getString("gb.leaveComment"));
+		add(this.markdownEditor);
 	}
 
 	public void setRepository(String repositoryName) {
 		this.repositoryName = repositoryName;
-		if (markdownEditor != null) {
-			markdownEditor.setRepository(repositoryName);
+		if (this.markdownEditor != null) {
+			this.markdownEditor.setRepository(repositoryName);
 		}
 	}
 }

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package com.gitblit.tests;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
@@ -48,6 +47,7 @@ import com.unboundid.ldap.sdk.SearchResult;
 import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.ldif.LDIFReader;
 
+
 /**
  * An Integration test for LDAP that tests going against an in-memory UnboundID
  * LDAP server.
@@ -56,14 +56,14 @@ import com.unboundid.ldif.LDIFReader;
  *
  */
 public class LdapAuthenticationTest extends GitblitUnitTest {
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+	@Rule
+	public TemporaryFolder folder = new TemporaryFolder();
 
 	private static final String RESOURCE_DIR = "src/test/resources/ldap/";
 
-    private File usersConf;
+	private File usersConf;
 
-    private LdapAuthProvider ldap;
+	private LdapAuthProvider ldap;
 
 	static int ldapPort = 1389;
 
@@ -77,7 +77,8 @@ public class LdapAuthenticationTest extends GitblitUnitTest {
 
 	@BeforeClass
 	public static void createInMemoryLdapServer() throws Exception {
-		InMemoryDirectoryServerConfig config = new InMemoryDirectoryServerConfig("dc=MyDomain");
+		final InMemoryDirectoryServerConfig config = new InMemoryDirectoryServerConfig(
+				"dc=MyDomain");
 		config.addAdditionalBindCredentials("cn=Directory Manager", "password");
 		config.setListenerConfigs(InMemoryListenerConfig.createLDAPConfig("default", ldapPort));
 		config.setSchema(null);
@@ -89,72 +90,82 @@ public class LdapAuthenticationTest extends GitblitUnitTest {
 	@Before
 	public void init() throws Exception {
 		ds.clear();
-		ds.importFromLDIF(true, new LDIFReader(new FileInputStream(RESOURCE_DIR + "sampledata.ldif")));
-		usersConf = folder.newFile("users.conf");
-		FileUtils.copyFile(new File(RESOURCE_DIR + "users.conf"), usersConf);
-		settings = getSettings();
-		ldap = newLdapAuthentication(settings);
-		auth = newAuthenticationManager(settings);
+		ds.importFromLDIF(true, new LDIFReader(
+				new FileInputStream(RESOURCE_DIR + "sampledata.ldif")));
+		this.usersConf = this.folder.newFile("users.conf");
+		FileUtils.copyFile(new File(RESOURCE_DIR + "users.conf"), this.usersConf);
+		this.settings = getSettings();
+		this.ldap = newLdapAuthentication(this.settings);
+		this.auth = newAuthenticationManager(this.settings);
 	}
 
 	private LdapAuthProvider newLdapAuthentication(IStoredSettings settings) {
-		XssFilter xssFilter = new AllowXssFilter();
-		RuntimeManager runtime = new RuntimeManager(settings, xssFilter, GitBlitSuite.BASEFOLDER).start();
-		userManager = new UserManager(runtime, null).start();
-		LdapAuthProvider ldap = new LdapAuthProvider();
-		ldap.setup(runtime, userManager);
+		final XssFilter xssFilter = new AllowXssFilter();
+		final RuntimeManager runtime = new RuntimeManager(settings, xssFilter,
+				GitBlitSuite.BASEFOLDER).start();
+		this.userManager = new UserManager(runtime, null).start();
+		final LdapAuthProvider ldap = new LdapAuthProvider();
+		ldap.setup(runtime, this.userManager);
 		return ldap;
 	}
 
 	private AuthenticationManager newAuthenticationManager(IStoredSettings settings) {
-		XssFilter xssFilter = new AllowXssFilter();
-		RuntimeManager runtime = new RuntimeManager(settings, xssFilter, GitBlitSuite.BASEFOLDER).start();
-		AuthenticationManager auth = new AuthenticationManager(runtime, userManager);
+		final XssFilter xssFilter = new AllowXssFilter();
+		final RuntimeManager runtime = new RuntimeManager(settings, xssFilter,
+				GitBlitSuite.BASEFOLDER).start();
+		final AuthenticationManager auth = new AuthenticationManager(runtime, this.userManager);
 		auth.addAuthenticationProvider(newLdapAuthentication(settings));
 		return auth;
 	}
 
 	private MemorySettings getSettings() {
-		Map<String, Object> backingMap = new HashMap<String, Object>();
-		backingMap.put(Keys.realm.userService, usersConf.getAbsolutePath());
+		final Map<String, Object> backingMap = new HashMap<String, Object>();
+		backingMap.put(Keys.realm.userService, this.usersConf.getAbsolutePath());
 		backingMap.put(Keys.realm.ldap.server, "ldap://localhost:" + ldapPort);
-//		backingMap.put(Keys.realm.ldap.domain, "");
+		// backingMap.put(Keys.realm.ldap.domain, "");
 		backingMap.put(Keys.realm.ldap.username, "cn=Directory Manager");
 		backingMap.put(Keys.realm.ldap.password, "password");
-//		backingMap.put(Keys.realm.ldap.backingUserService, "users.conf");
+		// backingMap.put(Keys.realm.ldap.backingUserService, "users.conf");
 		backingMap.put(Keys.realm.ldap.maintainTeams, "true");
-		backingMap.put(Keys.realm.ldap.accountBase, "OU=Users,OU=UserControl,OU=MyOrganization,DC=MyDomain");
-		backingMap.put(Keys.realm.ldap.accountPattern, "(&(objectClass=person)(sAMAccountName=${username}))");
-		backingMap.put(Keys.realm.ldap.groupBase, "OU=Groups,OU=UserControl,OU=MyOrganization,DC=MyDomain");
+		backingMap.put(Keys.realm.ldap.accountBase,
+				"OU=Users,OU=UserControl,OU=MyOrganization,DC=MyDomain");
+		backingMap.put(Keys.realm.ldap.accountPattern,
+				"(&(objectClass=person)(sAMAccountName=${username}))");
+		backingMap.put(Keys.realm.ldap.groupBase,
+				"OU=Groups,OU=UserControl,OU=MyOrganization,DC=MyDomain");
 		backingMap.put(Keys.realm.ldap.groupMemberPattern, "(&(objectClass=group)(member=${dn}))");
 		backingMap.put(Keys.realm.ldap.admins, "UserThree @Git_Admins \"@Git Admins\"");
 		backingMap.put(Keys.realm.ldap.displayName, "displayName");
 		backingMap.put(Keys.realm.ldap.email, "email");
 		backingMap.put(Keys.realm.ldap.uid, "sAMAccountName");
 
-		MemorySettings ms = new MemorySettings(backingMap);
+		final MemorySettings ms = new MemorySettings(backingMap);
 		return ms;
 	}
 
 	@Test
 	public void testAuthenticate() {
-		UserModel userOneModel = ldap.authenticate("UserOne", "userOnePassword".toCharArray());
+		final UserModel userOneModel = this.ldap.authenticate("UserOne",
+				"userOnePassword".toCharArray());
 		assertNotNull(userOneModel);
 		assertNotNull(userOneModel.getTeam("git_admins"));
 		assertNotNull(userOneModel.getTeam("git_users"));
 		assertTrue(userOneModel.canAdmin);
 
-		UserModel userOneModelFailedAuth = ldap.authenticate("UserOne", "userTwoPassword".toCharArray());
+		final UserModel userOneModelFailedAuth = this.ldap.authenticate("UserOne",
+				"userTwoPassword".toCharArray());
 		assertNull(userOneModelFailedAuth);
 
-		UserModel userTwoModel = ldap.authenticate("UserTwo", "userTwoPassword".toCharArray());
+		final UserModel userTwoModel = this.ldap.authenticate("UserTwo",
+				"userTwoPassword".toCharArray());
 		assertNotNull(userTwoModel);
 		assertNotNull(userTwoModel.getTeam("git_users"));
 		assertNull(userTwoModel.getTeam("git_admins"));
 		assertNotNull(userTwoModel.getTeam("git admins"));
 		assertTrue(userTwoModel.canAdmin);
 
-		UserModel userThreeModel = ldap.authenticate("UserThree", "userThreePassword".toCharArray());
+		final UserModel userThreeModel = this.ldap.authenticate("UserThree",
+				"userThreePassword".toCharArray());
 		assertNotNull(userThreeModel);
 		assertNotNull(userThreeModel.getTeam("git_users"));
 		assertNull(userThreeModel.getTeam("git_admins"));
@@ -163,100 +174,112 @@ public class LdapAuthenticationTest extends GitblitUnitTest {
 
 	@Test
 	public void testDisplayName() {
-		UserModel userOneModel = ldap.authenticate("UserOne", "userOnePassword".toCharArray());
+		UserModel userOneModel = this.ldap.authenticate("UserOne", "userOnePassword".toCharArray());
 		assertNotNull(userOneModel);
 		assertEquals("User One", userOneModel.displayName);
 
 		// Test more complicated scenarios - concat
-		MemorySettings ms = getSettings();
+		final MemorySettings ms = getSettings();
 		ms.put("realm.ldap.displayName", "${personalTitle}. ${givenName} ${surname}");
-		ldap = newLdapAuthentication(ms);
+		this.ldap = newLdapAuthentication(ms);
 
-		userOneModel = ldap.authenticate("UserOne", "userOnePassword".toCharArray());
+		userOneModel = this.ldap.authenticate("UserOne", "userOnePassword".toCharArray());
 		assertNotNull(userOneModel);
 		assertEquals("Mr. User One", userOneModel.displayName);
 	}
 
 	@Test
 	public void testEmail() {
-		UserModel userOneModel = ldap.authenticate("UserOne", "userOnePassword".toCharArray());
+		UserModel userOneModel = this.ldap.authenticate("UserOne", "userOnePassword".toCharArray());
 		assertNotNull(userOneModel);
 		assertEquals("userone@gitblit.com", userOneModel.emailAddress);
 
 		// Test more complicated scenarios - concat
-		MemorySettings ms = getSettings();
+		final MemorySettings ms = getSettings();
 		ms.put("realm.ldap.email", "${givenName}.${surname}@gitblit.com");
-		ldap = newLdapAuthentication(ms);
+		this.ldap = newLdapAuthentication(ms);
 
-		userOneModel = ldap.authenticate("UserOne", "userOnePassword".toCharArray());
+		userOneModel = this.ldap.authenticate("UserOne", "userOnePassword".toCharArray());
 		assertNotNull(userOneModel);
 		assertEquals("User.One@gitblit.com", userOneModel.emailAddress);
 	}
 
 	@Test
 	public void testLdapInjection() {
-		// Inject so "(&(objectClass=person)(sAMAccountName=${username}))" becomes "(&(objectClass=person)(sAMAccountName=*)(userPassword=userOnePassword))"
+		// Inject so "(&(objectClass=person)(sAMAccountName=${username}))"
+		// becomes
+		// "(&(objectClass=person)(sAMAccountName=*)(userPassword=userOnePassword))"
 		// Thus searching by password
 
-		UserModel userOneModel = ldap.authenticate("*)(userPassword=userOnePassword", "userOnePassword".toCharArray());
+		final UserModel userOneModel = this.ldap.authenticate("*)(userPassword=userOnePassword",
+				"userOnePassword".toCharArray());
 		assertNull(userOneModel);
 	}
 
 	@Test
 	public void checkIfUsersConfContainsAllUsersFromSampleDataLdif() throws Exception {
-		SearchResult searchResult = ds.search("OU=Users,OU=UserControl,OU=MyOrganization,DC=MyDomain", SearchScope.SUB, "objectClass=person");
-		assertEquals("Number of ldap users in gitblit user model", searchResult.getEntryCount(), countLdapUsersInUserManager());
+		final SearchResult searchResult = ds.search(
+				"OU=Users,OU=UserControl,OU=MyOrganization,DC=MyDomain", SearchScope.SUB,
+				"objectClass=person");
+		assertEquals("Number of ldap users in gitblit user model", searchResult.getEntryCount(),
+				countLdapUsersInUserManager());
 	}
 
 	@Test
 	public void addingUserInLdapShouldNotUpdateGitBlitUsersAndGroups() throws Exception {
 		ds.addEntries(LDIFReader.readEntries(RESOURCE_DIR + "adduser.ldif"));
-		ldap.sync();
+		this.ldap.sync();
 		assertEquals("Number of ldap users in gitblit user model", 5, countLdapUsersInUserManager());
 	}
 
 	@Test
 	public void addingUserInLdapShouldUpdateGitBlitUsersAndGroups() throws Exception {
-		settings.put(Keys.realm.ldap.synchronize, "true");
+		this.settings.put(Keys.realm.ldap.synchronize, "true");
 		ds.addEntries(LDIFReader.readEntries(RESOURCE_DIR + "adduser.ldif"));
-		ldap.sync();
+		this.ldap.sync();
 		assertEquals("Number of ldap users in gitblit user model", 6, countLdapUsersInUserManager());
 	}
 
 	@Test
 	public void addingGroupsInLdapShouldNotUpdateGitBlitUsersAndGroups() throws Exception {
 		ds.addEntries(LDIFReader.readEntries(RESOURCE_DIR + "addgroup.ldif"));
-		ldap.sync();
-		assertEquals("Number of ldap groups in gitblit team model", 0, countLdapTeamsInUserManager());
+		this.ldap.sync();
+		assertEquals("Number of ldap groups in gitblit team model", 0,
+				countLdapTeamsInUserManager());
 	}
 
 	@Test
 	public void addingGroupsInLdapShouldUpdateGitBlitUsersAndGroups() throws Exception {
-		settings.put(Keys.realm.ldap.synchronize, "true");
+		this.settings.put(Keys.realm.ldap.synchronize, "true");
 		ds.addEntries(LDIFReader.readEntries(RESOURCE_DIR + "addgroup.ldif"));
-		ldap.sync();
-		assertEquals("Number of ldap groups in gitblit team model", 1, countLdapTeamsInUserManager());
+		this.ldap.sync();
+		assertEquals("Number of ldap groups in gitblit team model", 1,
+				countLdapTeamsInUserManager());
 	}
 
 	@Test
 	public void testAuthenticationManager() {
-		UserModel userOneModel = auth.authenticate("UserOne", "userOnePassword".toCharArray(), null);
+		final UserModel userOneModel = this.auth.authenticate("UserOne",
+				"userOnePassword".toCharArray(), null);
 		assertNotNull(userOneModel);
 		assertNotNull(userOneModel.getTeam("git_admins"));
 		assertNotNull(userOneModel.getTeam("git_users"));
 		assertTrue(userOneModel.canAdmin);
 
-		UserModel userOneModelFailedAuth = auth.authenticate("UserOne", "userTwoPassword".toCharArray(), null);
+		final UserModel userOneModelFailedAuth = this.auth.authenticate("UserOne",
+				"userTwoPassword".toCharArray(), null);
 		assertNull(userOneModelFailedAuth);
 
-		UserModel userTwoModel = auth.authenticate("UserTwo", "userTwoPassword".toCharArray(), null);
+		final UserModel userTwoModel = this.auth.authenticate("UserTwo",
+				"userTwoPassword".toCharArray(), null);
 		assertNotNull(userTwoModel);
 		assertNotNull(userTwoModel.getTeam("git_users"));
 		assertNull(userTwoModel.getTeam("git_admins"));
 		assertNotNull(userTwoModel.getTeam("git admins"));
 		assertTrue(userTwoModel.canAdmin);
 
-		UserModel userThreeModel = auth.authenticate("UserThree", "userThreePassword".toCharArray(), null);
+		final UserModel userThreeModel = this.auth.authenticate("UserThree",
+				"userThreePassword".toCharArray(), null);
 		assertNotNull(userThreeModel);
 		assertNotNull(userThreeModel.getTeam("git_users"));
 		assertNull(userThreeModel.getTeam("git_admins"));
@@ -265,20 +288,23 @@ public class LdapAuthenticationTest extends GitblitUnitTest {
 
 	@Test
 	public void testBindWithUser() {
-		settings.put(Keys.realm.ldap.bindpattern, "CN=${username},OU=US,OU=Users,OU=UserControl,OU=MyOrganization,DC=MyDomain");
-		settings.put(Keys.realm.ldap.username, "");
-		settings.put(Keys.realm.ldap.password, "");
+		this.settings.put(Keys.realm.ldap.bindpattern,
+				"CN=${username},OU=US,OU=Users,OU=UserControl,OU=MyOrganization,DC=MyDomain");
+		this.settings.put(Keys.realm.ldap.username, "");
+		this.settings.put(Keys.realm.ldap.password, "");
 
-		UserModel userOneModel = auth.authenticate("UserOne", "userOnePassword".toCharArray(), null);
+		final UserModel userOneModel = this.auth.authenticate("UserOne",
+				"userOnePassword".toCharArray(), null);
 		assertNotNull(userOneModel);
 
-		UserModel userOneModelFailedAuth = auth.authenticate("UserOne", "userTwoPassword".toCharArray(), null);
+		final UserModel userOneModelFailedAuth = this.auth.authenticate("UserOne",
+				"userTwoPassword".toCharArray(), null);
 		assertNull(userOneModelFailedAuth);
 	}
 
 	private int countLdapUsersInUserManager() {
 		int ldapAccountCount = 0;
-		for (UserModel userModel : userManager.getAllUsers()) {
+		for (final UserModel userModel : this.userManager.getAllUsers()) {
 			if (AccountType.LDAP.equals(userModel.accountType)) {
 				ldapAccountCount++;
 			}
@@ -288,7 +314,7 @@ public class LdapAuthenticationTest extends GitblitUnitTest {
 
 	private int countLdapTeamsInUserManager() {
 		int ldapAccountCount = 0;
-		for (TeamModel teamModel : userManager.getAllTeams()) {
+		for (final TeamModel teamModel : this.userManager.getAllTeams()) {
 			if (AccountType.LDAP.equals(teamModel.accountType)) {
 				ldapAccountCount++;
 			}

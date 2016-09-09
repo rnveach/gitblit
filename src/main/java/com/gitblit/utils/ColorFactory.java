@@ -51,16 +51,16 @@ public class ColorFactory {
 	 * @return The map of key to tinted color.
 	 */
 	public <T> Map<T, String> getGraduatedColorMap(Set<T> keys, Color baseColor) {
-		Map<T, String> colorMap = new HashMap<T, String>();
+		final Map<T, String> colorMap = new HashMap<T, String>();
 
 		if (baseColor == null) {
 			baseColor = getRandomColor();
 		}
-		double tintStep = (MAX_TINT_FACTOR - MIN_TINT_FACTOR) / keys.size();
+		final double tintStep = (MAX_TINT_FACTOR - MIN_TINT_FACTOR) / keys.size();
 
 		double currentTint = MAX_TINT_FACTOR;
-		for (T key : keys) {
-			Color color = tintColor(baseColor, currentTint);
+		for (final T key : keys) {
+			final Color color = tintColor(baseColor, currentTint);
 
 			colorMap.put(key, getColorString(color));
 
@@ -75,35 +75,36 @@ public class ColorFactory {
 	 *
 	 * Each color is selected randomly and tinted with a fixed tint.
 	 *
-	 * @param keys The keys to create the mapped colors.
+	 * @param keys
+	 *            The keys to create the mapped colors.
 	 * @return The map of key to random color.
 	 */
 	public <T> Map<T, String> getRandomColorMap(Set<T> keys) {
-		Map<T, String> colorMap = new HashMap<T, String>();
+		final Map<T, String> colorMap = new HashMap<T, String>();
 
-		for (T key : keys) {
-			Color color = tintColor(getRandomColor(), FIXED_TINT_FACTOR);
+		for (final T key : keys) {
+			final Color color = tintColor(getRandomColor(), FIXED_TINT_FACTOR);
 			colorMap.put(key, getColorString(color));
 		}
 
 		return colorMap;
 	}
 
-	private Color getRandomColor() {
-		Random random = new Random();
+	private static Color getRandomColor() {
+		final Random random = new Random();
 
-		Color randomColor = new Color(random.nextInt(256), random.nextInt(256),
+		final Color randomColor = new Color(random.nextInt(256), random.nextInt(256),
 				random.nextInt(256));
 
 		return randomColor;
 	}
 
-	private Color tintColor(Color origColor, double tintFactor) {
-		int tintedRed = applyTint(origColor.getRed(), tintFactor);
-		int tintedGreen = applyTint(origColor.getGreen(), tintFactor);
-		int tintedBlue = applyTint(origColor.getBlue(), tintFactor);
+	private static Color tintColor(Color origColor, double tintFactor) {
+		final int tintedRed = applyTint(origColor.getRed(), tintFactor);
+		final int tintedGreen = applyTint(origColor.getGreen(), tintFactor);
+		final int tintedBlue = applyTint(origColor.getBlue(), tintFactor);
 
-		Color tintedColor = new Color(tintedRed, tintedGreen, tintedBlue);
+		final Color tintedColor = new Color(tintedRed, tintedGreen, tintedBlue);
 
 		return tintedColor;
 	}
@@ -112,10 +113,11 @@ public class ColorFactory {
 	 * Convert the color to an HTML compatible color string in hex format E.g.
 	 * #FF0000
 	 *
-	 * @param color The color to convert
+	 * @param color
+	 *            The color to convert
 	 * @return The string version of the color I.e. #RRGGBB
 	 */
-	private String getColorString(Color color) {
+	private static String getColorString(Color color) {
 		return "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
 	}
 
@@ -125,11 +127,13 @@ public class ColorFactory {
 	 *
 	 * A Tint of 0 has no effect, a Tint of 1 turns the color white.
 	 *
-	 * @param color The original color
-	 * @param tintFactor The factor - 0 to 1 inclusive
+	 * @param color
+	 *            The original color
+	 * @param tintFactor
+	 *            The factor - 0 to 1 inclusive
 	 * @return The tinted color.
 	 */
-	private int applyTint(int color, double tintFactor) {
+	private static int applyTint(int color, double tintFactor) {
 		return (int) (color + ((255 - color) * tintFactor));
 	}
 }

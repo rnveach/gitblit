@@ -41,20 +41,19 @@ public class ByteFormat extends Format {
 	@Override
 	public StringBuffer format(Object obj, StringBuffer buf, FieldPosition pos) {
 		if (obj instanceof Number) {
-			long numBytes = ((Number) obj).longValue();
+			final long numBytes = ((Number) obj).longValue();
 			if (numBytes < 1024) {
-				DecimalFormat formatter = new DecimalFormat("#,##0");
+				final DecimalFormat formatter = new DecimalFormat("#,##0");
 				buf.append(formatter.format((double) numBytes)).append(" b");
-			} else if (numBytes < 1024 * 1024) {
-				DecimalFormat formatter = new DecimalFormat("#,##0");
+			} else if (numBytes < (1024 * 1024)) {
+				final DecimalFormat formatter = new DecimalFormat("#,##0");
 				buf.append(formatter.format(numBytes / 1024.0)).append(" KB");
-			} else if (numBytes < 1024 * 1024 * 1024) {
-				DecimalFormat formatter = new DecimalFormat("#,##0.0");
+			} else if (numBytes < (1024 * 1024 * 1024)) {
+				final DecimalFormat formatter = new DecimalFormat("#,##0.0");
 				buf.append(formatter.format(numBytes / (1024.0 * 1024.0))).append(" MB");
 			} else {
-				DecimalFormat formatter = new DecimalFormat("#,##0.0");
-				buf.append(formatter.format(numBytes / (1024.0 * 1024.0 * 1024.0)))
-						.append(" GB");
+				final DecimalFormat formatter = new DecimalFormat("#,##0.0");
+				buf.append(formatter.format(numBytes / (1024.0 * 1024.0 * 1024.0))).append(" GB");
 			}
 		}
 		return buf;

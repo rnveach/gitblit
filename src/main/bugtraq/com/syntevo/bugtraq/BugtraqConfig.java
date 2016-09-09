@@ -73,7 +73,8 @@ public final class BugtraqConfig {
 	// Static =================================================================
 
 	@Nullable
-	public static BugtraqConfig read(@NotNull Repository repository) throws IOException, ConfigInvalidException {
+	public static BugtraqConfig read(@NotNull Repository repository) throws IOException,
+			ConfigInvalidException {
 		Config baseConfig = getBaseConfig(repository, DOT_GIT_BUGTRAQ);
 		if (baseConfig == null) {
 			baseConfig = getBaseConfig(repository, DOT_TGITCONFIG);
@@ -84,17 +85,16 @@ public final class BugtraqConfig {
 		try {
 			config = repository.getConfig();
 		}
-		catch (RuntimeException ex) {
+		catch (final RuntimeException ex) {
 			final Throwable cause = ex.getCause();
 			if (cause instanceof IOException) {
-				throw (IOException)cause;
+				throw (IOException) cause;
 			}
 			throw ex;
 		}
 		if (getString(null, URL, config, baseConfig) != null) {
 			allNames.add(null);
-		}
-		else {
+		} else {
 			allNames.addAll(config.getSubsections(BUGTRAQ));
 			if (baseConfig != null) {
 				allNames.addAll(baseConfig.getSubsections(BUGTRAQ));
@@ -102,14 +102,14 @@ public final class BugtraqConfig {
 		}
 
 		final List<BugtraqEntry> entries = new ArrayList<BugtraqEntry>();
-		for (String name : allNames) {
+		for (final String name : allNames) {
 			final String url = getString(name, URL, config, baseConfig);
 			if (url == null) {
 				continue;
 			}
 
 			final String enabled = getString(name, ENABLED, config, baseConfig);
-			if (enabled != null && !"true".equals(enabled)) {
+			if ((enabled != null) && !"true".equals(enabled)) {
 				continue;
 			}
 
@@ -120,18 +120,18 @@ public final class BugtraqConfig {
 
 			String filterRegex = getString(name, LOG_FILTERREGEX, config, baseConfig);
 			final String linkRegex = getString(name, LOG_LINKREGEX, config, baseConfig);
-			if (filterRegex == null && linkRegex == null) {
+			if ((filterRegex == null) && (linkRegex == null)) {
 				final String[] split = idRegex.split("\n", Integer.MAX_VALUE);
 				if (split.length == 2) {
 					// Compatibility with TortoiseGit
 					filterRegex = split[0];
 					idRegex = split[1];
-				}
-				else {
+				} else {
 					// Backwards compatibility with specification version < 0.3
 					final List<String> logIdRegexs = new ArrayList<String>();
 					for (int index = 1; index < Integer.MAX_VALUE; index++) {
-						final String logIdRegexN = getString(name, LOG_REGEX + index, config, baseConfig);
+						final String logIdRegexN = getString(name, LOG_REGEX + index, config,
+								baseConfig);
 						if (logIdRegexN == null) {
 							break;
 						}
@@ -140,9 +140,12 @@ public final class BugtraqConfig {
 					}
 
 					if (logIdRegexs.size() > 1) {
-						throw new ConfigInvalidException("More than three " + LOG_REGEX + " entries found. This is not supported anymore since bugtraq version 0.3, use " + LOG_FILTERREGEX + " and " + LOG_LINKREGEX + " instead.");
-					}
-					else if (logIdRegexs.size() == 1) {
+						throw new ConfigInvalidException(
+								"More than three "
+										+ LOG_REGEX
+										+ " entries found. This is not supported anymore since bugtraq version 0.3, use "
+										+ LOG_FILTERREGEX + " and " + LOG_LINKREGEX + " instead.");
+					} else if (logIdRegexs.size() == 1) {
 						filterRegex = idRegex;
 						idRegex = logIdRegexs.get(0);
 					}
@@ -175,19 +178,20 @@ public final class BugtraqConfig {
 
 	@NotNull
 	public List<BugtraqEntry> getEntries() {
-		return Collections.unmodifiableList(entries);
+		return Collections.unmodifiableList(this.entries);
 	}
 
 	// Utils ==================================================================
 
 	@Nullable
-	private static Config getBaseConfig(@NotNull Repository repository, @NotNull String configFileName) throws IOException, ConfigInvalidException {
+	private static Config getBaseConfig(@NotNull Repository repository,
+			@NotNull String configFileName) throws IOException, ConfigInvalidException {
 		final Config baseConfig;
 		if (repository.isBare()) {
 			// read bugtraq config directly from the repository
 			String content = null;
-			RevWalk rw = new RevWalk(repository);
-			TreeWalk tw = new TreeWalk(repository);
+			final RevWalk rw = new RevWalk(repository);
+			final TreeWalk tw = new TreeWalk(repository);
 			tw.setFilter(PathFilterGroup.createFromStrings(configFileName));
 			try {
 				final Ref ref = repository.getRef(Constants.HEAD);
@@ -195,18 +199,18 @@ public final class BugtraqConfig {
 					return null;
 				}
 
-				ObjectId headId = ref.getTarget().getObjectId();
-				if (headId == null || ObjectId.zeroId().equals(headId)) {
+				final ObjectId headId = ref.getTarget().getObjectId();
+				if ((headId == null) || ObjectId.zeroId().equals(headId)) {
 					return null;
 				}
-				RevCommit commit = rw.parseCommit(headId);
-				RevTree tree = commit.getTree();
+				final RevCommit commit = rw.parseCommit(headId);
+				final RevTree tree = commit.getTree();
 				tw.reset(tree);
 				while (tw.next()) {
-					ObjectId entid = tw.getObjectId(0);
-					FileMode entmode = tw.getFileMode(0);
+					final ObjectId entid = tw.getObjectId(0);
+					final FileMode entmode = tw.getFileMode(0);
 					if (FileMode.REGULAR_FILE == entmode) {
-						ObjectLoader ldr = repository.open(entid, Constants.OBJ_BLOB);
+						final ObjectLoader ldr = repository.open(entid, Constants.OBJ_BLOB);
 						content = new String(ldr.getCachedBytes(), commit.getEncoding());
 						break;
 					}
@@ -215,28 +219,26 @@ public final class BugtraqConfig {
 			finally {
 				rw.dispose();
 				tw.close();
+				rw.close();
 			}
 
 			if (content == null) {
 				// config not found
 				baseConfig = null;
-			}
-			else {
+			} else {
 				// parse the config
-				Config config = new Config();
+				final Config config = new Config();
 				config.fromText(content);
 				baseConfig = config;
 			}
-		}
-		else {
+		} else {
 			// read bugtraq config from work tree
 			final File baseFile = new File(repository.getWorkTree(), configFileName);
 			if (baseFile.isFile()) {
-				FileBasedConfig fileConfig = new FileBasedConfig(baseFile, repository.getFS());
+				final FileBasedConfig fileConfig = new FileBasedConfig(baseFile, repository.getFS());
 				fileConfig.load();
 				baseConfig = fileConfig;
-			}
-			else {
+			} else {
 				baseConfig = null;
 			}
 		}
@@ -244,7 +246,8 @@ public final class BugtraqConfig {
 	}
 
 	@Nullable
-	private static String getString(@Nullable String subsection, @NotNull String key, @NotNull Config config, @Nullable Config baseConfig) {
+	private static String getString(@Nullable String subsection, @NotNull String key,
+			@NotNull Config config, @Nullable Config baseConfig) {
 		final String value = config.getString(BUGTRAQ, subsection, key);
 		if (value != null) {
 			return trimMaybeNull(value);
@@ -254,8 +257,8 @@ public final class BugtraqConfig {
 			return trimMaybeNull(baseConfig.getString(BUGTRAQ, subsection, key));
 		}
 
-			return value;
-		}
+		return value;
+	}
 
 	@Nullable
 	private static String trimMaybeNull(@Nullable String string) {

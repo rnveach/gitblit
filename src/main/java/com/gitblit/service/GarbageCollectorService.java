@@ -36,7 +36,8 @@ import com.gitblit.models.RepositoryModel;
 import com.gitblit.utils.FileUtils;
 
 /**
- * The Garbage Collector Service handles periodic garbage collection in repositories.
+ * The Garbage Collector Service handles periodic garbage collection in
+ * repositories.
  *
  * @author James Moger
  *
@@ -44,27 +45,27 @@ import com.gitblit.utils.FileUtils;
 public class GarbageCollectorService implements Runnable {
 
 	public static enum GCStatus {
-		READY, COLLECTING;
+		READY,
+		COLLECTING;
 
 		public boolean exceeds(GCStatus s) {
 			return ordinal() > s.ordinal();
 		}
 	}
+
 	private final Logger logger = LoggerFactory.getLogger(GarbageCollectorService.class);
 
 	private final IStoredSettings settings;
 
 	private final IRepositoryManager repositoryManager;
 
-	private AtomicBoolean running = new AtomicBoolean(false);
+	private final AtomicBoolean running = new AtomicBoolean(false);
 
-	private AtomicBoolean forceClose = new AtomicBoolean(false);
+	private final AtomicBoolean forceClose = new AtomicBoolean(false);
 
 	private final Map<String, GCStatus> gcCache = new ConcurrentHashMap<String, GCStatus>();
 
-	public GarbageCollectorService(
-			IStoredSettings settings,
-			IRepositoryManager repositoryManager) {
+	public GarbageCollectorService(IStoredSettings settings, IRepositoryManager repositoryManager) {
 
 		this.settings = settings;
 		this.repositoryManager = repositoryManager;
@@ -76,11 +77,11 @@ public class GarbageCollectorService implements Runnable {
 	 * @return true if the GC executor is ready to process repositories
 	 */
 	public boolean isReady() {
-		return settings.getBoolean(Keys.git.enableGarbageCollection, false);
+		return this.settings.getBoolean(Keys.git.enableGarbageCollection, false);
 	}
 
 	public boolean isRunning() {
-		return running.get();
+		return this.running.get();
 	}
 
 	public boolean lock(String repositoryName) {
@@ -94,26 +95,27 @@ public class GarbageCollectorService implements Runnable {
 	 * @return true if the status has been set
 	 */
 	private boolean setGCStatus(String repositoryName, GCStatus status) {
-		String key = repositoryName.toLowerCase();
-		if (gcCache.containsKey(key)) {
-			if (gcCache.get(key).exceeds(GCStatus.READY)) {
+		final String key = repositoryName.toLowerCase();
+		if (this.gcCache.containsKey(key)) {
+			if (this.gcCache.get(key).exceeds(GCStatus.READY)) {
 				// already collecting or blocked
 				return false;
 			}
 		}
-		gcCache.put(key, status);
+		this.gcCache.put(key, status);
 		return true;
 	}
 
 	/**
-	 * Returns true if Gitblit is actively collecting garbage in this repository.
+	 * Returns true if Gitblit is actively collecting garbage in this
+	 * repository.
 	 *
 	 * @param repositoryName
 	 * @return true if actively collecting garbage
 	 */
 	public boolean isCollectingGarbage(String repositoryName) {
-		String key = repositoryName.toLowerCase();
-		return gcCache.containsKey(key) && GCStatus.COLLECTING.equals(gcCache.get(key));
+		final String key = repositoryName.toLowerCase();
+		return this.gcCache.containsKey(key) && GCStatus.COLLECTING.equals(this.gcCache.get(key));
 	}
 
 	/**
@@ -122,11 +124,11 @@ public class GarbageCollectorService implements Runnable {
 	 * @param repositoryName
 	 */
 	public void releaseLock(String repositoryName) {
-		gcCache.put(repositoryName.toLowerCase(), GCStatus.READY);
+		this.gcCache.put(repositoryName.toLowerCase(), GCStatus.READY);
 	}
 
 	public void close() {
-		forceClose.set(true);
+		this.forceClose.set(true);
 	}
 
 	@Override
@@ -135,30 +137,33 @@ public class GarbageCollectorService implements Runnable {
 			return;
 		}
 
-		running.set(true);
-		Date now = new Date();
+		this.running.set(true);
+		final Date now = new Date();
 
-		for (String repositoryName : repositoryManager.getRepositoryList()) {
-			if (forceClose.get()) {
+		for (final String repositoryName : this.repositoryManager.getRepositoryList()) {
+			if (this.forceClose.get()) {
 				break;
 			}
 			if (isCollectingGarbage(repositoryName)) {
-				logger.warn(MessageFormat.format("Already collecting garbage from {0}?!?", repositoryName));
+				this.logger.warn(MessageFormat.format("Already collecting garbage from {0}?!?",
+						repositoryName));
 				continue;
 			}
 			boolean garbageCollected = false;
 			RepositoryModel model = null;
 			Repository repository = null;
 			try {
-				model = repositoryManager.getRepositoryModel(repositoryName);
-				repository = repositoryManager.getRepository(repositoryName);
+				model = this.repositoryManager.getRepositoryModel(repositoryName);
+				repository = this.repositoryManager.getRepository(repositoryName);
 				if (repository == null) {
-					logger.warn(MessageFormat.format("GCExecutor is missing repository {0}?!?", repositoryName));
+					this.logger.warn(MessageFormat.format(
+							"GCExecutor is missing repository {0}?!?", repositoryName));
 					continue;
 				}
 
-				if (!repositoryManager.isIdle(repository)) {
-					logger.debug(MessageFormat.format("GCExecutor is skipping {0} because it is not idle", repositoryName));
+				if (!this.repositoryManager.isIdle(repository)) {
+					this.logger.debug(MessageFormat.format(
+							"GCExecutor is skipping {0} because it is not idle", repositoryName));
 					continue;
 				}
 
@@ -166,52 +171,61 @@ public class GarbageCollectorService implements Runnable {
 				// disabling *all* access to this repository from Gitblit.
 				// Think of this as a clutch in a manual transmission vehicle.
 				if (!setGCStatus(repositoryName, GCStatus.COLLECTING)) {
-					logger.warn(MessageFormat.format("Can not acquire GC lock for {0}, skipping", repositoryName));
+					this.logger.warn(MessageFormat.format(
+							"Can not acquire GC lock for {0}, skipping", repositoryName));
 					continue;
 				}
 
-				logger.debug(MessageFormat.format("GCExecutor locked idle repository {0}", repositoryName));
+				this.logger.debug(MessageFormat.format("GCExecutor locked idle repository {0}",
+						repositoryName));
 
-				Git git = new Git(repository);
-				GarbageCollectCommand gc = git.gc();
-				Properties stats = gc.getStatistics();
+				final Git git = new Git(repository);
+				final GarbageCollectCommand gc = git.gc();
+				final Properties stats = gc.getStatistics();
 
 				// determine if this is a scheduled GC
-				Calendar cal = Calendar.getInstance();
+				final Calendar cal = Calendar.getInstance();
 				cal.setTime(model.lastGC);
 				cal.set(Calendar.HOUR_OF_DAY, 0);
 				cal.set(Calendar.MINUTE, 0);
 				cal.set(Calendar.SECOND, 0);
 				cal.set(Calendar.MILLISECOND, 0);
 				cal.add(Calendar.DATE, model.gcPeriod);
-				Date gcDate = cal.getTime();
-				boolean shouldCollectGarbage = now.after(gcDate);
+				final Date gcDate = cal.getTime();
+				final boolean shouldCollectGarbage = now.after(gcDate);
 
 				// determine if filesize triggered GC
-				long gcThreshold = FileUtils.convertSizeToLong(model.gcThreshold, 500*1024L);
-				long sizeOfLooseObjects = (Long) stats.get("sizeOfLooseObjects");
-				boolean hasEnoughGarbage = sizeOfLooseObjects >= gcThreshold;
+				final long gcThreshold = FileUtils
+						.convertSizeToLong(model.gcThreshold, 500 * 1024L);
+				final long sizeOfLooseObjects = (Long) stats.get("sizeOfLooseObjects");
+				final boolean hasEnoughGarbage = sizeOfLooseObjects >= gcThreshold;
 
 				// if we satisfy one of the requirements, GC
-				boolean hasGarbage = sizeOfLooseObjects > 0;
+				final boolean hasGarbage = sizeOfLooseObjects > 0;
 				if (hasGarbage && (hasEnoughGarbage || shouldCollectGarbage)) {
-					long looseKB = sizeOfLooseObjects/1024L;
-					logger.info(MessageFormat.format("Collecting {1} KB of loose objects from {0}", repositoryName, looseKB));
+					final long looseKB = sizeOfLooseObjects / 1024L;
+					this.logger
+							.info(MessageFormat.format(
+									"Collecting {1} KB of loose objects from {0}", repositoryName,
+									looseKB));
 
 					// do the deed
 					gc.call();
 
 					garbageCollected = true;
 				}
-			} catch (Exception e) {
-				logger.error("Error collecting garbage in " + repositoryName, e);
-			} finally {
+				git.close();
+			}
+			catch (final Exception e) {
+				this.logger.error("Error collecting garbage in " + repositoryName, e);
+			}
+			finally {
 				// cleanup
 				if (repository != null) {
 					if (garbageCollected) {
 						// update the last GC date
 						model.lastGC = new Date();
-						repositoryManager.updateConfiguration(repository, model);
+						this.repositoryManager.updateConfiguration(repository, model);
 					}
 
 					repository.close();
@@ -219,10 +233,11 @@ public class GarbageCollectorService implements Runnable {
 
 				// reset the GC lock
 				releaseLock(repositoryName);
-				logger.debug(MessageFormat.format("GCExecutor released GC lock for {0}", repositoryName));
+				this.logger.debug(MessageFormat.format("GCExecutor released GC lock for {0}",
+						repositoryName));
 			}
 		}
 
-		running.set(false);
+		this.running.set(false);
 	}
 }

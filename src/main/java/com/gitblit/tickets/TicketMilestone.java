@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 package com.gitblit.tickets;
-
 import java.util.Date;
 
 import com.gitblit.models.TicketModel.Status;
+
 
 /**
  * A ticket milestone.
@@ -35,15 +35,15 @@ public class TicketMilestone extends TicketLabel {
 
 	public TicketMilestone(String name) {
 		super(name);
-		status = Status.Open;
+		this.status = Status.Open;
 	}
 
 	public boolean isOpen() {
-		return status == Status.Open;
+		return this.status == Status.Open;
 	}
 
 	public boolean isOverdue() {
-		return due == null ? false : System.currentTimeMillis() > due.getTime();
+		return this.due == null ? false : System.currentTimeMillis() > this.due.getTime();
 	}
 
 	public void setDue(Date due) {
@@ -51,7 +51,7 @@ public class TicketMilestone extends TicketLabel {
 	}
 
 	public int getProgress() {
-		int total = getTotalTickets();
+		final int total = getTotalTickets();
 		if (total == 0) {
 			return 0;
 		}
@@ -60,6 +60,6 @@ public class TicketMilestone extends TicketLabel {
 
 	@Override
 	public String toString() {
-		return name;
+		return this.name;
 	}
 }

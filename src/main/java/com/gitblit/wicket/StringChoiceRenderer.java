@@ -18,7 +18,7 @@ package com.gitblit.wicket;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 
 /**
- * Choice renderer for a palette or list of string values.  This renderer
+ * Choice renderer for a palette or list of string values. This renderer
  * controls the id value of each option such that palettes are case insensitive.
  *
  * @author James Moger
@@ -33,11 +33,11 @@ public class StringChoiceRenderer extends ChoiceRenderer<String> {
 	}
 
 	/**
-	 * @see org.apache.wicket.markup.html.form.IChoiceRenderer#getIdValue(java.lang.Object, int)
+	 * @see org.apache.wicket.markup.html.form.IChoiceRenderer#getIdValue(java.lang.Object,
+	 *      int)
 	 */
 	@Override
-	public String getIdValue(String object, int index)
-	{
+	public String getIdValue(String object, int index) {
 		return object.toLowerCase();
 	}
 }

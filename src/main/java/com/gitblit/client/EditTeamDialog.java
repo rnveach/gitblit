@@ -43,6 +43,7 @@ import javax.swing.JRootPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 
 import com.gitblit.Constants;
 import com.gitblit.Constants.AccessRestrictionType;
@@ -91,7 +92,7 @@ public class EditTeamDialog extends JDialog {
 
 	private JLabel postReceiveInherited;
 
-	private Set<String> teamnames;
+	private final Set<String> teamnames;
 
 	public EditTeamDialog(int protocolVersion, ServerSettings settings) {
 		this(protocolVersion, new TeamModel(""), settings);
@@ -114,8 +115,8 @@ public class EditTeamDialog extends JDialog {
 
 	@Override
 	protected JRootPane createRootPane() {
-		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-		JRootPane rootPane = new JRootPane();
+		final KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+		final JRootPane rootPane = new JRootPane();
 		rootPane.registerKeyboardAction(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -126,31 +127,34 @@ public class EditTeamDialog extends JDialog {
 	}
 
 	private void initialize(int protocolVersion, TeamModel aTeam) {
-		teamnameField = new JTextField(aTeam.name == null ? "" : aTeam.name, 25);
+		this.teamnameField = new JTextField(aTeam.name == null ? "" : aTeam.name, 25);
 
-		canAdminCheckbox = new JCheckBox(Translation.get("gb.canAdminDescription"), aTeam.canAdmin);
-		canForkCheckbox = new JCheckBox(Translation.get("gb.canForkDescription"), aTeam.canFork);
-		canCreateCheckbox = new JCheckBox(Translation.get("gb.canCreateDescription"), aTeam.canCreate);
+		this.canAdminCheckbox = new JCheckBox(Translation.get("gb.canAdminDescription"),
+				aTeam.canAdmin);
+		this.canForkCheckbox = new JCheckBox(Translation.get("gb.canForkDescription"),
+				aTeam.canFork);
+		this.canCreateCheckbox = new JCheckBox(Translation.get("gb.canCreateDescription"),
+				aTeam.canCreate);
 
-		mailingListsField = new JTextField(aTeam.mailingLists == null ? ""
+		this.mailingListsField = new JTextField(aTeam.mailingLists == null ? ""
 				: StringUtils.flattenStrings(aTeam.mailingLists, " "), 50);
 
-		JPanel fieldsPanel = new JPanel(new GridLayout(0, 1));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.teamName"), teamnameField));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.canAdmin"), canAdminCheckbox));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.canFork"), canForkCheckbox));
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.canCreate"), canCreateCheckbox));
+		final JPanel fieldsPanel = new JPanel(new GridLayout(0, 1));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.teamName"), this.teamnameField));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.canAdmin"), this.canAdminCheckbox));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.canFork"), this.canForkCheckbox));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.canCreate"), this.canCreateCheckbox));
 
-		fieldsPanel.add(newFieldPanel(Translation.get("gb.mailingLists"), mailingListsField));
+		fieldsPanel.add(newFieldPanel(Translation.get("gb.mailingLists"), this.mailingListsField));
 
 		final Insets _insets = new Insets(5, 5, 5, 5);
-		repositoryPalette = new RegistrantPermissionsPanel(RegistrantType.REPOSITORY);
-		userPalette = new JPalette<String>();
+		this.repositoryPalette = new RegistrantPermissionsPanel(RegistrantType.REPOSITORY);
+		this.userPalette = new JPalette<String>();
 
-		JPanel fieldsPanelTop = new JPanel(new BorderLayout());
+		final JPanel fieldsPanelTop = new JPanel(new BorderLayout());
 		fieldsPanelTop.add(fieldsPanel, BorderLayout.NORTH);
 
-		JPanel repositoriesPanel = new JPanel(new BorderLayout()) {
+		final JPanel repositoriesPanel = new JPanel(new BorderLayout()) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -159,9 +163,9 @@ public class EditTeamDialog extends JDialog {
 				return _insets;
 			}
 		};
-		repositoriesPanel.add(repositoryPalette, BorderLayout.CENTER);
+		repositoriesPanel.add(this.repositoryPalette, BorderLayout.CENTER);
 
-		JPanel usersPanel = new JPanel(new BorderLayout()) {
+		final JPanel usersPanel = new JPanel(new BorderLayout()) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -170,52 +174,52 @@ public class EditTeamDialog extends JDialog {
 				return _insets;
 			}
 		};
-		usersPanel.add(userPalette, BorderLayout.CENTER);
+		usersPanel.add(this.userPalette, BorderLayout.CENTER);
 
-		preReceivePalette = new JPalette<String>(true);
-		preReceiveInherited = new JLabel();
-		JPanel preReceivePanel = new JPanel(new BorderLayout(5, 5));
-		preReceivePanel.add(preReceivePalette, BorderLayout.CENTER);
-		preReceivePanel.add(preReceiveInherited, BorderLayout.WEST);
+		this.preReceivePalette = new JPalette<String>(true);
+		this.preReceiveInherited = new JLabel();
+		final JPanel preReceivePanel = new JPanel(new BorderLayout(5, 5));
+		preReceivePanel.add(this.preReceivePalette, BorderLayout.CENTER);
+		preReceivePanel.add(this.preReceiveInherited, BorderLayout.WEST);
 
-		postReceivePalette = new JPalette<String>(true);
-		postReceiveInherited = new JLabel();
-		JPanel postReceivePanel = new JPanel(new BorderLayout(5, 5));
-		postReceivePanel.add(postReceivePalette, BorderLayout.CENTER);
-		postReceivePanel.add(postReceiveInherited, BorderLayout.WEST);
+		this.postReceivePalette = new JPalette<String>(true);
+		this.postReceiveInherited = new JLabel();
+		final JPanel postReceivePanel = new JPanel(new BorderLayout(5, 5));
+		postReceivePanel.add(this.postReceivePalette, BorderLayout.CENTER);
+		postReceivePanel.add(this.postReceiveInherited, BorderLayout.WEST);
 
-		JTabbedPane panel = new JTabbedPane(JTabbedPane.TOP);
+		final JTabbedPane panel = new JTabbedPane(SwingConstants.TOP);
 		panel.addTab(Translation.get("gb.general"), fieldsPanelTop);
 		panel.addTab(Translation.get("gb.teamMembers"), usersPanel);
 		panel.addTab(Translation.get("gb.restrictedRepositories"), repositoriesPanel);
 		panel.addTab(Translation.get("gb.preReceiveScripts"), preReceivePanel);
 		panel.addTab(Translation.get("gb.postReceiveScripts"), postReceivePanel);
 
-		JButton createButton = new JButton(Translation.get("gb.save"));
+		final JButton createButton = new JButton(Translation.get("gb.save"));
 		createButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
 				if (validateFields()) {
-					canceled = false;
+					EditTeamDialog.this.canceled = false;
 					setVisible(false);
 				}
 			}
 		});
 
-		JButton cancelButton = new JButton(Translation.get("gb.cancel"));
+		final JButton cancelButton = new JButton(Translation.get("gb.cancel"));
 		cancelButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
-				canceled = true;
+				EditTeamDialog.this.canceled = true;
 				setVisible(false);
 			}
 		});
 
-		JPanel controls = new JPanel();
+		final JPanel controls = new JPanel();
 		controls.add(cancelButton);
 		controls.add(createButton);
 
-		JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
+		final JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -232,18 +236,18 @@ public class EditTeamDialog extends JDialog {
 		pack();
 	}
 
-	private JPanel newFieldPanel(String label, JComponent comp) {
-		JLabel fieldLabel = new JLabel(label);
+	private static JPanel newFieldPanel(String label, JComponent comp) {
+		final JLabel fieldLabel = new JLabel(label);
 		fieldLabel.setFont(fieldLabel.getFont().deriveFont(Font.BOLD));
 		fieldLabel.setPreferredSize(new Dimension(150, 20));
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+		final JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
 		panel.add(fieldLabel);
 		panel.add(comp);
 		return panel;
 	}
 
 	private boolean validateFields() {
-		String tname = teamnameField.getText();
+		final String tname = this.teamnameField.getText();
 		if (StringUtils.isEmpty(tname)) {
 			error("Please enter a team name!");
 			return false;
@@ -251,54 +255,54 @@ public class EditTeamDialog extends JDialog {
 
 		boolean rename = false;
 		// verify teamname uniqueness on create
-		if (isCreate) {
-			if (teamnames.contains(tname.toLowerCase())) {
+		if (this.isCreate) {
+			if (this.teamnames.contains(tname.toLowerCase())) {
 				error(MessageFormat.format("Team name ''{0}'' is unavailable.", tname));
 				return false;
 			}
 		} else {
 			// check rename collision
-			rename = !StringUtils.isEmpty(teamname) && !teamname.equalsIgnoreCase(tname);
+			rename = !StringUtils.isEmpty(this.teamname) && !this.teamname.equalsIgnoreCase(tname);
 			if (rename) {
-				if (teamnames.contains(tname.toLowerCase())) {
+				if (this.teamnames.contains(tname.toLowerCase())) {
 					error(MessageFormat.format(
-							"Failed to rename ''{0}'' because ''{1}'' already exists.", teamname,
-							tname));
+							"Failed to rename ''{0}'' because ''{1}'' already exists.",
+							this.teamname, tname));
 					return false;
 				}
 			}
 		}
-		team.name = tname;
+		this.team.name = tname;
 
-		team.canAdmin = canAdminCheckbox.isSelected();
-		team.canFork = canForkCheckbox.isSelected();
-		team.canCreate = canCreateCheckbox.isSelected();
+		this.team.canAdmin = this.canAdminCheckbox.isSelected();
+		this.team.canFork = this.canForkCheckbox.isSelected();
+		this.team.canCreate = this.canCreateCheckbox.isSelected();
 
-		String ml = mailingListsField.getText();
+		final String ml = this.mailingListsField.getText();
 		if (!StringUtils.isEmpty(ml)) {
-			Set<String> list = new HashSet<String>();
-			for (String address : ml.split("(,|\\s)")) {
+			final Set<String> list = new HashSet<String>();
+			for (final String address : ml.split("(,|\\s)")) {
 				if (StringUtils.isEmpty(address)) {
 					continue;
 				}
 				list.add(address.toLowerCase());
 			}
-			team.mailingLists.clear();
-			team.mailingLists.addAll(list);
+			this.team.mailingLists.clear();
+			this.team.mailingLists.addAll(list);
 		}
 
-		for (RegistrantAccessPermission rp : repositoryPalette.getPermissions()) {
-			team.setRepositoryPermission(rp.registrant, rp.permission);
+		for (final RegistrantAccessPermission rp : this.repositoryPalette.getPermissions()) {
+			this.team.setRepositoryPermission(rp.registrant, rp.permission);
 		}
 
-		team.users.clear();
-		team.users.addAll(userPalette.getSelections());
+		this.team.users.clear();
+		this.team.users.addAll(this.userPalette.getSelections());
 
-		team.preReceiveScripts.clear();
-		team.preReceiveScripts.addAll(preReceivePalette.getSelections());
+		this.team.preReceiveScripts.clear();
+		this.team.preReceiveScripts.addAll(this.preReceivePalette.getSelections());
 
-		team.postReceiveScripts.clear();
-		team.postReceiveScripts.addAll(postReceivePalette.getSelections());
+		this.team.postReceiveScripts.clear();
+		this.team.postReceiveScripts.addAll(this.postReceivePalette.getSelections());
 
 		return true;
 	}
@@ -309,15 +313,16 @@ public class EditTeamDialog extends JDialog {
 	}
 
 	public void setTeams(List<TeamModel> teams) {
-		teamnames.clear();
-		for (TeamModel team : teams) {
-			teamnames.add(team.name.toLowerCase());
+		this.teamnames.clear();
+		for (final TeamModel team : teams) {
+			this.teamnames.add(team.name.toLowerCase());
 		}
 	}
 
-	public void setRepositories(List<RepositoryModel> repositories, List<RegistrantAccessPermission> permissions) {
-		List<String> restricted = new ArrayList<String>();
-		for (RepositoryModel repo : repositories) {
+	public void setRepositories(List<RepositoryModel> repositories,
+			List<RegistrantAccessPermission> permissions) {
+		final List<String> restricted = new ArrayList<String>();
+		for (final RepositoryModel repo : repositories) {
 			if (repo.accessRestriction.exceeds(AccessRestrictionType.NONE)
 					&& repo.authorizationControl.equals(AuthorizationControl.NAMED)) {
 				restricted.add(repo.name);
@@ -325,13 +330,13 @@ public class EditTeamDialog extends JDialog {
 		}
 		StringUtils.sortRepositorynames(restricted);
 
-		List<String> list = new ArrayList<String>();
+		final List<String> list = new ArrayList<String>();
 		// repositories
 		list.add(".*");
 
 		String prefix;
-		if (settings.hasKey(Keys.git.userRepositoryPrefix)) {
-			prefix = settings.get(Keys.git.userRepositoryPrefix).currentValue;
+		if (this.settings.hasKey(Keys.git.userRepositoryPrefix)) {
+			prefix = this.settings.get(Keys.git.userRepositoryPrefix).currentValue;
 			if (StringUtils.isEmpty(prefix)) {
 				prefix = Constants.DEFAULT_USER_REPOSITORY_PREFIX;
 			}
@@ -345,9 +350,9 @@ public class EditTeamDialog extends JDialog {
 		}
 
 		String lastProject = null;
-		for (String repo : restricted) {
-			String projectPath = StringUtils.getFirstPathElement(repo);
-			if (lastProject == null || !lastProject.equalsIgnoreCase(projectPath)) {
+		for (final String repo : restricted) {
+			final String projectPath = StringUtils.getFirstPathElement(repo);
+			if ((lastProject == null) || !lastProject.equalsIgnoreCase(projectPath)) {
 				lastProject = projectPath;
 				if (!StringUtils.isEmpty(projectPath)) {
 					// regex for all repositories within a project
@@ -361,11 +366,11 @@ public class EditTeamDialog extends JDialog {
 		if (permissions == null) {
 			permissions = new ArrayList<RegistrantAccessPermission>();
 		} else {
-			for (RegistrantAccessPermission rp : permissions) {
+			for (final RegistrantAccessPermission rp : permissions) {
 				list.remove(rp.registrant);
 			}
 		}
-		repositoryPalette.setObjects(list, permissions);
+		this.repositoryPalette.setObjects(list, permissions);
 	}
 
 	public void setUsers(List<String> users, List<String> selected) {
@@ -373,7 +378,7 @@ public class EditTeamDialog extends JDialog {
 		if (selected != null) {
 			Collections.sort(selected);
 		}
-		userPalette.setObjects(users, selected);
+		this.userPalette.setObjects(users, selected);
 	}
 
 	public void setPreReceiveScripts(List<String> unused, List<String> inherited,
@@ -382,8 +387,8 @@ public class EditTeamDialog extends JDialog {
 		if (selected != null) {
 			Collections.sort(selected);
 		}
-		preReceivePalette.setObjects(unused, selected);
-		showInherited(inherited, preReceiveInherited);
+		this.preReceivePalette.setObjects(unused, selected);
+		showInherited(inherited, this.preReceiveInherited);
 	}
 
 	public void setPostReceiveScripts(List<String> unused, List<String> inherited,
@@ -392,15 +397,15 @@ public class EditTeamDialog extends JDialog {
 		if (selected != null) {
 			Collections.sort(selected);
 		}
-		postReceivePalette.setObjects(unused, selected);
-		showInherited(inherited, postReceiveInherited);
+		this.postReceivePalette.setObjects(unused, selected);
+		showInherited(inherited, this.postReceiveInherited);
 	}
 
-	private void showInherited(List<String> list, JLabel label) {
-		StringBuilder sb = new StringBuilder();
-		if (list != null && list.size() > 0) {
+	private static void showInherited(List<String> list, JLabel label) {
+		final StringBuilder sb = new StringBuilder();
+		if ((list != null) && (list.size() > 0)) {
 			sb.append("<html><body><b>INHERITED</b><ul style=\"margin-left:5px;list-style-type: none;\">");
-			for (String script : list) {
+			for (final String script : list) {
 				sb.append("<li>").append(script).append("</li>");
 			}
 			sb.append("</ul></body></html>");
@@ -409,9 +414,9 @@ public class EditTeamDialog extends JDialog {
 	}
 
 	public TeamModel getTeam() {
-		if (canceled) {
+		if (this.canceled) {
 			return null;
 		}
-		return team;
+		return this.team;
 	}
 }

@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 package com.gitblit.tests;
-
-import java.io.File;
-import java.io.IOException;
+import java.io.File;
 
 import org.junit.Test;
 
@@ -27,13 +25,14 @@ import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.TeamModel;
 import com.gitblit.models.UserModel;
 
+
 public class UserServiceTest extends GitblitUnitTest {
 
 	@Test
-	public void testConfigUserService() throws IOException {
-		File file = new File("us-test.conf");
+	public void testConfigUserService() {
+		final File file = new File("us-test.conf");
 		file.delete();
-		IUserService service = new ConfigUserService(file);
+		final IUserService service = new ConfigUserService(file);
 		testUsers(service);
 		testTeams(service);
 		file.delete();
@@ -106,9 +105,9 @@ public class UserServiceTest extends GitblitUnitTest {
 		assertEquals(1, service.getAllTeamNames().size());
 		assertEquals("admins", service.getAllTeamNames().get(0));
 
-		RepositoryModel newrepo1 = new RepositoryModel("newrepo1", null, null, null);
+		final RepositoryModel newrepo1 = new RepositoryModel("newrepo1", null, null, null);
 		newrepo1.accessRestriction = AccessRestrictionType.VIEW;
-		RepositoryModel NEWREPO1 = new RepositoryModel("NEWREPO1", null, null, null);
+		final RepositoryModel NEWREPO1 = new RepositoryModel("NEWREPO1", null, null, null);
 		NEWREPO1.accessRestriction = AccessRestrictionType.VIEW;
 
 		// remove newrepo1 from test user
@@ -144,9 +143,9 @@ public class UserServiceTest extends GitblitUnitTest {
 		assertTrue(user.canView(NEWREPO1));
 
 		// rename the team and add new repository
-		RepositoryModel newrepo2 = new RepositoryModel("newrepo2", null, null, null);
+		final RepositoryModel newrepo2 = new RepositoryModel("newrepo2", null, null, null);
 		newrepo2.accessRestriction = AccessRestrictionType.VIEW;
-		RepositoryModel NEWREPO2 = new RepositoryModel("NEWREPO2", null, null, null);
+		final RepositoryModel NEWREPO2 = new RepositoryModel("NEWREPO2", null, null, null);
 		NEWREPO2.accessRestriction = AccessRestrictionType.VIEW;
 
 		team.addRepositoryPermission(newrepo2.name);

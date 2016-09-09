@@ -40,22 +40,22 @@ public class DiffStatFormatter extends DiffFormatter {
 
 	public DiffStatFormatter(String commitId, Repository repository) {
 		super(NullOutputStream.INSTANCE);
-		diffStat = new DiffStat(commitId, repository);
+		this.diffStat = new DiffStat(commitId, repository);
 	}
 
 	@Override
 	public void format(DiffEntry entry) throws IOException {
-		path = diffStat.addPath(entry);
+		this.path = this.diffStat.addPath(entry);
 		super.format(entry);
 	}
 
 	@Override
 	protected void writeLine(final char prefix, final RawText text, final int cur)
 			throws IOException {
-		path.update(prefix);
+		this.path.update(prefix);
 	}
 
 	public DiffStat getDiffStat() {
-		return diffStat;
+		return this.diffStat;
 	}
 }

@@ -58,34 +58,39 @@ public class DiffStatPanel extends Panel {
 	protected void onInitialize() {
 		super.onInitialize();
 
-		final String diffStat = MessageFormat.format(getString("gb.diffStat"), "" + insertions, "" + deletions);
+		final String diffStat = MessageFormat.format(getString("gb.diffStat"),
+				"" + this.insertions, "" + this.deletions);
 		WicketUtils.setHtmlTooltip(this, diffStat);
 
-		final NormalizedDiffStat n = DiffUtils.normalizeDiffStat(5, insertions, deletions);
+		final NormalizedDiffStat n = DiffUtils
+				.normalizeDiffStat(5, this.insertions, this.deletions);
 
 		final String segment;
-		if (inline) {
+		if (this.inline) {
 			segment = "&#9679;";
 		} else {
 			segment = "&#9632;";
 		}
 
-		add(new Label("total", String.valueOf(total)));
-		add(new Label("insertions", timesRepeat(n.insertions, segment)).setEscapeModelStrings(false).setVisible(n.insertions > 0));
-		add(new Label("deletions", timesRepeat(n.deletions, segment)).setEscapeModelStrings(false).setVisible(n.deletions > 0));
-		add(new Label("blank", timesRepeat(n.blanks, segment)).setEscapeModelStrings(false).setVisible(n.blanks > 0));
+		add(new Label("total", String.valueOf(this.total)));
+		add(new Label("insertions", timesRepeat(n.insertions, segment))
+				.setEscapeModelStrings(false).setVisible(n.insertions > 0));
+		add(new Label("deletions", timesRepeat(n.deletions, segment)).setEscapeModelStrings(false)
+				.setVisible(n.deletions > 0));
+		add(new Label("blank", timesRepeat(n.blanks, segment)).setEscapeModelStrings(false)
+				.setVisible(n.blanks > 0));
 
-		if (inline) {
+		if (this.inline) {
 			WicketUtils.setCssClass(this, "diffstat-inline");
 		} else {
 			WicketUtils.setCssClass(this, "diffstat");
 		}
 
-		setVisible(total > 0);
+		setVisible(this.total > 0);
 	}
 
 	String timesRepeat(int cnt, String s) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < cnt; i++) {
 			sb.append(s);
 		}

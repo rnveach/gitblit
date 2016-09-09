@@ -49,26 +49,30 @@ public class BlobPage extends RepositoryPage {
 	public BlobPage(PageParameters params) {
 		super(params);
 
-		Repository r = getRepository();
+		final Repository r = getRepository();
 		final String blobPath = WicketUtils.getPath(params);
-		String [] encodings = getEncodings();
+		final String[] encodings = getEncodings();
 
-		if (StringUtils.isEmpty(objectId) && StringUtils.isEmpty(blobPath)) {
-			throw new RedirectException(TreePage.class, WicketUtils.newRepositoryParameter(repositoryName));
+		if (StringUtils.isEmpty(this.objectId) && StringUtils.isEmpty(blobPath)) {
+			throw new RedirectException(TreePage.class,
+					WicketUtils.newRepositoryParameter(this.repositoryName));
 		}
 
 		if (StringUtils.isEmpty(blobPath)) {
 			// blob by objectid
 
 			add(new BookmarkablePageLink<Void>("blameLink", BlamePage.class,
-					WicketUtils.newPathParameter(repositoryName, objectId, blobPath))
+					WicketUtils.newPathParameter(this.repositoryName, this.objectId, blobPath))
 					.setEnabled(false));
 			add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class).setEnabled(false));
-			String rawUrl = RawServlet.asLink(getContextUrl(), repositoryName, objectId, blobPath);
-			add(new ExternalLink("rawLink",  rawUrl));
-			add(new CommitHeaderPanel("commitHeader", objectId));
-			add(new PathBreadcrumbsPanel("breadcrumbs", repositoryName, blobPath, objectId));
-			Component c = new Label("blobText", JGitUtils.getStringContent(r, objectId, encodings));
+			final String rawUrl = RawServlet.asLink(getContextUrl(), this.repositoryName,
+					this.objectId, blobPath);
+			add(new ExternalLink("rawLink", rawUrl));
+			add(new CommitHeaderPanel("commitHeader", this.objectId));
+			add(new PathBreadcrumbsPanel("breadcrumbs", this.repositoryName, blobPath,
+					this.objectId));
+			final Component c = new Label("blobText", JGitUtils.getStringContent(r, this.objectId,
+					encodings));
 			WicketUtils.setCssClass(c, "plainprint");
 			add(c);
 		} else {
@@ -79,37 +83,40 @@ public class BlobPage extends RepositoryPage {
 			}
 
 			// see if we should redirect to the doc page
-			MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
-			for (String ext : processor.getMarkupExtensions()) {
+			final MarkupProcessor processor = new MarkupProcessor(app().settings(), app()
+					.xssFilter());
+			for (final String ext : processor.getMarkupExtensions()) {
 				if (ext.equals(extension)) {
 					setResponsePage(DocPage.class, params);
 					return;
 				}
 			}
 
-			RevCommit commit = getCommit();
+			final RevCommit commit = getCommit();
 
 			// blob page links
 			add(new BookmarkablePageLink<Void>("blameLink", BlamePage.class,
-					WicketUtils.newPathParameter(repositoryName, objectId, blobPath)));
+					WicketUtils.newPathParameter(this.repositoryName, this.objectId, blobPath)));
 			add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class,
-					WicketUtils.newPathParameter(repositoryName, objectId, blobPath)));
-			String rawUrl = RawServlet.asLink(getContextUrl(), repositoryName, objectId, blobPath);
+					WicketUtils.newPathParameter(this.repositoryName, this.objectId, blobPath)));
+			final String rawUrl = RawServlet.asLink(getContextUrl(), this.repositoryName,
+					this.objectId, blobPath);
 			add(new ExternalLink("rawLink", rawUrl));
 
-			add(new CommitHeaderPanel("commitHeader", repositoryName, commit));
+			add(new CommitHeaderPanel("commitHeader", this.repositoryName, commit));
 
-			add(new PathBreadcrumbsPanel("breadcrumbs", repositoryName, blobPath, objectId));
+			add(new PathBreadcrumbsPanel("breadcrumbs", this.repositoryName, blobPath,
+					this.objectId));
 
 			// Map the extensions to types
-			Map<String, Integer> map = new HashMap<String, Integer>();
-			for (String ext : app().settings().getStrings(Keys.web.prettyPrintExtensions)) {
+			final Map<String, Integer> map = new HashMap<String, Integer>();
+			for (final String ext : app().settings().getStrings(Keys.web.prettyPrintExtensions)) {
 				map.put(ext.toLowerCase(), 1);
 			}
-			for (String ext : app().settings().getStrings(Keys.web.imageExtensions)) {
+			for (final String ext : app().settings().getStrings(Keys.web.imageExtensions)) {
 				map.put(ext.toLowerCase(), 2);
 			}
-			for (String ext : app().settings().getStrings(Keys.web.binaryExtensions)) {
+			for (final String ext : app().settings().getStrings(Keys.web.binaryExtensions)) {
 				map.put(ext.toLowerCase(), 3);
 			}
 
@@ -131,7 +138,8 @@ public class BlobPage extends RepositoryPage {
 					break;
 				default:
 					// plain text
-					String source = JGitUtils.getStringContent(r, commit.getTree(), blobPath, encodings);
+					final String source = JGitUtils.getStringContent(r, commit.getTree(), blobPath,
+							encodings);
 					String table;
 					if (source == null) {
 						table = missingBlob(blobPath, commit);
@@ -141,11 +149,12 @@ public class BlobPage extends RepositoryPage {
 					}
 					add(new Label("blobText", table).setEscapeModelStrings(false));
 					add(new Image("blobImage").setVisible(false));
-					fileExtension = extension;
+					this.fileExtension = extension;
 				}
 			} else {
 				// plain text
-				String source = JGitUtils.getStringContent(r, commit.getTree(), blobPath, encodings);
+				final String source = JGitUtils.getStringContent(r, commit.getTree(), blobPath,
+						encodings);
 				String table;
 				if (source == null) {
 					table = missingBlob(blobPath, commit);
@@ -160,18 +169,19 @@ public class BlobPage extends RepositoryPage {
 	}
 
 	protected String missingBlob(String blobPath, RevCommit commit) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append("<div class=\"alert alert-error\">");
-		String pattern = getString("gb.doesNotExistInTree").replace("{0}", "<b>{0}</b>").replace("{1}", "<b>{1}</b>");
+		final String pattern = getString("gb.doesNotExistInTree").replace("{0}", "<b>{0}</b>")
+				.replace("{1}", "<b>{1}</b>");
 		sb.append(MessageFormat.format(pattern, blobPath, commit.getTree().getId().getName()));
 		sb.append("</div>");
 		return sb.toString();
 	}
 
 	protected String generateSourceView(String source, String extension, boolean prettyPrint) {
-		String [] lines = source.split("\n");
+		String[] lines = source.split("\n");
 
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append("<!-- start blob table -->");
 		sb.append("<table width=\"100%\"><tbody><tr>");
 
@@ -179,7 +189,7 @@ public class BlobPage extends RepositoryPage {
 		sb.append("<!-- start nums column -->");
 		sb.append("<td id=\"nums\">");
 		sb.append("<pre>");
-		String numPattern = "<span id=\"L{0}\" class=\"jump\"></span><a href=\"#L{0}\">{0}</a>\n";
+		final String numPattern = "<span id=\"L{0}\" class=\"jump\"></span><a href=\"#L{0}\">{0}</a>\n";
 		for (int i = 0; i < lines.length; i++) {
 			sb.append(MessageFormat.format(numPattern, "" + (i + 1)));
 		}
@@ -200,10 +210,10 @@ public class BlobPage extends RepositoryPage {
 
 		sb.append("<table width=\"100%\"><tbody>");
 
-		String linePattern = "<tr class=\"{0}\"><td><div><span class=\"line\">{1}</span></div>\r</tr>";
+		final String linePattern = "<tr class=\"{0}\"><td><div><span class=\"line\">{1}</span></div>\r</tr>";
 		for (int i = 0; i < lines.length; i++) {
 			String line = lines[i].replace('\r', ' ');
-			String cssClass = (i % 2 == 0) ? "even" : "odd";
+			final String cssClass = ((i % 2) == 0) ? "even" : "odd";
 			if (StringUtils.isEmpty(line.trim())) {
 				line = "&nbsp;";
 			}

@@ -38,17 +38,17 @@ public class PluginRegistry implements Serializable {
 
 	public PluginRegistry(String name) {
 		this.name = name;
-		registrations = new CopyOnWriteArrayList<PluginRegistration>();
+		this.registrations = new CopyOnWriteArrayList<PluginRegistration>();
 	}
 
 	public void setup() {
-		for (PluginRegistration reg : registrations) {
-			reg.registry = name;
+		for (final PluginRegistration reg : this.registrations) {
+			reg.registry = this.name;
 		}
 	}
 
 	public PluginRegistration lookup(String id) {
-		for (PluginRegistration registration : registrations) {
+		for (final PluginRegistration registration : this.registrations) {
 			if (registration.id.equalsIgnoreCase(id)) {
 				return registration;
 			}
@@ -62,7 +62,10 @@ public class PluginRegistry implements Serializable {
 	}
 
 	public static enum InstallState {
-		NOT_INSTALLED, INSTALLED, UPDATE_AVAILABLE, UNKNOWN
+		NOT_INSTALLED,
+		INSTALLED,
+		UPDATE_AVAILABLE,
+		UNKNOWN
 	}
 
 	/**
@@ -94,7 +97,7 @@ public class PluginRegistry implements Serializable {
 		public PluginRelease getCurrentRelease(Version system) {
 			PluginRelease current = null;
 			Date date = new Date(0);
-			for (PluginRelease pv : releases) {
+			for (final PluginRelease pv : this.releases) {
 				Version requires = Version.ZERO;
 				if (!StringUtils.isEmpty(pv.requires)) {
 					requires = Version.createVersion(pv.requires);
@@ -111,7 +114,7 @@ public class PluginRegistry implements Serializable {
 		}
 
 		public PluginRelease getRelease(String version) {
-			for (PluginRelease pv : releases) {
+			for (final PluginRelease pv : this.releases) {
 				if (pv.version.equalsIgnoreCase(version)) {
 					return pv;
 				}
@@ -120,12 +123,12 @@ public class PluginRegistry implements Serializable {
 		}
 
 		public InstallState getInstallState(Version system) {
-			if (StringUtils.isEmpty(installedRelease)) {
+			if (StringUtils.isEmpty(this.installedRelease)) {
 				return InstallState.NOT_INSTALLED;
 			}
-			Version ir = Version.createVersion(installedRelease);
+			final Version ir = Version.createVersion(this.installedRelease);
 			Version cr = Version.ZERO;
-			PluginRelease curr = getCurrentRelease(system);
+			final PluginRelease curr = getCurrentRelease(system);
 			if (curr != null) {
 				cr = Version.createVersion(curr.version);
 			}
@@ -141,7 +144,7 @@ public class PluginRegistry implements Serializable {
 
 		@Override
 		public String toString() {
-			return id;
+			return this.id;
 		}
 	}
 
@@ -156,7 +159,7 @@ public class PluginRegistry implements Serializable {
 
 		@Override
 		public int compareTo(PluginRelease o) {
-			return Version.createVersion(version).compareTo(Version.createVersion(o.version));
+			return Version.createVersion(this.version).compareTo(Version.createVersion(o.version));
 		}
 	}
 }

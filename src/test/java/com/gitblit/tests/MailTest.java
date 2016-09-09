@@ -28,11 +28,11 @@ public class MailTest extends GitblitUnitTest {
 
 	@Test
 	public void testSendMail() throws Exception {
-		FileSettings settings = new FileSettings("mailtest.properties");
-		MailService mail = new MailService(settings);
-		Mailing mailing = Mailing.newPlain();
+		final FileSettings settings = new FileSettings("mailtest.properties");
+		final MailService mail = new MailService(settings);
+		final Mailing mailing = Mailing.newPlain();
 		mailing.setRecipients(settings.getStrings(Keys.mail.adminAddresses));
-		Message message = mail.createMessage(mailing);
+		final Message message = mail.createMessage(mailing);
 		message.setSubject("Test");
 		message.setText("﻿Lägger till andra stycket i ny fil. UTF-8 encoded");
 		mail.queue(message);

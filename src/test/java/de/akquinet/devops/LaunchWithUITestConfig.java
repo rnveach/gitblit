@@ -37,18 +37,15 @@ import com.gitblit.Constants;
 public class LaunchWithUITestConfig {
 
 	@Test
-	public void testSequentialLaunchOfSeveralInstances()
-			throws InterruptedException {
+	public void testSequentialLaunchOfSeveralInstances() throws InterruptedException {
 		// different ports than in testParallelLaunchOfSeveralInstances to
 		// ensure that both test cases do not affect each others test results
-		int httpPort = 9191, httpsPort = 9292, shutdownPort = 9393;
-		String gitblitPropertiesPath = "src/test/config/test-ui-gitblit.properties",
-				usersPropertiesPath = "src/test/config/test-ui-users.conf";
+		final int httpPort = 9191, httpsPort = 9292, shutdownPort = 9393;
+		final String gitblitPropertiesPath = "src/test/config/test-ui-gitblit.properties", usersPropertiesPath = "src/test/config/test-ui-users.conf";
 
-		GitblitRunnable gitblitRunnable = new GitblitRunnable(httpPort,
-				httpsPort, shutdownPort, gitblitPropertiesPath,
-				usersPropertiesPath);
-		Thread serverThread = new Thread(gitblitRunnable);
+		final GitblitRunnable gitblitRunnable = new GitblitRunnable(httpPort, httpsPort,
+				shutdownPort, gitblitPropertiesPath, usersPropertiesPath);
+		final Thread serverThread = new Thread(gitblitRunnable);
 		serverThread.start();
 		Thread.sleep(2000);
 		Assert.assertFalse(gitblitRunnable.isStartFailed());
@@ -56,10 +53,9 @@ public class LaunchWithUITestConfig {
 
 		Thread.sleep(5000);
 
-		GitblitRunnable gitblitRunnable2 = new GitblitRunnable(httpPort,
-				httpsPort, shutdownPort, gitblitPropertiesPath,
-				usersPropertiesPath);
-		Thread serverThread2 = new Thread(gitblitRunnable2);
+		final GitblitRunnable gitblitRunnable2 = new GitblitRunnable(httpPort, httpsPort,
+				shutdownPort, gitblitPropertiesPath, usersPropertiesPath);
+		final Thread serverThread2 = new Thread(gitblitRunnable2);
 		serverThread2.start();
 		Thread.sleep(2000);
 		Assert.assertFalse(gitblitRunnable2.isStartFailed());
@@ -67,27 +63,23 @@ public class LaunchWithUITestConfig {
 	}
 
 	@Test
-	public void testParallelLaunchOfSeveralInstances()
-			throws InterruptedException {
+	public void testParallelLaunchOfSeveralInstances() throws InterruptedException {
 		// different ports than in testSequentialLaunchOfSeveralInstances to
 		// ensure that both test cases do not affect each others test results
-		int httpPort = 9797, httpsPort = 9898, shutdownPort = 9999;
-		int httpPort2 = 9494, httpsPort2 = 9595, shutdownPort2 = 9696;
-		String gitblitPropertiesPath = "src/test/config/test-ui-gitblit.properties",
-				usersPropertiesPath = "src/test/config/test-ui-users.conf";
+		final int httpPort = 9797, httpsPort = 9898, shutdownPort = 9999;
+		final int httpPort2 = 9494, httpsPort2 = 9595, shutdownPort2 = 9696;
+		final String gitblitPropertiesPath = "src/test/config/test-ui-gitblit.properties", usersPropertiesPath = "src/test/config/test-ui-users.conf";
 
-		GitblitRunnable gitblitRunnable = new GitblitRunnable(httpPort,
-				httpsPort, shutdownPort, gitblitPropertiesPath,
-				usersPropertiesPath);
-		Thread serverThread = new Thread(gitblitRunnable);
+		final GitblitRunnable gitblitRunnable = new GitblitRunnable(httpPort, httpsPort,
+				shutdownPort, gitblitPropertiesPath, usersPropertiesPath);
+		final Thread serverThread = new Thread(gitblitRunnable);
 		serverThread.start();
 		Thread.sleep(2000);
 		Assert.assertFalse(gitblitRunnable.isStartFailed());
 
-		GitblitRunnable gitblitRunnable2 = new GitblitRunnable(httpPort2,
-				httpsPort2, shutdownPort2, gitblitPropertiesPath,
-				usersPropertiesPath);
-		Thread serverThread2 = new Thread(gitblitRunnable2);
+		final GitblitRunnable gitblitRunnable2 = new GitblitRunnable(httpPort2, httpsPort2,
+				shutdownPort2, gitblitPropertiesPath, usersPropertiesPath);
+		final Thread serverThread2 = new Thread(gitblitRunnable2);
 		serverThread2.start();
 		Thread.sleep(2000);
 		Assert.assertFalse(gitblitRunnable2.isStartFailed());
@@ -110,16 +102,17 @@ public class LaunchWithUITestConfig {
 
 	private static void shutdownGitBlitServer(int shutdownPort) {
 		try {
-			Socket s = new Socket(InetAddress.getByName("127.0.0.1"),
-					shutdownPort);
-			OutputStream out = s.getOutputStream();
+			final Socket s = new Socket(InetAddress.getByName("127.0.0.1"), shutdownPort);
+			final OutputStream out = s.getOutputStream();
 			System.out.println("Sending Shutdown Request to " + Constants.NAME);
 			out.write("\r\n".getBytes());
 			out.flush();
 			s.close();
-		} catch (UnknownHostException e) {
+		}
+		catch (final UnknownHostException e) {
 			e.printStackTrace();
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			e.printStackTrace();
 		}
 	}

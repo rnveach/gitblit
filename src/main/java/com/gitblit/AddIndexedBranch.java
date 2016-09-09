@@ -46,31 +46,32 @@ import com.gitblit.utils.StringUtils;
 public class AddIndexedBranch {
 
 	public static void main(String... args) {
-		Params params = new Params();
-		CmdLineParser parser = new CmdLineParser(params);
+		final Params params = new Params();
+		final CmdLineParser parser = new CmdLineParser(params);
 		try {
 			parser.parseArgument(args);
-		} catch (CmdLineException t) {
+		}
+		catch (final CmdLineException t) {
 			System.err.println(t.getMessage());
 			parser.printUsage(System.out);
 			return;
 		}
 
 		// create a lowercase set of excluded repositories
-		Set<String> exclusions = new TreeSet<String>();
-		for (String exclude : params.exclusions) {
+		final Set<String> exclusions = new TreeSet<String>();
+		for (final String exclude : params.exclusions) {
 			exclusions.add(exclude.toLowerCase());
 		}
 
 		// determine available repositories
-		File folder = new File(params.folder);
-		List<String> repoList = JGitUtils.getRepositoryList(folder, false, true, -1, null);
+		final File folder = new File(params.folder);
+		final List<String> repoList = JGitUtils.getRepositoryList(folder, false, true, -1, null);
 
 		int modCount = 0;
 		int skipCount = 0;
-		for (String repo : repoList) {
+		for (final String repo : repoList) {
 			boolean skip = false;
-			for (String exclusion : exclusions) {
+			for (final String exclusion : exclusions) {
 				if (StringUtils.fuzzyMatch(repo, exclusion)) {
 					skip = true;
 					break;
@@ -83,56 +84,58 @@ public class AddIndexedBranch {
 				continue;
 			}
 
-
 			try {
 				// load repository config
-				File gitDir = FileKey.resolve(new File(folder, repo), FS.DETECTED);
-				Repository repository = new FileRepositoryBuilder().setGitDir(gitDir).build();
-				StoredConfig config = repository.getConfig();
+				final File gitDir = FileKey.resolve(new File(folder, repo), FS.DETECTED);
+				final Repository repository = new FileRepositoryBuilder().setGitDir(gitDir).build();
+				final StoredConfig config = repository.getConfig();
 				config.load();
 
-				Set<String> indexedBranches = new LinkedHashSet<String>();
+				final Set<String> indexedBranches = new LinkedHashSet<String>();
 
 				// add all local branches to index
 				if (params.addAllLocalBranches) {
-					List<RefModel> list = JGitUtils.getLocalBranches(repository, true, -1);
-					for (RefModel refModel : list) {
-						System.out.println(MessageFormat.format("adding [gitblit] indexBranch={0} for {1}", refModel.getName(), repo));
+					final List<RefModel> list = JGitUtils.getLocalBranches(repository, true, -1);
+					for (final RefModel refModel : list) {
+						System.out.println(MessageFormat.format(
+								"adding [gitblit] indexBranch={0} for {1}", refModel.getName(),
+								repo));
 						indexedBranches.add(refModel.getName());
 					}
-				}
-				else {
+				} else {
 					// add only one branch to index ('default' if not specified)
-					System.out.println(MessageFormat.format("adding [gitblit] indexBranch={0} for {1}", params.branch, repo));
+					System.out.println(MessageFormat.format(
+							"adding [gitblit] indexBranch={0} for {1}", params.branch, repo));
 					indexedBranches.add(params.branch);
 				}
 
-				String [] branches = config.getStringList("gitblit", null, "indexBranch");
+				final String[] branches = config.getStringList("gitblit", null, "indexBranch");
 				if (!ArrayUtils.isEmpty(branches)) {
-					for (String branch : branches) {
+					for (final String branch : branches) {
 						indexedBranches.add(branch);
 					}
 				}
-				config.setStringList("gitblit", null, "indexBranch", new ArrayList<String>(indexedBranches));
+				config.setStringList("gitblit", null, "indexBranch", new ArrayList<String>(
+						indexedBranches));
 				config.save();
 				modCount++;
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 				System.err.println(repo);
 				e.printStackTrace();
 			}
 		}
 
-		System.out.println(MessageFormat.format("updated {0} repository configurations, skipped {1}", modCount, skipCount));
+		System.out.println(MessageFormat.format(
+				"updated {0} repository configurations, skipped {1}", modCount, skipCount));
 	}
-
-
 
 	/**
 	 * Parameters class for AddIndexedBranch.
 	 */
 	private static class Params {
 
-		@Option(name =  "--repositoriesFolder", usage = "The root repositories folder ", required = true, metaVar = "PATH")
+		@Option(name = "--repositoriesFolder", usage = "The root repositories folder ", required = true, metaVar = "PATH")
 		public String folder;
 
 		@Option(name = "--branch", usage = "The branch to index", metaVar = "BRANCH")

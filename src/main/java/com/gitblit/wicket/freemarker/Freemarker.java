@@ -39,7 +39,8 @@ public class Freemarker {
 		return fm.getTemplate(name);
 	}
 
-	public static void evaluate(Template template, Map<String, Object> values, Writer out) throws TemplateException, IOException {
+	public static void evaluate(Template template, Map<String, Object> values, Writer out)
+			throws TemplateException, IOException {
 		template.process(values, out);
 	}
 

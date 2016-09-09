@@ -34,7 +34,7 @@ public class MemoryKeyManager extends IPublicKeyManager {
 
 	@Inject
 	public MemoryKeyManager() {
-		keys = new HashMap<String, List<SshKey>>();
+		this.keys = new HashMap<String, List<SshKey>>();
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class MemoryKeyManager extends IPublicKeyManager {
 
 	@Override
 	public MemoryKeyManager start() {
-		log.info(toString());
+		this.log.info(toString());
 		return this;
 	}
 
@@ -66,48 +66,48 @@ public class MemoryKeyManager extends IPublicKeyManager {
 
 	@Override
 	protected List<SshKey> getKeysImpl(String username) {
-		String id = username.toLowerCase();
-		if (keys.containsKey(id)) {
-			return keys.get(id);
+		final String id = username.toLowerCase();
+		if (this.keys.containsKey(id)) {
+			return this.keys.get(id);
 		}
 		return null;
 	}
 
 	@Override
 	public boolean addKey(String username, SshKey key) {
-		String id = username.toLowerCase();
-		if (!keys.containsKey(id)) {
-			keys.put(id, new ArrayList<SshKey>());
+		final String id = username.toLowerCase();
+		if (!this.keys.containsKey(id)) {
+			this.keys.put(id, new ArrayList<SshKey>());
 		}
-		log.info("added {} key {}", username, key.getFingerprint());
-		return keys.get(id).add(key);
+		this.log.info("added {} key {}", username, key.getFingerprint());
+		return this.keys.get(id).add(key);
 	}
 
 	@Override
 	public boolean removeKey(String username, SshKey key) {
-		String id = username.toLowerCase();
-		if (!keys.containsKey(id)) {
-			log.info("can't remove keys for {}", username);
+		final String id = username.toLowerCase();
+		if (!this.keys.containsKey(id)) {
+			this.log.info("can't remove keys for {}", username);
 			return false;
 		}
-		List<SshKey> list = keys.get(id);
-		boolean success = list.remove(key);
+		final List<SshKey> list = this.keys.get(id);
+		final boolean success = list.remove(key);
 		if (success) {
-			log.info("removed {} key {}", username, key.getFingerprint());
+			this.log.info("removed {} key {}", username, key.getFingerprint());
 		}
 
 		if (list.isEmpty()) {
-			keys.remove(id);
-			log.info("no {} keys left, removed {}", username, username);
+			this.keys.remove(id);
+			this.log.info("no {} keys left, removed {}", username, username);
 		}
 		return success;
 	}
 
 	@Override
 	public boolean removeAllKeys(String username) {
-		String id = username.toLowerCase();
-		keys.remove(id.toLowerCase());
-		log.info("removed all keys for {}", username);
+		final String id = username.toLowerCase();
+		this.keys.remove(id.toLowerCase());
+		this.log.info("removed all keys for {}", username);
 		return true;
 	}
 }

@@ -26,8 +26,8 @@ import org.apache.wicket.markup.repeater.data.ListDataProvider;
 
 import com.gitblit.Keys;
 import com.gitblit.models.Menu.ParameterMenuItem;
-import com.gitblit.models.NavLink.DropDownPageMenuNavLink;
 import com.gitblit.models.NavLink;
+import com.gitblit.models.NavLink.DropDownPageMenuNavLink;
 import com.gitblit.models.ProjectModel;
 import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.WicketUtils;
@@ -63,32 +63,33 @@ public class ProjectsPage extends RootPage {
 	private void setup(PageParameters params) {
 		setupPage("", "");
 		// check to see if we should display a login message
-		boolean authenticateView = app().settings().getBoolean(Keys.web.authenticateViewPages, true);
+		final boolean authenticateView = app().settings().getBoolean(
+				Keys.web.authenticateViewPages, true);
 		if (authenticateView && !GitBlitWebSession.get().isLoggedIn()) {
 			add(new Label("projectsPanel"));
 			return;
 		}
 
-		List<ProjectModel> projects = getProjects(params);
+		final List<ProjectModel> projects = getProjects(params);
 		Collections.sort(projects);
 
-		ListDataProvider<ProjectModel> dp = new ListDataProvider<ProjectModel>(projects);
+		final ListDataProvider<ProjectModel> dp = new ListDataProvider<ProjectModel>(projects);
 
-		DataView<ProjectModel> dataView = new DataView<ProjectModel>("project", dp) {
+		final DataView<ProjectModel> dataView = new DataView<ProjectModel>("project", dp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
 			public void populateItem(final Item<ProjectModel> item) {
 				final ProjectModel entry = item.getModelObject();
 
-				PageParameters pp = WicketUtils.newProjectParameter(entry.name);
+				final PageParameters pp = WicketUtils.newProjectParameter(entry.name);
 				item.add(new LinkPanel("projectTitle", "list", entry.getDisplayName(),
 						ProjectPage.class, pp));
 				item.add(new LinkPanel("projectDescription", "list", entry.description,
@@ -105,12 +106,12 @@ public class ProjectsPage extends RootPage {
 				} else {
 					lastChange = getTimeUtils().timeAgo(entry.lastChange);
 				}
-				Label lastChangeLabel = new Label("projectLastChange", lastChange);
+				final Label lastChangeLabel = new Label("projectLastChange", lastChange);
 				item.add(lastChangeLabel);
 				WicketUtils.setCssClass(lastChangeLabel, getTimeUtils()
 						.timeAgoCss(entry.lastChange));
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(dataView);
@@ -118,9 +119,9 @@ public class ProjectsPage extends RootPage {
 
 	@Override
 	protected void addDropDownMenus(List<NavLink> navLinks) {
-		PageParameters params = getPageParameters();
+		final PageParameters params = getPageParameters();
 
-		DropDownPageMenuNavLink menu = new DropDownPageMenuNavLink("gb.filters",
+		final DropDownPageMenuNavLink menu = new DropDownPageMenuNavLink("gb.filters",
 				ProjectsPage.class);
 		// preserve time filter option on repository choices
 		menu.menuItems.addAll(getRepositoryFilterItems(params));

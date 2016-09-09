@@ -28,7 +28,8 @@ import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.util.value.IValueMap;
 
 /**
- * https://cwiki.apache.org/WICKET/object-container-adding-flash-to-a-wicket-application.html
+ * https://cwiki.apache.org/WICKET/object-container-adding-flash-to-a-wicket-
+ * application.html
  *
  * @author Jan Kriesten
  * @author manuelbarzi
@@ -58,14 +59,14 @@ public class ShockWaveComponent extends ObjectContainer {
 		optionNames.addAll(parameterNames);
 	}
 
-	private Map<String, String> attributes;
-	private Map<String, String> parameters;
+	private final Map<String, String> attributes;
+	private final Map<String, String> parameters;
 
 	public ShockWaveComponent(String id) {
 		super(id);
 
-		attributes = new HashMap<String, String>();
-		parameters = new HashMap<String, String>();
+		this.attributes = new HashMap<String, String>();
+		this.parameters = new HashMap<String, String>();
 	}
 
 	public ShockWaveComponent(String id, String movie) {
@@ -89,16 +90,19 @@ public class ShockWaveComponent extends ObjectContainer {
 		// to handle url and
 		// puts the values to the maps depending on the browser information
 		String parameter = name.toLowerCase();
-		if ("data".equals(parameter))
+		if ("data".equals(parameter)) {
 			parameter = "movie";
+		}
 
-		if ("movie".equals(parameter) && !getClientProperties().isBrowserInternetExplorer())
-			attributes.put("data", value);
+		if ("movie".equals(parameter) && !getClientProperties().isBrowserInternetExplorer()) {
+			this.attributes.put("data", value);
+		}
 
-		if (attributeNames.contains(parameter))
-			attributes.put(parameter, value);
-		else if (parameterNames.contains(parameter))
-			parameters.put(parameter, value);
+		if (attributeNames.contains(parameter)) {
+			this.attributes.put(parameter, value);
+		} else if (parameterNames.contains(parameter)) {
+			this.parameters.put(parameter, value);
+		}
 	}
 
 	@Override
@@ -107,19 +111,22 @@ public class ShockWaveComponent extends ObjectContainer {
 		String value = null;
 
 		if ("data".equals(parameter)) {
-			if (getClientProperties().isBrowserInternetExplorer())
+			if (getClientProperties().isBrowserInternetExplorer()) {
 				return null;
+			}
 			parameter = "movie";
 		}
 
-		if (attributeNames.contains(parameter))
-			value = attributes.get(parameter);
-		else if (parameterNames.contains(parameter))
-			value = parameters.get(parameter);
+		if (attributeNames.contains(parameter)) {
+			value = this.attributes.get(parameter);
+		} else if (parameterNames.contains(parameter)) {
+			value = this.parameters.get(parameter);
+		}
 
 		// special treatment of movie to resolve to the url
-		if (value != null && parameter.equals("movie"))
+		if ((value != null) && parameter.equals("movie")) {
 			value = resolveResource(value);
+		}
 
 		return value;
 	}
@@ -127,14 +134,15 @@ public class ShockWaveComponent extends ObjectContainer {
 	@Override
 	public void onComponentTag(ComponentTag tag) {
 		// get options from the markup
-		IValueMap valueMap = tag.getAttributes();
+		final IValueMap valueMap = tag.getAttributes();
 
 		// Iterate over valid options
-		for (String s : optionNames) {
+		for (final String s : optionNames) {
 			if (valueMap.containsKey(s)) {
 				// if option isn't set programmatically, set value from markup
-				if (!attributes.containsKey(s) && !parameters.containsKey(s))
+				if (!this.attributes.containsKey(s) && !this.parameters.containsKey(s)) {
 					setValue(s, valueMap.getString(s));
+				}
 				// remove attribute - they are added in super.onComponentTag()
 				// to
 				// the right place as attribute or param
@@ -150,21 +158,21 @@ public class ShockWaveComponent extends ObjectContainer {
 
 		super.onComponentTagBody(markupStream, openTag);
 
-		Response response = getResponse();
+		final Response response = getResponse();
 
 		// add all object's parameters in embed tag too:
 		response.write("<embed");
 		addParameter(response, "type", CONTENTTYPE);
 		for (String name : getParameterNames()) {
-			String value = getValue(name);
+			final String value = getValue(name);
 			if (value != null) {
 				name = "movie".equals(name) ? "src" : name;
 				addParameter(response, name, value);
 			}
 		}
-		for (String name : getAttributeNames()) {
+		for (final String name : getAttributeNames()) {
 			if ("width".equals(name) || "height".equals(name)) {
-				String value = getValue(name);
+				final String value = getValue(name);
 				if (value != null) {
 					addParameter(response, name, value);
 				}
@@ -174,7 +182,7 @@ public class ShockWaveComponent extends ObjectContainer {
 
 	}
 
-	private void addParameter(Response response, String name, String value) {
+	private static void addParameter(Response response, String name, String value) {
 		response.write(" ");
 		response.write(name);
 		response.write("=\"");

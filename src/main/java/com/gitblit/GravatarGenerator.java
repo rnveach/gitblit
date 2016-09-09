@@ -23,7 +23,7 @@ public class GravatarGenerator implements AvatarGenerator {
 
 	@Override
 	public String getURL(String username, String emailaddress, boolean identicon, int width) {
-		String email = emailaddress == null ? username : emailaddress;
+		final String email = emailaddress == null ? username : emailaddress;
 		if (identicon) {
 			return ActivityUtils.getGravatarIdenticonUrl(email, width);
 		} else {

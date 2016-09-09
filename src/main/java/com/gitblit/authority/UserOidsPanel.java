@@ -26,70 +26,71 @@ public class UserOidsPanel extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
-	private JTextField displayname;
-	private JTextField username;
-	private JTextField emailAddress;
-	private JTextField organizationalUnit;
-	private JTextField organization;
-	private JTextField locality;
-	private JTextField stateProvince;
-	private JTextField countryCode;
+	private final JTextField displayname;
+	private final JTextField username;
+	private final JTextField emailAddress;
+	private final JTextField organizationalUnit;
+	private final JTextField organization;
+	private final JTextField locality;
+	private final JTextField stateProvince;
+	private final JTextField countryCode;
 
 	public UserOidsPanel() {
 		super();
 
-		displayname = new JTextField(20);
-		username = new JTextField(20);
-		username.setEditable(false);
-		emailAddress = new JTextField(20);
-		organizationalUnit = new JTextField(20);
-		organization = new JTextField(20);
-		locality = new JTextField(20);
-		stateProvince = new JTextField(20);
-		countryCode = new JTextField(20);
+		this.displayname = new JTextField(20);
+		this.username = new JTextField(20);
+		this.username.setEditable(false);
+		this.emailAddress = new JTextField(20);
+		this.organizationalUnit = new JTextField(20);
+		this.organization = new JTextField(20);
+		this.locality = new JTextField(20);
+		this.stateProvince = new JTextField(20);
+		this.countryCode = new JTextField(20);
 
 		setLayout(new GridLayout(0, 1, Utils.MARGIN, Utils.MARGIN));
-		add(Utils.newFieldPanel(Translation.get("gb.displayName"), displayname));
-		add(Utils.newFieldPanel(Translation.get("gb.username") + " (CN)", username));
-		add(Utils.newFieldPanel(Translation.get("gb.emailAddress") + " (E)", emailAddress));
-		add(Utils.newFieldPanel(Translation.get("gb.organizationalUnit") + " (OU)", organizationalUnit));
-		add(Utils.newFieldPanel(Translation.get("gb.organization") + " (O)", organization));
-		add(Utils.newFieldPanel(Translation.get("gb.locality") + " (L)", locality));
-		add(Utils.newFieldPanel(Translation.get("gb.stateProvince") + " (ST)", stateProvince));
-		add(Utils.newFieldPanel(Translation.get("gb.countryCode") + " (C)", countryCode));
+		add(Utils.newFieldPanel(Translation.get("gb.displayName"), this.displayname));
+		add(Utils.newFieldPanel(Translation.get("gb.username") + " (CN)", this.username));
+		add(Utils.newFieldPanel(Translation.get("gb.emailAddress") + " (E)", this.emailAddress));
+		add(Utils.newFieldPanel(Translation.get("gb.organizationalUnit") + " (OU)",
+				this.organizationalUnit));
+		add(Utils.newFieldPanel(Translation.get("gb.organization") + " (O)", this.organization));
+		add(Utils.newFieldPanel(Translation.get("gb.locality") + " (L)", this.locality));
+		add(Utils.newFieldPanel(Translation.get("gb.stateProvince") + " (ST)", this.stateProvince));
+		add(Utils.newFieldPanel(Translation.get("gb.countryCode") + " (C)", this.countryCode));
 	}
 
 	public void setUserCertificateModel(UserCertificateModel ucm) {
 		setEditable(false);
-		displayname.setText(ucm == null ? "" : ucm.user.getDisplayName());
-		username.setText(ucm == null ? "" : ucm.user.username);
-		emailAddress.setText(ucm == null ? "" : ucm.user.emailAddress);
-		organizationalUnit.setText(ucm == null ? "" : ucm.user.organizationalUnit);
-		organization.setText(ucm == null ? "" : ucm.user.organization);
-		locality.setText(ucm == null ? "" : ucm.user.locality);
-		stateProvince.setText(ucm == null ? "" : ucm.user.stateProvince);
-		countryCode.setText(ucm == null ? "" : ucm.user.countryCode);
+		this.displayname.setText(ucm == null ? "" : ucm.user.getDisplayName());
+		this.username.setText(ucm == null ? "" : ucm.user.username);
+		this.emailAddress.setText(ucm == null ? "" : ucm.user.emailAddress);
+		this.organizationalUnit.setText(ucm == null ? "" : ucm.user.organizationalUnit);
+		this.organization.setText(ucm == null ? "" : ucm.user.organization);
+		this.locality.setText(ucm == null ? "" : ucm.user.locality);
+		this.stateProvince.setText(ucm == null ? "" : ucm.user.stateProvince);
+		this.countryCode.setText(ucm == null ? "" : ucm.user.countryCode);
 	}
 
 	public void setEditable(boolean editable) {
-		displayname.setEditable(editable);
-//		username.setEditable(editable);
-		emailAddress.setEditable(editable);
-		organizationalUnit.setEditable(editable);
-		organization.setEditable(editable);
-		locality.setEditable(editable);
-		stateProvince.setEditable(editable);
-		countryCode.setEditable(editable);
+		this.displayname.setEditable(editable);
+		// username.setEditable(editable);
+		this.emailAddress.setEditable(editable);
+		this.organizationalUnit.setEditable(editable);
+		this.organization.setEditable(editable);
+		this.locality.setEditable(editable);
+		this.stateProvince.setEditable(editable);
+		this.countryCode.setEditable(editable);
 	}
 
 	protected void updateUser(UserCertificateModel ucm) {
-		ucm.user.displayName = displayname.getText();
-		ucm.user.username = username.getText();
-		ucm.user.emailAddress = emailAddress.getText();
-		ucm.user.organizationalUnit = organizationalUnit.getText();
-		ucm.user.organization = organization.getText();
-		ucm.user.locality = locality.getText();
-		ucm.user.stateProvince = stateProvince.getText();
-		ucm.user.countryCode = countryCode.getText();
+		ucm.user.displayName = this.displayname.getText();
+		ucm.user.username = this.username.getText();
+		ucm.user.emailAddress = this.emailAddress.getText();
+		ucm.user.organizationalUnit = this.organizationalUnit.getText();
+		ucm.user.organization = this.organization.getText();
+		ucm.user.locality = this.locality.getText();
+		ucm.user.stateProvince = this.stateProvince.getText();
+		ucm.user.countryCode = this.countryCode.getText();
 	}
 }

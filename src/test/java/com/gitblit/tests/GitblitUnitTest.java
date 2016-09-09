@@ -27,7 +27,6 @@ import com.gitblit.manager.IRuntimeManager;
 import com.gitblit.manager.IUserManager;
 import com.gitblit.servlet.GitblitContext;
 
-
 public class GitblitUnitTest extends org.junit.Assert {
 
 	public static IStoredSettings settings() {
@@ -65,8 +64,8 @@ public class GitblitUnitTest extends org.junit.Assert {
 	public static IGitblit gitblit() {
 		return GitblitContext.getManager(IGitblit.class);
 	}
-	
+
 	public static IFilestoreManager filestore() {
-		return GitblitContext.getManager(IFilestoreManager.class); 
+		return GitblitContext.getManager(IFilestoreManager.class);
 	}
 }

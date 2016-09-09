@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -34,10 +32,12 @@ import ro.fortsoft.pf4j.PluginWrapper;
 import com.gitblit.extensions.HttpRequestFilter;
 import com.gitblit.manager.IPluginManager;
 import com.gitblit.manager.IRuntimeManager;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * A request filter than allows registered extension request filters to access
- * request data.  The intended purpose is for server monitoring plugins.
+ * request data. The intended purpose is for server monitoring plugins.
  *
  * @author David Ostrovsky
  * @since 1.6.0
@@ -51,9 +51,7 @@ public class ProxyFilter implements Filter {
 	private final List<HttpRequestFilter> filters;
 
 	@Inject
-	public ProxyFilter(
-			IRuntimeManager runtimeManager,
-			IPluginManager pluginManager) {
+	public ProxyFilter(IRuntimeManager runtimeManager, IPluginManager pluginManager) {
 
 		this.runtimeManager = runtimeManager;
 		this.pluginManager = pluginManager;
@@ -64,11 +62,11 @@ public class ProxyFilter implements Filter {
 	@Override
 	public void init(FilterConfig filterConfig) throws ServletException {
 
-		filters.addAll(pluginManager.getExtensions(HttpRequestFilter.class));
-		for (HttpRequestFilter f : filters) {
+		this.filters.addAll(this.pluginManager.getExtensions(HttpRequestFilter.class));
+		for (final HttpRequestFilter f : this.filters) {
 			// wrap the filter config for Gitblit settings retrieval
-			PluginWrapper pluginWrapper = pluginManager.whichPlugin(f.getClass());
-			FilterConfig runtimeConfig = new FilterRuntimeConfig(runtimeManager,
+			final PluginWrapper pluginWrapper = this.pluginManager.whichPlugin(f.getClass());
+			final FilterConfig runtimeConfig = new FilterRuntimeConfig(this.runtimeManager,
 					pluginWrapper.getPluginId(), filterConfig);
 
 			f.init(runtimeConfig);
@@ -78,7 +76,7 @@ public class ProxyFilter implements Filter {
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, final FilterChain last)
 			throws IOException, ServletException {
-		final Iterator<HttpRequestFilter> itr = filters.iterator();
+		final Iterator<HttpRequestFilter> itr = this.filters.iterator();
 		new FilterChain() {
 			@Override
 			public void doFilter(ServletRequest req, ServletResponse res) throws IOException,
@@ -94,7 +92,7 @@ public class ProxyFilter implements Filter {
 
 	@Override
 	public void destroy() {
-		for (HttpRequestFilter f : filters) {
+		for (final HttpRequestFilter f : this.filters) {
 			f.destroy();
 		}
 	}

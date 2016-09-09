@@ -37,7 +37,10 @@ public class UserCertificateTableModel extends AbstractTableModel {
 	List<UserCertificateModel> list;
 
 	enum Columns {
-		Username, DisplayName, Status, Expires;
+		Username,
+		DisplayName,
+		Status,
+		Expires;
 
 		@Override
 		public String toString() {
@@ -56,7 +59,7 @@ public class UserCertificateTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return list.size();
+		return this.list.size();
 	}
 
 	@Override
@@ -66,7 +69,7 @@ public class UserCertificateTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Username:
 			return Translation.get("gb.username");
@@ -89,7 +92,7 @@ public class UserCertificateTableModel extends AbstractTableModel {
 	 */
 	@Override
 	public Class<?> getColumnClass(int columnIndex) {
-		Columns col = Columns.values()[columnIndex];
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Expires:
 			return Date.class;
@@ -102,7 +105,7 @@ public class UserCertificateTableModel extends AbstractTableModel {
 
 	@Override
 	public boolean isCellEditable(int rowIndex, int columnIndex) {
-		Columns col = Columns.values()[columnIndex];
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		default:
 			return false;
@@ -111,8 +114,8 @@ public class UserCertificateTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		UserCertificateModel model = list.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final UserCertificateModel model = this.list.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Username:
 			return model.user.username;
@@ -127,6 +130,6 @@ public class UserCertificateTableModel extends AbstractTableModel {
 	}
 
 	public UserCertificateModel get(int modelRow) {
-		return list.get(modelRow);
+		return this.list.get(modelRow);
 	}
 }

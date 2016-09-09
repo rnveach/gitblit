@@ -77,6 +77,6 @@ public class ServerStatus implements Serializable {
 	}
 
 	private void put(String key) {
-		systemProperties.put(key, System.getProperty(key));
+		this.systemProperties.put(key, System.getProperty(key));
 	}
 }

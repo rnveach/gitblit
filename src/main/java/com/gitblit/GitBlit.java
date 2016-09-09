@@ -32,8 +32,9 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 /**
- * GitBlit is the aggregate manager for the Gitblit webapp.  The parent class provides all
- * functionality.  This class exists to not break existing Groovy push hooks.
+ * GitBlit is the aggregate manager for the Gitblit webapp. The parent class
+ * provides all functionality. This class exists to not break existing Groovy
+ * push hooks.
  *
  * @author James Moger
  *
@@ -43,30 +44,15 @@ import com.google.inject.Singleton;
 public class GitBlit extends GitblitManager {
 
 	@Inject
-	public GitBlit(
-			Provider<IPublicKeyManager> publicKeyManagerProvider,
-			Provider<ITicketService> ticketServiceProvider,
-			IRuntimeManager runtimeManager,
-			IPluginManager pluginManager,
-			INotificationManager notificationManager,
-			IUserManager userManager,
-			IAuthenticationManager authenticationManager,
-			IRepositoryManager repositoryManager,
-			IProjectManager projectManager,
-			IFederationManager federationManager,
-			IFilestoreManager filestoreManager) {
+	public GitBlit(Provider<IPublicKeyManager> publicKeyManagerProvider,
+			Provider<ITicketService> ticketServiceProvider, IRuntimeManager runtimeManager,
+			IPluginManager pluginManager, INotificationManager notificationManager,
+			IUserManager userManager, IAuthenticationManager authenticationManager,
+			IRepositoryManager repositoryManager, IProjectManager projectManager,
+			IFederationManager federationManager, IFilestoreManager filestoreManager) {
 
-		super(
-				publicKeyManagerProvider,
-				ticketServiceProvider,
-				runtimeManager,
-				pluginManager,
-				notificationManager,
-				userManager,
-				authenticationManager,
-				repositoryManager,
-				projectManager,
-				federationManager,
-				filestoreManager);
+		super(publicKeyManagerProvider, ticketServiceProvider, runtimeManager, pluginManager,
+				notificationManager, userManager, authenticationManager, repositoryManager,
+				projectManager, federationManager, filestoreManager);
 	}
 }

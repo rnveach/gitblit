@@ -84,8 +84,8 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @param type
 	 */
 	public void updateRef(String ref, ReceiveCommand.Type type) {
-		if (!refUpdates.containsKey(ref)) {
-			refUpdates.put(ref, type);
+		if (!this.refUpdates.containsKey(ref)) {
+			this.refUpdates.put(ref, type);
 		}
 	}
 
@@ -98,9 +98,9 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @param newId
 	 */
 	public void updateRef(String ref, ReceiveCommand.Type type, String oldId, String newId) {
-		if (!refUpdates.containsKey(ref)) {
-			refUpdates.put(ref, type);
-			refIdChanges.put(ref, oldId + "-" + newId);
+		if (!this.refUpdates.containsKey(ref)) {
+			this.refUpdates.put(ref, type);
+			this.refIdChanges.put(ref, oldId + "-" + newId);
 		}
 	}
 
@@ -111,7 +111,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return the old id
 	 */
 	public String getOldId(String ref) {
-		String change = refIdChanges.get(ref);
+		final String change = this.refIdChanges.get(ref);
 		if (StringUtils.isEmpty(change)) {
 			return null;
 		}
@@ -125,7 +125,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return the new id
 	 */
 	public String getNewId(String ref) {
-		String change = refIdChanges.get(ref);
+		final String change = this.refIdChanges.get(ref);
 		if (StringUtils.isEmpty(change)) {
 			return null;
 		}
@@ -139,7 +139,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return the change type for the ref
 	 */
 	public ReceiveCommand.Type getChangeType(String ref) {
-		ReceiveCommand.Type type = refUpdates.get(ref);
+		final ReceiveCommand.Type type = this.refUpdates.get(ref);
 		return type;
 	}
 
@@ -153,9 +153,9 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 *         commit
 	 */
 	public RepositoryCommit addCommit(String branch, RevCommit commit) {
-		RepositoryCommit commitModel = new RepositoryCommit(repository, branch, commit);
-		if (commits.add(commitModel)) {
-			authorCount = -1;
+		final RepositoryCommit commitModel = new RepositoryCommit(this.repository, branch, commit);
+		if (this.commits.add(commitModel)) {
+			this.authorCount = -1;
 			return commitModel;
 		}
 		return null;
@@ -171,22 +171,22 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 *         commit
 	 */
 	public RepositoryCommit addCommit(RepositoryCommit commit) {
-		if (commits.add(commit)) {
-			authorCount = -1;
+		if (this.commits.add(commit)) {
+			this.authorCount = -1;
 			return commit;
 		}
 		return null;
 	}
 
 	/**
-	 * Adds a a list of repository commits.  This is used to construct discrete
+	 * Adds a a list of repository commits. This is used to construct discrete
 	 * ref push log entries
 	 *
 	 * @param commits
 	 */
 	public void addCommits(List<RepositoryCommit> list) {
-		commits.addAll(list);
-		authorCount = -1;
+		this.commits.addAll(list);
+		this.authorCount = -1;
 	}
 
 	/**
@@ -195,7 +195,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return true if this is a non-fastforward push
 	 */
 	public boolean isNonFastForward() {
-		for (Map.Entry<String, ReceiveCommand.Type> entry : refUpdates.entrySet()) {
+		for (final Map.Entry<String, ReceiveCommand.Type> entry : this.refUpdates.entrySet()) {
 			if (ReceiveCommand.Type.UPDATE_NONFASTFORWARD.equals(entry.getValue())) {
 				return true;
 			}
@@ -210,7 +210,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return true if this is a non-fastforward ref update
 	 */
 	public boolean isNonFastForward(String ref) {
-		ReceiveCommand.Type type = refUpdates.get(ref);
+		final ReceiveCommand.Type type = this.refUpdates.get(ref);
 		if (type == null) {
 			return false;
 		}
@@ -224,7 +224,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return true if this is a delete ref update
 	 */
 	public boolean isDelete(String ref) {
-		ReceiveCommand.Type type = refUpdates.get(ref);
+		final ReceiveCommand.Type type = this.refUpdates.get(ref);
 		if (type == null) {
 			return false;
 		}
@@ -237,7 +237,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return a list of refs
 	 */
 	public List<String> getChangedRefs() {
-		return new ArrayList<String>(refUpdates.keySet());
+		return new ArrayList<String>(this.refUpdates.keySet());
 	}
 
 	/**
@@ -265,27 +265,27 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return the changed refs
 	 */
 	protected List<String> getChangedRefs(String baseRef) {
-		Set<String> refs = new HashSet<String>();
-		for (String ref : refUpdates.keySet()) {
-			if (baseRef == null || ref.startsWith(baseRef)) {
+		final Set<String> refs = new HashSet<String>();
+		for (final String ref : this.refUpdates.keySet()) {
+			if ((baseRef == null) || ref.startsWith(baseRef)) {
 				refs.add(ref);
 			}
 		}
-		List<String> list = new ArrayList<String>(refs);
+		final List<String> list = new ArrayList<String>(refs);
 		Collections.sort(list);
 		return list;
 	}
 
 	public int getAuthorCount() {
-		if (authorCount == -1) {
-			Set<String> authors = new HashSet<String>();
-			for (RepositoryCommit commit : commits) {
-				String name = commit.getAuthorIdent().getName();
+		if (this.authorCount == -1) {
+			final Set<String> authors = new HashSet<String>();
+			for (final RepositoryCommit commit : this.commits) {
+				final String name = commit.getAuthorIdent().getName();
 				authors.add(name);
 			}
-			authorCount = authors.size();
+			this.authorCount = authors.size();
 		}
-		return authorCount;
+		return this.authorCount;
 	}
 
 	/**
@@ -294,7 +294,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return the number of commits in the push
 	 */
 	public int getCommitCount() {
-		return commits.size();
+		return this.commits.size();
 	}
 
 	/**
@@ -303,7 +303,7 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return a list of commits
 	 */
 	public List<RepositoryCommit> getCommits() {
-		List<RepositoryCommit> list = new ArrayList<RepositoryCommit>(commits);
+		final List<RepositoryCommit> list = new ArrayList<RepositoryCommit>(this.commits);
 		Collections.sort(list);
 		return list;
 	}
@@ -315,8 +315,8 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	 * @return a list of commits
 	 */
 	public List<RepositoryCommit> getCommits(String ref) {
-		List<RepositoryCommit> list = new ArrayList<RepositoryCommit>();
-		for (RepositoryCommit commit : commits) {
+		final List<RepositoryCommit> list = new ArrayList<RepositoryCommit>();
+		for (final RepositoryCommit commit : this.commits) {
 			if (commit.branch.equals(ref)) {
 				list.add(commit);
 			}
@@ -326,7 +326,8 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	}
 
 	public PersonIdent getCommitterIdent() {
-		return new PersonIdent(user.getDisplayName(), user.emailAddress == null ? user.username : user.emailAddress);
+		return new PersonIdent(this.user.getDisplayName(),
+				this.user.emailAddress == null ? this.user.username : this.user.emailAddress);
 	}
 
 	public PersonIdent getAuthorIdent() {
@@ -339,19 +340,21 @@ public class RefLogEntry implements Serializable, Comparable<RefLogEntry> {
 	@Override
 	public int compareTo(RefLogEntry o) {
 		// reverse chronological order
-		return o.date.compareTo(date);
+		return o.date.compareTo(this.date);
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(MessageFormat.format("{0,date,yyyy-MM-dd HH:mm}: {1} pushed {2,number,0} commit{3} to {4} ",
-				date, user.getDisplayName(), commits.size(), commits.size() == 1 ? "":"s", repository));
-		for (Map.Entry<String, ReceiveCommand.Type> entry : refUpdates.entrySet()) {
-			String ref = entry.getKey();
-			ReceiveCommand.Type type = entry.getValue();
+		final StringBuilder sb = new StringBuilder();
+		sb.append(MessageFormat.format(
+				"{0,date,yyyy-MM-dd HH:mm}: {1} pushed {2,number,0} commit{3} to {4} ", this.date,
+				this.user.getDisplayName(), this.commits.size(), this.commits.size() == 1 ? ""
+						: "s", this.repository));
+		for (final Map.Entry<String, ReceiveCommand.Type> entry : this.refUpdates.entrySet()) {
+			final String ref = entry.getKey();
+			final ReceiveCommand.Type type = entry.getValue();
 			sb.append("\n  ").append(ref).append(' ').append(type.name()).append('\n');
-			for (RepositoryCommit commit : getCommits(ref)) {
+			for (final RepositoryCommit commit : getCommits(ref)) {
 				sb.append("    ").append(commit.toString()).append('\n');
 			}
 		}

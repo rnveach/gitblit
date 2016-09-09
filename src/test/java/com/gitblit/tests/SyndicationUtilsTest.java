@@ -49,9 +49,9 @@ public class SyndicationUtilsTest extends GitblitUnitTest {
 
 	@Test
 	public void testSyndication() throws Exception {
-		List<FeedEntryModel> entries = new ArrayList<FeedEntryModel>();
+		final List<FeedEntryModel> entries = new ArrayList<FeedEntryModel>();
 		for (int i = 0; i < 10; i++) {
-			FeedEntryModel entry = new FeedEntryModel();
+			final FeedEntryModel entry = new FeedEntryModel();
 			entry.title = "Title " + i;
 			entry.author = "Author " + i;
 			entry.link = "Link " + i;
@@ -60,17 +60,16 @@ public class SyndicationUtilsTest extends GitblitUnitTest {
 			entry.content = "Content " + i;
 			entry.repository = "Repository " + i;
 			entry.branch = "Branch " + i;
-			List<String> tags = new ArrayList<String>();
+			final List<String> tags = new ArrayList<String>();
 			for (int j = 0; j < 5; j++) {
 				tags.add("Tag " + j);
 			}
 			entry.tags = tags;
 			entries.add(entry);
 		}
-		ByteArrayOutputStream os = new ByteArrayOutputStream();
-		SyndicationUtils.toRSS("http://localhost", "", "Title", "Description",
-				entries, os);
-		String feed = os.toString();
+		final ByteArrayOutputStream os = new ByteArrayOutputStream();
+		SyndicationUtils.toRSS("http://localhost", "", "Title", "Description", entries, os);
+		final String feed = os.toString();
 		os.close();
 		assertTrue(feed.indexOf("<title>Title</title>") > -1);
 		assertTrue(feed.indexOf("<description>Description</description>") > -1);
@@ -78,14 +77,15 @@ public class SyndicationUtilsTest extends GitblitUnitTest {
 
 	@Test
 	public void testFeedReadCommits() throws Exception {
-		Set<String> links = new HashSet<String>();
+		final Set<String> links = new HashSet<String>();
 		for (int i = 0; i < 2; i++) {
-			List<FeedEntryModel> feed = SyndicationUtils.readFeed(GitBlitSuite.url, "ticgit.git",
-					"master", 5, i, GitBlitSuite.account, GitBlitSuite.password.toCharArray());
+			final List<FeedEntryModel> feed = SyndicationUtils.readFeed(GitBlitSuite.url,
+					"ticgit.git", "master", 5, i, GitBlitSuite.account,
+					GitBlitSuite.password.toCharArray());
 			assertTrue(feed != null);
 			assertTrue(feed.size() > 0);
 			assertEquals(5, feed.size());
-			for (FeedEntryModel entry : feed) {
+			for (final FeedEntryModel entry : feed) {
 				links.add(entry.link);
 			}
 		}
@@ -95,14 +95,15 @@ public class SyndicationUtilsTest extends GitblitUnitTest {
 
 	@Test
 	public void testFeedReadTags() throws Exception {
-		Set<String> links = new HashSet<String>();
+		final Set<String> links = new HashSet<String>();
 		for (int i = 0; i < 2; i++) {
-			List<FeedEntryModel> feed = SyndicationUtils.readTags(GitBlitSuite.url, "test/gitective.git",
-					5, i, GitBlitSuite.account, GitBlitSuite.password.toCharArray());
+			final List<FeedEntryModel> feed = SyndicationUtils.readTags(GitBlitSuite.url,
+					"test/gitective.git", 5, i, GitBlitSuite.account,
+					GitBlitSuite.password.toCharArray());
 			assertTrue(feed != null);
 			assertTrue(feed.size() > 0);
 			assertEquals(5, feed.size());
-			for (FeedEntryModel entry : feed) {
+			for (final FeedEntryModel entry : feed) {
 				links.add(entry.link);
 			}
 		}

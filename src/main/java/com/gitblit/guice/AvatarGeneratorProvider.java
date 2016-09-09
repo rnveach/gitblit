@@ -29,7 +29,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 /**
- * Provides a lazily-instantiated AvatarGenerator configured from IStoredSettings.
+ * Provides a lazily-instantiated AvatarGenerator configured from
+ * IStoredSettings.
  *
  * @author James Moger
  *
@@ -50,22 +51,25 @@ public class AvatarGeneratorProvider implements Provider<AvatarGenerator> {
 
 	@Override
 	public synchronized AvatarGenerator get() {
-		if (avatarGenerator != null) {
-			return avatarGenerator;
+		if (this.avatarGenerator != null) {
+			return this.avatarGenerator;
 		}
 
-		IStoredSettings settings = runtimeManager.getSettings();
+		final IStoredSettings settings = this.runtimeManager.getSettings();
 		String clazz = settings.getString(Keys.web.avatarClass, GravatarGenerator.class.getName());
 		if (StringUtils.isEmpty(clazz)) {
 			clazz = GravatarGenerator.class.getName();
 		}
 		try {
-			Class<? extends AvatarGenerator> generatorClass = (Class<? extends AvatarGenerator>) Class.forName(clazz);
-			avatarGenerator = runtimeManager.getInjector().getInstance(generatorClass);
-		} catch (Exception e) {
-			logger.error("failed to create avatar generator", e);
-			avatarGenerator = new GravatarGenerator();
+			@SuppressWarnings("unchecked")
+			final Class<? extends AvatarGenerator> generatorClass = (Class<? extends AvatarGenerator>) Class
+					.forName(clazz);
+			this.avatarGenerator = this.runtimeManager.getInjector().getInstance(generatorClass);
 		}
-		return avatarGenerator;
+		catch (final Exception e) {
+			this.logger.error("failed to create avatar generator", e);
+			this.avatarGenerator = new GravatarGenerator();
+		}
+		return this.avatarGenerator;
 	}
 }

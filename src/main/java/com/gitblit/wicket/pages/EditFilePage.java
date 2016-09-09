@@ -15,7 +15,6 @@
  */
 package com.gitblit.wicket.pages;
 
-
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.HashSet;
@@ -46,8 +45,8 @@ import com.gitblit.utils.BugtraqProcessor;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.StringUtils;
 import com.gitblit.wicket.CacheControl;
-import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.CacheControl.LastModified;
+import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.MarkupProcessor;
 import com.gitblit.wicket.MarkupProcessor.MarkupDocument;
 import com.gitblit.wicket.WicketUtils;
@@ -58,14 +57,15 @@ public class EditFilePage extends RepositoryPage {
 	public EditFilePage(final PageParameters params) {
 		super(params);
 
-		final UserModel currentUser = (GitBlitWebSession.get().getUser() != null) ? GitBlitWebSession.get().getUser() : UserModel.ANONYMOUS;
-		
-		final String path = WicketUtils.getPath(params).replace("%2f", "/").replace("%2F", "/");
-		MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
+		final UserModel currentUser = (GitBlitWebSession.get().getUser() != null) ? GitBlitWebSession
+				.get().getUser() : UserModel.ANONYMOUS;
 
-		Repository r = getRepository();
-		RevCommit commit = JGitUtils.getCommit(r, objectId);
-		String [] encodings = getEncodings();
+		final String path = WicketUtils.getPath(params).replace("%2f", "/").replace("%2F", "/");
+		final MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
+
+		final Repository r = getRepository();
+		final RevCommit commit = JGitUtils.getCommit(r, this.objectId);
+		final String[] encodings = getEncodings();
 
 		// Read raw markup content and transform it to html
 		String documentPath = path;
@@ -73,11 +73,11 @@ public class EditFilePage extends RepositoryPage {
 
 		// Hunt for document
 		if (StringUtils.isEmpty(markupText)) {
-			String name = StringUtils.stripFileExtension(path);
+			final String name = StringUtils.stripFileExtension(path);
 
-			List<String> docExtensions = processor.getAllExtensions();
-			for (String ext : docExtensions) {
-				String checkName = name + "." + ext;
+			final List<String> docExtensions = processor.getAllExtensions();
+			for (final String ext : docExtensions) {
+				final String checkName = name + "." + ext;
 				markupText = JGitUtils.getStringContent(r, commit.getTree(), checkName, encodings);
 				if (!StringUtils.isEmpty(markupText)) {
 					// found it
@@ -91,22 +91,23 @@ public class EditFilePage extends RepositoryPage {
 			markupText = "";
 		}
 
-		BugtraqProcessor bugtraq = new BugtraqProcessor(app().settings());
-		markupText = bugtraq.processText(getRepository(), repositoryName, markupText);
+		final BugtraqProcessor bugtraq = new BugtraqProcessor(app().settings());
+		markupText = bugtraq.processText(getRepository(), this.repositoryName, markupText);
 
 		Fragment fragment;
-		String displayedCommitId = commit.getId().getName();
+		final String displayedCommitId = commit.getId().getName();
 
-		if (currentUser.canEdit(getRepositoryModel()) && JGitUtils.isTip(getRepository(), objectId.toString())) {
-			
+		if (currentUser.canEdit(getRepositoryModel())
+				&& JGitUtils.isTip(getRepository(), this.objectId.toString())) {
+
 			final Model<String> documentContent = new Model<String>(markupText);
 			final Model<String> commitMessage = new Model<String>("Document update");
 			final Model<String> commitIdAtLoad = new Model<String>(displayedCommitId);
-			
+
 			fragment = new Fragment("doc", "markupContent", this);
-			
-			Form<Void> form = new Form<Void>("documentEditor") {
-				
+
+			final Form<Void> form = new Form<Void>("documentEditor") {
+
 				private static final long serialVersionUID = 1L;
 
 				@Override
@@ -114,89 +115,100 @@ public class EditFilePage extends RepositoryPage {
 					final Repository repository = getRepository();
 					final String document = documentContent.getObject();
 					final String message = commitMessage.getObject();
-					
-					final String branchName = JGitUtils.getBranch(getRepository(), objectId).getName();
-					final String authorEmail = StringUtils.isEmpty(currentUser.emailAddress) ? (currentUser.username + "@gitblit") : currentUser.emailAddress;
-					
+
+					final String branchName = JGitUtils.getBranch(getRepository(),
+							EditFilePage.this.objectId).getName();
+					final String authorEmail = StringUtils.isEmpty(currentUser.emailAddress) ? (currentUser.username + "@gitblit")
+							: currentUser.emailAddress;
+
 					boolean success = false;
 
-					try {			
-						ObjectId docAtLoad = getRepository().resolve(commitIdAtLoad.getObject());
-						
-						logger.trace("Commiting Edit File page: " + commitIdAtLoad.getObject());
-						
-						DirCache index = DirCache.newInCore();
-						DirCacheBuilder builder = index.builder();
-						byte[] bytes = document.getBytes( Constants.ENCODING );
-						
+					try {
+						final ObjectId docAtLoad = getRepository().resolve(
+								commitIdAtLoad.getObject());
+
+						EditFilePage.this.logger.trace("Commiting Edit File page: "
+								+ commitIdAtLoad.getObject());
+
+						final DirCache index = DirCache.newInCore();
+						final DirCacheBuilder builder = index.builder();
+						final byte[] bytes = document.getBytes(Constants.ENCODING);
+
 						final DirCacheEntry fileUpdate = new DirCacheEntry(path);
 						fileUpdate.setLength(bytes.length);
 						fileUpdate.setLastModified(System.currentTimeMillis());
 						fileUpdate.setFileMode(FileMode.REGULAR_FILE);
-						fileUpdate.setObjectId(repository.newObjectInserter().insert( org.eclipse.jgit.lib.Constants.OBJ_BLOB, bytes ));
+						fileUpdate.setObjectId(repository.newObjectInserter().insert(
+								org.eclipse.jgit.lib.Constants.OBJ_BLOB, bytes));
 						builder.add(fileUpdate);
-						
-						Set<String> ignorePaths = new HashSet<String>();
+
+						final Set<String> ignorePaths = new HashSet<String>();
 						ignorePaths.add(path);
 
-						for (DirCacheEntry entry : JGitUtils.getTreeEntries(repository, branchName, ignorePaths)) {
+						for (final DirCacheEntry entry : JGitUtils.getTreeEntries(repository,
+								branchName, ignorePaths)) {
 							builder.add(entry);
 						}
-						
+
 						builder.finish();
-						
+
 						final boolean forceCommit = false;
-						
-						success = JGitUtils.commitIndex(repository,  branchName,  index, docAtLoad, forceCommit, currentUser.getDisplayName(), authorEmail, message);
-						
-					} catch (IOException | ConcurrentRefUpdateException e) {
+
+						success = JGitUtils.commitIndex(repository, branchName, index, docAtLoad,
+								forceCommit, currentUser.getDisplayName(), authorEmail, message);
+
+					}
+					catch (IOException | ConcurrentRefUpdateException e) {
 						e.printStackTrace();
 					}
-				
+
 					if (success == false) {
-						getSession().error(MessageFormat.format(getString("gb.fileNotMergeable"),path));
+						getSession().error(
+								MessageFormat.format(getString("gb.fileNotMergeable"), path));
 						return;
 					}
-					
-					getSession().info(MessageFormat.format(getString("gb.fileCommitted"),path));
+
+					getSession().info(MessageFormat.format(getString("gb.fileCommitted"), path));
 					setResponsePage(EditFilePage.class, params);
 				}
 			};
 
 			final TextArea<String> docIO = new TextArea<String>("content", documentContent);
 			docIO.setOutputMarkupId(false);
-			
-			form.add(new Label("commitAuthor", String.format("%s <%s>", currentUser.getDisplayName(), currentUser.emailAddress)));
+
+			form.add(new Label("commitAuthor", String.format("%s <%s>",
+					currentUser.getDisplayName(), currentUser.emailAddress)));
 			form.add(new TextArea<String>("commitMessage", commitMessage));
-			
-			
+
 			form.setOutputMarkupId(false);
 			form.add(docIO);
-			
+
 			addBottomScriptInline("attachDocumentEditor(document.querySelector('textarea#editor'), $('#commitDialog'));");
-			
-	        fragment.add(form);
-	        
+
+			fragment.add(form);
+
 		} else {
-			
-			MarkupDocument markupDoc = processor.parse(repositoryName, displayedCommitId, documentPath, markupText);
+
+			final MarkupDocument markupDoc = processor.parse(this.repositoryName,
+					displayedCommitId, documentPath, markupText);
 			final Model<String> documentContent = new Model<String>(markupDoc.html);
-			
+
 			fragment = new Fragment("doc", "plainContent", this);
-			
+
 			fragment.add(new Label("content", documentContent).setEscapeModelStrings(false));
 		}
 
 		// document page links
-		fragment.add(new BookmarkablePageLink<Void>("blameLink", BlamePage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, documentPath)));
-		fragment.add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, documentPath)));
-		String rawUrl = RawServlet.asLink(getContextUrl(), repositoryName, objectId, documentPath);
+		fragment.add(new BookmarkablePageLink<Void>("blameLink", BlamePage.class, WicketUtils
+				.newPathParameter(this.repositoryName, this.objectId, documentPath)));
+		fragment.add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class, WicketUtils
+				.newPathParameter(this.repositoryName, this.objectId, documentPath)));
+		final String rawUrl = RawServlet.asLink(getContextUrl(), this.repositoryName,
+				this.objectId, documentPath);
 		fragment.add(new ExternalLink("rawLink", rawUrl));
 
 		add(fragment);
-     
+
 	}
 
 	@Override
@@ -213,7 +225,5 @@ public class EditFilePage extends RepositoryPage {
 	protected Class<? extends BasePage> getRepoNavPageClass() {
 		return EditFilePage.class;
 	}
-	
-	
 
 }

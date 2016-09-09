@@ -28,7 +28,7 @@ import com.google.gson.GsonBuilder;
 
 /**
  * Simple AngularJS data controller which injects scoped objects as static,
- * embedded JSON within the generated page.  This allows use of AngularJS
+ * embedded JSON within the generated page. This allows use of AngularJS
  * client-side databinding (magic) with server-generated pages.
  *
  * @author James Moger
@@ -48,7 +48,7 @@ public class NgController implements IHeaderContributor {
 	}
 
 	public void addVariable(String name, Object o) {
-		variables.put(name,  o);
+		this.variables.put(name, o);
 	}
 
 	@Override
@@ -56,15 +56,15 @@ public class NgController implements IHeaderContributor {
 		// add Google AngularJS reference
 		response.renderJavascriptReference(new ResourceReference(NgController.class, "angular.js"));
 
-		Gson gson = new GsonBuilder().create();
+		final Gson gson = new GsonBuilder().create();
 
-		StringBuilder sb = new StringBuilder();
-		line(sb, MessageFormat.format("<!-- AngularJS {0} data controller -->", name));
-		line(sb, MessageFormat.format("function {0}($scope) '{'", name));
-		for (Map.Entry<String, Object> entry : variables.entrySet()) {
-			String var = entry.getKey();
-			Object o = entry.getValue();
-			String json = gson.toJson(o);
+		final StringBuilder sb = new StringBuilder();
+		line(sb, MessageFormat.format("<!-- AngularJS {0} data controller -->", this.name));
+		line(sb, MessageFormat.format("function {0}($scope) '{'", this.name));
+		for (final Map.Entry<String, Object> entry : this.variables.entrySet()) {
+			final String var = entry.getKey();
+			final Object o = entry.getValue();
+			final String json = gson.toJson(o);
 			line(sb, MessageFormat.format("\t$scope.{0} = {1};", var, json));
 		}
 		line(sb, "}");
@@ -72,7 +72,7 @@ public class NgController implements IHeaderContributor {
 		response.renderJavascript(sb.toString(), null);
 	}
 
-	private void line(StringBuilder sb, String line) {
+	private static void line(StringBuilder sb, String line) {
 		sb.append(line);
 		sb.append('\n');
 	}

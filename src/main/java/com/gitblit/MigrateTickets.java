@@ -51,15 +51,13 @@ import com.gitblit.utils.XssFilter.AllowXssFilter;
 public class MigrateTickets {
 
 	public static void main(String... args) {
-		MigrateTickets migrate = new MigrateTickets();
-
 		// filter out the baseFolder parameter
-		List<String> filtered = new ArrayList<String>();
+		final List<String> filtered = new ArrayList<String>();
 		String folder = "data";
 		for (int i = 0; i < args.length; i++) {
-			String arg = args[i];
+			final String arg = args[i];
 			if (arg.equals("--baseFolder")) {
-				if (i + 1 == args.length) {
+				if ((i + 1) == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
 					System.exit(-1);
 				} else if (!".".equals(args[i + 1])) {
@@ -72,16 +70,17 @@ public class MigrateTickets {
 		}
 
 		Params.baseFolder = folder;
-		Params params = new Params();
-		CmdLineParser parser = new CmdLineParser(params);
+		final Params params = new Params();
+		final CmdLineParser parser = new CmdLineParser(params);
 		try {
 			parser.parseArgument(filtered);
 			if (params.help) {
-				migrate.usage(parser, null);
+				MigrateTickets.usage(parser, null);
 				return;
 			}
-		} catch (CmdLineException t) {
-			migrate.usage(parser, t);
+		}
+		catch (final CmdLineException t) {
+			MigrateTickets.usage(parser, t);
 			return;
 		}
 
@@ -94,7 +93,7 @@ public class MigrateTickets {
 		}
 
 		// migrate tickets
-		migrate.migrate(new File(Params.baseFolder), settings, params.outputServiceName);
+		migrate(new File(Params.baseFolder), settings, params.outputServiceName);
 		System.exit(0);
 	}
 
@@ -104,7 +103,7 @@ public class MigrateTickets {
 	 * @param parser
 	 * @param t
 	 */
-	protected final void usage(CmdLineParser parser, CmdLineException t) {
+	private static final void usage(CmdLineParser parser, CmdLineException t) {
 		System.out.println(Constants.BORDER);
 		System.out.println(Constants.getGitBlitVersion());
 		System.out.println(Constants.BORDER);
@@ -128,7 +127,7 @@ public class MigrateTickets {
 	 * @param settings
 	 * @param outputServiceName
 	 */
-	protected void migrate(File baseFolder, IStoredSettings settings, String outputServiceName) {
+	private static void migrate(File baseFolder, IStoredSettings settings, String outputServiceName) {
 		// disable some services
 		settings.overrideSetting(Keys.web.allowLuceneIndexing, false);
 		settings.overrideSetting(Keys.git.enableGarbageCollection, false);
@@ -136,13 +135,17 @@ public class MigrateTickets {
 		settings.overrideSetting(Keys.web.activityCacheDays, 0);
 		settings.overrideSetting(ITicketService.SETTING_UPDATE_DIFFSTATS, false);
 
-		XssFilter xssFilter = new AllowXssFilter();
-		IRuntimeManager runtimeManager = new RuntimeManager(settings, xssFilter, baseFolder).start();
-		IRepositoryManager repositoryManager = new RepositoryManager(runtimeManager, null, null).start();
+		final XssFilter xssFilter = new AllowXssFilter();
+		final IRuntimeManager runtimeManager = new RuntimeManager(settings, xssFilter, baseFolder)
+				.start();
+		final IRepositoryManager repositoryManager = new RepositoryManager(runtimeManager, null,
+				null).start();
 
-		String inputServiceName = settings.getString(Keys.tickets.service, BranchTicketService.class.getSimpleName());
+		final String inputServiceName = settings.getString(Keys.tickets.service,
+				BranchTicketService.class.getSimpleName());
 		if (StringUtils.isEmpty(inputServiceName)) {
-			System.err.println(MessageFormat.format("Please define a ticket service in \"{0}\"", Keys.tickets.service));
+			System.err.println(MessageFormat.format("Please define a ticket service in \"{0}\"",
+					Keys.tickets.service));
 			System.exit(1);
 		}
 
@@ -151,28 +154,31 @@ public class MigrateTickets {
 		try {
 			inputService = getService(inputServiceName, runtimeManager, repositoryManager);
 			outputService = getService(outputServiceName, runtimeManager, repositoryManager);
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 
 		if (!inputService.isReady()) {
-			System.err.println(String.format("%s INPUT service is not ready, check config.", inputService.getClass().getSimpleName()));
+			System.err.println(String.format("%s INPUT service is not ready, check config.",
+					inputService.getClass().getSimpleName()));
 			System.exit(1);
 		}
 
 		if (!outputService.isReady()) {
-			System.err.println(String.format("%s OUTPUT service is not ready, check config.", outputService.getClass().getSimpleName()));
+			System.err.println(String.format("%s OUTPUT service is not ready, check config.",
+					outputService.getClass().getSimpleName()));
 			System.exit(1);
 		}
 
 		// migrate tickets
-		long start = System.nanoTime();
+		final long start = System.nanoTime();
 		long totalTickets = 0;
 		long totalChanges = 0;
-		for (RepositoryModel repository : repositoryManager.getRepositoryModels()) {
-			Set<Long> ids = inputService.getIds(repository);
-			if (ids == null || ids.isEmpty()) {
+		for (final RepositoryModel repository : repositoryManager.getRepositoryModels()) {
+			final Set<Long> ids = inputService.getIds(repository);
+			if ((ids == null) || ids.isEmpty()) {
 				// nothing to migrate
 				continue;
 			}
@@ -180,25 +186,30 @@ public class MigrateTickets {
 			// delete any tickets we may have in the output ticket service
 			outputService.deleteAll(repository);
 
-			for (long id : ids) {
-				List<Change> journal = inputService.getJournal(repository, id);
-				if (journal == null || journal.size() == 0) {
+			for (final long id : ids) {
+				final List<Change> journal = inputService.getJournal(repository, id);
+				if ((journal == null) || (journal.size() == 0)) {
 					continue;
 				}
-				TicketModel ticket = outputService.createTicket(repository, id, journal.get(0));
+				final TicketModel ticket = outputService.createTicket(repository, id,
+						journal.get(0));
 				if (ticket == null) {
-					System.err.println(String.format("Failed to migrate %s #%s", repository.name, id));
+					System.err.println(String.format("Failed to migrate %s #%s", repository.name,
+							id));
 					System.exit(1);
 				}
 				totalTickets++;
-				System.out.println(String.format("%s #%s: %s", repository.name, ticket.number, ticket.title));
+				System.out.println(String.format("%s #%s: %s", repository.name, ticket.number,
+						ticket.title));
 				for (int i = 1; i < journal.size(); i++) {
-					TicketModel updated = outputService.updateTicket(repository, ticket.number, journal.get(i));
+					final TicketModel updated = outputService.updateTicket(repository,
+							ticket.number, journal.get(i));
 					if (updated != null) {
 						System.out.println(String.format("   applied change %d", i));
 						totalChanges++;
 					} else {
-						System.err.println(String.format("Failed to apply change %d:\n%s", i, journal.get(i)));
+						System.err.println(String.format("Failed to apply change %d:\n%s", i,
+								journal.get(i)));
 						System.exit(1);
 					}
 				}
@@ -211,24 +222,29 @@ public class MigrateTickets {
 		repositoryManager.stop();
 		runtimeManager.stop();
 
-		long end = System.nanoTime();
+		final long end = System.nanoTime();
 
-		System.out.println(String.format("Migrated %d tickets composed of %d journal entries in %d seconds",
-				totalTickets, totalTickets + totalChanges, TimeUnit.NANOSECONDS.toSeconds(end - start)));
+		System.out.println(String.format(
+				"Migrated %d tickets composed of %d journal entries in %d seconds", totalTickets,
+				totalTickets + totalChanges, TimeUnit.NANOSECONDS.toSeconds(end - start)));
 	}
 
-	protected ITicketService getService(String serviceName, IRuntimeManager runtimeManager, IRepositoryManager repositoryManager) throws Exception {
+	private static ITicketService getService(String serviceName, IRuntimeManager runtimeManager,
+			IRepositoryManager repositoryManager) throws Exception {
 		ITicketService service = null;
-		Class<?> serviceClass = Class.forName(serviceName);
+		final Class<?> serviceClass = Class.forName(serviceName);
 		if (RedisTicketService.class.isAssignableFrom(serviceClass)) {
 			// Redis ticket service
-			service = new RedisTicketService(runtimeManager, null, null, null, repositoryManager).start();
+			service = new RedisTicketService(runtimeManager, null, null, null, repositoryManager)
+					.start();
 		} else if (BranchTicketService.class.isAssignableFrom(serviceClass)) {
 			// Branch ticket service
-			service = new BranchTicketService(runtimeManager, null, null, null, repositoryManager).start();
+			service = new BranchTicketService(runtimeManager, null, null, null, repositoryManager)
+					.start();
 		} else if (FileTicketService.class.isAssignableFrom(serviceClass)) {
 			// File ticket service
-			service = new FileTicketService(runtimeManager, null, null, null, repositoryManager).start();
+			service = new FileTicketService(runtimeManager, null, null, null, repositoryManager)
+					.start();
 		} else {
 			System.err.println("Unknown ticket service " + serviceName);
 		}
@@ -238,17 +254,19 @@ public class MigrateTickets {
 	/**
 	 * Parameters.
 	 */
-	public static class Params {
+	private static class Params {
 
 		public static String baseFolder;
 
-		@Option(name = "--help", aliases = { "-h"}, usage = "Show this help")
+		@Option(name = "--help", aliases = { "-h" }, usage = "Show this help")
 		public Boolean help = false;
 
-		private final FileSettings FILESETTINGS = new FileSettings(new File(baseFolder, Constants.PROPERTIES_FILE).getAbsolutePath());
+		private final FileSettings FILESETTINGS = new FileSettings(new File(baseFolder,
+				Constants.PROPERTIES_FILE).getAbsolutePath());
 
 		@Option(name = "--repositoriesFolder", usage = "Git Repositories Folder", metaVar = "PATH")
-		public String repositoriesFolder = FILESETTINGS.getString(Keys.git.repositoriesFolder, "git");
+		public String repositoriesFolder = this.FILESETTINGS.getString(Keys.git.repositoriesFolder,
+				"git");
 
 		@Option(name = "--settings", usage = "Path to alternative settings", metaVar = "FILE")
 		public String settingsfile;

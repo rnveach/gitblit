@@ -35,30 +35,33 @@ public class FanoutServiceTest extends GitblitUnitTest {
 
 	@Test
 	public void testNioPubSub() throws Exception {
-		testPubSub(new FanoutNioService(fanoutPort));
+		testPubSub(new FanoutNioService(this.fanoutPort));
 	}
 
 	@Test
 	public void testSocketPubSub() throws Exception {
-		testPubSub(new FanoutSocketService(fanoutPort));
+		testPubSub(new FanoutSocketService(this.fanoutPort));
 	}
 
 	@Test
 	public void testNioDisruptionAndRecovery() throws Exception {
-		testDisruption(new FanoutNioService(fanoutPort));
+		testDisruption(new FanoutNioService(this.fanoutPort));
 	}
 
 	@Test
 	public void testSocketDisruptionAndRecovery() throws Exception {
-		testDisruption(new FanoutSocketService(fanoutPort));
+		testDisruption(new FanoutSocketService(this.fanoutPort));
 	}
 
 	protected void testPubSub(FanoutService service) throws Exception {
-		System.out.println(MessageFormat.format("\n\n========================================\nPUBSUB TEST {0}\n========================================\n\n", service.toString()));
+		System.out
+				.println(MessageFormat
+						.format("\n\n========================================\nPUBSUB TEST {0}\n========================================\n\n",
+								service.toString()));
 		service.startSynchronously();
 
 		final Map<String, String> announcementsA = new ConcurrentHashMap<String, String>();
-		FanoutClient clientA = new FanoutClient("localhost", fanoutPort);
+		final FanoutClient clientA = new FanoutClient("localhost", this.fanoutPort);
 		clientA.addListener(new FanoutAdapter() {
 
 			@Override
@@ -70,7 +73,7 @@ public class FanoutServiceTest extends GitblitUnitTest {
 		clientA.startSynchronously();
 
 		final Map<String, String> announcementsB = new ConcurrentHashMap<String, String>();
-		FanoutClient clientB = new FanoutClient("localhost", fanoutPort);
+		final FanoutClient clientB = new FanoutClient("localhost", this.fanoutPort);
 		clientB.addListener(new FanoutAdapter() {
 			@Override
 			public void announcement(String channel, String message) {
@@ -78,7 +81,6 @@ public class FanoutServiceTest extends GitblitUnitTest {
 			}
 		});
 		clientB.startSynchronously();
-
 
 		// subscribe clients A and B to the channels
 		clientA.subscribe("a");
@@ -118,12 +120,15 @@ public class FanoutServiceTest extends GitblitUnitTest {
 		service.stop();
 	}
 
-	protected void testDisruption(FanoutService service) throws Exception  {
-		System.out.println(MessageFormat.format("\n\n========================================\nDISRUPTION TEST {0}\n========================================\n\n", service.toString()));
+	protected void testDisruption(FanoutService service) throws Exception {
+		System.out
+				.println(MessageFormat
+						.format("\n\n========================================\nDISRUPTION TEST {0}\n========================================\n\n",
+								service.toString()));
 		service.startSynchronously();
 
 		final AtomicInteger pongCount = new AtomicInteger(0);
-		FanoutClient client = new FanoutClient("localhost", fanoutPort);
+		final FanoutClient client = new FanoutClient("localhost", this.fanoutPort);
 		client.addListener(new FanoutAdapter() {
 			@Override
 			public void pong(Date timestamp) {

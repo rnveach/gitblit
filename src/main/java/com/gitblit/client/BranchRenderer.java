@@ -30,7 +30,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * @author James Moger
  *
  */
-public class BranchRenderer extends DefaultTableCellRenderer implements ListCellRenderer {
+public class BranchRenderer<E> extends DefaultTableCellRenderer implements ListCellRenderer<E> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -52,7 +52,7 @@ public class BranchRenderer extends DefaultTableCellRenderer implements ListCell
 	}
 
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value, int index,
+	public Component getListCellRendererComponent(JList<? extends E> list, E value, int index,
 			boolean isSelected, boolean cellHasFocus) {
 		setText(value == null ? "" : value.toString());
 		if (isSelected) {

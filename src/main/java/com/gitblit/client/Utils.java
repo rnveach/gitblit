@@ -52,17 +52,20 @@ public class Utils {
 		return newTable(model, datePattern, null);
 	}
 
-	public static JTable newTable(TableModel model, String datePattern, final RowRenderer rowRenderer) {
+	public static JTable newTable(TableModel model, String datePattern,
+			final RowRenderer rowRenderer) {
 		JTable table;
 		if (rowRenderer == null) {
 			table = new JTable(model);
 		} else {
 			table = new JTable(model) {
 
+				private static final long serialVersionUID = 1L;
+
 				@Override
 				public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-					Component c = super.prepareRenderer(renderer, row, column);
-					boolean isSelected = isCellSelected(row, column);
+					final Component c = super.prepareRenderer(renderer, row, column);
+					final boolean isSelected = isCellSelected(row, column);
 					rowRenderer.prepareRow(c, isSelected, row, column);
 					return c;
 				}
@@ -80,41 +83,42 @@ public class Utils {
 	}
 
 	public static void explainNotAllowed(Component c, RpcRequest request) {
-		String msg = MessageFormat.format("The Gitblit server does not allow the request \"{0}\".",
-				request.name());
+		final String msg = MessageFormat
+				.format("The Gitblit server does not allow the request \"{0}\".", request.name());
 		JOptionPane.showMessageDialog(c, msg, "Not Allowed", JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void explainForbidden(Component c, RpcRequest request) {
-		String msg = MessageFormat.format(
+		final String msg = MessageFormat.format(
 				"The request \"{0}\" has been forbidden for the account by the Gitblit server.",
 				request.name());
 		JOptionPane.showMessageDialog(c, msg, "Forbidden", JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void explainUnauthorized(Component c, RpcRequest request) {
-		String msg = MessageFormat.format(
+		final String msg = MessageFormat.format(
 				"This account is not authorized to execute the request \"{0}\".", request.name());
 		JOptionPane.showMessageDialog(c, msg, "Unauthorized", JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void explainUnknown(Component c, RpcRequest request) {
-		String msg = MessageFormat.format(
+		final String msg = MessageFormat.format(
 				"The request \"{0}\" is not recognized by the Gitblit server.", request.name());
 		JOptionPane.showMessageDialog(c, msg, "Unknown Request", JOptionPane.ERROR_MESSAGE);
 	}
 
 	public static void showException(Component c, Throwable t) {
-		StringWriter writer = new StringWriter();
+		final StringWriter writer = new StringWriter();
 		t.printStackTrace(new PrintWriter(writer));
-		String stacktrace = writer.toString();
+		final String stacktrace = writer.toString();
 		try {
 			writer.close();
-		} catch (Throwable x) {
 		}
-		JTextArea textArea = new JTextArea(stacktrace);
+		catch (final Throwable x) {
+		}
+		final JTextArea textArea = new JTextArea(stacktrace);
 		textArea.setFont(new Font("monospaced", Font.PLAIN, 11));
-		JScrollPane jsp = new JScrollPane(textArea);
+		final JScrollPane jsp = new JScrollPane(textArea);
 		jsp.setPreferredSize(new Dimension(800, 400));
 		JOptionPane.showMessageDialog(c, jsp, Translation.get("gb.error"),
 				JOptionPane.ERROR_MESSAGE);
@@ -131,8 +135,8 @@ public class Utils {
 	// widest cell in the column. margin pixels are added to the left and right
 	// (resulting in an additional width of 2*margin pixels).
 	private static void packColumn(JTable table, int vColIndex, int margin) {
-		DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
-		TableColumn col = colModel.getColumn(vColIndex);
+		final DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+		final TableColumn col = colModel.getColumn(vColIndex);
 		int width = 0;
 
 		// Get width of column header
@@ -162,7 +166,8 @@ public class Utils {
 	public static void browse(String url) {
 		try {
 			Desktop.getDesktop().browse(new URI(url));
-		} catch (Exception x) {
+		}
+		catch (final Exception x) {
 			showException(null, x);
 		}
 	}

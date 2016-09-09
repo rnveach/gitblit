@@ -21,7 +21,8 @@ import com.gitblit.models.TeamModel;
 import com.gitblit.models.UserModel;
 
 /**
- * Extension point to allow plugins to listen to major user and team lifecycle events.
+ * Extension point to allow plugins to listen to major user and team lifecycle
+ * events.
  *
  * @author James Moger
  * @since 1.6.0

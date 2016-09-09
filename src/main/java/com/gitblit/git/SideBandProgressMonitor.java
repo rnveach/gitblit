@@ -56,13 +56,13 @@ class SideBandProgressMonitor extends BatchingProgressMonitor {
 	private boolean write;
 
 	SideBandProgressMonitor(final OutputStream os) {
-		out = os;
-		write = true;
+		this.out = os;
+		this.write = true;
 	}
 
 	@Override
 	protected void onUpdate(String taskName, int workCurr) {
-		StringBuilder s = new StringBuilder();
+		final StringBuilder s = new StringBuilder();
 		format(s, taskName, workCurr);
 		s.append("   \r"); //$NON-NLS-1$
 		send(s);
@@ -70,13 +70,13 @@ class SideBandProgressMonitor extends BatchingProgressMonitor {
 
 	@Override
 	protected void onEndTask(String taskName, int workCurr) {
-		StringBuilder s = new StringBuilder();
+		final StringBuilder s = new StringBuilder();
 		format(s, taskName, workCurr);
 		s.append(", done\n"); //$NON-NLS-1$
 		send(s);
 	}
 
-	private void format(StringBuilder s, String taskName, int workCurr) {
+	private static void format(StringBuilder s, String taskName, int workCurr) {
 		s.append(taskName);
 		s.append(": "); //$NON-NLS-1$
 		s.append(workCurr);
@@ -84,7 +84,7 @@ class SideBandProgressMonitor extends BatchingProgressMonitor {
 
 	@Override
 	protected void onUpdate(String taskName, int cmp, int totalWork, int pcnt) {
-		StringBuilder s = new StringBuilder();
+		final StringBuilder s = new StringBuilder();
 		format(s, taskName, cmp, totalWork, pcnt);
 		s.append("   \r"); //$NON-NLS-1$
 		send(s);
@@ -92,20 +92,21 @@ class SideBandProgressMonitor extends BatchingProgressMonitor {
 
 	@Override
 	protected void onEndTask(String taskName, int cmp, int totalWork, int pcnt) {
-		StringBuilder s = new StringBuilder();
+		final StringBuilder s = new StringBuilder();
 		format(s, taskName, cmp, totalWork, pcnt);
 		s.append("\n"); //$NON-NLS-1$
 		send(s);
 	}
 
-	private void format(StringBuilder s, String taskName, int cmp,
-			int totalWork, int pcnt) {
+	private static void format(StringBuilder s, String taskName, int cmp, int totalWork, int pcnt) {
 		s.append(taskName);
 		s.append(": "); //$NON-NLS-1$
-		if (pcnt < 100)
+		if (pcnt < 100) {
 			s.append(' ');
-		if (pcnt < 10)
+		}
+		if (pcnt < 10) {
 			s.append(' ');
+		}
 		s.append(pcnt);
 		s.append("% ("); //$NON-NLS-1$
 		s.append(cmp);
@@ -115,12 +116,13 @@ class SideBandProgressMonitor extends BatchingProgressMonitor {
 	}
 
 	private void send(StringBuilder s) {
-		if (write) {
+		if (this.write) {
 			try {
-				out.write(Constants.encode(s.toString()));
-				out.flush();
-			} catch (IOException err) {
-				write = false;
+				this.out.write(Constants.encode(s.toString()));
+				this.out.flush();
+			}
+			catch (final IOException err) {
+				this.write = false;
 			}
 		}
 	}

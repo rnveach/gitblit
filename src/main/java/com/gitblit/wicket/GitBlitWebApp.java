@@ -134,23 +134,16 @@ public class GitBlitWebApp extends WebApplication implements GitblitWicketApp {
 	private final IGitblit gitblit;
 
 	private final IServicesManager services;
-	
+
 	private final IFilestoreManager filestoreManager;
 
 	@Inject
-	public GitBlitWebApp(
-			Provider<IPublicKeyManager> publicKeyManagerProvider,
-			Provider<ITicketService> ticketServiceProvider,
-			IRuntimeManager runtimeManager,
-			IPluginManager pluginManager,
-			INotificationManager notificationManager,
-			IUserManager userManager,
-			IAuthenticationManager authenticationManager,
-			IRepositoryManager repositoryManager,
-			IProjectManager projectManager,
-			IFederationManager federationManager,
-			IGitblit gitblit,
-			IServicesManager services,
+	public GitBlitWebApp(Provider<IPublicKeyManager> publicKeyManagerProvider,
+			Provider<ITicketService> ticketServiceProvider, IRuntimeManager runtimeManager,
+			IPluginManager pluginManager, INotificationManager notificationManager,
+			IUserManager userManager, IAuthenticationManager authenticationManager,
+			IRepositoryManager repositoryManager, IProjectManager projectManager,
+			IFederationManager federationManager, IGitblit gitblit, IServicesManager services,
 			IFilestoreManager filestoreManager) {
 
 		super();
@@ -176,16 +169,17 @@ public class GitBlitWebApp extends WebApplication implements GitblitWicketApp {
 		super.init();
 
 		// Setup page authorization mechanism
-		boolean useAuthentication = settings.getBoolean(Keys.web.authenticateViewPages, false)
-				|| settings.getBoolean(Keys.web.authenticateAdminPages, false);
+		final boolean useAuthentication = this.settings.getBoolean(Keys.web.authenticateViewPages,
+				false) || this.settings.getBoolean(Keys.web.authenticateAdminPages, false);
 		if (useAuthentication) {
-			AuthorizationStrategy authStrategy = new AuthorizationStrategy(settings, homePageClass);
+			final AuthorizationStrategy authStrategy = new AuthorizationStrategy(this.settings,
+					this.homePageClass);
 			getSecuritySettings().setAuthorizationStrategy(authStrategy);
 			getSecuritySettings().setUnauthorizedComponentInstantiationListener(authStrategy);
 		}
 
 		// Grab Browser info (like timezone, etc)
-		if (settings.getBoolean(Keys.web.useClientTimezone, false)) {
+		if (this.settings.getBoolean(Keys.web.useClientTimezone, false)) {
 			getRequestCycleSettings().setGatherExtendedBrowserInfo(true);
 		}
 
@@ -246,239 +240,287 @@ public class GitBlitWebApp extends WebApplication implements GitblitWicketApp {
 		mount("/user", UserPage.class, "user");
 		mount("/forks", ForksPage.class, "r");
 		mount("/fork", ForkPage.class, "r");
-		
+
 		// filestore URL
 		mount("/filestore", FilestorePage.class);
 
 		// allow started Wicket plugins to initialize
-		for (PluginWrapper pluginWrapper : pluginManager.getPlugins()) {
+		for (final PluginWrapper pluginWrapper : this.pluginManager.getPlugins()) {
 			if (PluginState.STARTED != pluginWrapper.getPluginState()) {
 				continue;
 			}
 			if (pluginWrapper.getPlugin() instanceof GitblitWicketPlugin) {
-				GitblitWicketPlugin wicketPlugin = (GitblitWicketPlugin) pluginWrapper.getPlugin();
+				final GitblitWicketPlugin wicketPlugin = (GitblitWicketPlugin) pluginWrapper
+						.getPlugin();
 				wicketPlugin.init(this);
 			}
 		}
 
-		 // customize the Wicket class resolver to load from plugins
-		IClassResolver coreResolver = getApplicationSettings().getClassResolver();
-        PluginClassResolver classResolver = new PluginClassResolver(coreResolver, pluginManager);
-        getApplicationSettings().setClassResolver(classResolver);
+		// customize the Wicket class resolver to load from plugins
+		final IClassResolver coreResolver = getApplicationSettings().getClassResolver();
+		final PluginClassResolver classResolver = new PluginClassResolver(coreResolver,
+				this.pluginManager);
+		getApplicationSettings().setClassResolver(classResolver);
 
 		getMarkupSettings().setDefaultMarkupEncoding("UTF-8");
 	}
 
-	/* (non-Javadoc)
-	 * @see com.gitblit.wicket.Webapp#mount(java.lang.String, java.lang.Class, java.lang.String)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see com.gitblit.wicket.Webapp#mount(java.lang.String, java.lang.Class,
+	 * java.lang.String)
 	 */
 	@Override
 	public void mount(String location, Class<? extends WebPage> clazz, String... parameters) {
 		if (parameters == null) {
 			parameters = new String[] {};
 		}
-		if (!settings.getBoolean(Keys.web.mountParameters, true)) {
+		if (!this.settings.getBoolean(Keys.web.mountParameters, true)) {
 			parameters = new String[] {};
 		}
-		mount(new GitblitParamUrlCodingStrategy(settings, xssFilter, location, clazz, parameters));
+		mount(new GitblitParamUrlCodingStrategy(this.settings, this.xssFilter, location, clazz,
+				parameters));
 
 		// map the mount point to the cache control definition
 		if (clazz.isAnnotationPresent(CacheControl.class)) {
-			CacheControl cacheControl = clazz.getAnnotation(CacheControl.class);
-			cacheablePages.put(location.substring(1), cacheControl);
+			final CacheControl cacheControl = clazz.getAnnotation(CacheControl.class);
+			this.cacheablePages.put(location.substring(1), cacheControl);
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#getHomePage()
 	 */
 	@Override
 	public Class<? extends WebPage> getHomePage() {
-		return homePageClass;
+		return this.homePageClass;
 	}
 
 	public Class<? extends WebPage> getNewRepositoryPage() {
-		return newRepositoryPageClass;
+		return this.newRepositoryPageClass;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#isCacheablePage(java.lang.String)
 	 */
 	@Override
 	public boolean isCacheablePage(String mountPoint) {
-		return cacheablePages.containsKey(mountPoint);
+		return this.cacheablePages.containsKey(mountPoint);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#getCacheControl(java.lang.String)
 	 */
 	@Override
 	public CacheControl getCacheControl(String mountPoint) {
-		return cacheablePages.get(mountPoint);
+		return this.cacheablePages.get(mountPoint);
 	}
 
 	@Override
 	public final Session newSession(Request request, Response response) {
-		GitBlitWebSession gitBlitWebSession = new GitBlitWebSession(request);
+		final GitBlitWebSession gitBlitWebSession = new GitBlitWebSession(request);
 
-		Locale forcedLocale = runtime().getLocale();
+		final Locale forcedLocale = runtime().getLocale();
 		if (forcedLocale != null) {
 			gitBlitWebSession.setLocale(forcedLocale);
 		}
 		return gitBlitWebSession;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#settings()
 	 */
 	@Override
 	public IStoredSettings settings() {
-		return settings;
+		return this.settings;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#xssFilter()
 	 */
 	@Override
 	public XssFilter xssFilter() {
-		return xssFilter;
+		return this.xssFilter;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#isDebugMode()
 	 */
 	@Override
 	public boolean isDebugMode() {
-		return runtimeManager.isDebugMode();
+		return this.runtimeManager.isDebugMode();
 	}
 
 	/*
-	 * These methods look strange... and they are... but they are the first
-	 * step towards modularization across multiple commits.
+	 * These methods look strange... and they are... but they are the first step
+	 * towards modularization across multiple commits.
 	 */
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#getBootDate()
 	 */
 	@Override
 	public Date getBootDate() {
-		return runtimeManager.getBootDate();
+		return this.runtimeManager.getBootDate();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#getLastActivityDate()
 	 */
 	@Override
 	public Date getLastActivityDate() {
-		return repositoryManager.getLastActivityDate();
+		return this.repositoryManager.getLastActivityDate();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#runtime()
 	 */
 	@Override
 	public IRuntimeManager runtime() {
-		return runtimeManager;
+		return this.runtimeManager;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#plugins()
 	 */
 	@Override
 	public IPluginManager plugins() {
-		return pluginManager;
+		return this.pluginManager;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#notifier()
 	 */
 	@Override
 	public INotificationManager notifier() {
-		return notificationManager;
+		return this.notificationManager;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#users()
 	 */
 	@Override
 	public IUserManager users() {
-		return userManager;
+		return this.userManager;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#authentication()
 	 */
 	@Override
 	public IAuthenticationManager authentication() {
-		return authenticationManager;
+		return this.authenticationManager;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#keys()
 	 */
 	@Override
 	public IPublicKeyManager keys() {
-		return publicKeyManagerProvider.get();
+		return this.publicKeyManagerProvider.get();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#repositories()
 	 */
 	@Override
 	public IRepositoryManager repositories() {
-		return repositoryManager;
+		return this.repositoryManager;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#projects()
 	 */
 	@Override
 	public IProjectManager projects() {
-		return projectManager;
+		return this.projectManager;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#federation()
 	 */
 	@Override
 	public IFederationManager federation() {
-		return federationManager;
+		return this.federationManager;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#gitblit()
 	 */
 	@Override
 	public IGitblit gitblit() {
-		return gitblit;
+		return this.gitblit;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#services()
 	 */
 	@Override
 	public IServicesManager services() {
-		return services;
+		return this.services;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#tickets()
 	 */
 	@Override
 	public ITicketService tickets() {
-		return ticketServiceProvider.get();
+		return this.ticketServiceProvider.get();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.wicket.Webapp#getTimezone()
 	 */
 	@Override
 	public TimeZone getTimezone() {
-		return runtimeManager.getTimezone();
+		return this.runtimeManager.getTimezone();
 	}
 
 	@Override
 	public final String getConfigurationType() {
-		if (runtimeManager.isDebugMode()) {
+		if (this.runtimeManager.isDebugMode()) {
 			return Application.DEVELOPMENT;
 		}
 		return Application.DEPLOYMENT;
@@ -490,6 +532,6 @@ public class GitBlitWebApp extends WebApplication implements GitblitWicketApp {
 
 	@Override
 	public IFilestoreManager filestore() {
-		return filestoreManager;
+		return this.filestoreManager;
 	}
 }

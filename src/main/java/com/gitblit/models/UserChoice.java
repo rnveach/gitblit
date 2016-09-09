@@ -83,30 +83,30 @@ public class UserChoice implements Serializable {
 	}
 
 	public String getDisplayName() {
-		return displayName;
+		return this.displayName;
 	}
 
 	public String getDisplayNameOrUserId() {
-		if (StringUtils.isEmpty(displayName)) {
-			return userId;
+		if (StringUtils.isEmpty(this.displayName)) {
+			return this.userId;
 		}
-		return displayName;
+		return this.displayName;
 	}
 
 	public String getUserId() {
-		return userId;
+		return this.userId;
 	}
 
 	public String getEmail() {
-		return email;
+		return this.email;
 	}
 
 	@Override
 	public String toString() {
-		String dn = getDisplayNameOrUserId();
-		if (dn.equals(userId)) {
+		final String dn = getDisplayNameOrUserId();
+		if (dn.equals(this.userId)) {
 			return dn;
 		}
-		return dn + " (" + userId + ")";
+		return dn + " (" + this.userId + ")";
 	}
 }

@@ -78,13 +78,14 @@ public class UserPage extends RootPage {
 	private void setup(PageParameters params) {
 		setupPage("", "");
 		// check to see if we should display a login message
-		boolean authenticateView = app().settings().getBoolean(Keys.web.authenticateViewPages, true);
+		final boolean authenticateView = app().settings().getBoolean(
+				Keys.web.authenticateViewPages, true);
 		if (authenticateView && !GitBlitWebSession.get().isLoggedIn()) {
 			authenticationError("Please login");
 			return;
 		}
 
-		String userName = WicketUtils.getUsername(params);
+		final String userName = WicketUtils.getUsername(params);
 		if (StringUtils.isEmpty(userName)) {
 			throw new GitblitRedirectException(GitBlitWebApp.get().getHomePage());
 		}
@@ -95,11 +96,10 @@ public class UserPage extends RootPage {
 			user = new UserModel(userName);
 		}
 
-
 		add(new UserTitlePanel("userTitlePanel", user, user.username));
 
-		UserModel sessionUser = GitBlitWebSession.get().getUser();
-		boolean isMyProfile = sessionUser != null && sessionUser.equals(user);
+		final UserModel sessionUser = GitBlitWebSession.get().getUser();
+		final boolean isMyProfile = (sessionUser != null) && sessionUser.equals(user);
 
 		if (isMyProfile) {
 			addPreferences(user);
@@ -121,7 +121,7 @@ public class UserPage extends RootPage {
 			add(new Label("sshKeysTab").setVisible(false));
 		}
 
-		List<RepositoryModel> repositories = getRepositories(params);
+		final List<RepositoryModel> repositories = getRepositories(params);
 
 		Collections.sort(repositories, new Comparator<RepositoryModel>() {
 			@Override
@@ -131,16 +131,19 @@ public class UserPage extends RootPage {
 			}
 		});
 
-		final ListDataProvider<RepositoryModel> dp = new ListDataProvider<RepositoryModel>(repositories);
-		DataView<RepositoryModel> dataView = new DataView<RepositoryModel>("repositoryList", dp) {
+		final ListDataProvider<RepositoryModel> dp = new ListDataProvider<RepositoryModel>(
+				repositories);
+		final DataView<RepositoryModel> dataView = new DataView<RepositoryModel>("repositoryList",
+				dp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<RepositoryModel> item) {
 				final RepositoryModel entry = item.getModelObject();
 
-				ProjectRepositoryPanel row = new ProjectRepositoryPanel("repository",
-						getLocalizer(), this, showAdmin, entry, getAccessRestrictions());
+				final ProjectRepositoryPanel row = new ProjectRepositoryPanel("repository",
+						getLocalizer(), this, UserPage.this.showAdmin, entry,
+						getAccessRestrictions());
 				item.add(row);
 			}
 		};
@@ -149,9 +152,9 @@ public class UserPage extends RootPage {
 
 	@Override
 	protected void addDropDownMenus(List<NavLink> navLinks) {
-		PageParameters params = getPageParameters();
+		final PageParameters params = getPageParameters();
 
-		DropDownPageMenuNavLink menu = new DropDownPageMenuNavLink("gb.filters",
+		final DropDownPageMenuNavLink menu = new DropDownPageMenuNavLink("gb.filters",
 				UserPage.class);
 		// preserve time filter option on repository choices
 		menu.menuItems.addAll(getRepositoryFilterItems(params));
@@ -169,32 +172,24 @@ public class UserPage extends RootPage {
 
 	private void addPreferences(UserModel user) {
 		// add preferences
-		Form<Void> prefs = new Form<Void>("prefsForm");
+		final Form<Void> prefs = new Form<Void>("prefsForm");
 
-		List<Language> languages = Arrays.asList(
-				new Language("Deutsch","de"),
-				new Language("English","en"),
-				new Language("Español", "es"),
-				new Language("Français", "fr"),
-				new Language("Italiano", "it"),
-				new Language("日本語", "ja"),
-				new Language("한국말", "ko"),
-				new Language("Nederlands", "nl"),
-				new Language("Norsk", "no"),
-				new Language("Język Polski", "pl"),
-				new Language("Português", "pt_BR"),
-				new Language("簡體中文", "zh_CN"),
-				new Language("正體中文", "zh_TW"));
+		final List<Language> languages = Arrays.asList(new Language("Deutsch", "de"), new Language(
+				"English", "en"), new Language("Español", "es"), new Language("Français", "fr"),
+				new Language("Italiano", "it"), new Language("日本語", "ja"),
+				new Language("한국말", "ko"), new Language("Nederlands", "nl"), new Language("Norsk",
+						"no"), new Language("Język Polski", "pl"), new Language("Português",
+						"pt_BR"), new Language("簡體中文", "zh_CN"), new Language("正體中文", "zh_TW"));
 
 		Locale locale = user.getPreferences().getLocale();
 		if (locale == null) {
 			// user has not specified language preference
 			// try server default preference
-			String lc = app().settings().getString(Keys.web.forceDefaultLocale, null);
+			final String lc = app().settings().getString(Keys.web.forceDefaultLocale, null);
 			if (StringUtils.isEmpty(lc)) {
 				// server default language is not configured
 				// try browser preference
-				Locale sessionLocale = GitBlitWebSession.get().getLocale();
+				final Locale sessionLocale = GitBlitWebSession.get().getLocale();
 				if (sessionLocale != null) {
 					locale = sessionLocale;
 				}
@@ -210,11 +205,12 @@ public class UserPage extends RootPage {
 				localeCode += "_" + locale.getCountry();
 			}
 
-			for (Language language : languages) {
+			for (final Language language : languages) {
 				if (language.code.equals(localeCode)) {
 					// language_COUNTRY match
 					preferredLanguage = language;
-				} else if (preferredLanguage != null && language.code.startsWith(locale.getLanguage())) {
+				} else if ((preferredLanguage != null)
+						&& language.code.startsWith(locale.getLanguage())) {
 					// language match
 					preferredLanguage = language;
 				}
@@ -222,33 +218,30 @@ public class UserPage extends RootPage {
 		}
 
 		final IModel<String> displayName = Model.of(user.getDisplayName());
-		final IModel<String> emailAddress = Model.of(user.emailAddress == null ? "" : user.emailAddress);
+		final IModel<String> emailAddress = Model.of(user.emailAddress == null ? ""
+				: user.emailAddress);
 		final IModel<Language> language = Model.of(preferredLanguage);
-		final IModel<Boolean> emailMeOnMyTicketChanges = Model.of(user.getPreferences().isEmailMeOnMyTicketChanges());
+		final IModel<Boolean> emailMeOnMyTicketChanges = Model.of(user.getPreferences()
+				.isEmailMeOnMyTicketChanges());
 		final IModel<Transport> transport = Model.of(user.getPreferences().getTransport());
 
-		prefs.add(new TextOption("displayName",
-				getString("gb.displayName"),
-				getString("gb.displayNameDescription"),
-				displayName).setVisible(app().authentication().supportsDisplayNameChanges(user)));
+		prefs.add(new TextOption("displayName", getString("gb.displayName"),
+				getString("gb.displayNameDescription"), displayName).setVisible(app()
+				.authentication().supportsDisplayNameChanges(user)));
 
-		prefs.add(new TextOption("emailAddress",
-				getString("gb.emailAddress"),
-				getString("gb.emailAddressDescription"),
-				emailAddress).setVisible(app().authentication().supportsEmailAddressChanges(user)));
+		prefs.add(new TextOption("emailAddress", getString("gb.emailAddress"),
+				getString("gb.emailAddressDescription"), emailAddress).setVisible(app()
+				.authentication().supportsEmailAddressChanges(user)));
 
-		prefs.add(new ChoiceOption<Language>("language",
-				getString("gb.languagePreference"),
-				getString("gb.languagePreferenceDescription"),
-				language,
-				languages));
+		prefs.add(new ChoiceOption<Language>("language", getString("gb.languagePreference"),
+				getString("gb.languagePreferenceDescription"), language, languages));
 
 		prefs.add(new BooleanOption("emailMeOnMyTicketChanges",
 				getString("gb.emailMeOnMyTicketChanges"),
-				getString("gb.emailMeOnMyTicketChangesDescription"),
-				emailMeOnMyTicketChanges).setVisible(app().notifier().isSendingMail()));
+				getString("gb.emailMeOnMyTicketChangesDescription"), emailMeOnMyTicketChanges)
+				.setVisible(app().notifier().isSendingMail()));
 
-		List<Transport> availableTransports = new ArrayList<>();
+		final List<Transport> availableTransports = new ArrayList<>();
 		if (app().services().isServingSSH()) {
 			availableTransports.add(Transport.SSH);
 		}
@@ -262,11 +255,8 @@ public class UserPage extends RootPage {
 			availableTransports.add(Transport.GIT);
 		}
 
-		prefs.add(new ChoiceOption<Transport>("transport",
-				getString("gb.transportPreference"),
-				getString("gb.transportPreferenceDescription"),
-				transport,
-				availableTransports));
+		prefs.add(new ChoiceOption<Transport>("transport", getString("gb.transportPreference"),
+				getString("gb.transportPreferenceDescription"), transport, availableTransports));
 
 		prefs.add(new AjaxButton("save") {
 
@@ -275,17 +265,18 @@ public class UserPage extends RootPage {
 			@Override
 			protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
 
-				UserModel user = GitBlitWebSession.get().getUser();
+				final UserModel user = GitBlitWebSession.get().getUser();
 
 				user.displayName = displayName.getObject();
 				user.emailAddress = emailAddress.getObject();
 
-				Language lang = language.getObject();
+				final Language lang = language.getObject();
 				if (lang != null) {
 					user.getPreferences().setLocale(lang.code);
 				}
 
-				user.getPreferences().setEmailMeOnMyTicketChanges(emailMeOnMyTicketChanges.getObject());
+				user.getPreferences().setEmailMeOnMyTicketChanges(
+						emailMeOnMyTicketChanges.getObject());
 				user.getPreferences().setTransport(transport.getObject());
 
 				try {
@@ -293,22 +284,25 @@ public class UserPage extends RootPage {
 
 					setRedirect(true);
 					setResponsePage(UserPage.class, WicketUtils.newUsernameParameter(user.username));
-				} catch (GitBlitException e) {
-					// logger.error("Failed to update user " + user.username, e);
+				}
+				catch (final GitBlitException e) {
+					// logger.error("Failed to update user " + user.username,
+					// e);
 					// error(getString("gb.failedToUpdateUser"), false);
 				}
 			}
 		});
 
 		// add the preferences tab
-		add(new Fragment("preferencesLink", "preferencesLinkFragment", this).setRenderBodyOnly(true));
-		Fragment fragment = new Fragment("preferencesTab", "preferencesTabFragment", this);
+		add(new Fragment("preferencesLink", "preferencesLinkFragment", this)
+				.setRenderBodyOnly(true));
+		final Fragment fragment = new Fragment("preferencesTab", "preferencesTabFragment", this);
 		fragment.add(prefs);
 		add(fragment.setRenderBodyOnly(true));
 	}
 
 	private void addSshKeys(final UserModel user) {
-		Fragment keysTab = new Fragment("sshKeysTab", "sshKeysTabFragment", this);
+		final Fragment keysTab = new Fragment("sshKeysTab", "sshKeysTabFragment", this);
 		keysTab.add(new SshKeysPanel("sshKeysPanel", user));
 
 		// add the SSH keys tab
@@ -330,7 +324,7 @@ public class UserPage extends RootPage {
 
 		@Override
 		public String toString() {
-			return name + " (" + code +")";
+			return this.name + " (" + this.code + ")";
 		}
 	}
 }

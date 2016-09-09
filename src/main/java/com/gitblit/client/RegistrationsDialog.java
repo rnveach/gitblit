@@ -79,8 +79,8 @@ public class RegistrationsDialog extends JDialog {
 
 	@Override
 	protected JRootPane createRootPane() {
-		KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
-		JRootPane rootPane = new JRootPane();
+		final KeyStroke stroke = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+		final JRootPane rootPane = new JRootPane();
 		rootPane.registerKeyboardAction(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -91,14 +91,14 @@ public class RegistrationsDialog extends JDialog {
 	}
 
 	private void initialize() {
-		NameRenderer nameRenderer = new NameRenderer();
-		model = new RegistrationsTableModel(registrations);
-		registrationsTable = Utils.newTable(model, Utils.DATE_FORMAT);
+		final NameRenderer nameRenderer = new NameRenderer();
+		this.model = new RegistrationsTableModel(this.registrations);
+		this.registrationsTable = Utils.newTable(this.model, Utils.DATE_FORMAT);
 
-		String id = registrationsTable
+		final String id = this.registrationsTable
 				.getColumnName(RegistrationsTableModel.Columns.Name.ordinal());
-		registrationsTable.getColumn(id).setCellRenderer(nameRenderer);
-		registrationsTable.addMouseListener(new MouseAdapter() {
+		this.registrationsTable.getColumn(id).setCellRenderer(nameRenderer);
+		this.registrationsTable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2) {
@@ -142,29 +142,31 @@ public class RegistrationsDialog extends JDialog {
 			}
 		});
 
-		registrationsTable.getSelectionModel().addListSelectionListener(
+		this.registrationsTable.getSelectionModel().addListSelectionListener(
 				new ListSelectionListener() {
 					@Override
 					public void valueChanged(ListSelectionEvent e) {
 						if (e.getValueIsAdjusting()) {
 							return;
 						}
-						boolean singleSelection = registrationsTable.getSelectedRowCount() == 1;
-						boolean selected = registrationsTable.getSelectedRow() > -1;
+						final boolean singleSelection = RegistrationsDialog.this.registrationsTable
+								.getSelectedRowCount() == 1;
+						final boolean selected = RegistrationsDialog.this.registrationsTable
+								.getSelectedRow() > -1;
 						login.setEnabled(singleSelection);
 						edit.setEnabled(singleSelection);
 						delete.setEnabled(selected);
 					}
 				});
 
-		JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
+		final JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
 		controls.add(create);
 		controls.add(login);
 		controls.add(edit);
 		controls.add(delete);
 
 		final Insets insets = new Insets(5, 5, 5, 5);
-		JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
+		final JPanel centerPanel = new JPanel(new BorderLayout(5, 5)) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -174,7 +176,7 @@ public class RegistrationsDialog extends JDialog {
 			}
 		};
 		centerPanel.add(new HeaderPanel(Translation.get("gb.servers"), null), BorderLayout.NORTH);
-		centerPanel.add(new JScrollPane(registrationsTable), BorderLayout.CENTER);
+		centerPanel.add(new JScrollPane(this.registrationsTable), BorderLayout.CENTER);
 		centerPanel.add(controls, BorderLayout.SOUTH);
 
 		getContentPane().setLayout(new BorderLayout(5, 5));
@@ -182,54 +184,54 @@ public class RegistrationsDialog extends JDialog {
 	}
 
 	private void login() {
-		int viewRow = registrationsTable.getSelectedRow();
-		int modelRow = registrationsTable.convertRowIndexToModel(viewRow);
-		GitblitRegistration reg = registrations.get(modelRow);
+		final int viewRow = this.registrationsTable.getSelectedRow();
+		final int modelRow = this.registrationsTable.convertRowIndexToModel(viewRow);
+		final GitblitRegistration reg = this.registrations.get(modelRow);
 		RegistrationsDialog.this.setVisible(false);
-		listener.login(reg);
+		this.listener.login(reg);
 	}
 
 	private void create() {
-		EditRegistrationDialog dialog = new EditRegistrationDialog(getOwner());
+		final EditRegistrationDialog dialog = new EditRegistrationDialog(getOwner());
 		dialog.setLocationRelativeTo(this);
 		dialog.setVisible(true);
-		GitblitRegistration reg = dialog.getRegistration();
+		final GitblitRegistration reg = dialog.getRegistration();
 		if (reg == null) {
 			return;
 		}
-		if (listener.saveRegistration(reg.name, reg)) {
-			model.list.add(reg);
-			model.fireTableDataChanged();
+		if (this.listener.saveRegistration(reg.name, reg)) {
+			this.model.list.add(reg);
+			this.model.fireTableDataChanged();
 		}
 	}
 
 	private void edit() {
-		int viewRow = registrationsTable.getSelectedRow();
-		int modelRow = registrationsTable.convertRowIndexToModel(viewRow);
-		GitblitRegistration reg = registrations.get(modelRow);
-		String originalName = reg.name;
-		EditRegistrationDialog dialog = new EditRegistrationDialog(getOwner(), reg, false);
+		final int viewRow = this.registrationsTable.getSelectedRow();
+		final int modelRow = this.registrationsTable.convertRowIndexToModel(viewRow);
+		GitblitRegistration reg = this.registrations.get(modelRow);
+		final String originalName = reg.name;
+		final EditRegistrationDialog dialog = new EditRegistrationDialog(getOwner(), reg, false);
 		dialog.setLocationRelativeTo(this);
 		dialog.setVisible(true);
 		reg = dialog.getRegistration();
 		if (reg == null) {
 			return;
 		}
-		if (listener.saveRegistration(originalName, reg)) {
-			model.fireTableDataChanged();
+		if (this.listener.saveRegistration(originalName, reg)) {
+			this.model.fireTableDataChanged();
 		}
 	}
 
 	private void delete() {
-		List<GitblitRegistration> list = new ArrayList<GitblitRegistration>();
-		for (int i : registrationsTable.getSelectedRows()) {
-			int model = registrationsTable.convertRowIndexToModel(i);
-			GitblitRegistration reg = registrations.get(model);
+		final List<GitblitRegistration> list = new ArrayList<GitblitRegistration>();
+		for (final int i : this.registrationsTable.getSelectedRows()) {
+			final int model = this.registrationsTable.convertRowIndexToModel(i);
+			final GitblitRegistration reg = this.registrations.get(model);
 			list.add(reg);
 		}
-		if (listener.deleteRegistrations(list)) {
-			registrations.removeAll(list);
-			model.fireTableDataChanged();
+		if (this.listener.deleteRegistrations(list)) {
+			this.registrations.removeAll(list);
+			this.model.fireTableDataChanged();
 		}
 	}
 }

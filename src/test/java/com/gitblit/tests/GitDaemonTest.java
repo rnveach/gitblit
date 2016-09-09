@@ -92,13 +92,13 @@ public class GitDaemonTest extends GitblitUnitTest {
 		}
 
 		// set push restriction
-		RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
+		final RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
 		model.accessRestriction = AccessRestrictionType.PUSH;
 		model.authorizationControl = AuthorizationControl.NAMED;
 		repositories().updateRepositoryModel(model.name, model, false);
 
-		CloneCommand clone = Git.cloneRepository();
-		clone.setURI(MessageFormat.format("{0}/ticgit.git", url));
+		final CloneCommand clone = Git.cloneRepository();
+		clone.setURI(MessageFormat.format("{0}/ticgit.git", this.url));
 		clone.setDirectory(ticgitFolder);
 		clone.setBare(false);
 		clone.setCloneAllBranches(true);
@@ -119,7 +119,7 @@ public class GitDaemonTest extends GitblitUnitTest {
 		}
 
 		// restrict repository access
-		RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
+		final RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
 		model.accessRestriction = AccessRestrictionType.CLONE;
 		model.authorizationControl = AuthorizationControl.NAMED;
 		repositories().updateRepositoryModel(model.name, model, false);
@@ -127,14 +127,15 @@ public class GitDaemonTest extends GitblitUnitTest {
 		// delete any existing working folder
 		boolean cloned = false;
 		try {
-			CloneCommand clone = Git.cloneRepository();
-			clone.setURI(MessageFormat.format("{0}/ticgit.git", url));
+			final CloneCommand clone = Git.cloneRepository();
+			clone.setURI(MessageFormat.format("{0}/ticgit.git", this.url));
 			clone.setDirectory(ticgit2Folder);
 			clone.setBare(false);
 			clone.setCloneAllBranches(true);
 			GitBlitSuite.close(clone.call());
 			cloned = true;
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			// swallow the exception which we expect
 		}
 
@@ -156,31 +157,32 @@ public class GitDaemonTest extends GitblitUnitTest {
 		}
 
 		// restore anonymous repository access
-		RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
+		final RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
 		model.accessRestriction = AccessRestrictionType.NONE;
 		model.authorizationControl = AuthorizationControl.NAMED;
 		repositories().updateRepositoryModel(model.name, model, false);
 
-		CloneCommand clone = Git.cloneRepository();
-		clone.setURI(MessageFormat.format("{0}/ticgit.git", url));
+		final CloneCommand clone = Git.cloneRepository();
+		clone.setURI(MessageFormat.format("{0}/ticgit.git", this.url));
 		clone.setDirectory(ticgitFolder);
 		clone.setBare(false);
 		clone.setCloneAllBranches(true);
 		GitBlitSuite.close(clone.call());
 		assertTrue(true);
 
-		Git git = Git.open(ticgitFolder);
-		File file = new File(ticgitFolder, "TODO");
-		OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file, true), Constants.CHARSET);
-		BufferedWriter w = new BufferedWriter(os);
+		final Git git = Git.open(ticgitFolder);
+		final File file = new File(ticgitFolder, "TODO");
+		final OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file, true),
+				Constants.CHARSET);
+		final BufferedWriter w = new BufferedWriter(os);
 		w.write("// hellol中文 " + new Date().toString() + "\n");
 		w.close();
 		git.add().addFilepattern(file.getName()).call();
 		git.commit().setMessage("test commit").call();
-		Iterable<PushResult> results = git.push().setPushAll().call();
+		final Iterable<PushResult> results = git.push().setPushAll().call();
 		GitBlitSuite.close(git);
-		for (PushResult result : results) {
-			for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+		for (final PushResult result : results) {
+			for (final RemoteRefUpdate update : result.getRemoteUpdates()) {
 				assertEquals(Status.OK, update.getStatus());
 			}
 		}
@@ -194,31 +196,32 @@ public class GitDaemonTest extends GitblitUnitTest {
 		}
 
 		// restore anonymous repository access
-		RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
+		final RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
 		model.accessRestriction = AccessRestrictionType.PUSH;
 		model.authorizationControl = AuthorizationControl.NAMED;
 		repositories().updateRepositoryModel(model.name, model, false);
 
-		CloneCommand clone = Git.cloneRepository();
-		clone.setURI(MessageFormat.format("{0}/ticgit.git", url));
+		final CloneCommand clone = Git.cloneRepository();
+		clone.setURI(MessageFormat.format("{0}/ticgit.git", this.url));
 		clone.setDirectory(ticgitFolder);
 		clone.setBare(false);
 		clone.setCloneAllBranches(true);
 		GitBlitSuite.close(clone.call());
 		assertTrue(true);
 
-		Git git = Git.open(ticgitFolder);
-		File file = new File(ticgitFolder, "TODO");
-		OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file, true), Constants.CHARSET);
-		BufferedWriter w = new BufferedWriter(os);
+		final Git git = Git.open(ticgitFolder);
+		final File file = new File(ticgitFolder, "TODO");
+		final OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file, true),
+				Constants.CHARSET);
+		final BufferedWriter w = new BufferedWriter(os);
 		w.write("// hellol中文 " + new Date().toString() + "\n");
 		w.close();
 		git.add().addFilepattern(file.getName()).call();
 		git.commit().setMessage("test commit").call();
-		Iterable<PushResult> results = git.push().setPushAll().call();
+		final Iterable<PushResult> results = git.push().setPushAll().call();
 		GitBlitSuite.close(git);
-		for (PushResult result : results) {
-			for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+		for (final PushResult result : results) {
+			for (final RemoteRefUpdate update : result.getRemoteUpdates()) {
 				assertEquals(Status.REJECTED_OTHER_REASON, update.getStatus());
 			}
 		}
@@ -231,8 +234,8 @@ public class GitDaemonTest extends GitblitUnitTest {
 			FileUtils.delete(jgitFolder, FileUtils.RECURSIVE | FileUtils.RETRY);
 		}
 
-		CloneCommand clone = Git.cloneRepository();
-		clone.setURI(MessageFormat.format("{0}/test/jgit.git", url));
+		final CloneCommand clone = Git.cloneRepository();
+		clone.setURI(MessageFormat.format("{0}/test/jgit.git", this.url));
 		clone.setDirectory(jgitFolder);
 		clone.setBare(false);
 		clone.setCloneAllBranches(true);
@@ -240,22 +243,23 @@ public class GitDaemonTest extends GitblitUnitTest {
 		assertTrue(true);
 
 		// freeze repo
-		RepositoryModel model = repositories().getRepositoryModel("test/jgit.git");
+		final RepositoryModel model = repositories().getRepositoryModel("test/jgit.git");
 		model.isFrozen = true;
 		repositories().updateRepositoryModel(model.name, model, false);
 
-		Git git = Git.open(jgitFolder);
-		File file = new File(jgitFolder, "TODO");
-		OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file, true), Constants.CHARSET);
-		BufferedWriter w = new BufferedWriter(os);
+		final Git git = Git.open(jgitFolder);
+		final File file = new File(jgitFolder, "TODO");
+		final OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file, true),
+				Constants.CHARSET);
+		final BufferedWriter w = new BufferedWriter(os);
 		w.write("// " + new Date().toString() + "\n");
 		w.close();
 		git.add().addFilepattern(file.getName()).call();
 		git.commit().setMessage("test commit").call();
 
 		Iterable<PushResult> results = git.push().call();
-		for (PushResult result : results) {
-			for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+		for (final PushResult result : results) {
+			for (final RemoteRefUpdate update : result.getRemoteUpdates()) {
 				assertEquals(Status.REJECTED_OTHER_REASON, update.getStatus());
 			}
 		}
@@ -266,8 +270,8 @@ public class GitDaemonTest extends GitblitUnitTest {
 
 		results = git.push().setPushAll().call();
 		GitBlitSuite.close(git);
-		for (PushResult result : results) {
-			for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+		for (final PushResult result : results) {
+			for (final RemoteRefUpdate update : result.getRemoteUpdates()) {
 				assertEquals(Status.OK, update.getStatus());
 			}
 		}
@@ -280,28 +284,29 @@ public class GitDaemonTest extends GitblitUnitTest {
 			FileUtils.delete(jgit2Folder, FileUtils.RECURSIVE | FileUtils.RETRY);
 		}
 
-		CloneCommand clone = Git.cloneRepository();
-		clone.setURI(MessageFormat.format("{0}/working/jgit", url));
+		final CloneCommand clone = Git.cloneRepository();
+		clone.setURI(MessageFormat.format("{0}/working/jgit", this.url));
 		clone.setDirectory(jgit2Folder);
 		clone.setBare(false);
 		clone.setCloneAllBranches(true);
 		GitBlitSuite.close(clone.call());
 		assertTrue(true);
 
-		Git git = Git.open(jgit2Folder);
-		File file = new File(jgit2Folder, "NONBARE");
-		OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file, true), Constants.CHARSET);
-		BufferedWriter w = new BufferedWriter(os);
+		final Git git = Git.open(jgit2Folder);
+		final File file = new File(jgit2Folder, "NONBARE");
+		final OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(file, true),
+				Constants.CHARSET);
+		final BufferedWriter w = new BufferedWriter(os);
 		w.write("// " + new Date().toString() + "\n");
 		w.close();
 		git.add().addFilepattern(file.getName()).call();
 		git.commit().setMessage("test commit followed by push to non-bare repository").call();
 
-		Iterable<PushResult> results = git.push().setPushAll().call();
+		final Iterable<PushResult> results = git.push().setPushAll().call();
 		GitBlitSuite.close(git);
 
-		for (PushResult result : results) {
-			for (RemoteRefUpdate update : result.getRemoteUpdates()) {
+		for (final PushResult result : results) {
+			for (final RemoteRefUpdate update : result.getRemoteUpdates()) {
 				assertEquals(Status.REJECTED_OTHER_REASON, update.getStatus());
 			}
 		}

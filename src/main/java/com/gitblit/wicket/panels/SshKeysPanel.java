@@ -36,7 +36,6 @@ import com.gitblit.transport.ssh.SshKey;
 import com.gitblit.utils.StringUtils;
 import com.gitblit.wicket.GitBlitWebSession;
 
-
 /**
  * A panel that enumerates and manages SSH public keys using AJAX.
  *
@@ -61,7 +60,7 @@ public class SshKeysPanel extends BasePanel {
 
 		setOutputMarkupId(true);
 
-		final List<SshKey> keys = new ArrayList<SshKey>(app().keys().getKeys(user.username));
+		final List<SshKey> keys = new ArrayList<SshKey>(app().keys().getKeys(this.user.username));
 		final ListDataProvider<SshKey> dp = new ListDataProvider<SshKey>(keys);
 		final DataView<SshKey> keysView = new DataView<SshKey>("keys", dp) {
 			private static final long serialVersionUID = 1L;
@@ -74,16 +73,16 @@ public class SshKeysPanel extends BasePanel {
 				item.add(new Label("permission", key.getPermission().toString()));
 				item.add(new Label("algorithm", key.getAlgorithm()));
 
-				AjaxLink<Void> delete = new AjaxLink<Void>("delete") {
+				final AjaxLink<Void> delete = new AjaxLink<Void>("delete") {
 
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					public void onClick(AjaxRequestTarget target) {
-						if (app().keys().removeKey(user.username, key)) {
+						if (app().keys().removeKey(SshKeysPanel.this.user.username, key)) {
 							// reset the keys list
 							keys.clear();
-							keys.addAll(app().keys().getKeys(user.username));
+							keys.addAll(app().keys().getKeys(SshKeysPanel.this.user.username));
 
 							// update the panel
 							target.addComponent(SshKeysPanel.this);
@@ -95,28 +94,20 @@ public class SshKeysPanel extends BasePanel {
 		};
 		add(keysView);
 
-		Form<Void> addKeyForm = new Form<Void>("addKeyForm");
+		final Form<Void> addKeyForm = new Form<Void>("addKeyForm");
 
 		final IModel<String> keyData = Model.of("");
-		addKeyForm.add(new TextAreaOption("addKeyData",
-				getString("gb.key"),
-				null,
-				"span5",
-				keyData));
+		addKeyForm
+				.add(new TextAreaOption("addKeyData", getString("gb.key"), null, "span5", keyData));
 
 		final IModel<AccessPermission> keyPermission = Model.of(AccessPermission.PUSH);
 		addKeyForm.add(new ChoiceOption<AccessPermission>("addKeyPermission",
-				getString("gb.permission"),
-				getString("gb.sshKeyPermissionDescription"),
-				keyPermission,
-				Arrays.asList(AccessPermission.SSHPERMISSIONS)));
+				getString("gb.permission"), getString("gb.sshKeyPermissionDescription"),
+				keyPermission, Arrays.asList(AccessPermission.SSHPERMISSIONS)));
 
 		final IModel<String> keyComment = Model.of("");
-		addKeyForm.add(new TextOption("addKeyComment",
-				getString("gb.comment"),
-				getString("gb.sshKeyCommentDescription"),
-				"span5",
-				keyComment));
+		addKeyForm.add(new TextOption("addKeyComment", getString("gb.comment"),
+				getString("gb.sshKeyCommentDescription"), "span5", keyComment));
 
 		addKeyForm.add(new AjaxButton("addKeyButton") {
 
@@ -125,25 +116,26 @@ public class SshKeysPanel extends BasePanel {
 			@Override
 			protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
 
-				UserModel user = GitBlitWebSession.get().getUser();
-				String data = keyData.getObject();
+				final UserModel user = GitBlitWebSession.get().getUser();
+				final String data = keyData.getObject();
 				if (StringUtils.isEmpty(data)) {
 					// do not submit empty key
 					return;
 				}
 
-				SshKey key = new SshKey(data);
+				final SshKey key = new SshKey(data);
 				try {
 					key.getPublicKey();
-				} catch (Exception e) {
+				}
+				catch (final Exception e) {
 					// failed to parse the key
 					return;
 				}
 
-				AccessPermission permission = keyPermission.getObject();
+				final AccessPermission permission = keyPermission.getObject();
 				key.setPermission(permission);
 
-				String comment  = keyComment.getObject();
+				final String comment = keyComment.getObject();
 				if (!StringUtils.isEmpty(comment)) {
 					key.setComment(comment);
 				}

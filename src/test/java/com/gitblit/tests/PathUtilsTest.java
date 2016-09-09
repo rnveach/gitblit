@@ -15,10 +15,11 @@
  */
 package com.gitblit.tests;
 
-import com.gitblit.utils.PathUtils;
+import java.util.Arrays;
+
 import org.junit.Test;
 
-import java.util.Arrays;
+import com.gitblit.utils.PathUtils;
 
 public class PathUtilsTest extends GitblitUnitTest {
 
@@ -26,30 +27,23 @@ public class PathUtilsTest extends GitblitUnitTest {
 
 			{
 					// Folder contents
-					{".gitignore","src/main/java/a.java", "src/main/java/b.java", "docs/c.md"},
+					{ ".gitignore", "src/main/java/a.java", "src/main/java/b.java", "docs/c.md" },
 					// Expected after compressing
-					{".gitignore", "src/main/java/", "docs/"}
-			},
+					{ ".gitignore", "src/main/java/", "docs/" } },
+
+			{ { ".gitignore", "src/main/java/a.java", "src/main/b.java", "docs/c.md" },
+					{ ".gitignore", "src/main/", "docs/" } },
 
 			{
-					{".gitignore","src/main/java/a.java", "src/main/b.java", "docs/c.md"},
-					{".gitignore", "src/main/", "docs/"}
-			},
-
-			{
-					{".gitignore","src/x.java","src/main/java/a.java", "src/main/java/b.java", "docs/c.md"},
-					{".gitignore", "src/", "docs/"}
-			},
-	};
-
-
-
+					{ ".gitignore", "src/x.java", "src/main/java/a.java", "src/main/java/b.java",
+							"docs/c.md" }, { ".gitignore", "src/", "docs/" } }, };
 
 	@Test
-	public void testCompressPaths() throws Exception {
+	public void testCompressPaths() {
 
-		for (String[][] test : testData ) {
-			assertArrayEquals(test[1], PathUtils.compressPaths(Arrays.asList(test[0])).toArray(new String[]{}));
+		for (final String[][] test : testData) {
+			assertArrayEquals(test[1],
+					PathUtils.compressPaths(Arrays.asList(test[0])).toArray(new String[] {}));
 		}
 
 	}

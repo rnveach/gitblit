@@ -29,7 +29,7 @@ public class JsonUtilsTest extends GitblitUnitTest {
 
 	@Test
 	public void testSerialization() {
-		Map<String, String> map = new HashMap<String, String>();
+		final Map<String, String> map = new HashMap<String, String>();
 		map.put("a", "alligator");
 		map.put("b", "bear");
 		map.put("c", "caterpillar");
@@ -39,16 +39,16 @@ public class JsonUtilsTest extends GitblitUnitTest {
 		assertEquals(
 				"{\"d\":\"dingo\",\"e\":\"eagle\",\"b\":\"bear\",\"c\":\"caterpillar\",\"a\":\"alligator\"}",
 				json);
-		Map<String, String> map2 = JsonUtils.fromJsonString(json,
+		final Map<String, String> map2 = JsonUtils.fromJsonString(json,
 				new TypeToken<Map<String, String>>() {
 				}.getType());
 		assertEquals(map, map2);
 
-		SomeJsonObject someJson = new SomeJsonObject();
+		final SomeJsonObject someJson = new SomeJsonObject();
 		json = JsonUtils.toJsonString(someJson);
-		SomeJsonObject someJson2 = JsonUtils.fromJsonString(json, SomeJsonObject.class);
+		final SomeJsonObject someJson2 = JsonUtils.fromJsonString(json, SomeJsonObject.class);
 		assertEquals(someJson.name, someJson2.name);
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd HHmmss");
+		final SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd HHmmss");
 		assertEquals(df.format(someJson.date), df.format(someJson2.date));
 	}
 

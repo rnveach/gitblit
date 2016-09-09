@@ -47,9 +47,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 /**
- * Implementation of a ticket service based on a Redis key-value store.  All
+ * Implementation of a ticket service based on a Redis key-value store. All
  * tickets are persisted in the Redis store so it must be configured for
- * durability otherwise tickets are lost on a flush or restart.  Tickets are
+ * durability otherwise tickets are lost on a flush or restart. Tickets are
  * indexed with Lucene and all queries are executed against the Lucene index.
  *
  * @author James Moger
@@ -61,32 +61,27 @@ public class RedisTicketService extends ITicketService {
 	private final JedisPool pool;
 
 	private enum KeyType {
-		journal, ticket, counter
+		journal,
+		ticket,
+		counter
 	}
 
 	@Inject
-	public RedisTicketService(
-			IRuntimeManager runtimeManager,
-			IPluginManager pluginManager,
-			INotificationManager notificationManager,
-			IUserManager userManager,
+	public RedisTicketService(IRuntimeManager runtimeManager, IPluginManager pluginManager,
+			INotificationManager notificationManager, IUserManager userManager,
 			IRepositoryManager repositoryManager) {
 
-		super(runtimeManager,
-				pluginManager,
-				notificationManager,
-				userManager,
-				repositoryManager);
+		super(runtimeManager, pluginManager, notificationManager, userManager, repositoryManager);
 
-		String redisUrl = settings.getString(Keys.tickets.redis.url, "");
+		final String redisUrl = this.settings.getString(Keys.tickets.redis.url, "");
 		this.pool = createPool(redisUrl);
 	}
 
 	@Override
 	public RedisTicketService start() {
-		log.info("{} started", getClass().getSimpleName());
+		this.log.info("{} started", getClass().getSimpleName());
 		if (!isReady()) {
-			log.warn("{} is not ready!", getClass().getSimpleName());
+			this.log.warn("{} is not ready!", getClass().getSimpleName());
 		}
 		return this;
 	}
@@ -101,12 +96,12 @@ public class RedisTicketService extends ITicketService {
 
 	@Override
 	protected void close() {
-		pool.destroy();
+		this.pool.destroy();
 	}
 
 	@Override
 	public boolean isReady() {
-		return pool != null;
+		return this.pool != null;
 	}
 
 	/**
@@ -117,8 +112,8 @@ public class RedisTicketService extends ITicketService {
 	 * @param id
 	 * @return a key
 	 */
-	private String key(RepositoryModel repository, KeyType key, String id) {
-		StringBuilder sb = new StringBuilder();
+	private static String key(RepositoryModel repository, KeyType key, String id) {
+		final StringBuilder sb = new StringBuilder();
 		sb.append(repository.name).append(':');
 		sb.append(key.name());
 		if (!StringUtils.isEmpty(id)) {
@@ -136,27 +131,29 @@ public class RedisTicketService extends ITicketService {
 	 * @param id
 	 * @return a key
 	 */
-	private String key(RepositoryModel repository, KeyType key, long id) {
+	private static String key(RepositoryModel repository, KeyType key, long id) {
 		return key(repository, key, "" + id);
 	}
 
-	private boolean isNull(String value) {
-		return value == null || "nil".equals(value);
+	private static boolean isNull(String value) {
+		return (value == null) || "nil".equals(value);
 	}
 
 	private String getUrl() {
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		try {
 			if (jedis != null) {
-				Client client = jedis.getClient();
+				final Client client = jedis.getClient();
 				return client.getHost() + ":" + client.getPort() + "/" + client.getDB();
 			}
-		} catch (JedisException e) {
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return null;
@@ -174,20 +171,22 @@ public class RedisTicketService extends ITicketService {
 		if (ticketId <= 0L) {
 			return false;
 		}
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		if (jedis == null) {
 			return false;
 		}
 		try {
-			Boolean exists = jedis.exists(key(repository, KeyType.journal, ticketId));
-			return exists != null && exists;
-		} catch (JedisException e) {
-			log.error("failed to check hasTicket from Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+			final Boolean exists = jedis.exists(key(repository, KeyType.journal, ticketId));
+			return (exists != null) && exists;
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to check hasTicket from Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return false;
@@ -195,23 +194,25 @@ public class RedisTicketService extends ITicketService {
 
 	@Override
 	public Set<Long> getIds(RepositoryModel repository) {
-		Set<Long> ids = new TreeSet<Long>();
-		Jedis jedis = pool.getResource();
+		final Set<Long> ids = new TreeSet<Long>();
+		Jedis jedis = this.pool.getResource();
 		try {// account for migrated tickets
-			Set<String> keys = jedis.keys(key(repository, KeyType.journal, "*"));
-			for (String tkey : keys) {
+			final Set<String> keys = jedis.keys(key(repository, KeyType.journal, "*"));
+			for (final String tkey : keys) {
 				// {repo}:journal:{id}
-				String id = tkey.split(":")[2];
-				long ticketId = Long.parseLong(id);
+				final String id = tkey.split(":")[2];
+				final long ticketId = Long.parseLong(id);
 				ids.add(ticketId);
 			}
-		} catch (JedisException e) {
-			log.error("failed to assign new ticket id in Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to assign new ticket id in Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return ids;
@@ -225,29 +226,31 @@ public class RedisTicketService extends ITicketService {
 	 */
 	@Override
 	public synchronized long assignNewId(RepositoryModel repository) {
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		try {
-			String key = key(repository, KeyType.counter, null);
-			String val = jedis.get(key);
+			final String key = key(repository, KeyType.counter, null);
+			final String val = jedis.get(key);
 			if (isNull(val)) {
 				long lastId = 0;
-				Set<Long> ids = getIds(repository);
-				for (long id : ids) {
+				final Set<Long> ids = getIds(repository);
+				for (final long id : ids) {
 					if (id > lastId) {
 						lastId = id;
 					}
 				}
 				jedis.set(key, "" + lastId);
 			}
-			long ticketNumber = jedis.incr(key);
+			final long ticketNumber = jedis.incr(key);
 			return ticketNumber;
-		} catch (JedisException e) {
-			log.error("failed to assign new ticket id in Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to assign new ticket id in Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return 0L;
@@ -255,7 +258,7 @@ public class RedisTicketService extends ITicketService {
 
 	/**
 	 * Returns all the tickets in the repository. Querying tickets from the
-	 * repository requires deserializing all tickets. This is an  expensive
+	 * repository requires deserializing all tickets. This is an expensive
 	 * process and not recommended. Tickets should be indexed by Lucene and
 	 * queries should be executed against that index.
 	 *
@@ -266,24 +269,24 @@ public class RedisTicketService extends ITicketService {
 	 */
 	@Override
 	public List<TicketModel> getTickets(RepositoryModel repository, TicketFilter filter) {
-		Jedis jedis = pool.getResource();
-		List<TicketModel> list = new ArrayList<TicketModel>();
+		Jedis jedis = this.pool.getResource();
+		final List<TicketModel> list = new ArrayList<TicketModel>();
 		if (jedis == null) {
 			return list;
 		}
 		try {
 			// Deserialize each journal, build the ticket, and optionally filter
-			Set<String> keys = jedis.keys(key(repository, KeyType.journal, "*"));
-			for (String key : keys) {
+			final Set<String> keys = jedis.keys(key(repository, KeyType.journal, "*"));
+			for (final String key : keys) {
 				// {repo}:journal:{id}
-				String id = key.split(":")[2];
-				long ticketId = Long.parseLong(id);
-				List<Change> changes = getJournal(jedis, repository, ticketId);
+				final String id = key.split(":")[2];
+				final long ticketId = Long.parseLong(id);
+				final List<Change> changes = getJournal(jedis, repository, ticketId);
 				if (ArrayUtils.isEmpty(changes)) {
-					log.warn("Empty journal for {}:{}", repository, ticketId);
+					this.log.warn("Empty journal for {}:{}", repository, ticketId);
 					continue;
 				}
-				TicketModel ticket = TicketModel.buildTicket(changes);
+				final TicketModel ticket = TicketModel.buildTicket(changes);
 				ticket.project = repository.projectPath;
 				ticket.repository = repository.name;
 				ticket.number = ticketId;
@@ -300,13 +303,15 @@ public class RedisTicketService extends ITicketService {
 
 			// sort the tickets by creation
 			Collections.sort(list);
-		} catch (JedisException e) {
-			log.error("failed to retrieve tickets from Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to retrieve tickets from Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return list;
@@ -321,30 +326,32 @@ public class RedisTicketService extends ITicketService {
 	 */
 	@Override
 	protected TicketModel getTicketImpl(RepositoryModel repository, long ticketId) {
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		if (jedis == null) {
 			return null;
 		}
 
 		try {
-			List<Change> changes = getJournal(jedis, repository, ticketId);
+			final List<Change> changes = getJournal(jedis, repository, ticketId);
 			if (ArrayUtils.isEmpty(changes)) {
-				log.warn("Empty journal for {}:{}", repository, ticketId);
+				this.log.warn("Empty journal for {}:{}", repository, ticketId);
 				return null;
 			}
-			TicketModel ticket = TicketModel.buildTicket(changes);
+			final TicketModel ticket = TicketModel.buildTicket(changes);
 			ticket.project = repository.projectPath;
 			ticket.repository = repository.name;
 			ticket.number = ticketId;
-			log.debug("rebuilt ticket {} from Redis @ {}", ticketId, getUrl());
+			this.log.debug("rebuilt ticket {} from Redis @ {}", ticketId, getUrl());
 			return ticket;
-		} catch (JedisException e) {
-			log.error("failed to retrieve ticket from Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to retrieve ticket from Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return null;
@@ -359,25 +366,27 @@ public class RedisTicketService extends ITicketService {
 	 */
 	@Override
 	protected List<Change> getJournalImpl(RepositoryModel repository, long ticketId) {
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		if (jedis == null) {
 			return null;
 		}
 
 		try {
-			List<Change> changes = getJournal(jedis, repository, ticketId);
+			final List<Change> changes = getJournal(jedis, repository, ticketId);
 			if (ArrayUtils.isEmpty(changes)) {
-				log.warn("Empty journal for {}:{}", repository, ticketId);
+				this.log.warn("Empty journal for {}:{}", repository, ticketId);
 				return null;
 			}
 			return changes;
-		} catch (JedisException e) {
-			log.error("failed to retrieve journal from Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to retrieve journal from Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return null;
@@ -390,21 +399,23 @@ public class RedisTicketService extends ITicketService {
 	 * @param ticketId
 	 * @return a list of changes
 	 */
-	private List<Change> getJournal(Jedis jedis, RepositoryModel repository, long ticketId) throws JedisException {
+	private static List<Change> getJournal(Jedis jedis, RepositoryModel repository, long ticketId)
+			throws JedisException {
 		if (ticketId <= 0L) {
 			return new ArrayList<Change>();
 		}
-		List<String> entries = jedis.lrange(key(repository, KeyType.journal, ticketId), 0, -1);
+		final List<String> entries = jedis
+				.lrange(key(repository, KeyType.journal, ticketId), 0, -1);
 		if (entries.size() > 0) {
 			// build a json array from the individual entries
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder();
 			sb.append("[");
-			for (String entry : entries) {
+			for (final String entry : entries) {
 				sb.append(entry).append(',');
 			}
 			sb.setLength(sb.length() - 1);
 			sb.append(']');
-			String journal = sb.toString();
+			final String journal = sb.toString();
 
 			return TicketSerializer.deserializeJournal(journal);
 		}
@@ -436,33 +447,36 @@ public class RedisTicketService extends ITicketService {
 	 * @return true if successful
 	 */
 	@Override
-	protected boolean deleteTicketImpl(RepositoryModel repository, TicketModel ticket, String deletedBy) {
+	protected boolean deleteTicketImpl(RepositoryModel repository, TicketModel ticket,
+			String deletedBy) {
 		boolean success = false;
 		if (ticket == null) {
 			throw new RuntimeException("must specify a ticket!");
 		}
 
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		if (jedis == null) {
 			return false;
 		}
 
 		try {
 			// atomically remove ticket
-			Transaction t = jedis.multi();
+			final Transaction t = jedis.multi();
 			t.del(key(repository, KeyType.ticket, ticket.number));
 			t.del(key(repository, KeyType.journal, ticket.number));
 			t.exec();
 
 			success = true;
-			log.debug("deleted ticket {} from Redis @ {}", "" + ticket.number, getUrl());
-		} catch (JedisException e) {
-			log.error("failed to delete ticket from Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+			this.log.debug("deleted ticket {} from Redis @ {}", "" + ticket.number, getUrl());
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to delete ticket from Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 
@@ -479,66 +493,70 @@ public class RedisTicketService extends ITicketService {
 	 */
 	@Override
 	protected boolean commitChangeImpl(RepositoryModel repository, long ticketId, Change change) {
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		if (jedis == null) {
 			return false;
 		}
 		try {
-			List<Change> changes = getJournal(jedis, repository, ticketId);
+			final List<Change> changes = getJournal(jedis, repository, ticketId);
 			changes.add(change);
 			// build a new effective ticket from the changes
-			TicketModel ticket = TicketModel.buildTicket(changes);
+			final TicketModel ticket = TicketModel.buildTicket(changes);
 
-			String object = TicketSerializer.serialize(ticket);
-			String journal = TicketSerializer.serialize(change);
+			final String object = TicketSerializer.serialize(ticket);
+			final String journal = TicketSerializer.serialize(change);
 
 			// atomically store ticket
-			Transaction t = jedis.multi();
+			final Transaction t = jedis.multi();
 			t.set(key(repository, KeyType.ticket, ticketId), object);
 			t.rpush(key(repository, KeyType.journal, ticketId), journal);
 			t.exec();
 
-			log.debug("updated ticket {} in Redis @ {}", "" + ticketId, getUrl());
+			this.log.debug("updated ticket {} in Redis @ {}", "" + ticketId, getUrl());
 			return true;
-		} catch (JedisException e) {
-			log.error("failed to update ticket cache in Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to update ticket cache in Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return false;
 	}
 
 	/**
-	 *  Deletes all Tickets for the rpeository from the Redis key-value store.
+	 * Deletes all Tickets for the rpeository from the Redis key-value store.
 	 *
 	 */
 	@Override
 	protected boolean deleteAllImpl(RepositoryModel repository) {
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		if (jedis == null) {
 			return false;
 		}
 
 		boolean success = false;
 		try {
-			Set<String> keys = jedis.keys(repository.name + ":*");
+			final Set<String> keys = jedis.keys(repository.name + ":*");
 			if (keys.size() > 0) {
-				Transaction t = jedis.multi();
+				final Transaction t = jedis.multi();
 				t.del(keys.toArray(new String[keys.size()]));
 				t.exec();
 			}
 			success = true;
-		} catch (JedisException e) {
-			log.error("failed to delete all tickets in Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to delete all tickets in Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return success;
@@ -546,28 +564,30 @@ public class RedisTicketService extends ITicketService {
 
 	@Override
 	protected boolean renameImpl(RepositoryModel oldRepository, RepositoryModel newRepository) {
-		Jedis jedis = pool.getResource();
+		Jedis jedis = this.pool.getResource();
 		if (jedis == null) {
 			return false;
 		}
 
 		boolean success = false;
 		try {
-			Set<String> oldKeys = jedis.keys(oldRepository.name + ":*");
-			Transaction t = jedis.multi();
-			for (String oldKey : oldKeys) {
-				String newKey = newRepository.name + oldKey.substring(oldKey.indexOf(':'));
+			final Set<String> oldKeys = jedis.keys(oldRepository.name + ":*");
+			final Transaction t = jedis.multi();
+			for (final String oldKey : oldKeys) {
+				final String newKey = newRepository.name + oldKey.substring(oldKey.indexOf(':'));
 				t.rename(oldKey, newKey);
 			}
 			t.exec();
 			success = true;
-		} catch (JedisException e) {
-			log.error("failed to rename tickets in Redis @ " + getUrl(), e);
-			pool.returnBrokenResource(jedis);
+		}
+		catch (final JedisException e) {
+			this.log.error("failed to rename tickets in Redis @ " + getUrl(), e);
+			this.pool.returnBrokenResource(jedis);
 			jedis = null;
-		} finally {
+		}
+		finally {
 			if (jedis != null) {
-				pool.returnResource(jedis);
+				this.pool.returnResource(jedis);
 			}
 		}
 		return success;
@@ -577,8 +597,8 @@ public class RedisTicketService extends ITicketService {
 		JedisPool pool = null;
 		if (!StringUtils.isEmpty(url)) {
 			try {
-				URI uri = URI.create(url);
-				if (uri.getScheme() != null && uri.getScheme().equalsIgnoreCase("redis")) {
+				final URI uri = URI.create(url);
+				if ((uri.getScheme() != null) && uri.getScheme().equalsIgnoreCase("redis")) {
 					int database = Protocol.DEFAULT_DATABASE;
 					String password = null;
 					if (uri.getUserInfo() != null) {
@@ -587,12 +607,14 @@ public class RedisTicketService extends ITicketService {
 					if (uri.getPath().indexOf('/') > -1) {
 						database = Integer.parseInt(uri.getPath().split("/", 2)[1]);
 					}
-					pool = new JedisPool(new GenericObjectPoolConfig(), uri.getHost(), uri.getPort(), Protocol.DEFAULT_TIMEOUT, password, database);
+					pool = new JedisPool(new GenericObjectPoolConfig(), uri.getHost(),
+							uri.getPort(), Protocol.DEFAULT_TIMEOUT, password, database);
 				} else {
 					pool = new JedisPool(url);
 				}
-			} catch (JedisException e) {
-				log.error("failed to create a Redis pool!", e);
+			}
+			catch (final JedisException e) {
+				this.log.error("failed to create a Redis pool!", e);
 			}
 		}
 		return pool;
@@ -600,7 +622,7 @@ public class RedisTicketService extends ITicketService {
 
 	@Override
 	public String toString() {
-		String url = getUrl();
+		final String url = getUrl();
 		return getClass().getSimpleName() + " (" + (url == null ? "DISABLED" : url) + ")";
 	}
 }

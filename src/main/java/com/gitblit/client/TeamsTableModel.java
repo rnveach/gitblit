@@ -36,7 +36,9 @@ public class TeamsTableModel extends AbstractTableModel {
 	List<TeamModel> list;
 
 	enum Columns {
-		Name, Members, Repositories;
+		Name,
+		Members,
+		Repositories;
 
 		@Override
 		public String toString() {
@@ -55,7 +57,7 @@ public class TeamsTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return list.size();
+		return this.list.size();
 	}
 
 	@Override
@@ -65,7 +67,7 @@ public class TeamsTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Name:
 			return Translation.get("gb.name");
@@ -91,8 +93,8 @@ public class TeamsTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		TeamModel model = list.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final TeamModel model = this.list.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Name:
 			return model.name;

@@ -48,17 +48,18 @@ public class SearchResult implements Serializable {
 	}
 
 	public String getId() {
-		switch (type) {
+		switch (this.type) {
 		case blob:
-			return path;
+			return this.path;
 		case commit:
-			return commitId;
+			return this.commitId;
 		}
-		return commitId;
+		return this.commitId;
 	}
 
 	@Override
 	public String toString() {
-		return  score + " : " + type.name() + " : " + repository + " : " + getId() + " (" + branch + ")";
+		return this.score + " : " + this.type.name() + " : " + this.repository + " : " + getId()
+				+ " (" + this.branch + ")";
 	}
 }

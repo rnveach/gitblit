@@ -42,11 +42,11 @@ public class CertificateStatusRenderer extends DefaultTableCellRenderer {
 
 	public CertificateStatusRenderer() {
 		super();
-		unknownIcon = new ImageIcon(getClass().getResource("/bullet_white.png"));
-		revokedIcon = new ImageIcon(getClass().getResource("/bullet_delete.png"));
-		expiredIcon = new ImageIcon(getClass().getResource("/bullet_red.png"));
-		expiringIcon = new ImageIcon(getClass().getResource("/bullet_orange.png"));
-		okIcon = new ImageIcon(getClass().getResource("/bullet_green.png"));
+		this.unknownIcon = new ImageIcon(getClass().getResource("/bullet_white.png"));
+		this.revokedIcon = new ImageIcon(getClass().getResource("/bullet_delete.png"));
+		this.expiredIcon = new ImageIcon(getClass().getResource("/bullet_red.png"));
+		this.expiringIcon = new ImageIcon(getClass().getResource("/bullet_orange.png"));
+		this.okIcon = new ImageIcon(getClass().getResource("/bullet_green.png"));
 	}
 
 	@Override
@@ -54,28 +54,28 @@ public class CertificateStatusRenderer extends DefaultTableCellRenderer {
 			boolean hasFocus, int row, int column) {
 		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 		if (value instanceof CertificateStatus) {
-			CertificateStatus status = (CertificateStatus) value;
-			switch(status) {
-				case revoked:
-					setText(Translation.get("gb.revoked"));
-					setIcon(revokedIcon);
-					break;
-				case expiring:
-					setText(Translation.get("gb.expiring"));
-					setIcon(expiringIcon);
-					break;
-				case expired:
-					setText(Translation.get("gb.expired"));
-					setIcon(expiredIcon);
-					break;
-				case unknown:
-					setText("");
-					setIcon(unknownIcon);
-					break;
-				default:
-					setText(Translation.get("gb.ok"));
-					setIcon(okIcon);
-					break;
+			final CertificateStatus status = (CertificateStatus) value;
+			switch (status) {
+			case revoked:
+				setText(Translation.get("gb.revoked"));
+				setIcon(this.revokedIcon);
+				break;
+			case expiring:
+				setText(Translation.get("gb.expiring"));
+				setIcon(this.expiringIcon);
+				break;
+			case expired:
+				setText(Translation.get("gb.expired"));
+				setIcon(this.expiredIcon);
+				break;
+			case unknown:
+				setText("");
+				setIcon(this.unknownIcon);
+				break;
+			default:
+				setText(Translation.get("gb.ok"));
+				setIcon(this.okIcon);
+				break;
 			}
 		}
 		return this;

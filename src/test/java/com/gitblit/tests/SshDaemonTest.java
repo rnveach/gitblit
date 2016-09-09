@@ -43,15 +43,16 @@ public class SshDaemonTest extends SshUnitTest {
 
 	@Test
 	public void testPublicKeyAuthentication() throws Exception {
-		SshClient client = getClient();
-		ClientSession session = client.connect(username, "localhost", GitBlitSuite.sshPort).await().getSession();
-		session.addPublicKeyIdentity(rwKeyPair);
+		final SshClient client = getClient();
+		final ClientSession session = client
+				.connect(this.username, "localhost", GitBlitSuite.sshPort).await().getSession();
+		session.addPublicKeyIdentity(this.rwKeyPair);
 		assertTrue(session.auth().await().isSuccess());
 	}
 
 	@Test
 	public void testVersionCommand() throws Exception {
-		String result = testSshCommand("version");
+		final String result = testSshCommand("version");
 		assertEquals(Constants.getGitBlitVersion(), result);
 	}
 
@@ -63,22 +64,24 @@ public class SshDaemonTest extends SshUnitTest {
 		}
 
 		// set clone restriction
-		RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
+		final RepositoryModel model = repositories().getRepositoryModel("ticgit.git");
 		model.accessRestriction = AccessRestrictionType.CLONE;
 		model.authorizationControl = AuthorizationControl.NAMED;
 		repositories().updateRepositoryModel(model.name, model, false);
 
-		JschConfigTestSessionFactory sessionFactory = new JschConfigTestSessionFactory(roKeyPair);
+		final JschConfigTestSessionFactory sessionFactory = new JschConfigTestSessionFactory(
+				this.roKeyPair);
 		SshSessionFactory.setInstance(sessionFactory);
 
-		CloneCommand clone = Git.cloneRepository();
-		clone.setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password));
-		clone.setURI(MessageFormat.format("{0}/ticgit.git", url));
+		final CloneCommand clone = Git.cloneRepository();
+		clone.setCredentialsProvider(new UsernamePasswordCredentialsProvider(this.username,
+				this.password));
+		clone.setURI(MessageFormat.format("{0}/ticgit.git", this.url));
 		clone.setDirectory(ticgitFolder);
 		clone.setBare(false);
 		clone.setCloneAllBranches(true);
-		Git git = clone.call();
-		List<RevCommit> commits = JGitUtils.getRevLog(git.getRepository(), 10);
+		final Git git = clone.call();
+		final List<RevCommit> commits = JGitUtils.getRevLog(git.getRepository(), 10);
 		GitBlitSuite.close(git);
 		assertEquals(10, commits.size());
 

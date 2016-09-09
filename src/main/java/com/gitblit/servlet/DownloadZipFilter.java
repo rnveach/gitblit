@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 package com.gitblit.servlet;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import com.gitblit.Constants.AccessRestrictionType;
+import com.gitblit.Constants.AccessRestrictionType;
 import com.gitblit.manager.IAuthenticationManager;
 import com.gitblit.manager.IRepositoryManager;
 import com.gitblit.manager.IRuntimeManager;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.UserModel;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 
 /**
  * The DownloadZipFilter is an AccessRestrictionFilter which ensures that zip
@@ -37,10 +36,8 @@ import com.gitblit.models.UserModel;
 public class DownloadZipFilter extends AccessRestrictionFilter {
 
 	@Inject
-	public DownloadZipFilter(
-			IRuntimeManager runtimeManager,
-			IAuthenticationManager authenticationManager,
-			IRepositoryManager repositoryManager) {
+	public DownloadZipFilter(IRuntimeManager runtimeManager,
+			IAuthenticationManager authenticationManager, IRepositoryManager repositoryManager) {
 
 		super(runtimeManager, authenticationManager, repositoryManager);
 	}
@@ -53,7 +50,7 @@ public class DownloadZipFilter extends AccessRestrictionFilter {
 	 */
 	@Override
 	protected String extractRepositoryName(String url) {
-		int a = url.indexOf("r=");
+		final int a = url.indexOf("r=");
 		if (a > -1) {
 			String repository = url.substring(a + 2);
 			if (repository.indexOf('&') > -1) {
@@ -107,7 +104,8 @@ public class DownloadZipFilter extends AccessRestrictionFilter {
 	 * @return true if authentication required
 	 */
 	@Override
-	protected boolean requiresAuthentication(RepositoryModel repository, String action, String method) {
+	protected boolean requiresAuthentication(RepositoryModel repository, String action,
+			String method) {
 		return repository.accessRestriction.atLeast(AccessRestrictionType.VIEW);
 	}
 

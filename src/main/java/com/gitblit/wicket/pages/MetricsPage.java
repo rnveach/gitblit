@@ -45,32 +45,33 @@ public class MetricsPage extends RepositoryPage {
 
 	public MetricsPage(PageParameters params) {
 		super(params);
-		Repository r = getRepository();
-		if (StringUtils.isEmpty(objectId)) {
+		final Repository r = getRepository();
+		if (StringUtils.isEmpty(this.objectId)) {
 			add(new Label("branchTitle", getRepositoryModel().HEAD));
 		} else {
-			add(new Label("branchTitle", objectId));
+			add(new Label("branchTitle", this.objectId));
 		}
 		Metric metricsTotal = null;
-		List<Metric> metrics = MetricUtils.getDateMetrics(r, objectId, true, null, getTimeZone());
+		final List<Metric> metrics = MetricUtils.getDateMetrics(r, this.objectId, true, null,
+				getTimeZone());
 		metricsTotal = metrics.remove(0);
 		if (metricsTotal == null) {
 			add(new Label("branchStats", ""));
 		} else {
-			add(new Label("branchStats",
-					MessageFormat.format(getString("gb.branchStats"), metricsTotal.count,
-							metricsTotal.tag, getTimeUtils().duration(metricsTotal.duration))));
+			add(new Label("branchStats", MessageFormat.format(getString("gb.branchStats"),
+					metricsTotal.count, metricsTotal.tag,
+					getTimeUtils().duration(metricsTotal.duration))));
 		}
 
-		Charts charts =  new Flotr2Charts();
+		final Charts charts = new Flotr2Charts();
 
 		add(WicketUtils.newBlankImage("commitsChart"));
 		add(WicketUtils.newBlankImage("dayOfWeekChart"));
 		add(WicketUtils.newBlankImage("authorsChart"));
 
 		createLineChart(charts, "commitsChart", metrics);
-		createBarChart(charts, "dayOfWeekChart", getDayOfWeekMetrics(r, objectId));
-		createPieChart(charts, "authorsChart", getAuthorMetrics(r, objectId));
+		createBarChart(charts, "dayOfWeekChart", getDayOfWeekMetrics(r, this.objectId));
+		createPieChart(charts, "authorsChart", getAuthorMetrics(r, this.objectId));
 
 		add(new HeaderContributor(charts));
 
@@ -79,27 +80,27 @@ public class MetricsPage extends RepositoryPage {
 	private void createLineChart(Charts charts, String id, List<Metric> metrics) {
 		if ((metrics != null) && (metrics.size() > 0)) {
 
-			Chart chart = charts.createLineChart(id, "", "day",
-					getString("gb.commits"));
+			final Chart chart = charts.createLineChart(id, "", "day", getString("gb.commits"));
 			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 			String displayFormat = "MMM dd";
-			if(metrics.size() > 0 && metrics.get(0).name.length() == 7){
+			if ((metrics.size() > 0) && (metrics.get(0).name.length() == 7)) {
 				df = new SimpleDateFormat("yyyy-MM");
 				displayFormat = "yyyy MMM";
 			}
 			df.setTimeZone(getTimeZone());
 			chart.setDateFormat(displayFormat);
-			for (Metric metric : metrics) {
+			for (final Metric metric : metrics) {
 				Date date;
 				try {
 					date = df.parse(metric.name);
-				} catch (ParseException e) {
-					logger.error("Unable to parse date: " + metric.name);
+				}
+				catch (final ParseException e) {
+					this.logger.error("Unable to parse date: " + metric.name);
 					return;
 				}
-				chart.addValue(date, (int)metric.count);
-				if(metric.tag > 0 ){
-					chart.addHighlight(date, (int)metric.count);
+				chart.addValue(date, (int) metric.count);
+				if (metric.tag > 0) {
+					chart.addHighlight(date, (int) metric.count);
 				}
 			}
 			charts.addChart(chart);
@@ -109,10 +110,9 @@ public class MetricsPage extends RepositoryPage {
 	private void createPieChart(Charts charts, String id, List<Metric> metrics) {
 		if ((metrics != null) && (metrics.size() > 0)) {
 
-			Chart chart = charts.createPieChart(id, "", "day",
-					getString("gb.commits"));
-			for (Metric metric : metrics) {
-				chart.addValue(metric.name, (int)metric.count);
+			final Chart chart = charts.createPieChart(id, "", "day", getString("gb.commits"));
+			for (final Metric metric : metrics) {
+				chart.addValue(metric.name, (int) metric.count);
 			}
 			charts.addChart(chart);
 		}
@@ -120,29 +120,29 @@ public class MetricsPage extends RepositoryPage {
 
 	private void createBarChart(Charts charts, String id, List<Metric> metrics) {
 		if ((metrics != null) && (metrics.size() > 0)) {
-			Chart chart = charts.createBarChart(id, "", "day",
-					getString("gb.commits"));
-			for (Metric metric : metrics) {
-				chart.addValue(metric.name, (int)metric.count);
+			final Chart chart = charts.createBarChart(id, "", "day", getString("gb.commits"));
+			for (final Metric metric : metrics) {
+				chart.addValue(metric.name, (int) metric.count);
 			}
 			charts.addChart(chart);
 		}
 	}
 
 	private List<Metric> getDayOfWeekMetrics(Repository repository, String objectId) {
-		List<Metric> list = MetricUtils.getDateMetrics(repository, objectId, false, "E", getTimeZone());
-		SimpleDateFormat sdf = new SimpleDateFormat("E");
-		Calendar cal = Calendar.getInstance();
+		final List<Metric> list = MetricUtils.getDateMetrics(repository, objectId, false, "E",
+				getTimeZone());
+		final SimpleDateFormat sdf = new SimpleDateFormat("E");
+		final Calendar cal = Calendar.getInstance();
 
-		List<Metric> sorted = new ArrayList<Metric>();
-		int firstDayOfWeek = cal.getFirstDayOfWeek();
-		int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+		final List<Metric> sorted = new ArrayList<Metric>();
+		final int firstDayOfWeek = cal.getFirstDayOfWeek();
+		final int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
 
 		// rewind date to first day of week
 		cal.add(Calendar.DATE, firstDayOfWeek - dayOfWeek);
 		for (int i = 0; i < 7; i++) {
-			String day = sdf.format(cal.getTime());
-			for (Metric metric : list) {
+			final String day = sdf.format(cal.getTime());
+			for (final Metric metric : list) {
 				if (metric.name.equals(day)) {
 					sorted.add(metric);
 					list.remove(metric);
@@ -154,8 +154,8 @@ public class MetricsPage extends RepositoryPage {
 		return sorted;
 	}
 
-	private List<Metric> getAuthorMetrics(Repository repository, String objectId) {
-		List<Metric> authors = MetricUtils.getAuthorMetrics(repository, objectId, true);
+	private static List<Metric> getAuthorMetrics(Repository repository, String objectId) {
+		final List<Metric> authors = MetricUtils.getAuthorMetrics(repository, objectId, true);
 		Collections.sort(authors, new Comparator<Metric>() {
 			@Override
 			public int compare(Metric o1, Metric o2) {

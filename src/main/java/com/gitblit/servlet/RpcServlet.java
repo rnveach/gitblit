@@ -23,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -48,6 +46,8 @@ import com.gitblit.utils.HttpUtils;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.RpcUtils;
 import com.gitblit.utils.StringUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Handles remote procedure calls.
@@ -61,9 +61,9 @@ public class RpcServlet extends JsonServlet {
 
 	public static final int PROTOCOL_VERSION = 8;
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private IGitblit gitblit;
+	private final IGitblit gitblit;
 
 	@Inject
 	public RpcServlet(IStoredSettings settings, IGitblit gitblit) {
@@ -80,19 +80,20 @@ public class RpcServlet extends JsonServlet {
 	 * @throws java.io.IOException
 	 */
 	@Override
-	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException,
-			IOException {
-		RpcRequest reqType = RpcRequest.fromName(request.getParameter("req"));
-		String objectName = request.getParameter("name");
-		logger.info(MessageFormat.format("Rpc {0} request from {1}", reqType, request.getRemoteAddr()));
+	protected void processRequest(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		final RpcRequest reqType = RpcRequest.fromName(request.getParameter("req"));
+		final String objectName = request.getParameter("name");
+		this.logger.info(MessageFormat.format("Rpc {0} request from {1}", reqType,
+				request.getRemoteAddr()));
 
-		UserModel user = (UserModel) request.getUserPrincipal();
+		final UserModel user = (UserModel) request.getUserPrincipal();
 
-		boolean allowManagement = user != null && user.canAdmin()
-				&& settings.getBoolean(Keys.web.enableRpcManagement, false);
+		final boolean allowManagement = (user != null) && user.canAdmin()
+				&& this.settings.getBoolean(Keys.web.enableRpcManagement, false);
 
-		boolean allowAdmin = user != null && user.canAdmin()
-				&& settings.getBoolean(Keys.web.enableRpcAdministration, false);
+		final boolean allowAdmin = (user != null) && user.canAdmin()
+				&& this.settings.getBoolean(Keys.web.enableRpcAdministration, false);
 
 		Object result = null;
 		if (RpcRequest.GET_PROTOCOL.equals(reqType)) {
@@ -100,49 +101,50 @@ public class RpcServlet extends JsonServlet {
 			result = PROTOCOL_VERSION;
 		} else if (RpcRequest.LIST_REPOSITORIES.equals(reqType)) {
 			// Determine the Gitblit clone url
-			String gitblitUrl = settings.getString(Keys.web.canonicalUrl, null);
+			String gitblitUrl = this.settings.getString(Keys.web.canonicalUrl, null);
 			if (StringUtils.isEmpty(gitblitUrl)) {
 				gitblitUrl = HttpUtils.getGitblitURL(request);
 			}
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder();
 			sb.append(gitblitUrl);
 			sb.append(Constants.R_PATH);
 			sb.append("{0}");
-			String cloneUrl = sb.toString();
+			final String cloneUrl = sb.toString();
 
 			// list repositories
-			List<RepositoryModel> list = gitblit.getRepositoryModels(user);
-			Map<String, RepositoryModel> repositories = new HashMap<String, RepositoryModel>();
-			for (RepositoryModel model : list) {
-				String url = MessageFormat.format(cloneUrl, model.name);
+			final List<RepositoryModel> list = this.gitblit.getRepositoryModels(user);
+			final Map<String, RepositoryModel> repositories = new HashMap<String, RepositoryModel>();
+			for (final RepositoryModel model : list) {
+				final String url = MessageFormat.format(cloneUrl, model.name);
 				repositories.put(url, model);
 			}
 			result = repositories;
 		} else if (RpcRequest.LIST_BRANCHES.equals(reqType)) {
 			// list all local branches in all repositories accessible to user
-			Map<String, List<String>> localBranches = new HashMap<String, List<String>>();
-			List<RepositoryModel> models = gitblit.getRepositoryModels(user);
-			for (RepositoryModel model : models) {
+			final Map<String, List<String>> localBranches = new HashMap<String, List<String>>();
+			final List<RepositoryModel> models = this.gitblit.getRepositoryModels(user);
+			for (final RepositoryModel model : models) {
 				if (!model.hasCommits) {
 					// skip empty repository
 					continue;
 				}
 				if (model.isCollectingGarbage) {
 					// skip garbage collecting repository
-					logger.warn(MessageFormat.format("Temporarily excluding {0} from RPC, busy collecting garbage",
+					this.logger.warn(MessageFormat.format(
+							"Temporarily excluding {0} from RPC, busy collecting garbage",
 							model.name));
 					continue;
 				}
 				// get local branches
-				Repository repository = gitblit.getRepository(model.name);
-				List<RefModel> refs = JGitUtils.getLocalBranches(repository, false, -1);
+				final Repository repository = this.gitblit.getRepository(model.name);
+				final List<RefModel> refs = JGitUtils.getLocalBranches(repository, false, -1);
 				if (model.showRemoteBranches) {
 					// add remote branches if repository displays them
 					refs.addAll(JGitUtils.getRemoteBranches(repository, false, -1));
 				}
 				if (refs.size() > 0) {
-					List<String> branches = new ArrayList<String>();
-					for (RefModel ref : refs) {
+					final List<String> branches = new ArrayList<String>();
+					for (final RefModel ref : refs) {
 						branches.add(ref.getName());
 					}
 					localBranches.put(model.name, branches);
@@ -153,222 +155,229 @@ public class RpcServlet extends JsonServlet {
 		} else if (RpcRequest.GET_USER.equals(reqType)) {
 			if (StringUtils.isEmpty(objectName)) {
 				if (UserModel.ANONYMOUS.equals(user)) {
-					response.sendError(forbiddenCode);
+					response.sendError(this.forbiddenCode);
 				} else {
 					// return the current user, reset credentials
-					UserModel requestedUser = DeepCopier.copy(user);
+					final UserModel requestedUser = DeepCopier.copy(user);
 					result = requestedUser;
 				}
 			} else {
 				if (user.canAdmin() || objectName.equals(user.username)) {
 					// return the specified user
-					UserModel requestedUser = gitblit.getUserModel(objectName);
+					final UserModel requestedUser = this.gitblit.getUserModel(objectName);
 					if (requestedUser == null) {
-						response.setStatus(failureCode);
+						response.setStatus(this.failureCode);
 					} else {
 						result = requestedUser;
 					}
 				} else {
-					response.sendError(forbiddenCode);
+					response.sendError(this.forbiddenCode);
 				}
 			}
 		} else if (RpcRequest.LIST_USERS.equals(reqType)) {
 			// list users
-			List<String> names = gitblit.getAllUsernames();
-			List<UserModel> users = new ArrayList<UserModel>();
-			for (String name : names) {
-				users.add(gitblit.getUserModel(name));
+			final List<String> names = this.gitblit.getAllUsernames();
+			final List<UserModel> users = new ArrayList<UserModel>();
+			for (final String name : names) {
+				users.add(this.gitblit.getUserModel(name));
 			}
 			result = users;
 		} else if (RpcRequest.LIST_TEAMS.equals(reqType)) {
 			// list teams
-			List<String> names = gitblit.getAllTeamNames();
-			List<TeamModel> teams = new ArrayList<TeamModel>();
-			for (String name : names) {
-				teams.add(gitblit.getTeamModel(name));
+			final List<String> names = this.gitblit.getAllTeamNames();
+			final List<TeamModel> teams = new ArrayList<TeamModel>();
+			for (final String name : names) {
+				teams.add(this.gitblit.getTeamModel(name));
 			}
 			result = teams;
 		} else if (RpcRequest.CREATE_REPOSITORY.equals(reqType)) {
 			// create repository
-			RepositoryModel model = deserialize(request, response, RepositoryModel.class);
+			final RepositoryModel model = deserialize(request, response, RepositoryModel.class);
 			try {
-				gitblit.updateRepositoryModel(model.name, model, true);
-			} catch (GitBlitException e) {
-				response.setStatus(failureCode);
+				this.gitblit.updateRepositoryModel(model.name, model, true);
+			}
+			catch (final GitBlitException e) {
+				response.setStatus(this.failureCode);
 			}
 		} else if (RpcRequest.FORK_REPOSITORY.equals(reqType)) {
 			// fork repository
-			RepositoryModel origin = gitblit.getRepositoryModel(objectName);
+			final RepositoryModel origin = this.gitblit.getRepositoryModel(objectName);
 			if (origin == null) {
 				// failed to find repository, error is logged by the repository
 				// manager
-				response.setStatus(failureCode);
+				response.setStatus(this.failureCode);
 			} else {
-				if (user == null || !user.canFork(origin)) {
-					logger.error("User {} is not permitted to fork '{}'!", user == null ? "anonymous" : user.username,
-							objectName);
-					response.setStatus(failureCode);
+				if ((user == null) || !user.canFork(origin)) {
+					this.logger.error("User {} is not permitted to fork '{}'!",
+							user == null ? "anonymous" : user.username, objectName);
+					response.setStatus(this.failureCode);
 				} else {
 					try {
 						// fork the origin
-						RepositoryModel fork = gitblit.fork(origin, user);
+						final RepositoryModel fork = this.gitblit.fork(origin, user);
 						if (fork == null) {
-							logger.error("Failed to fork repository '{}'!", objectName);
-							response.setStatus(failureCode);
+							this.logger.error("Failed to fork repository '{}'!", objectName);
+							response.setStatus(this.failureCode);
 						} else {
-							logger.info("User {} has forked '{}'!", user.username, objectName);
+							this.logger.info("User {} has forked '{}'!", user.username, objectName);
 						}
-					} catch (GitBlitException e) {
-						response.setStatus(failureCode);
+					}
+					catch (final GitBlitException e) {
+						response.setStatus(this.failureCode);
 					}
 				}
 			}
 		} else if (RpcRequest.EDIT_REPOSITORY.equals(reqType)) {
 			// edit repository
-			RepositoryModel model = deserialize(request, response, RepositoryModel.class);
+			final RepositoryModel model = deserialize(request, response, RepositoryModel.class);
 			// name specifies original repository name in event of rename
 			String repoName = objectName;
 			if (repoName == null) {
 				repoName = model.name;
 			}
 			try {
-				gitblit.updateRepositoryModel(repoName, model, false);
-			} catch (GitBlitException e) {
-				response.setStatus(failureCode);
+				this.gitblit.updateRepositoryModel(repoName, model, false);
+			}
+			catch (final GitBlitException e) {
+				response.setStatus(this.failureCode);
 			}
 		} else if (RpcRequest.DELETE_REPOSITORY.equals(reqType)) {
 			// delete repository
-			RepositoryModel model = deserialize(request, response, RepositoryModel.class);
-			gitblit.deleteRepositoryModel(model);
+			final RepositoryModel model = deserialize(request, response, RepositoryModel.class);
+			this.gitblit.deleteRepositoryModel(model);
 		} else if (RpcRequest.CREATE_USER.equals(reqType)) {
 			// create user
-			UserModel model = deserialize(request, response, UserModel.class);
+			final UserModel model = deserialize(request, response, UserModel.class);
 			try {
-				gitblit.addUser(model);
-			} catch (GitBlitException e) {
-				response.setStatus(failureCode);
+				this.gitblit.addUser(model);
+			}
+			catch (final GitBlitException e) {
+				response.setStatus(this.failureCode);
 			}
 		} else if (RpcRequest.EDIT_USER.equals(reqType)) {
 			// edit user
-			UserModel model = deserialize(request, response, UserModel.class);
+			final UserModel model = deserialize(request, response, UserModel.class);
 			// name parameter specifies original user name in event of rename
 			String username = objectName;
 			if (username == null) {
 				username = model.username;
 			}
 			try {
-				gitblit.reviseUser(username, model);
-			} catch (GitBlitException e) {
-				response.setStatus(failureCode);
+				this.gitblit.reviseUser(username, model);
+			}
+			catch (final GitBlitException e) {
+				response.setStatus(this.failureCode);
 			}
 		} else if (RpcRequest.DELETE_USER.equals(reqType)) {
 			// delete user
-			UserModel model = deserialize(request, response, UserModel.class);
-			if (!gitblit.deleteUser(model.username)) {
-				response.setStatus(failureCode);
+			final UserModel model = deserialize(request, response, UserModel.class);
+			if (!this.gitblit.deleteUser(model.username)) {
+				response.setStatus(this.failureCode);
 			}
 		} else if (RpcRequest.CREATE_TEAM.equals(reqType)) {
 			// create team
-			TeamModel model = deserialize(request, response, TeamModel.class);
+			final TeamModel model = deserialize(request, response, TeamModel.class);
 			try {
-				gitblit.addTeam(model);
-			} catch (GitBlitException e) {
-				response.setStatus(failureCode);
+				this.gitblit.addTeam(model);
+			}
+			catch (final GitBlitException e) {
+				response.setStatus(this.failureCode);
 			}
 		} else if (RpcRequest.EDIT_TEAM.equals(reqType)) {
 			// edit team
-			TeamModel model = deserialize(request, response, TeamModel.class);
+			final TeamModel model = deserialize(request, response, TeamModel.class);
 			// name parameter specifies original team name in event of rename
 			String teamname = objectName;
 			if (teamname == null) {
 				teamname = model.name;
 			}
 			try {
-				gitblit.reviseTeam(teamname, model);
-			} catch (GitBlitException e) {
-				response.setStatus(failureCode);
+				this.gitblit.reviseTeam(teamname, model);
+			}
+			catch (final GitBlitException e) {
+				response.setStatus(this.failureCode);
 			}
 		} else if (RpcRequest.DELETE_TEAM.equals(reqType)) {
 			// delete team
-			TeamModel model = deserialize(request, response, TeamModel.class);
-			if (!gitblit.deleteTeam(model.name)) {
-				response.setStatus(failureCode);
+			final TeamModel model = deserialize(request, response, TeamModel.class);
+			if (!this.gitblit.deleteTeam(model.name)) {
+				response.setStatus(this.failureCode);
 			}
 		} else if (RpcRequest.LIST_REPOSITORY_MEMBERS.equals(reqType)) {
 			// get repository members
-			RepositoryModel model = gitblit.getRepositoryModel(objectName);
-			result = gitblit.getRepositoryUsers(model);
+			final RepositoryModel model = this.gitblit.getRepositoryModel(objectName);
+			result = this.gitblit.getRepositoryUsers(model);
 		} else if (RpcRequest.SET_REPOSITORY_MEMBERS.equals(reqType)) {
 			// rejected since 1.2.0
-			response.setStatus(failureCode);
+			response.setStatus(this.failureCode);
 		} else if (RpcRequest.LIST_REPOSITORY_MEMBER_PERMISSIONS.equals(reqType)) {
 			// get repository member permissions
-			RepositoryModel model = gitblit.getRepositoryModel(objectName);
-			result = gitblit.getUserAccessPermissions(model);
+			final RepositoryModel model = this.gitblit.getRepositoryModel(objectName);
+			result = this.gitblit.getUserAccessPermissions(model);
 		} else if (RpcRequest.SET_REPOSITORY_MEMBER_PERMISSIONS.equals(reqType)) {
 			// set the repository permissions for the specified users
-			RepositoryModel model = gitblit.getRepositoryModel(objectName);
-			Collection<RegistrantAccessPermission> permissions = deserialize(request, response,
-					RpcUtils.REGISTRANT_PERMISSIONS_TYPE);
-			result = gitblit.setUserAccessPermissions(model, permissions);
+			final RepositoryModel model = this.gitblit.getRepositoryModel(objectName);
+			final Collection<RegistrantAccessPermission> permissions = deserialize(request,
+					response, RpcUtils.REGISTRANT_PERMISSIONS_TYPE);
+			result = this.gitblit.setUserAccessPermissions(model, permissions);
 		} else if (RpcRequest.LIST_REPOSITORY_TEAMS.equals(reqType)) {
 			// get repository teams
-			RepositoryModel model = gitblit.getRepositoryModel(objectName);
-			result = gitblit.getRepositoryTeams(model);
+			final RepositoryModel model = this.gitblit.getRepositoryModel(objectName);
+			result = this.gitblit.getRepositoryTeams(model);
 		} else if (RpcRequest.SET_REPOSITORY_TEAMS.equals(reqType)) {
 			// rejected since 1.2.0
-			response.setStatus(failureCode);
+			response.setStatus(this.failureCode);
 		} else if (RpcRequest.LIST_REPOSITORY_TEAM_PERMISSIONS.equals(reqType)) {
 			// get repository team permissions
-			RepositoryModel model = gitblit.getRepositoryModel(objectName);
-			result = gitblit.getTeamAccessPermissions(model);
+			final RepositoryModel model = this.gitblit.getRepositoryModel(objectName);
+			result = this.gitblit.getTeamAccessPermissions(model);
 		} else if (RpcRequest.SET_REPOSITORY_TEAM_PERMISSIONS.equals(reqType)) {
 			// set the repository permissions for the specified teams
-			RepositoryModel model = gitblit.getRepositoryModel(objectName);
-			Collection<RegistrantAccessPermission> permissions = deserialize(request, response,
-					RpcUtils.REGISTRANT_PERMISSIONS_TYPE);
-			result = gitblit.setTeamAccessPermissions(model, permissions);
+			final RepositoryModel model = this.gitblit.getRepositoryModel(objectName);
+			final Collection<RegistrantAccessPermission> permissions = deserialize(request,
+					response, RpcUtils.REGISTRANT_PERMISSIONS_TYPE);
+			result = this.gitblit.setTeamAccessPermissions(model, permissions);
 		} else if (RpcRequest.LIST_FEDERATION_REGISTRATIONS.equals(reqType)) {
 			// return the list of federation registrations
 			if (allowAdmin) {
-				result = gitblit.getFederationRegistrations();
+				result = this.gitblit.getFederationRegistrations();
 			} else {
-				response.sendError(notAllowedCode);
+				response.sendError(this.notAllowedCode);
 			}
 		} else if (RpcRequest.LIST_FEDERATION_RESULTS.equals(reqType)) {
 			// return the list of federation result registrations
-			if (allowAdmin && gitblit.canFederate()) {
-				result = gitblit.getFederationResultRegistrations();
+			if (allowAdmin && this.gitblit.canFederate()) {
+				result = this.gitblit.getFederationResultRegistrations();
 			} else {
-				response.sendError(notAllowedCode);
+				response.sendError(this.notAllowedCode);
 			}
 		} else if (RpcRequest.LIST_FEDERATION_PROPOSALS.equals(reqType)) {
 			// return the list of federation proposals
-			if (allowAdmin && gitblit.canFederate()) {
-				result = gitblit.getPendingFederationProposals();
+			if (allowAdmin && this.gitblit.canFederate()) {
+				result = this.gitblit.getPendingFederationProposals();
 			} else {
-				response.sendError(notAllowedCode);
+				response.sendError(this.notAllowedCode);
 			}
 		} else if (RpcRequest.LIST_FEDERATION_SETS.equals(reqType)) {
 			// return the list of federation sets
-			if (allowAdmin && gitblit.canFederate()) {
-				String gitblitUrl = settings.getString(Keys.web.canonicalUrl, null);
+			if (allowAdmin && this.gitblit.canFederate()) {
+				String gitblitUrl = this.settings.getString(Keys.web.canonicalUrl, null);
 				if (StringUtils.isEmpty(gitblitUrl)) {
 					gitblitUrl = HttpUtils.getGitblitURL(request);
 				}
-				result = gitblit.getFederationSets(gitblitUrl);
+				result = this.gitblit.getFederationSets(gitblitUrl);
 			} else {
-				response.sendError(notAllowedCode);
+				response.sendError(this.notAllowedCode);
 			}
 		} else if (RpcRequest.LIST_SETTINGS.equals(reqType)) {
 			// return the server's settings
-			ServerSettings serverSettings = gitblit.getSettingsModel();
+			final ServerSettings serverSettings = this.gitblit.getSettingsModel();
 			if (allowAdmin) {
 				// return all settings
 				result = serverSettings;
 			} else {
 				// anonymous users get a few settings to allow browser launching
-				List<String> keys = new ArrayList<String>();
+				final List<String> keys = new ArrayList<String>();
 				keys.add(Keys.web.siteName);
 				keys.add(Keys.web.mountParameters);
 				keys.add(Keys.web.syndicationEntries);
@@ -380,8 +389,8 @@ public class RpcServlet extends JsonServlet {
 					keys.add(Keys.federation.sets);
 				}
 				// build the settings
-				ServerSettings managementSettings = new ServerSettings();
-				for (String key : keys) {
+				final ServerSettings managementSettings = new ServerSettings();
+				for (final String key : keys) {
 					managementSettings.add(serverSettings.get(key));
 				}
 				if (allowManagement) {
@@ -392,37 +401,38 @@ public class RpcServlet extends JsonServlet {
 		} else if (RpcRequest.EDIT_SETTINGS.equals(reqType)) {
 			// update settings on the server
 			if (allowAdmin) {
-				Map<String, String> map = deserialize(request, response, RpcUtils.SETTINGS_TYPE);
-				gitblit.updateSettings(map);
+				final Map<String, String> map = deserialize(request, response,
+						RpcUtils.SETTINGS_TYPE);
+				this.gitblit.updateSettings(map);
 			} else {
-				response.sendError(notAllowedCode);
+				response.sendError(this.notAllowedCode);
 			}
 		} else if (RpcRequest.LIST_STATUS.equals(reqType)) {
 			// return the server's status information
 			if (allowAdmin) {
-				result = gitblit.getStatus();
+				result = this.gitblit.getStatus();
 			} else {
-				response.sendError(notAllowedCode);
+				response.sendError(this.notAllowedCode);
 			}
 		} else if (RpcRequest.CLEAR_REPOSITORY_CACHE.equals(reqType)) {
 			// clear the repository list cache
 			if (allowManagement) {
-				gitblit.resetRepositoryListCache();
+				this.gitblit.resetRepositoryListCache();
 			} else {
-				response.sendError(notAllowedCode);
+				response.sendError(this.notAllowedCode);
 			}
 		} else if (RpcRequest.REINDEX_TICKETS.equals(reqType)) {
 			if (allowManagement) {
 				if (StringUtils.isEmpty(objectName)) {
 					// reindex all tickets
-					gitblit.getTicketService().reindex();
+					this.gitblit.getTicketService().reindex();
 				} else {
 					// reindex tickets in a specific repository
-					RepositoryModel model = gitblit.getRepositoryModel(objectName);
-					gitblit.getTicketService().reindex(model);
+					final RepositoryModel model = this.gitblit.getRepositoryModel(objectName);
+					this.gitblit.getTicketService().reindex(model);
 				}
 			} else {
-				response.sendError(notAllowedCode);
+				response.sendError(this.notAllowedCode);
 			}
 		}
 

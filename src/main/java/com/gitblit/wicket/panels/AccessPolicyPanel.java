@@ -36,7 +36,8 @@ import com.gitblit.models.RepositoryModel;
 import com.gitblit.wicket.WicketUtils;
 
 /**
- * A radio group panel of the 5 available authorization/access restriction combinations.
+ * A radio group panel of the 5 available authorization/access restriction
+ * combinations.
  *
  * @author James Moger
  *
@@ -55,7 +56,8 @@ public class AccessPolicyPanel extends BasePanel {
 		this(wicketId, repository, null);
 	}
 
-	public AccessPolicyPanel(String wicketId, RepositoryModel repository, AjaxFormChoiceComponentUpdatingBehavior callback) {
+	public AccessPolicyPanel(String wicketId, RepositoryModel repository,
+			AjaxFormChoiceComponentUpdatingBehavior callback) {
 		super(wicketId);
 		this.repository = repository;
 		this.callback = callback;
@@ -65,37 +67,28 @@ public class AccessPolicyPanel extends BasePanel {
 	protected void onInitialize() {
 		super.onInitialize();
 
-		AccessPolicy anonymousPolicy = new AccessPolicy(getString("gb.anonymousPolicy"),
-				getString("gb.anonymousPolicyDescription"),
-				"blank.png",
-				AuthorizationControl.AUTHENTICATED,
-				AccessRestrictionType.NONE);
+		final AccessPolicy anonymousPolicy = new AccessPolicy(getString("gb.anonymousPolicy"),
+				getString("gb.anonymousPolicyDescription"), "blank.png",
+				AuthorizationControl.AUTHENTICATED, AccessRestrictionType.NONE);
 
-		AccessPolicy authenticatedPushPolicy = new AccessPolicy(getString("gb.authenticatedPushPolicy"),
-				getString("gb.authenticatedPushPolicyDescription"),
-				"lock_go_16x16.png",
-				AuthorizationControl.AUTHENTICATED,
-				AccessRestrictionType.PUSH);
+		final AccessPolicy authenticatedPushPolicy = new AccessPolicy(
+				getString("gb.authenticatedPushPolicy"),
+				getString("gb.authenticatedPushPolicyDescription"), "lock_go_16x16.png",
+				AuthorizationControl.AUTHENTICATED, AccessRestrictionType.PUSH);
 
-		AccessPolicy namedPushPolicy = new AccessPolicy(getString("gb.namedPushPolicy"),
-				getString("gb.namedPushPolicyDescription"),
-				"lock_go_16x16.png",
-				AuthorizationControl.NAMED,
-				AccessRestrictionType.PUSH);
+		final AccessPolicy namedPushPolicy = new AccessPolicy(getString("gb.namedPushPolicy"),
+				getString("gb.namedPushPolicyDescription"), "lock_go_16x16.png",
+				AuthorizationControl.NAMED, AccessRestrictionType.PUSH);
 
-		AccessPolicy clonePolicy = new AccessPolicy(getString("gb.clonePolicy"),
-				getString("gb.clonePolicyDescription"),
-				"lock_pull_16x16.png",
-				AuthorizationControl.NAMED,
-				AccessRestrictionType.CLONE);
+		final AccessPolicy clonePolicy = new AccessPolicy(getString("gb.clonePolicy"),
+				getString("gb.clonePolicyDescription"), "lock_pull_16x16.png",
+				AuthorizationControl.NAMED, AccessRestrictionType.CLONE);
 
-		AccessPolicy viewPolicy = new AccessPolicy(getString("gb.viewPolicy"),
-				getString("gb.viewPolicyDescription"),
-				"shield_16x16.png",
-				AuthorizationControl.NAMED,
-				AccessRestrictionType.VIEW);
+		final AccessPolicy viewPolicy = new AccessPolicy(getString("gb.viewPolicy"),
+				getString("gb.viewPolicyDescription"), "shield_16x16.png",
+				AuthorizationControl.NAMED, AccessRestrictionType.VIEW);
 
-		List<AccessPolicy> policies = new ArrayList<AccessPolicy>();
+		final List<AccessPolicy> policies = new ArrayList<AccessPolicy>();
 		if (app().settings().getBoolean(Keys.git.allowAnonymousPushes, false)) {
 			policies.add(anonymousPolicy);
 		}
@@ -104,52 +97,52 @@ public class AccessPolicyPanel extends BasePanel {
 		policies.add(clonePolicy);
 		policies.add(viewPolicy);
 
-		AccessRestrictionType defaultRestriction = repository.accessRestriction;
+		AccessRestrictionType defaultRestriction = this.repository.accessRestriction;
 		if (defaultRestriction == null) {
-			defaultRestriction = AccessRestrictionType.fromName(app().settings().getString(Keys.git.defaultAccessRestriction,
-					AccessRestrictionType.PUSH.name()));
+			defaultRestriction = AccessRestrictionType.fromName(app().settings().getString(
+					Keys.git.defaultAccessRestriction, AccessRestrictionType.PUSH.name()));
 		}
 
-		AuthorizationControl defaultControl = repository.authorizationControl;
+		AuthorizationControl defaultControl = this.repository.authorizationControl;
 		if (defaultControl == null) {
-			defaultControl = AuthorizationControl.fromName(app().settings().getString(Keys.git.defaultAuthorizationControl,
-					AuthorizationControl.NAMED.name()));
+			defaultControl = AuthorizationControl.fromName(app().settings().getString(
+					Keys.git.defaultAuthorizationControl, AuthorizationControl.NAMED.name()));
 		}
 
 		AccessPolicy defaultPolicy = namedPushPolicy;
-		for (AccessPolicy policy : policies) {
-			if (policy.type == defaultRestriction && policy.control == defaultControl) {
+		for (final AccessPolicy policy : policies) {
+			if ((policy.type == defaultRestriction) && (policy.control == defaultControl)) {
 				defaultPolicy = policy;
 			}
 		}
 
-		policiesGroup = new RadioGroup<>("policiesGroup", new Model<AccessPolicy>(defaultPolicy));
-		ListView<AccessPolicy> policiesList = new ListView<AccessPolicy>("policies", policies) {
+		this.policiesGroup = new RadioGroup<>("policiesGroup", new Model<AccessPolicy>(
+				defaultPolicy));
+		final ListView<AccessPolicy> policiesList = new ListView<AccessPolicy>("policies", policies) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			protected void populateItem(ListItem<AccessPolicy> item) {
-				AccessPolicy p = item.getModelObject();
+				final AccessPolicy p = item.getModelObject();
 				item.add(new Radio<AccessPolicy>("radio", item.getModel()));
-				item.add(WicketUtils.newImage("image",  p.image));
+				item.add(WicketUtils.newImage("image", p.image));
 				item.add(new Label("name", p.name));
 				item.add(new Label("description", p.description));
 			}
 		};
-		policiesGroup.add(policiesList);
-		if (callback != null) {
-			policiesGroup.add(callback);
-			policiesGroup.setOutputMarkupId(true);
+		this.policiesGroup.add(policiesList);
+		if (this.callback != null) {
+			this.policiesGroup.add(this.callback);
+			this.policiesGroup.setOutputMarkupId(true);
 		}
-		add(policiesGroup);
+		add(this.policiesGroup);
 
 		if (app().settings().getBoolean(Keys.web.allowForking, true)) {
-			Fragment fragment = new Fragment("allowForks", "allowForksFragment", this);
-			fragment.add(new BooleanOption("allowForks",
-				getString("gb.allowForks"),
-				getString("gb.allowForksDescription"),
-				new PropertyModel<Boolean>(repository, "allowForks")));
+			final Fragment fragment = new Fragment("allowForks", "allowForksFragment", this);
+			fragment.add(new BooleanOption("allowForks", getString("gb.allowForks"),
+					getString("gb.allowForksDescription"), new PropertyModel<Boolean>(
+							this.repository, "allowForks")));
 			add(fragment);
 		} else {
 			add(new Label("allowForks").setVisible(false));
@@ -159,7 +152,7 @@ public class AccessPolicyPanel extends BasePanel {
 	}
 
 	public void updateModel(RepositoryModel repository) {
-		AccessPolicy policy = policiesGroup.getModelObject();
+		final AccessPolicy policy = this.policiesGroup.getModelObject();
 		repository.authorizationControl = policy.control;
 		repository.accessRestriction = policy.type;
 	}
@@ -179,7 +172,8 @@ public class AccessPolicyPanel extends BasePanel {
 		final AuthorizationControl control;
 		final AccessRestrictionType type;
 
-		AccessPolicy(String name, String description, String img, AuthorizationControl control, AccessRestrictionType type) {
+		AccessPolicy(String name, String description, String img, AuthorizationControl control,
+				AccessRestrictionType type) {
 			this.name = name;
 			this.description = description;
 			this.image = img;
@@ -189,7 +183,7 @@ public class AccessPolicyPanel extends BasePanel {
 
 		@Override
 		public String toString() {
-			return name;
+			return this.name;
 		}
 	}
 }

@@ -30,30 +30,28 @@ import com.gitblit.transport.git.GitDaemonClient;
  *
  * @author James Moger
  *
- * @param <X> the connection type
+ * @param <X>
+ *            the connection type
  */
 public class GitblitUploadPackFactory<X> implements UploadPackFactory<X> {
 
-	private final IAuthenticationManager authenticationManager;
-
 	public GitblitUploadPackFactory(IAuthenticationManager authenticationManager) {
-		this.authenticationManager = authenticationManager;
 	}
 
 	@Override
-	public UploadPack create(X req, Repository db)
-			throws ServiceNotEnabledException, ServiceNotAuthorizedException {
+	public UploadPack create(X req, Repository db) throws ServiceNotEnabledException,
+			ServiceNotAuthorizedException {
 
 		int timeout = 0;
 
 		if (req instanceof GitDaemonClient) {
 			// git daemon request is always anonymous
-			GitDaemonClient client = (GitDaemonClient) req;
+			final GitDaemonClient client = (GitDaemonClient) req;
 			// set timeout from Git daemon
 			timeout = client.getDaemon().getTimeout();
 		}
 
-		UploadPack up = new UploadPack(db);
+		final UploadPack up = new UploadPack(db);
 		up.setTimeout(timeout);
 
 		return up;

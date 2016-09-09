@@ -39,21 +39,21 @@ public class GitClientApplication implements Serializable {
 	public String cloneUrl;
 	public String command;
 	public String productUrl;
-	public String [] transports;
+	public String[] transports;
 	public String[] platforms;
 	public AccessPermission minimumPermission;
 	public boolean isActive;
 
 	public boolean allowsPlatform(String p) {
-		if (ArrayUtils.isEmpty(platforms)) {
+		if (ArrayUtils.isEmpty(this.platforms)) {
 			// all platforms
 			return true;
 		}
 		if (StringUtils.isEmpty(p)) {
 			return false;
 		}
-		String plc = p.toLowerCase();
-		for (String platform : platforms) {
+		final String plc = p.toLowerCase();
+		for (final String platform : this.platforms) {
 			if (plc.contains(platform)) {
 				return true;
 			}
@@ -62,7 +62,7 @@ public class GitClientApplication implements Serializable {
 	}
 
 	public boolean supportsTransport(String transportOrUrl) {
-		if (ArrayUtils.isEmpty(transports)) {
+		if (ArrayUtils.isEmpty(this.transports)) {
 			return true;
 		}
 
@@ -72,7 +72,7 @@ public class GitClientApplication implements Serializable {
 			scheme = transportOrUrl.substring(0, transportOrUrl.indexOf(':'));
 		}
 
-		for (String transport : transports) {
+		for (final String transport : this.transports) {
 			if (transport.equalsIgnoreCase(scheme)) {
 				return true;
 			}
@@ -82,6 +82,6 @@ public class GitClientApplication implements Serializable {
 
 	@Override
 	public String toString() {
-		return StringUtils.isEmpty(title) ? name : title;
+		return StringUtils.isEmpty(this.title) ? this.name : this.title;
 	}
 }

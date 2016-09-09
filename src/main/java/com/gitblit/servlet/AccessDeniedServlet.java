@@ -30,8 +30,8 @@ import com.google.inject.Singleton;
  * This servlet serves only 404 Not Found error replies.
  * 
  * This servlet is used to override the container's default behavior to serve
- * all contents of the application's WAR. We can selectively prevent access to
- * a specific path simply by mapping this servlet onto specific paths.
+ * all contents of the application's WAR. We can selectively prevent access to a
+ * specific path simply by mapping this servlet onto specific paths.
  * 
  * 
  * @author Jean-Baptiste Mayer
@@ -56,8 +56,7 @@ public class AccessDeniedServlet extends HttpServlet {
 		processRequest(request, response);
 	}
 
-	private void processRequest(HttpServletRequest request,
-			HttpServletResponse response) {
+	private static void processRequest(HttpServletRequest request, HttpServletResponse response) {
 		response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 	}
 }

@@ -88,85 +88,97 @@ public class NewTicketPage extends RepositoryPage {
 			currentUser = UserModel.ANONYMOUS;
 		}
 
-		if (!currentUser.isAuthenticated || !app().tickets().isAcceptingNewTickets(getRepositoryModel())) {
+		if (!currentUser.isAuthenticated
+				|| !app().tickets().isAcceptingNewTickets(getRepositoryModel())) {
 			// tickets prohibited
-			setResponsePage(TicketsPage.class, WicketUtils.newRepositoryParameter(repositoryName));
+			setResponsePage(TicketsPage.class,
+					WicketUtils.newRepositoryParameter(this.repositoryName));
 		}
 
-		typeModel = Model.of(TicketModel.Type.defaultType);
-		titleModel = Model.of();
-		topicModel = Model.of();
-		mergeToModel = Model.of(Repository.shortenRefName(getRepositoryModel().mergeTo));
-		responsibleModel = Model.of();
-		milestoneModel = Model.of();
-		severityModel = Model.of(TicketModel.Severity.defaultSeverity);
-		priorityModel = Model.of(TicketModel.Priority.defaultPriority);
+		this.typeModel = Model.of(TicketModel.Type.defaultType);
+		this.titleModel = Model.of();
+		this.topicModel = Model.of();
+		this.mergeToModel = Model.of(Repository.shortenRefName(getRepositoryModel().mergeTo));
+		this.responsibleModel = Model.of();
+		this.milestoneModel = Model.of();
+		this.severityModel = Model.of(TicketModel.Severity.defaultSeverity);
+		this.priorityModel = Model.of(TicketModel.Priority.defaultPriority);
 
 		setStatelessHint(false);
 		setOutputMarkupId(true);
 
-		Form<Void> form = new Form<Void>("editForm");
+		final Form<Void> form = new Form<Void>("editForm");
 		add(form);
 
-		form.add(new DropDownChoice<TicketModel.Type>("type", typeModel, Arrays.asList(TicketModel.Type.choices())));
-		form.add(new TextField<String>("title", titleModel));
-		form.add(new TextField<String>("topic", topicModel));
-		form.add(new DropDownChoice<TicketModel.Severity>("severity", severityModel, Arrays.asList(TicketModel.Severity.choices())));
+		form.add(new DropDownChoice<TicketModel.Type>("type", this.typeModel, Arrays
+				.asList(TicketModel.Type.choices())));
+		form.add(new TextField<String>("title", this.titleModel));
+		form.add(new TextField<String>("topic", this.topicModel));
+		form.add(new DropDownChoice<TicketModel.Severity>("severity", this.severityModel, Arrays
+				.asList(TicketModel.Severity.choices())));
 
 		final IModel<String> markdownPreviewModel = Model.of();
-		descriptionPreview = new Label("descriptionPreview", markdownPreviewModel);
-		descriptionPreview.setEscapeModelStrings(false);
-		descriptionPreview.setOutputMarkupId(true);
-		form.add(descriptionPreview);
+		this.descriptionPreview = new Label("descriptionPreview", markdownPreviewModel);
+		this.descriptionPreview.setEscapeModelStrings(false);
+		this.descriptionPreview.setOutputMarkupId(true);
+		form.add(this.descriptionPreview);
 
-		descriptionEditor = new MarkdownTextArea("description", markdownPreviewModel, descriptionPreview);
-		descriptionEditor.setRepository(repositoryName);
-		form.add(descriptionEditor);
+		this.descriptionEditor = new MarkdownTextArea("description", markdownPreviewModel,
+				this.descriptionPreview);
+		this.descriptionEditor.setRepository(this.repositoryName);
+		form.add(this.descriptionEditor);
 
 		if (currentUser.canAdmin(null, getRepositoryModel())) {
 			// responsible
-			Set<String> userlist = new TreeSet<String>();
+			final Set<String> userlist = new TreeSet<String>();
 
 			if (UserModel.ANONYMOUS.canPush(getRepositoryModel())
-					|| AuthorizationControl.AUTHENTICATED == getRepositoryModel().authorizationControl) {
-				// 	authorization is ANONYMOUS or AUTHENTICATED (i.e. all users can be set responsible)
+					|| (AuthorizationControl.AUTHENTICATED == getRepositoryModel().authorizationControl)) {
+				// authorization is ANONYMOUS or AUTHENTICATED (i.e. all users
+				// can be set responsible)
 				userlist.addAll(app().users().getAllUsernames());
 			} else {
-				// authorization is by NAMED users (users with PUSH permission can be set responsible)
-				for (RegistrantAccessPermission rp : app().repositories().getUserAccessPermissions(getRepositoryModel())) {
+				// authorization is by NAMED users (users with PUSH permission
+				// can be set responsible)
+				for (final RegistrantAccessPermission rp : app().repositories()
+						.getUserAccessPermissions(getRepositoryModel())) {
 					if (rp.permission.atLeast(AccessPermission.PUSH)) {
 						userlist.add(rp.registrant);
 					}
 				}
 			}
 
-			List<TicketResponsible> responsibles = new ArrayList<TicketResponsible>();
-			for (String username : userlist) {
-				UserModel user = app().users().getUserModel(username);
-				if (user != null && !user.disabled) {
-					TicketResponsible responsible = new TicketResponsible(user);
+			final List<TicketResponsible> responsibles = new ArrayList<TicketResponsible>();
+			for (final String username : userlist) {
+				final UserModel user = app().users().getUserModel(username);
+				if ((user != null) && !user.disabled) {
+					final TicketResponsible responsible = new TicketResponsible(user);
 					responsibles.add(responsible);
 				}
 			}
 			Collections.sort(responsibles);
-			Fragment responsible = new Fragment("responsible", "responsibleFragment", this);
-			responsible.add(new DropDownChoice<TicketResponsible>("responsible", responsibleModel, responsibles));
+			final Fragment responsible = new Fragment("responsible", "responsibleFragment", this);
+			responsible.add(new DropDownChoice<TicketResponsible>("responsible",
+					this.responsibleModel, responsibles));
 			form.add(responsible.setVisible(!responsibles.isEmpty()));
 
 			// milestone
-			List<TicketMilestone> milestones = app().tickets().getMilestones(getRepositoryModel(), Status.Open);
-			Fragment milestone = new Fragment("milestone", "milestoneFragment", this);
-			milestone.add(new DropDownChoice<TicketMilestone>("milestone", milestoneModel, milestones));
+			final List<TicketMilestone> milestones = app().tickets().getMilestones(
+					getRepositoryModel(), Status.Open);
+			final Fragment milestone = new Fragment("milestone", "milestoneFragment", this);
+			milestone.add(new DropDownChoice<TicketMilestone>("milestone", this.milestoneModel,
+					milestones));
 			form.add(milestone.setVisible(!milestones.isEmpty()));
 
 			// priority
-			Fragment priority = new Fragment("priority", "priorityFragment", this);
-			priority.add(new DropDownChoice<TicketModel.Priority>("priority", priorityModel, Arrays.asList(TicketModel.Priority.choices())));
+			final Fragment priority = new Fragment("priority", "priorityFragment", this);
+			priority.add(new DropDownChoice<TicketModel.Priority>("priority", this.priorityModel,
+					Arrays.asList(TicketModel.Priority.choices())));
 			form.add(priority);
 
 			// integration branch
-			List<String> branches = new ArrayList<String>();
-			for (String branch : getRepositoryModel().getLocalBranches()) {
+			final List<String> branches = new ArrayList<String>();
+			for (final String branch : getRepositoryModel().getLocalBranches()) {
 				// exclude ticket branches
 				if (!branch.startsWith(Constants.R_TICKET)) {
 					branches.add(Repository.shortenRefName(branch));
@@ -175,11 +187,12 @@ public class NewTicketPage extends RepositoryPage {
 			branches.remove(Repository.shortenRefName(getRepositoryModel().HEAD));
 			branches.add(0, Repository.shortenRefName(getRepositoryModel().HEAD));
 
-			Fragment mergeto = new Fragment("mergeto", "mergeToFragment", this);
-			mergeto.add(new DropDownChoice<String>("mergeto", mergeToModel, branches));
+			final Fragment mergeto = new Fragment("mergeto", "mergeToFragment", this);
+			mergeto.add(new DropDownChoice<String>("mergeto", this.mergeToModel, branches));
 			form.add(mergeto.setVisible(!branches.isEmpty()));
 		} else {
-			// user does not have permission to assign milestone, responsible, or mergeto
+			// user does not have permission to assign milestone, responsible,
+			// or mergeto
 			form.add(new Label("responsible").setVisible(false));
 			form.add(new Label("milestone").setVisible(false));
 			form.add(new Label("mergeto").setVisible(false));
@@ -192,72 +205,78 @@ public class NewTicketPage extends RepositoryPage {
 
 			@Override
 			protected void onSubmit(AjaxRequestTarget target, Form<?> form) {
-				String title = titleModel.getObject();
+				final String title = NewTicketPage.this.titleModel.getObject();
 				if (StringUtils.isEmpty(title)) {
 					return;
 				}
 
-				String createdBy = GitBlitWebSession.get().getUsername();
-				Change change = new Change(createdBy);
+				final String createdBy = GitBlitWebSession.get().getUsername();
+				final Change change = new Change(createdBy);
 				change.setField(Field.title, title);
-				change.setField(Field.body, descriptionEditor.getText());
-				String topic = topicModel.getObject();
+				change.setField(Field.body, NewTicketPage.this.descriptionEditor.getText());
+				final String topic = NewTicketPage.this.topicModel.getObject();
 				if (!StringUtils.isEmpty(topic)) {
 					change.setField(Field.topic, topic);
 				}
 
 				// type
 				TicketModel.Type type = TicketModel.Type.defaultType;
-				if (typeModel.getObject() != null) {
-					type = typeModel.getObject();
+				if (NewTicketPage.this.typeModel.getObject() != null) {
+					type = NewTicketPage.this.typeModel.getObject();
 				}
 				change.setField(Field.type, type);
 
 				// responsible
-				TicketResponsible responsible = responsibleModel == null ? null : responsibleModel.getObject();
+				final TicketResponsible responsible = NewTicketPage.this.responsibleModel == null ? null
+						: NewTicketPage.this.responsibleModel.getObject();
 				if (responsible != null) {
 					change.setField(Field.responsible, responsible.username);
 				}
 
 				// milestone
-				TicketMilestone milestone = milestoneModel == null ? null : milestoneModel.getObject();
+				final TicketMilestone milestone = NewTicketPage.this.milestoneModel == null ? null
+						: NewTicketPage.this.milestoneModel.getObject();
 				if (milestone != null) {
 					change.setField(Field.milestone, milestone.name);
 				}
 
 				// severity
 				TicketModel.Severity severity = TicketModel.Severity.defaultSeverity;
-				if (severityModel.getObject() != null) {
-					severity = severityModel.getObject();
+				if (NewTicketPage.this.severityModel.getObject() != null) {
+					severity = NewTicketPage.this.severityModel.getObject();
 				}
 				change.setField(Field.severity, severity);
 
 				// priority
 				TicketModel.Priority priority = TicketModel.Priority.defaultPriority;
-				if (priorityModel.getObject() != null) {
-					priority = priorityModel.getObject();
+				if (NewTicketPage.this.priorityModel.getObject() != null) {
+					priority = NewTicketPage.this.priorityModel.getObject();
 				}
 				change.setField(Field.priority, priority);
 
 				// integration branch
-				String mergeTo = mergeToModel.getObject();
+				final String mergeTo = NewTicketPage.this.mergeToModel.getObject();
 				if (!StringUtils.isEmpty(mergeTo)) {
 					change.setField(Field.mergeTo, mergeTo);
 				}
 
-				TicketModel ticket = app().tickets().createTicket(getRepositoryModel(), 0L, change);
+				final TicketModel ticket = app().tickets().createTicket(getRepositoryModel(), 0L,
+						change);
 				if (ticket != null) {
-					TicketNotifier notifier = app().tickets().createNotifier();
+					final TicketNotifier notifier = app().tickets().createNotifier();
 					notifier.sendMailing(ticket);
 
-					redirectTo(TicketsPage.class, WicketUtils.newObjectParameter(getRepositoryModel().name, "" + ticket.number));
+					redirectTo(
+							TicketsPage.class,
+							WicketUtils.newObjectParameter(getRepositoryModel().name, ""
+									+ ticket.number));
 				} else {
 					// TODO error
 				}
 			}
 		});
 
-		Button cancel = new Button("cancel") {
+		final Button cancel = new Button("cancel") {
 			private static final long serialVersionUID = 1L;
 
 			@Override

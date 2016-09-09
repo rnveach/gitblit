@@ -84,7 +84,7 @@ public abstract class BaseCommand implements Command, SessionAware {
 	private WorkQueue workQueue;
 
 	public BaseCommand() {
-		task = Atomics.newReference();
+		this.task = Atomics.newReference();
 	}
 
 	@Override
@@ -95,12 +95,12 @@ public abstract class BaseCommand implements Command, SessionAware {
 	@Override
 	public void destroy() {
 		log.debug("destroying " + getClass().getName());
-		Future<?> future = task.getAndSet(null);
-		if (future != null && !future.isDone()) {
+		final Future<?> future = this.task.getAndSet(null);
+		if ((future != null) && !future.isDone()) {
 			future.cancel(true);
 		}
-		session = null;
-		ctx = null;
+		this.session = null;
+		this.ctx = null;
 	}
 
 	protected static PrintWriter toPrintWriter(final OutputStream o) {
@@ -111,16 +111,16 @@ public abstract class BaseCommand implements Command, SessionAware {
 	public abstract void start(Environment env) throws IOException;
 
 	protected void provideStateTo(final BaseCommand cmd) {
-		cmd.setContext(ctx);
-		cmd.setWorkQueue(workQueue);
-		cmd.setInputStream(in);
-		cmd.setOutputStream(out);
-		cmd.setErrorStream(err);
-		cmd.setExitCallback(exit);
+		cmd.setContext(this.ctx);
+		cmd.setWorkQueue(this.workQueue);
+		cmd.setInputStream(this.in);
+		cmd.setOutputStream(this.out);
+		cmd.setErrorStream(this.err);
+		cmd.setExitCallback(this.exit);
 	}
 
 	public WorkQueue getWorkQueue() {
-		return workQueue;
+		return this.workQueue;
 	}
 
 	public void setWorkQueue(WorkQueue workQueue) {
@@ -132,7 +132,7 @@ public abstract class BaseCommand implements Command, SessionAware {
 	}
 
 	public SshCommandContext getContext() {
-		return ctx;
+		return this.ctx;
 	}
 
 	@Override
@@ -156,7 +156,7 @@ public abstract class BaseCommand implements Command, SessionAware {
 	}
 
 	protected String getName() {
-		return commandName;
+		return this.commandName;
 	}
 
 	void setName(final String prefix) {
@@ -164,7 +164,7 @@ public abstract class BaseCommand implements Command, SessionAware {
 	}
 
 	public String[] getArguments() {
-		return argv;
+		return this.argv;
 	}
 
 	public void setArguments(final String[] argv) {
@@ -201,22 +201,24 @@ public abstract class BaseCommand implements Command, SessionAware {
 	protected void parseCommandLine(Object options) throws UnloggedFailure {
 		final CmdLineParser clp = newCmdLineParser(options);
 		try {
-			clp.parseArgument(argv);
-		} catch (IllegalArgumentException err) {
+			clp.parseArgument(this.argv);
+		}
+		catch (final IllegalArgumentException err) {
 			if (!clp.wasHelpRequestedByOption()) {
 				throw new UnloggedFailure(1, "fatal: " + err.getMessage());
 			}
-		} catch (CmdLineException err) {
+		}
+		catch (final CmdLineException err) {
 			if (!clp.wasHelpRequestedByOption()) {
 				throw new UnloggedFailure(1, "fatal: " + err.getMessage());
 			}
 		}
 
 		if (clp.wasHelpRequestedByOption()) {
-			CommandMetaData meta = getClass().getAnnotation(CommandMetaData.class);
-			String title = meta.name().toUpperCase() + ": " + meta.description();
-			String b = com.gitblit.utils.StringUtils.leftPad("", title.length() + 2, '═');
-			StringWriter msg = new StringWriter();
+			final CommandMetaData meta = getClass().getAnnotation(CommandMetaData.class);
+			final String title = meta.name().toUpperCase() + ": " + meta.description();
+			final String b = com.gitblit.utils.StringUtils.leftPad("", title.length() + 2, '═');
+			final StringWriter msg = new StringWriter();
 			msg.write('\n');
 			msg.write(b);
 			msg.write('\n');
@@ -228,12 +230,12 @@ public abstract class BaseCommand implements Command, SessionAware {
 			msg.write("USAGE\n");
 			msg.write("─────\n");
 			msg.write(' ');
-			msg.write(commandName);
+			msg.write(this.commandName);
 			msg.write('\n');
 			msg.write("  ");
 			clp.printSingleLineUsage(msg, null);
 			msg.write("\n\n");
-			String txt = getUsageText();
+			final String txt = getUsageText();
 			if (!StringUtils.isEmpty(txt)) {
 				msg.write(txt);
 				msg.write("\n\n");
@@ -242,7 +244,7 @@ public abstract class BaseCommand implements Command, SessionAware {
 			msg.write("───────────────────\n");
 			clp.printUsage(msg, null);
 			msg.write('\n');
-			String examples = usage().trim();
+			final String examples = usage().trim();
 			if (!StringUtils.isEmpty(examples)) {
 				msg.write('\n');
 				msg.write("EXAMPLES\n");
@@ -261,7 +263,7 @@ public abstract class BaseCommand implements Command, SessionAware {
 	}
 
 	public String usage() {
-		Class<? extends BaseCommand> clazz = getClass();
+		final Class<? extends BaseCommand> clazz = getClass();
 		if (clazz.isAnnotationPresent(UsageExamples.class)) {
 			return examples(clazz.getAnnotation(UsageExamples.class).examples());
 		} else if (clazz.isAnnotationPresent(UsageExample.class)) {
@@ -275,25 +277,26 @@ public abstract class BaseCommand implements Command, SessionAware {
 	}
 
 	protected String examples(UsageExample... examples) {
-		int sshPort = getContext().getGitblit().getSettings().getInteger(Keys.git.sshPort, 29418);
-		String username = getContext().getClient().getUsername();
-		String hostname = "localhost";
-		String ssh = String.format("ssh -l %s -p %d %s", username, sshPort, hostname);
+		final int sshPort = getContext().getGitblit().getSettings()
+				.getInteger(Keys.git.sshPort, 29418);
+		final String username = getContext().getClient().getUsername();
+		final String hostname = "localhost";
+		final String ssh = String.format("ssh -l %s -p %d %s", username, sshPort, hostname);
 
-		StringBuilder sb = new StringBuilder();
-		for (UsageExample example : examples) {
+		final StringBuilder sb = new StringBuilder();
+		for (final UsageExample example : examples) {
 			sb.append(example.description()).append("\n\n");
 			String syntax = example.syntax();
 			syntax = syntax.replace("${ssh}", ssh);
 			syntax = syntax.replace("${username}", username);
-			syntax = syntax.replace("${cmd}", commandName);
+			syntax = syntax.replace("${cmd}", this.commandName);
 			sb.append("   ").append(syntax).append("\n\n");
 		}
 		return sb.toString();
 	}
 
 	protected void showHelp() throws UnloggedFailure {
-		argv = new String [] { "--help" };
+		this.argv = new String[] { "--help" };
 		parseCommandLine();
 	}
 
@@ -304,8 +307,8 @@ public abstract class BaseCommand implements Command, SessionAware {
 		private TaskThunk(final CommandRunnable thunk) {
 			this.thunk = thunk;
 
-			StringBuilder m = new StringBuilder();
-			m.append(ctx.getCommandLine());
+			final StringBuilder m = new StringBuilder();
+			m.append(BaseCommand.this.ctx.getCommandLine());
 			this.taskName = m.toString();
 		}
 
@@ -314,8 +317,9 @@ public abstract class BaseCommand implements Command, SessionAware {
 			synchronized (this) {
 				try {
 					onExit(STATUS_CANCEL);
-				} finally {
-					ctx = null;
+				}
+				finally {
+					BaseCommand.this.ctx = null;
 				}
 			}
 		}
@@ -327,25 +331,30 @@ public abstract class BaseCommand implements Command, SessionAware {
 				final String thisName = thisThread.getName();
 				int rc = 0;
 				try {
-					thisThread.setName("SSH " + taskName);
-					thunk.run();
+					thisThread.setName("SSH " + this.taskName);
+					this.thunk.run();
 
-					out.flush();
-					err.flush();
-				} catch (Throwable e) {
+					BaseCommand.this.out.flush();
+					BaseCommand.this.err.flush();
+				}
+				catch (final Throwable e) {
 					try {
-						out.flush();
-					} catch (Throwable e2) {
+						BaseCommand.this.out.flush();
+					}
+					catch (final Throwable e2) {
 					}
 					try {
-						err.flush();
-					} catch (Throwable e2) {
+						BaseCommand.this.err.flush();
+					}
+					catch (final Throwable e2) {
 					}
 					rc = handleError(e);
-				} finally {
+				}
+				finally {
 					try {
 						onExit(rc);
-					} finally {
+					}
+					finally {
 						thisThread.setName(thisName);
 					}
 				}
@@ -354,7 +363,7 @@ public abstract class BaseCommand implements Command, SessionAware {
 
 		@Override
 		public String toString() {
-			return taskName;
+			return this.taskName;
 		}
 	}
 
@@ -400,16 +409,17 @@ public abstract class BaseCommand implements Command, SessionAware {
 	 * <p>
 	 * Commands should invoke this at most once.
 	 *
-	 * @param rc exit code for the remote client.
+	 * @param rc
+	 *            exit code for the remote client.
 	 */
 	protected void onExit(final int rc) {
-		exit.onExit(rc);
+		this.exit.onExit(rc);
 	}
 
 	private int handleError(final Throwable e) {
-		if ((e.getClass() == IOException.class && "Pipe closed".equals(e.getMessage())) ||
-				(e.getClass() == SshException.class && "Already closed".equals(e.getMessage())) ||
-				e.getClass() == InterruptedIOException.class) {
+		if (((e.getClass() == IOException.class) && "Pipe closed".equals(e.getMessage()))
+				|| ((e.getClass() == SshException.class) && "Already closed".equals(e.getMessage()))
+				|| (e.getClass() == InterruptedIOException.class)) {
 			// This is sshd telling us the client just dropped off while
 			// we were waiting for a read or a write to complete. Either
 			// way its not really a fatal error. Don't log it.
@@ -421,34 +431,38 @@ public abstract class BaseCommand implements Command, SessionAware {
 		} else {
 			final StringBuilder m = new StringBuilder();
 			m.append("Internal server error");
-			String user = ctx.getClient().getUsername();
+			final String user = this.ctx.getClient().getUsername();
 			if (user != null) {
 				m.append(" (user ");
 				m.append(user);
 				m.append(")");
 			}
 			m.append(" during ");
-			m.append(ctx.getCommandLine());
+			m.append(this.ctx.getCommandLine());
 			log.error(m.toString(), e);
 		}
 
 		if (e instanceof Failure) {
 			final Failure f = (Failure) e;
 			try {
-				err.write((f.getMessage() + "\n").getBytes(Charsets.UTF_8));
-				err.flush();
-			} catch (IOException e2) {
-			} catch (Throwable e2) {
+				this.err.write((f.getMessage() + "\n").getBytes(Charsets.UTF_8));
+				this.err.flush();
+			}
+			catch (final IOException e2) {
+			}
+			catch (final Throwable e2) {
 				log.warn("Cannot send failure message to client", e2);
 			}
 			return f.exitCode;
 
 		} else {
 			try {
-				err.write("fatal: internal server error\n".getBytes(Charsets.UTF_8));
-				err.flush();
-			} catch (IOException e2) {
-			} catch (Throwable e2) {
+				this.err.write("fatal: internal server error\n".getBytes(Charsets.UTF_8));
+				this.err.flush();
+			}
+			catch (final IOException e2) {
+			}
+			catch (final Throwable e2) {
 				log.warn("Cannot send internal server error message to client", e2);
 			}
 			return 128;
@@ -478,7 +492,7 @@ public abstract class BaseCommand implements Command, SessionAware {
 	 */
 	protected void startThread(final CommandRunnable thunk) {
 		final TaskThunk tt = new TaskThunk(thunk);
-		task.set(workQueue.getDefaultQueue().submit(tt));
+		this.task.set(this.workQueue.getDefaultQueue().submit(tt));
 	}
 
 	/** Thrown from {@link CommandRunnable#run()} with client message and code. */

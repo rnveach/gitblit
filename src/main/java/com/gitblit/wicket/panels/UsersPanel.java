@@ -38,12 +38,12 @@ public class UsersPanel extends BasePanel {
 	public UsersPanel(String wicketId, final boolean showAdmin) {
 		super(wicketId);
 
-		Fragment adminLinks = new Fragment("adminPanel", "adminLinks", this);
+		final Fragment adminLinks = new Fragment("adminPanel", "adminLinks", this);
 		adminLinks.add(new BookmarkablePageLink<Void>("newUser", EditUserPage.class));
 		add(adminLinks.setVisible(showAdmin));
 
 		final List<UserModel> users = app().users().getAllUsers();
-		DataView<UserModel> usersView = new DataView<UserModel>("userRow",
+		final DataView<UserModel> usersView = new DataView<UserModel>("userRow",
 				new ListDataProvider<UserModel>(users)) {
 			private static final long serialVersionUID = 1L;
 			private int counter;
@@ -51,24 +51,26 @@ public class UsersPanel extends BasePanel {
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
 			public void populateItem(final Item<UserModel> item) {
 				final UserModel entry = item.getModelObject();
-				String css = "list" + (entry.disabled ? "-strikethrough":"");
+				final String css = "list" + (entry.disabled ? "-strikethrough" : "");
 				LinkPanel editLink = new LinkPanel("username", css, entry.username,
 						EditUserPage.class, WicketUtils.newUsernameParameter(entry.username));
-				WicketUtils.setHtmlTooltip(editLink, getString("gb.edit") + " " + entry.getDisplayName());
+				WicketUtils.setHtmlTooltip(editLink,
+						getString("gb.edit") + " " + entry.getDisplayName());
 				item.add(editLink);
 
 				if (StringUtils.isEmpty(entry.displayName)) {
 					item.add(new Label("displayName").setVisible(false));
 				} else {
 					editLink = new LinkPanel("displayName", css, entry.getDisplayName(),
-						EditUserPage.class, WicketUtils.newUsernameParameter(entry.username));
-					WicketUtils.setHtmlTooltip(editLink, getString("gb.edit") + " " + entry.getDisplayName());
+							EditUserPage.class, WicketUtils.newUsernameParameter(entry.username));
+					WicketUtils.setHtmlTooltip(editLink,
+							getString("gb.edit") + " " + entry.getDisplayName());
 					item.add(editLink);
 				}
 
@@ -76,19 +78,21 @@ public class UsersPanel extends BasePanel {
 					item.add(new Label("emailAddress").setVisible(false));
 				} else {
 					editLink = new LinkPanel("emailAddress", css, entry.emailAddress,
-						EditUserPage.class, WicketUtils.newUsernameParameter(entry.username));
-					WicketUtils.setHtmlTooltip(editLink, getString("gb.edit") + " " + entry.getDisplayName());
+							EditUserPage.class, WicketUtils.newUsernameParameter(entry.username));
+					WicketUtils.setHtmlTooltip(editLink,
+							getString("gb.edit") + " " + entry.getDisplayName());
 					item.add(editLink);
 				}
 
-				item.add(new Label("accountType", entry.accountType.name() + (entry.canAdmin() ? ", admin":"")));
+				item.add(new Label("accountType", entry.accountType.name()
+						+ (entry.canAdmin() ? ", admin" : "")));
 				item.add(new Label("teams", entry.teams.size() > 0 ? ("" + entry.teams.size()) : ""));
 				item.add(new Label("repositories",
 						entry.permissions.size() > 0 ? ("" + entry.permissions.size()) : ""));
-				Fragment userLinks = new Fragment("userLinks", "userAdminLinks", this);
+				final Fragment userLinks = new Fragment("userLinks", "userAdminLinks", this);
 				userLinks.add(new BookmarkablePageLink<Void>("editUser", EditUserPage.class,
 						WicketUtils.newUsernameParameter(entry.username)));
-				Link<Void> deleteLink = new Link<Void>("deleteUser") {
+				final Link<Void> deleteLink = new Link<Void>("deleteUser") {
 
 					private static final long serialVersionUID = 1L;
 
@@ -108,8 +112,8 @@ public class UsersPanel extends BasePanel {
 				userLinks.add(deleteLink);
 				item.add(userLinks);
 
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(usersView.setVisible(showAdmin));

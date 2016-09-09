@@ -29,7 +29,8 @@
  */
 package com.syntevo.bugtraq;
 
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class BugtraqEntry {
 
@@ -41,7 +42,9 @@ final class BugtraqEntry {
 
 	// Setup ==================================================================
 
-	public BugtraqEntry(@NotNull String url, @NotNull String logIdRegex, @Nullable String logLinkRegex, @Nullable String logFilterRegex, @Nullable String logLinkText) throws BugtraqException {
+	public BugtraqEntry(@NotNull String url, @NotNull String logIdRegex,
+			@Nullable String logLinkRegex, @Nullable String logFilterRegex,
+			@Nullable String logLinkText) throws BugtraqException {
 		this.url = url;
 		this.logLinkText = logLinkText;
 		this.parser = BugtraqParser.createInstance(logIdRegex, logLinkRegex, logFilterRegex);
@@ -51,16 +54,16 @@ final class BugtraqEntry {
 
 	@NotNull
 	public String getUrl() {
-		return url;
+		return this.url;
 	}
 
 	@Nullable
 	public String getLogLinkText() {
-		return logLinkText;
+		return this.logLinkText;
 	}
 
 	@NotNull
 	public BugtraqParser getParser() {
-		return parser;
+		return this.parser;
 	}
 }

@@ -50,12 +50,12 @@ public class LogPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
 
-	private boolean hasMore;
+	private final boolean hasMore;
 
 	public LogPanel(String wicketId, final String repositoryName, final String objectId,
 			Repository r, int limit, int pageOffset, boolean showRemoteRefs) {
 		super(wicketId);
-		boolean pageResults = limit <= 0;
+		final boolean pageResults = limit <= 0;
 		int itemsPerPage = app().settings().getInteger(Keys.web.itemsPerPage, 50);
 		if (itemsPerPage <= 1) {
 			itemsPerPage = 50;
@@ -73,12 +73,12 @@ public class LogPanel extends BasePanel {
 
 		// inaccurate way to determine if there are more commits.
 		// works unless commits.size() represents the exact end.
-		hasMore = commits.size() >= itemsPerPage;
+		this.hasMore = commits.size() >= itemsPerPage;
 
 		final String baseUrl = WicketUtils.getGitblitURL(getRequest());
 		final boolean showGraph = app().settings().getBoolean(Keys.web.showBranchGraph, true);
 
-		MarkupContainer graph = new WebMarkupContainer("graph");
+		final MarkupContainer graph = new WebMarkupContainer("graph");
 		add(graph);
 		if (!showGraph || commits.isEmpty()) {
 			// not showing or nothing to show
@@ -86,7 +86,8 @@ public class LogPanel extends BasePanel {
 		} else {
 			// set the rowspan on the graph row and +1 for the graph row itself
 			graph.add(new SimpleAttributeModifier("rowspan", "" + (commits.size() + 1)));
-			graph.add(new ExternalImage("image", BranchGraphServlet.asLink(baseUrl, repositoryName, commits.get(0).name(), commits.size())));
+			graph.add(new ExternalImage("image", BranchGraphServlet.asLink(baseUrl, repositoryName,
+					commits.get(0).name(), commits.size())));
 		}
 
 		// header
@@ -101,8 +102,8 @@ public class LogPanel extends BasePanel {
 		}
 
 		final int hashLen = app().settings().getInteger(Keys.web.shortCommitIdLength, 6);
-		ListDataProvider<RevCommit> dp = new ListDataProvider<RevCommit>(commits);
-		DataView<RevCommit> logView = new DataView<RevCommit>("commit", dp) {
+		final ListDataProvider<RevCommit> dp = new ListDataProvider<RevCommit>(commits);
+		final DataView<RevCommit> logView = new DataView<RevCommit>("commit", dp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
@@ -112,13 +113,14 @@ public class LogPanel extends BasePanel {
 				final Date date = JGitUtils.getAuthorDate(entry);
 				final boolean isMerge = entry.getParentCount() > 1;
 
-				item.add(WicketUtils.createDateLabel("commitDate", date, getTimeZone(), getTimeUtils()));
+				item.add(WicketUtils.createDateLabel("commitDate", date, getTimeZone(),
+						getTimeUtils()));
 
 				// author search link
-				String author = entry.getAuthorIdent().getName();
-				LinkPanel authorLink = new LinkPanel("commitAuthor", "list", author,
-						GitSearchPage.class, WicketUtils.newSearchParameter(repositoryName,
-								null, author, Constants.SearchType.AUTHOR));
+				final String author = entry.getAuthorIdent().getName();
+				final LinkPanel authorLink = new LinkPanel("commitAuthor", "list", author,
+						GitSearchPage.class, WicketUtils.newSearchParameter(repositoryName, null,
+								author, Constants.SearchType.AUTHOR));
 				setPersonSearchTooltip(authorLink, author, Constants.SearchType.AUTHOR);
 				item.add(authorLink);
 
@@ -130,16 +132,17 @@ public class LogPanel extends BasePanel {
 				}
 
 				// short message
-				String shortMessage = entry.getShortMessage();
+				final String shortMessage = entry.getShortMessage();
 				String trimmedMessage = shortMessage;
 				if (allRefs.containsKey(entry.getId())) {
-					trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG_REFS);
+					trimmedMessage = StringUtils.trimString(shortMessage,
+							Constants.LEN_SHORTLOG_REFS);
 				} else {
 					trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG);
 				}
-				LinkPanel shortlog = new LinkPanel("commitShortMessage", "list subject" + (isMerge ? " merge" : ""),
-						trimmedMessage, CommitPage.class, WicketUtils.newObjectParameter(
-								repositoryName, entry.getName()));
+				final LinkPanel shortlog = new LinkPanel("commitShortMessage", "list subject"
+						+ (isMerge ? " merge" : ""), trimmedMessage, CommitPage.class,
+						WicketUtils.newObjectParameter(repositoryName, entry.getName()));
 				if (!shortMessage.equals(trimmedMessage)) {
 					WicketUtils.setHtmlTooltip(shortlog, shortMessage);
 				}
@@ -148,9 +151,9 @@ public class LogPanel extends BasePanel {
 				item.add(new RefsPanel("commitRefs", repositoryName, entry, allRefs));
 
 				// commit hash link
-				LinkPanel commitHash = new LinkPanel("hashLink", null, entry.getName().substring(0, hashLen),
-						CommitPage.class, WicketUtils.newObjectParameter(
-								repositoryName, entry.getName()));
+				final LinkPanel commitHash = new LinkPanel("hashLink", null, entry.getName()
+						.substring(0, hashLen), CommitPage.class, WicketUtils.newObjectParameter(
+						repositoryName, entry.getName()));
 				WicketUtils.setCssClass(commitHash, "shortsha1");
 				WicketUtils.setHtmlTooltip(commitHash, entry.getName());
 				item.add(commitHash);
@@ -161,10 +164,10 @@ public class LogPanel extends BasePanel {
 				item.add(new BookmarkablePageLink<Void>("tree", TreePage.class, WicketUtils
 						.newObjectParameter(repositoryName, entry.getName())));
 
-				String clazz = counter % 2 == 0 ? "light commit" : "dark commit";
+				final String clazz = (this.counter % 2) == 0 ? "light commit" : "dark commit";
 				WicketUtils.setCssClass(item, clazz);
 
-				counter++;
+				this.counter++;
 			}
 		};
 		add(logView);
@@ -193,6 +196,6 @@ public class LogPanel extends BasePanel {
 	}
 
 	public boolean hasMore() {
-		return hasMore;
+		return this.hasMore;
 	}
 }

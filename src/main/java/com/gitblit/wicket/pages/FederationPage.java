@@ -26,10 +26,10 @@ public class FederationPage extends RootPage {
 		super();
 		setupPage("", "");
 
-		boolean showFederation = showAdmin && app().federation().canFederate();
+		final boolean showFederation = this.showAdmin && app().federation().canFederate();
 		add(new FederationTokensPanel("federationTokensPanel", showFederation)
 				.setVisible(showFederation));
-		FederationProposalsPanel proposalsPanel = new FederationProposalsPanel(
+		final FederationProposalsPanel proposalsPanel = new FederationProposalsPanel(
 				"federationProposalsPanel");
 		if (showFederation) {
 			proposalsPanel.hideIfEmpty();
@@ -37,10 +37,11 @@ public class FederationPage extends RootPage {
 			proposalsPanel.setVisible(false);
 		}
 
-		boolean showRegistrations = app().settings().getBoolean(Keys.web.showFederationRegistrations, false);
-		FederationRegistrationsPanel registrationsPanel = new FederationRegistrationsPanel(
+		final boolean showRegistrations = app().settings().getBoolean(
+				Keys.web.showFederationRegistrations, false);
+		final FederationRegistrationsPanel registrationsPanel = new FederationRegistrationsPanel(
 				"federationRegistrationsPanel");
-		if (showAdmin || showRegistrations) {
+		if (this.showAdmin || showRegistrations) {
 			registrationsPanel.hideIfEmpty();
 		} else {
 			registrationsPanel.setVisible(false);

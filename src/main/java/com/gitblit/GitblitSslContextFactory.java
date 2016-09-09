@@ -64,9 +64,9 @@ public class GitblitSslContextFactory extends SslContextFactory {
 	@Override
 	protected TrustManager[] getTrustManagers(KeyStore trustStore, Collection<? extends CRL> crls)
 			throws Exception {
-		TrustManager[] managers = super.getTrustManagers(trustStore, crls);
-		X509TrustManager delegate = (X509TrustManager) managers[0];
-		GitblitTrustManager root = new GitblitTrustManager(delegate, caRevocationList);
+		final TrustManager[] managers = super.getTrustManagers(trustStore, crls);
+		final X509TrustManager delegate = (X509TrustManager) managers[0];
+		final GitblitTrustManager root = new GitblitTrustManager(delegate, this.caRevocationList);
 
 		// replace first manager with the GitblitTrustManager
 		managers[0] = root;

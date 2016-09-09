@@ -45,29 +45,31 @@ public class FederationTokensPanel extends BasePanel {
 				.getFederationToken(FederationToken.USERS_AND_REPOSITORIES),
 				FederationRequest.PULL_USERS)));
 
-		add(new ExternalLink("federatedSettings", FederationUtils.asLink(baseUrl, app().federation()
-				.getFederationToken(FederationToken.ALL), FederationRequest.PULL_SETTINGS)));
+		add(new ExternalLink("federatedSettings", FederationUtils.asLink(baseUrl, app()
+				.federation().getFederationToken(FederationToken.ALL),
+				FederationRequest.PULL_SETTINGS)));
 
 		final List<String[]> data = new ArrayList<String[]>();
-		for (FederationToken token : FederationToken.values()) {
-			data.add(new String[] { token.name(), app().federation().getFederationToken(token), null });
+		for (final FederationToken token : FederationToken.values()) {
+			data.add(new String[] { token.name(), app().federation().getFederationToken(token),
+					null });
 		}
-		List<String> sets = app().settings().getStrings(Keys.federation.sets);
+		final List<String> sets = app().settings().getStrings(Keys.federation.sets);
 		Collections.sort(sets);
-		for (String set : sets) {
+		for (final String set : sets) {
 			data.add(new String[] { FederationToken.REPOSITORIES.name(),
 					app().federation().getFederationToken(set), set });
 		}
 
-		DataView<String[]> dataView = new DataView<String[]>("row", new ListDataProvider<String[]>(
-				data)) {
+		final DataView<String[]> dataView = new DataView<String[]>("row",
+				new ListDataProvider<String[]>(data)) {
 			private static final long serialVersionUID = 1L;
 			private int counter;
 
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
@@ -83,14 +85,14 @@ public class FederationTokensPanel extends BasePanel {
 				}
 				item.add(new Label("value", entry[1]));
 
-				item.add(new ExternalLink("repositoryDefinitions", FederationUtils.asLink(
-						baseUrl, entry[1], FederationRequest.PULL_REPOSITORIES)));
+				item.add(new ExternalLink("repositoryDefinitions", FederationUtils.asLink(baseUrl,
+						entry[1], FederationRequest.PULL_REPOSITORIES)));
 
-				item.add(new BookmarkablePageLink<Void>("send",
-						SendProposalPage.class, WicketUtils.newTokenParameter(entry[1])));
+				item.add(new BookmarkablePageLink<Void>("send", SendProposalPage.class, WicketUtils
+						.newTokenParameter(entry[1])));
 
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(dataView.setVisible(showFederation));

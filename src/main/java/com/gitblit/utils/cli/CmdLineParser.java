@@ -98,19 +98,19 @@ public class CmdLineParser {
 	}
 
 	public void addArgument(Setter<?> setter, Argument a) {
-		parser.addArgument(setter, a);
+		this.parser.addArgument(setter, a);
 	}
 
 	public void addOption(Setter<?> setter, Option o) {
-		parser.addOption(setter, o);
+		this.parser.addOption(setter, o);
 	}
 
 	public void printSingleLineUsage(Writer w, ResourceBundle rb) {
-		parser.printSingleLineUsage(w, rb);
+		this.parser.printSingleLineUsage(w, rb);
 	}
 
 	public void printUsage(Writer out, ResourceBundle rb) {
-		parser.printUsage(out, rb);
+		this.parser.printUsage(out, rb);
 	}
 
 	public void printDetailedUsage(String name, StringWriter out) {
@@ -126,11 +126,11 @@ public class CmdLineParser {
 		out.write(name);
 
 		char next = '?';
-		List<NamedOptionDef> booleans = new ArrayList<NamedOptionDef>();
+		final List<NamedOptionDef> booleans = new ArrayList<NamedOptionDef>();
 		for (@SuppressWarnings("rawtypes")
-		OptionHandler handler : parser.options) {
+		final OptionHandler handler : this.parser.options) {
 			if (handler.option instanceof NamedOptionDef) {
-				NamedOptionDef n = (NamedOptionDef) handler.option;
+				final NamedOptionDef n = (NamedOptionDef) handler.option;
 
 				if (handler instanceof BooleanOptionHandler) {
 					booleans.add(n);
@@ -160,7 +160,7 @@ public class CmdLineParser {
 				}
 			}
 		}
-		for (NamedOptionDef n : booleans) {
+		for (final NamedOptionDef n : booleans) {
 			if (!n.required()) {
 				out.write('[');
 			}
@@ -191,16 +191,17 @@ public class CmdLineParser {
 	}
 
 	public boolean wasHelpRequestedByOption() {
-		return parser.help.value;
+		return this.parser.help.value;
 	}
 
 	public void parseArgument(final String... args) throws CmdLineException {
-		List<String> tmp = Lists.newArrayListWithCapacity(args.length);
+		final List<String> tmp = Lists.newArrayListWithCapacity(args.length);
 		for (int argi = 0; argi < args.length; argi++) {
 			final String str = args[argi];
 			if (str.equals("--")) {
-				while (argi < args.length)
+				while (argi < args.length) {
 					tmp.add(args[argi++]);
+				}
 				break;
 			}
 
@@ -215,13 +216,13 @@ public class CmdLineParser {
 
 			tmp.add(str);
 		}
-		parser.parseArgument(tmp.toArray(new String[tmp.size()]));
+		this.parser.parseArgument(tmp.toArray(new String[tmp.size()]));
 	}
 
 	public void parseOptionMap(Map<String, String[]> parameters) throws CmdLineException {
-		Multimap<String, String> map = LinkedHashMultimap.create();
-		for (Map.Entry<String, String[]> ent : parameters.entrySet()) {
-			for (String val : ent.getValue()) {
+		final Multimap<String, String> map = LinkedHashMultimap.create();
+		for (final Map.Entry<String, String[]> ent : parameters.entrySet()) {
+			for (final String val : ent.getValue()) {
 				map.put(ent.getKey(), val);
 			}
 		}
@@ -229,33 +230,33 @@ public class CmdLineParser {
 	}
 
 	public void parseOptionMap(Multimap<String, String> params) throws CmdLineException {
-		List<String> tmp = Lists.newArrayListWithCapacity(2 * params.size());
+		final List<String> tmp = Lists.newArrayListWithCapacity(2 * params.size());
 		for (final String key : params.keySet()) {
-			String name = makeOption(key);
+			final String name = makeOption(key);
 
 			if (isBoolean(name)) {
 				boolean on = false;
-				for (String value : params.get(key)) {
+				for (final String value : params.get(key)) {
 					on = toBoolean(key, value);
 				}
 				if (on) {
 					tmp.add(name);
 				}
 			} else {
-				for (String value : params.get(key)) {
+				for (final String value : params.get(key)) {
 					tmp.add(name);
 					tmp.add(value);
 				}
 			}
 		}
-		parser.parseArgument(tmp.toArray(new String[tmp.size()]));
+		this.parser.parseArgument(tmp.toArray(new String[tmp.size()]));
 	}
 
 	public boolean isBoolean(String name) {
 		return findHandler(makeOption(name)) instanceof BooleanOptionHandler;
 	}
 
-	private String makeOption(String name) {
+	private static String makeOption(String name) {
 		if (!name.startsWith("-")) {
 			if (name.length() == 1) {
 				name = "-" + name;
@@ -268,21 +269,21 @@ public class CmdLineParser {
 
 	@SuppressWarnings("rawtypes")
 	private OptionHandler findHandler(String name) {
-		if (options == null) {
-			options = index(parser.options);
+		if (this.options == null) {
+			this.options = index(this.parser.options);
 		}
-		return options.get(name);
+		return this.options.get(name);
 	}
 
 	@SuppressWarnings("rawtypes")
 	private static Map<String, OptionHandler> index(List<OptionHandler> in) {
-		Map<String, OptionHandler> m = Maps.newHashMap();
-		for (OptionHandler handler : in) {
+		final Map<String, OptionHandler> m = Maps.newHashMap();
+		for (final OptionHandler handler : in) {
 			if (handler.option instanceof NamedOptionDef) {
-				NamedOptionDef def = (NamedOptionDef) handler.option;
+				final NamedOptionDef def = (NamedOptionDef) handler.option;
 				if (!def.isArgument()) {
 					m.put(def.name(), handler);
-					for (String alias : def.aliases()) {
+					for (final String alias : def.aliases()) {
 						m.put(alias, handler);
 					}
 				}
@@ -292,8 +293,8 @@ public class CmdLineParser {
 	}
 
 	private boolean toBoolean(String name, String value) throws CmdLineException {
-		if ("true".equals(value) || "t".equals(value) || "yes".equals(value) || "y".equals(value) || "on".equals(value)
-				|| "1".equals(value) || value == null || "".equals(value)) {
+		if ("true".equals(value) || "t".equals(value) || "yes".equals(value) || "y".equals(value)
+				|| "on".equals(value) || "1".equals(value) || (value == null) || "".equals(value)) {
 			return true;
 		}
 
@@ -302,7 +303,8 @@ public class CmdLineParser {
 			return false;
 		}
 
-		throw new CmdLineException(parser, String.format("invalid boolean \"%s=%s\"", name, value));
+		throw new CmdLineException(this.parser, String.format("invalid boolean \"%s=%s\"", name,
+				value));
 	}
 
 	private class MyParser extends org.kohsuke.args4j.CmdLineParser {
@@ -332,15 +334,15 @@ public class CmdLineParser {
 		@SuppressWarnings("rawtypes")
 		private OptionHandler add(OptionHandler handler) {
 			ensureOptionsInitialized();
-			options.add(handler);
+			this.options.add(handler);
 			return handler;
 		}
 
 		private void ensureOptionsInitialized() {
-			if (options == null) {
-				help = new HelpOption();
-				options = Lists.newArrayList();
-				addOption(help, help);
+			if (this.options == null) {
+				this.help = new HelpOption();
+				this.options = Lists.newArrayList();
+				addOption(this.help, this.help);
 			}
 		}
 
@@ -387,7 +389,7 @@ public class CmdLineParser {
 
 		@Override
 		public void addValue(Boolean val) {
-			value = val;
+			this.value = val;
 		}
 
 		@Override
@@ -437,7 +439,7 @@ public class CmdLineParser {
 
 		@Override
 		public String[] forbids() {
-			return new String [0];
+			return new String[0];
 		}
 	}
 }

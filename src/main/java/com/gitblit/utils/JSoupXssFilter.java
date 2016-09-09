@@ -32,29 +32,29 @@ import com.google.inject.Singleton;
 @Singleton
 public class JSoupXssFilter implements XssFilter {
 
-	 private final Cleaner none;
+	private final Cleaner none;
 
-	 private final Cleaner relaxed;
+	private final Cleaner relaxed;
 
-	 @Inject
-	 public JSoupXssFilter() {
-		 none = new Cleaner(Whitelist.none());
-		 relaxed = new Cleaner(getRelaxedWhiteList());
+	@Inject
+	public JSoupXssFilter() {
+		this.none = new Cleaner(Whitelist.none());
+		this.relaxed = new Cleaner(getRelaxedWhiteList());
 	}
 
 	@Override
 	public String none(String input) {
-		return clean(input, none);
+		return clean(input, this.none);
 	}
 
 	@Override
 	public String relaxed(String input) {
-		return clean(input, relaxed);
+		return clean(input, this.relaxed);
 	}
 
 	protected String clean(String input, Cleaner cleaner) {
-		Document unsafe = Jsoup.parse(input);
-		Document safe = cleaner.clean(unsafe);
+		final Document unsafe = Jsoup.parse(input);
+		final Document safe = cleaner.clean(unsafe);
 		return safe.body().html();
 	}
 
@@ -62,33 +62,33 @@ public class JSoupXssFilter implements XssFilter {
 	 * Builds & returns a loose HTML whitelist similar to Github.
 	 *
 	 * https://github.com/github/markup/tree/master#html-sanitization
+	 * 
 	 * @return a loose HTML whitelist
 	 */
 	protected Whitelist getRelaxedWhiteList() {
 		return new Whitelist()
-        .addTags(
-                "a", "b", "blockquote", "br", "caption", "cite", "code", "col",
-                "colgroup", "dd", "del", "div", "dl", "dt", "em", "h1", "h2", "h3", "h4", "h5", "h6", "hr",
-                "i", "img", "ins", "kbd", "li", "ol", "p", "pre", "q", "samp", "small", "strike", "strong",
-                "sub", "sup", "table", "tbody", "td", "tfoot", "th", "thead", "tr", "tt", "u",
-                "ul", "var")
+				.addTags("a", "b", "blockquote", "br", "caption", "cite", "code", "col",
+						"colgroup", "dd", "del", "div", "dl", "dt", "em", "h1", "h2", "h3", "h4",
+						"h5", "h6", "hr", "i", "img", "ins", "kbd", "li", "ol", "p", "pre", "q",
+						"samp", "small", "strike", "strong", "sub", "sup", "table", "tbody", "td",
+						"tfoot", "th", "thead", "tr", "tt", "u", "ul", "var")
 
-        .addAttributes("a", "class", "href", "style", "target", "title")
-        .addAttributes("blockquote", "cite")
-        .addAttributes("col", "span", "width")
-        .addAttributes("colgroup", "span", "width")
-        .addAttributes("div", "class", "style")
-        .addAttributes("img", "align", "alt", "height", "src", "title", "width")
-        .addAttributes("ol", "start", "type")
-        .addAttributes("q", "cite")
-        .addAttributes("span", "class", "style")
-        .addAttributes("table", "class", "style", "summary", "width")
-        .addAttributes("td", "abbr", "axis", "class", "colspan", "rowspan", "style", "width")
-        .addAttributes("th", "abbr", "axis", "class", "colspan", "rowspan", "scope", "style", "width")
-        .addAttributes("ul", "type")
+				.addAttributes("a", "class", "href", "style", "target", "title")
+				.addAttributes("blockquote", "cite")
+				.addAttributes("col", "span", "width")
+				.addAttributes("colgroup", "span", "width")
+				.addAttributes("div", "class", "style")
+				.addAttributes("img", "align", "alt", "height", "src", "title", "width")
+				.addAttributes("ol", "start", "type")
+				.addAttributes("q", "cite")
+				.addAttributes("span", "class", "style")
+				.addAttributes("table", "class", "style", "summary", "width")
+				.addAttributes("td", "abbr", "axis", "class", "colspan", "rowspan", "style",
+						"width")
+				.addAttributes("th", "abbr", "axis", "class", "colspan", "rowspan", "scope",
+						"style", "width").addAttributes("ul", "type")
 
-        .addEnforcedAttribute("a", "rel", "nofollow")
-        ;
+				.addEnforcedAttribute("a", "rel", "nofollow");
 	}
 
 }

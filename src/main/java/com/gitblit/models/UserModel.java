@@ -95,9 +95,8 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	}
 
 	public boolean isLocalAccount() {
-		return !Constants.EXTERNAL_ACCOUNT.equals(password)
-				|| accountType == null
-				|| accountType.isLocal();
+		return !Constants.EXTERNAL_ACCOUNT.equals(this.password) || (this.accountType == null)
+				|| this.accountType.isLocal();
 	}
 
 	/**
@@ -107,13 +106,13 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	 * @return the user's list of permissions
 	 */
 	public List<RegistrantAccessPermission> getRepositoryPermissions() {
-		List<RegistrantAccessPermission> list = new ArrayList<RegistrantAccessPermission>();
+		final List<RegistrantAccessPermission> list = new ArrayList<RegistrantAccessPermission>();
 		if (canAdmin()) {
 			// user has REWIND access to all repositories
 			return list;
 		}
-		for (Map.Entry<String, AccessPermission> entry : permissions.entrySet()) {
-			String registrant = entry.getKey();
+		for (final Map.Entry<String, AccessPermission> entry : this.permissions.entrySet()) {
+			final String registrant = entry.getKey();
 			AccessPermission ap = entry.getValue();
 			String source = null;
 			boolean mutable = true;
@@ -127,15 +126,18 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 				pType = PermissionType.REGEX;
 				source = registrant;
 			}
-			list.add(new RegistrantAccessPermission(registrant, ap, pType, RegistrantType.REPOSITORY, source, mutable));
+			list.add(new RegistrantAccessPermission(registrant, ap, pType,
+					RegistrantType.REPOSITORY, source, mutable));
 		}
 		Collections.sort(list);
 
 		// include immutable team permissions, being careful to preserve order
-		Set<RegistrantAccessPermission> set = new LinkedHashSet<RegistrantAccessPermission>(list);
-		for (TeamModel team : teams) {
-			for (RegistrantAccessPermission teamPermission : team.getRepositoryPermissions()) {
-				// we can not change an inherited team permission, though we can override
+		final Set<RegistrantAccessPermission> set = new LinkedHashSet<RegistrantAccessPermission>(
+				list);
+		for (final TeamModel team : this.teams) {
+			for (final RegistrantAccessPermission teamPermission : team.getRepositoryPermissions()) {
+				// we can not change an inherited team permission, though we can
+				// override
 				teamPermission.registrantType = RegistrantType.REPOSITORY;
 				teamPermission.permissionType = PermissionType.TEAM;
 				teamPermission.source = team.name;
@@ -154,15 +156,15 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	 * @return true if user has a specified access permission for the repository
 	 */
 	public boolean hasRepositoryPermission(String name) {
-		String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
-		if (permissions.containsKey(repository)) {
+		final String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
+		if (this.permissions.containsKey(repository)) {
 			// exact repository permission specified
 			return true;
 		} else {
 			// search for regex permission match
-			for (String key : permissions.keySet()) {
+			for (final String key : this.permissions.keySet()) {
 				if (name.matches(key)) {
-					AccessPermission p = permissions.get(key);
+					final AccessPermission p = this.permissions.get(key);
 					if (p != null) {
 						return true;
 					}
@@ -173,27 +175,27 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	}
 
 	/**
-	 * Returns true if the user has an explicitly specified access permission for
-	 * this repository.
+	 * Returns true if the user has an explicitly specified access permission
+	 * for this repository.
 	 *
 	 * @param name
 	 * @return if the user has an explicitly specified access permission
 	 */
 	public boolean hasExplicitRepositoryPermission(String name) {
-		String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
-		return permissions.containsKey(repository);
+		final String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
+		return this.permissions.containsKey(repository);
 	}
 
 	/**
-	 * Returns true if the user's team memberships specify an access permission for
-	 * this repository.
+	 * Returns true if the user's team memberships specify an access permission
+	 * for this repository.
 	 *
 	 * @param name
 	 * @return if the user's team memberships specifi an access permission
 	 */
 	public boolean hasTeamRepositoryPermission(String name) {
-		if (teams != null) {
-			for (TeamModel team : teams) {
+		if (this.teams != null) {
+			for (final TeamModel team : this.teams) {
 				if (team.hasRepositoryPermission(name)) {
 					return true;
 				}
@@ -207,45 +209,45 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	 * <p>
 	 * Role may be formatted as:
 	 * <ul>
-	 * <li> myrepo.git <i>(this is implicitly RW+)</i>
-	 * <li> RW+:myrepo.git
+	 * <li>myrepo.git <i>(this is implicitly RW+)</i>
+	 * <li>RW+:myrepo.git
 	 * </ul>
+	 * 
 	 * @param role
 	 */
 	public void addRepositoryPermission(String role) {
-		AccessPermission permission = AccessPermission.permissionFromRole(role);
-		String repository = AccessPermission.repositoryFromRole(role).toLowerCase();
-		repositories.add(repository);
-		permissions.put(repository, permission);
+		final AccessPermission permission = AccessPermission.permissionFromRole(role);
+		final String repository = AccessPermission.repositoryFromRole(role).toLowerCase();
+		this.repositories.add(repository);
+		this.permissions.put(repository, permission);
 	}
 
 	public AccessPermission removeRepositoryPermission(String name) {
-		String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
-		repositories.remove(repository);
-		return permissions.remove(repository);
+		final String repository = AccessPermission.repositoryFromRole(name).toLowerCase();
+		this.repositories.remove(repository);
+		return this.permissions.remove(repository);
 	}
 
 	public void setRepositoryPermission(String repository, AccessPermission permission) {
 		if (permission == null) {
 			// remove the permission
-			permissions.remove(repository.toLowerCase());
+			this.permissions.remove(repository.toLowerCase());
 		} else {
 			// set the new permission
-			permissions.put(repository.toLowerCase(), permission);
+			this.permissions.put(repository.toLowerCase(), permission);
 		}
 	}
 
 	public RegistrantAccessPermission getRepositoryPermission(RepositoryModel repository) {
-		RegistrantAccessPermission ap = new RegistrantAccessPermission();
-		ap.registrant = username;
+		final RegistrantAccessPermission ap = new RegistrantAccessPermission();
+		ap.registrant = this.username;
 		ap.registrantType = RegistrantType.USER;
 		ap.permission = AccessPermission.NONE;
 		ap.mutable = false;
 
 		// determine maximum permission for the repository
-		final AccessPermission maxPermission =
-				(repository.isFrozen || !repository.isBare || repository.isMirror) ?
-						AccessPermission.CLONE : AccessPermission.REWIND;
+		final AccessPermission maxPermission = (repository.isFrozen || !repository.isBare || repository.isMirror) ? AccessPermission.CLONE
+				: AccessPermission.REWIND;
 
 		if (AccessRestrictionType.NONE.equals(repository.accessRestriction)) {
 			// anonymous rewind
@@ -266,9 +268,9 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 			} else {
 				ap.permission = maxPermission;
 			}
-			if (!canAdmin) {
+			if (!this.canAdmin) {
 				// administator permission from team membership
-				for (TeamModel team : teams) {
+				for (final TeamModel team : this.teams) {
 					if (team.canAdmin) {
 						ap.source = team.name;
 						break;
@@ -279,7 +281,8 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 		}
 
 		// repository owner - either specified owner or personal repository
-		if (repository.isOwner(username) || repository.isUsersPersonalRepository(username)) {
+		if (repository.isOwner(this.username)
+				|| repository.isUsersPersonalRepository(this.username)) {
 			ap.permissionType = PermissionType.OWNER;
 			if (AccessPermission.REWIND.atMost(maxPermission)) {
 				ap.permission = AccessPermission.REWIND;
@@ -289,8 +292,10 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 			return ap;
 		}
 
-		if (AuthorizationControl.AUTHENTICATED.equals(repository.authorizationControl) && isAuthenticated) {
-			// AUTHENTICATED is a shortcut for authorizing all logged-in users RW+ access
+		if (AuthorizationControl.AUTHENTICATED.equals(repository.authorizationControl)
+				&& this.isAuthenticated) {
+			// AUTHENTICATED is a shortcut for authorizing all logged-in users
+			// RW+ access
 			if (AccessPermission.REWIND.atMost(maxPermission)) {
 				ap.permission = AccessPermission.REWIND;
 			} else {
@@ -301,10 +306,10 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 
 		// explicit user permission OR user regex match is used
 		// if that fails, then the best team permission is used
-		if (permissions.containsKey(repository.name.toLowerCase())) {
+		if (this.permissions.containsKey(repository.name.toLowerCase())) {
 			// exact repository permission specified, use it
-			AccessPermission p = permissions.get(repository.name.toLowerCase());
-			if (p != null && repository.accessRestriction.isValidPermission(p)) {
+			final AccessPermission p = this.permissions.get(repository.name.toLowerCase());
+			if ((p != null) && repository.accessRestriction.isValidPermission(p)) {
 				ap.permissionType = PermissionType.EXPLICIT;
 				if (p.atMost(maxPermission)) {
 					ap.permission = p;
@@ -316,10 +321,10 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 			}
 		} else {
 			// search for case-insensitive regex permission match
-			for (String key : permissions.keySet()) {
+			for (final String key : this.permissions.keySet()) {
 				if (StringUtils.matchesIgnoreCase(repository.name, key)) {
-					AccessPermission p = permissions.get(key);
-					if (p != null && repository.accessRestriction.isValidPermission(p)) {
+					final AccessPermission p = this.permissions.get(key);
+					if ((p != null) && repository.accessRestriction.isValidPermission(p)) {
 						// take first match
 						ap.permissionType = PermissionType.REGEX;
 						if (p.atMost(maxPermission)) {
@@ -335,17 +340,20 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 		}
 
 		// try to find a team match
-		for (TeamModel team : teams) {
-			RegistrantAccessPermission p = team.getRepositoryPermission(repository);
-			if (p.permission.atMost(maxPermission) && p.permission.exceeds(ap.permission) && PermissionType.ANONYMOUS != p.permissionType) {
-				// use highest team permission that is not an implicit permission
+		for (final TeamModel team : this.teams) {
+			final RegistrantAccessPermission p = team.getRepositoryPermission(repository);
+			if (p.permission.atMost(maxPermission) && p.permission.exceeds(ap.permission)
+					&& (PermissionType.ANONYMOUS != p.permissionType)) {
+				// use highest team permission that is not an implicit
+				// permission
 				ap.permission = p.permission;
 				ap.source = team.name;
 				ap.permissionType = PermissionType.TEAM;
 			}
 		}
 
-		// still no explicit, regex, or team match, check for implicit permissions
+		// still no explicit, regex, or team match, check for implicit
+		// permissions
 		if (AccessPermission.NONE == ap.permission) {
 			switch (repository.accessRestriction) {
 			case VIEW:
@@ -372,9 +380,10 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 		return ap;
 	}
 
-	protected boolean canAccess(RepositoryModel repository, AccessRestrictionType ifRestriction, AccessPermission requirePermission) {
+	protected boolean canAccess(RepositoryModel repository, AccessRestrictionType ifRestriction,
+			AccessPermission requirePermission) {
 		if (repository.accessRestriction.atLeast(ifRestriction)) {
-			RegistrantAccessPermission ap = getRepositoryPermission(repository);
+			final RegistrantAccessPermission ap = getRepositoryPermission(repository);
 			return ap.permission.atLeast(requirePermission);
 		}
 		return true;
@@ -423,41 +432,42 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	}
 
 	public boolean canFork(RepositoryModel repository) {
-		if (repository.isUsersPersonalRepository(username)) {
+		if (repository.isUsersPersonalRepository(this.username)) {
 			// can not fork your own repository
 			return false;
 		}
-		if (canAdmin() || repository.isOwner(username)) {
+		if (canAdmin() || repository.isOwner(this.username)) {
 			return true;
 		}
 		if (!repository.allowForks) {
 			return false;
 		}
-		if (!isAuthenticated || !canFork()) {
+		if (!this.isAuthenticated || !canFork()) {
 			return false;
 		}
 		return canClone(repository);
 	}
 
 	public boolean canDelete(RepositoryModel model) {
-		return canAdmin() || model.isUsersPersonalRepository(username);
+		return canAdmin() || model.isUsersPersonalRepository(this.username);
 	}
 
 	public boolean canEdit(RepositoryModel model) {
-		return canAdmin() || model.isUsersPersonalRepository(username) || model.isOwner(username);
+		return canAdmin() || model.isUsersPersonalRepository(this.username)
+				|| model.isOwner(this.username);
 	}
 
 	public boolean canEdit(TicketModel ticket, RepositoryModel repository) {
-		 return isAuthenticated() &&
-				 (canPush(repository)
-				 || (ticket != null && username.equals(ticket.responsible))
-				 || (ticket != null && username.equals(ticket.createdBy)));
+		return isAuthenticated()
+				&& (canPush(repository)
+						|| ((ticket != null) && this.username.equals(ticket.responsible)) || ((ticket != null) && this.username
+						.equals(ticket.createdBy)));
 	}
 
 	public boolean canAdmin(TicketModel ticket, RepositoryModel repository) {
-		 return isAuthenticated() &&
-				 (canPush(repository)
-				 || ticket != null && username.equals(ticket.responsible));
+		return isAuthenticated()
+				&& (canPush(repository) || ((ticket != null) && this.username
+						.equals(ticket.responsible)));
 	}
 
 	public boolean canReviewPatchset(RepositoryModel model) {
@@ -479,11 +489,11 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	 * @return true if the user can fork
 	 */
 	public boolean canFork() {
-		if (canFork) {
+		if (this.canFork) {
 			return true;
 		}
-		if (!ArrayUtils.isEmpty(teams)) {
-			for (TeamModel team : teams) {
+		if (!ArrayUtils.isEmpty(this.teams)) {
+			for (final TeamModel team : this.teams) {
 				if (team.canFork) {
 					return true;
 				}
@@ -499,11 +509,11 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	 * @return true if the user can admin
 	 */
 	public boolean canAdmin() {
-		if (canAdmin) {
+		if (this.canAdmin) {
 			return true;
 		}
-		if (!ArrayUtils.isEmpty(teams)) {
-			for (TeamModel team : teams) {
+		if (!ArrayUtils.isEmpty(this.teams)) {
+			for (final TeamModel team : this.teams) {
 				if (team.canAdmin) {
 					return true;
 				}
@@ -513,17 +523,17 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	}
 
 	/**
-	 * This returns true if the user has create privileges or the user has create
-	 * privileges because of a team membership.
+	 * This returns true if the user has create privileges or the user has
+	 * create privileges because of a team membership.
 	 *
 	 * @return true if the user can admin
 	 */
 	public boolean canCreate() {
-		if (canCreate) {
+		if (this.canCreate) {
 			return true;
 		}
-		if (!ArrayUtils.isEmpty(teams)) {
-			for (TeamModel team : teams) {
+		if (!ArrayUtils.isEmpty(this.teams)) {
+			for (final TeamModel team : this.teams) {
 				if (team.canCreate) {
 					return true;
 				}
@@ -544,8 +554,9 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 			return true;
 		}
 		if (canCreate()) {
-			String projectPath = StringUtils.getFirstPathElement(repository);
-			if (!StringUtils.isEmpty(projectPath) && projectPath.equalsIgnoreCase(getPersonalPath())) {
+			final String projectPath = StringUtils.getFirstPathElement(repository);
+			if (!StringUtils.isEmpty(projectPath)
+					&& projectPath.equalsIgnoreCase(getPersonalPath())) {
 				// personal repository
 				return true;
 			}
@@ -554,21 +565,22 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	}
 
 	/**
-	 * Returns true if the user is allowed to administer the specified repository
+	 * Returns true if the user is allowed to administer the specified
+	 * repository
 	 *
 	 * @param repo
 	 * @return true if the user can administer the repository
 	 */
 	public boolean canAdmin(RepositoryModel repo) {
-		return canAdmin() || repo.isOwner(username) || isMyPersonalRepository(repo.name);
+		return canAdmin() || repo.isOwner(this.username) || isMyPersonalRepository(repo.name);
 	}
 
 	public boolean isAuthenticated() {
-		return !UserModel.ANONYMOUS.equals(this) && isAuthenticated;
+		return !UserModel.ANONYMOUS.equals(this) && this.isAuthenticated;
 	}
 
 	public boolean isTeamMember(String teamname) {
-		for (TeamModel team : teams) {
+		for (final TeamModel team : this.teams) {
 			if (team.name.equalsIgnoreCase(teamname)) {
 				return true;
 			}
@@ -577,10 +589,10 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	}
 
 	public TeamModel getTeam(String teamname) {
-		if (teams == null) {
+		if (this.teams == null) {
 			return null;
 		}
-		for (TeamModel team : teams) {
+		for (final TeamModel team : this.teams) {
 			if (team.name.equalsIgnoreCase(teamname)) {
 				return team;
 			}
@@ -590,45 +602,45 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 
 	@Override
 	public String getName() {
-		return username;
+		return this.username;
 	}
 
 	public String getDisplayName() {
-		if (StringUtils.isEmpty(displayName)) {
-			return username;
+		if (StringUtils.isEmpty(this.displayName)) {
+			return this.username;
 		}
-		return displayName;
+		return this.displayName;
 	}
 
 	public String getPersonalPath() {
-		return ModelUtils.getPersonalPath(username);
+		return ModelUtils.getPersonalPath(this.username);
 	}
 
 	public UserPreferences getPreferences() {
-		return userPreferences;
+		return this.userPreferences;
 	}
 
 	@Override
 	public int hashCode() {
-		return username.hashCode();
+		return this.username.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof UserModel) {
-			return username.equals(((UserModel) o).username);
+			return this.username.equals(((UserModel) o).username);
 		}
 		return false;
 	}
 
 	@Override
 	public String toString() {
-		return username;
+		return this.username;
 	}
 
 	@Override
 	public int compareTo(UserModel o) {
-		return username.compareTo(o.username);
+		return this.username.compareTo(o.username);
 	}
 
 	/**
@@ -639,25 +651,27 @@ public class UserModel implements Principal, Serializable, Comparable<UserModel>
 	 * @return true, if the name and email address match this account
 	 */
 	public boolean is(String name, String email) {
-		// at a minimum a username or display name AND email address must be supplied
+		// at a minimum a username or display name AND email address must be
+		// supplied
 		if (StringUtils.isEmpty(name) || StringUtils.isEmpty(email)) {
 			return false;
 		}
-		boolean nameVerified = name.equalsIgnoreCase(username) || name.equalsIgnoreCase(getDisplayName());
+		final boolean nameVerified = name.equalsIgnoreCase(this.username)
+				|| name.equalsIgnoreCase(getDisplayName());
 		boolean emailVerified = false;
-		if (StringUtils.isEmpty(emailAddress)) {
+		if (StringUtils.isEmpty(this.emailAddress)) {
 			// user account has not specified an email address
 			// fail
 			emailVerified = false;
 		} else {
 			// user account has specified an email address
-			emailVerified = email.equalsIgnoreCase(emailAddress);
+			emailVerified = email.equalsIgnoreCase(this.emailAddress);
 		}
 		return nameVerified && emailVerified;
 	}
 
 	public boolean isMyPersonalRepository(String repository) {
-		String projectPath = StringUtils.getFirstPathElement(repository);
+		final String projectPath = StringUtils.getFirstPathElement(repository);
 		return !StringUtils.isEmpty(projectPath) && projectPath.equalsIgnoreCase(getPersonalPath());
 	}
 }

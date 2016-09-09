@@ -52,69 +52,71 @@ public class SendProposalPage extends RootSubPage {
 
 		final String token = WicketUtils.getToken(params);
 
-		myUrl = WicketUtils.getGitblitURL(getRequest());
-		destinationUrl = "https://";
+		this.myUrl = WicketUtils.getGitblitURL(getRequest());
+		this.destinationUrl = "https://";
 
 		// temporary proposal
-		FederationProposal proposal = app().federation().createFederationProposal(myUrl, token);
+		final FederationProposal proposal = app().federation().createFederationProposal(this.myUrl,
+				token);
 		if (proposal == null) {
 			error(getString("gb.couldNotCreateFederationProposal"), true);
 		}
 
-		CompoundPropertyModel<SendProposalPage> model = new CompoundPropertyModel<SendProposalPage>(
+		final CompoundPropertyModel<SendProposalPage> model = new CompoundPropertyModel<SendProposalPage>(
 				this);
 
-		Form<SendProposalPage> form = new Form<SendProposalPage>("editForm", model) {
+		final Form<SendProposalPage> form = new Form<SendProposalPage>("editForm", model) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			protected void onSubmit() {
 				// confirm a repository name was entered
-				if (StringUtils.isEmpty(myUrl)) {
+				if (StringUtils.isEmpty(SendProposalPage.this.myUrl)) {
 					error(getString("gb.pleaseSetGitblitUrl"));
 					return;
 				}
-				if (StringUtils.isEmpty(destinationUrl)) {
+				if (StringUtils.isEmpty(SendProposalPage.this.destinationUrl)) {
 					error(getString("gb.pleaseSetDestinationUrl"));
 					return;
 				}
 
 				// build new proposal
-				FederationProposal proposal = app().federation().createFederationProposal(myUrl, token);
-				proposal.url = myUrl;
-				proposal.message = message;
+				final FederationProposal proposal = app().federation().createFederationProposal(
+						SendProposalPage.this.myUrl, token);
+				proposal.url = SendProposalPage.this.myUrl;
+				proposal.message = SendProposalPage.this.message;
 				try {
-					FederationProposalResult res = FederationUtils
-							.propose(destinationUrl, proposal);
+					final FederationProposalResult res = FederationUtils.propose(
+							SendProposalPage.this.destinationUrl, proposal);
 					switch (res) {
 					case ACCEPTED:
 						info(MessageFormat.format(getString("gb.proposalReceived"),
-								destinationUrl));
+								SendProposalPage.this.destinationUrl));
 						setResponsePage(RepositoriesPage.class);
 						break;
 					case NO_POKE:
 						error(MessageFormat.format(getString("noGitblitFound"),
-								destinationUrl, myUrl));
+								SendProposalPage.this.destinationUrl, SendProposalPage.this.myUrl));
 						break;
 					case NO_PROPOSALS:
 						error(MessageFormat.format(getString("gb.noProposals"),
-								destinationUrl));
+								SendProposalPage.this.destinationUrl));
 						break;
 					case FEDERATION_DISABLED:
-						error(MessageFormat
-								.format(getString("gb.noFederation"),
-										destinationUrl));
+						error(MessageFormat.format(getString("gb.noFederation"),
+								SendProposalPage.this.destinationUrl));
 						break;
 					case MISSING_DATA:
 						error(MessageFormat.format(getString("gb.proposalFailed"),
-								destinationUrl));
+								SendProposalPage.this.destinationUrl));
 						break;
 					case ERROR:
 						error(MessageFormat.format(getString("gb.proposalError"),
-								destinationUrl));
+								SendProposalPage.this.destinationUrl));
 						break;
 					}
-				} catch (Exception e) {
+				}
+				catch (final Exception e) {
 					if (!StringUtils.isEmpty(e.getMessage())) {
 						error(e.getMessage());
 					} else {
@@ -130,7 +132,7 @@ public class SendProposalPage extends RootSubPage {
 		form.add(new Label("token", proposal.token));
 
 		form.add(new Button("save"));
-		Button cancel = new Button("cancel") {
+		final Button cancel = new Button("cancel") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -142,10 +144,10 @@ public class SendProposalPage extends RootSubPage {
 		form.add(cancel);
 		add(form);
 
-		List<RepositoryModel> repositories = new ArrayList<RepositoryModel>(
+		final List<RepositoryModel> repositories = new ArrayList<RepositoryModel>(
 				proposal.repositories.values());
-		RepositoriesPanel repositoriesPanel = new RepositoriesPanel("repositoriesPanel", false,
-				false, repositories, false, getAccessRestrictions());
+		final RepositoriesPanel repositoriesPanel = new RepositoriesPanel("repositoriesPanel",
+				false, false, repositories, false, getAccessRestrictions());
 		add(repositoriesPanel);
 	}
 

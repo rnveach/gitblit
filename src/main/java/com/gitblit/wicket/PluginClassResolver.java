@@ -49,9 +49,9 @@ public class PluginClassResolver implements IClassResolver {
 
 	@Override
 	public Class<?> resolveClass(final String className) throws ClassNotFoundException {
-		boolean debugEnabled = logger.isDebugEnabled();
+		final boolean debugEnabled = logger.isDebugEnabled();
 
-		for (PluginWrapper plugin : pluginManager.getPlugins()) {
+		for (final PluginWrapper plugin : this.pluginManager.getPlugins()) {
 			if (PluginState.STARTED != plugin.getPluginState()) {
 				// ignore this plugin
 				continue;
@@ -59,55 +59,58 @@ public class PluginClassResolver implements IClassResolver {
 
 			try {
 				return plugin.getPluginClassLoader().loadClass(className);
-			} catch (ClassNotFoundException cnfx) {
+			}
+			catch (final ClassNotFoundException cnfx) {
 				if (debugEnabled) {
-					logger.debug("ClassResolver '{}' cannot find class: '{}'", plugin.getPluginId(), className);
+					logger.debug("ClassResolver '{}' cannot find class: '{}'",
+							plugin.getPluginId(), className);
 				}
 			}
 		}
 
-		return coreResolver.resolveClass(className);
+		return this.coreResolver.resolveClass(className);
 	}
 
 	@Override
 	public Iterator<URL> getResources(final String name) {
-		Set<URL> urls = new TreeSet<URL>(new UrlExternalFormComparator());
+		final Set<URL> urls = new TreeSet<URL>(new UrlExternalFormComparator());
 
-		for (PluginWrapper plugin : pluginManager.getPlugins()) {
+		for (final PluginWrapper plugin : this.pluginManager.getPlugins()) {
 			if (PluginState.STARTED != plugin.getPluginState()) {
 				// ignore this plugin
 				continue;
 			}
 
-			Iterator<URL> it = getResources(name, plugin);
+			final Iterator<URL> it = getResources(name, plugin);
 			while (it.hasNext()) {
-				URL url = it.next();
+				final URL url = it.next();
 				urls.add(url);
 			}
 		}
 
-		Iterator<URL> it = coreResolver.getResources(name);
+		final Iterator<URL> it = this.coreResolver.getResources(name);
 		while (it.hasNext()) {
-			URL url = it.next();
+			final URL url = it.next();
 			urls.add(url);
 		}
 		return urls.iterator();
 	}
 
 	protected Iterator<URL> getResources(String name, PluginWrapper plugin) {
-		HashSet<URL> loadedFiles = new HashSet<URL>();
+		final HashSet<URL> loadedFiles = new HashSet<URL>();
 		try {
 			// Try the classloader for the wicket jar/bundle
-			Enumeration<URL> resources = plugin.getPluginClassLoader().getResources(name);
+			final Enumeration<URL> resources = plugin.getPluginClassLoader().getResources(name);
 			loadResources(resources, loadedFiles);
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			throw new WicketRuntimeException(e);
 		}
 
 		return loadedFiles.iterator();
 	}
 
-	private void loadResources(Enumeration<URL> resources, Set<URL> loadedFiles) {
+	private static void loadResources(Enumeration<URL> resources, Set<URL> loadedFiles) {
 		if (resources != null) {
 			while (resources.hasMoreElements()) {
 				final URL url = resources.nextElement();

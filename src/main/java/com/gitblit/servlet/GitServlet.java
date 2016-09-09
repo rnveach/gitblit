@@ -20,8 +20,6 @@ import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import java.io.IOException;
 import java.util.Enumeration;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletConfig;
@@ -39,10 +37,12 @@ import com.gitblit.git.GitblitReceivePackFactory;
 import com.gitblit.git.GitblitUploadPackFactory;
 import com.gitblit.git.RepositoryResolver;
 import com.gitblit.manager.IGitblit;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
- * The GitServlet provides http/https access to Git repositories.
- * Access to this servlet is protected by the GitFilter.
+ * The GitServlet provides http/https access to Git repositories. Access to this
+ * servlet is protected by the GitFilter.
  *
  * @author James Moger
  *
@@ -56,19 +56,21 @@ public class GitServlet extends HttpServlet {
 
 	@Inject
 	public GitServlet(IGitblit gitblit) {
-		gitFilter = new GitFilter();
-		gitFilter.setRepositoryResolver(new RepositoryResolver<HttpServletRequest>(gitblit));
-		gitFilter.setUploadPackFactory(new GitblitUploadPackFactory<HttpServletRequest>(gitblit));
-		gitFilter.setReceivePackFactory(new GitblitReceivePackFactory<HttpServletRequest>(gitblit));
+		this.gitFilter = new GitFilter();
+		this.gitFilter.setRepositoryResolver(new RepositoryResolver<HttpServletRequest>(gitblit));
+		this.gitFilter.setUploadPackFactory(new GitblitUploadPackFactory<HttpServletRequest>(
+				gitblit));
+		this.gitFilter.setReceivePackFactory(new GitblitReceivePackFactory<HttpServletRequest>(
+				gitblit));
 	}
 
 	@Override
 	public void init(final ServletConfig config) throws ServletException {
 
-		gitFilter.init(new FilterConfig() {
+		this.gitFilter.init(new FilterConfig() {
 			@Override
 			public String getFilterName() {
-				return gitFilter.getClass().getName();
+				return GitServlet.this.gitFilter.getClass().getName();
 			}
 
 			@Override
@@ -93,11 +95,10 @@ public class GitServlet extends HttpServlet {
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
-		gitFilter.doFilter(req, res, new FilterChain() {
+		this.gitFilter.doFilter(req, res, new FilterChain() {
 			@Override
-			public void doFilter(ServletRequest request,
-					ServletResponse response) throws IOException,
-					ServletException {
+			public void doFilter(ServletRequest request, ServletResponse response)
+					throws IOException, ServletException {
 				((HttpServletResponse) response).sendError(SC_NOT_FOUND);
 			}
 		});
@@ -105,6 +106,6 @@ public class GitServlet extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		gitFilter.destroy();
+		this.gitFilter.destroy();
 	}
 }

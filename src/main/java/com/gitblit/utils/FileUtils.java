@@ -47,8 +47,8 @@ public class FileUtils {
 	public static final int GB = 1024 * MB;
 
 	/**
-	 * Returns an int from a string representation of a file size.
-	 * e.g. 50m = 50 megabytes
+	 * Returns an int from a string representation of a file size. e.g. 50m = 50
+	 * megabytes
 	 *
 	 * @param aString
 	 * @param defaultValue
@@ -59,8 +59,8 @@ public class FileUtils {
 	}
 
 	/**
-	 * Returns a long from a string representation of a file size.
-	 * e.g. 50m = 50 megabytes
+	 * Returns a long from a string representation of a file size. e.g. 50m = 50
+	 * megabytes
 	 *
 	 * @param aString
 	 * @param defaultValue
@@ -69,15 +69,15 @@ public class FileUtils {
 	public static long convertSizeToLong(String aString, long defaultValue) {
 		// trim string and remove all spaces
 		aString = aString.toLowerCase().trim();
-		StringBuilder sb = new StringBuilder();
-		for (String a : aString.split(" ")) {
+		final StringBuilder sb = new StringBuilder();
+		for (final String a : aString.split(" ")) {
 			sb.append(a);
 		}
 		aString = sb.toString();
 
 		// identify value and unit
 		int idx = 0;
-		int len = aString.length();
+		final int len = aString.length();
 		while (Character.isDigit(aString.charAt(idx))) {
 			idx++;
 			if (idx == len) {
@@ -89,7 +89,8 @@ public class FileUtils {
 		try {
 			value = Long.parseLong(aString.substring(0, idx));
 			unit = aString.substring(idx);
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			return defaultValue;
 		}
 		if (unit.equals("g") || unit.equals("gb")) {
@@ -108,20 +109,23 @@ public class FileUtils {
 	 * @param file
 	 * @return the byte content of the file
 	 */
-	public static byte [] readContent(File file) {
-		byte [] buffer = new byte[(int) file.length()];
+	public static byte[] readContent(File file) {
+		final byte[] buffer = new byte[(int) file.length()];
 		BufferedInputStream is = null;
 		try {
 			is = new BufferedInputStream(new FileInputStream(file));
-			is.read(buffer,  0,  buffer.length);
-		} catch (Throwable t) {
+			is.read(buffer, 0, buffer.length);
+		}
+		catch (final Throwable t) {
 			System.err.println("Failed to read byte content of " + file.getAbsolutePath());
 			t.printStackTrace();
-		} finally {
+		}
+		finally {
 			if (is != null) {
 				try {
 					is.close();
-				} catch (IOException ioe) {
+				}
+				catch (final IOException ioe) {
 					System.err.println("Failed to close file " + file.getAbsolutePath());
 					ioe.printStackTrace();
 				}
@@ -138,7 +142,7 @@ public class FileUtils {
 	 * @return the string content of the file
 	 */
 	public static String readContent(File file, String lineEnding) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		InputStreamReader is = null;
 		BufferedReader reader = null;
 		try {
@@ -151,14 +155,17 @@ public class FileUtils {
 					sb.append(lineEnding);
 				}
 			}
-		} catch (Throwable t) {
+		}
+		catch (final Throwable t) {
 			System.err.println("Failed to read content of " + file.getAbsolutePath());
 			t.printStackTrace();
-		} finally {
-			if (reader != null){
+		}
+		finally {
+			if (reader != null) {
 				try {
 					reader.close();
-				} catch (IOException ioe) {
+				}
+				catch (final IOException ioe) {
 					System.err.println("Failed to close file " + file.getAbsolutePath());
 					ioe.printStackTrace();
 				}
@@ -166,7 +173,8 @@ public class FileUtils {
 			if (is != null) {
 				try {
 					is.close();
-				} catch (IOException ioe) {
+				}
+				catch (final IOException ioe) {
 					System.err.println("Failed to close file " + file.getAbsolutePath());
 					ioe.printStackTrace();
 				}
@@ -185,17 +193,21 @@ public class FileUtils {
 		OutputStreamWriter os = null;
 		try {
 			os = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"));
-			BufferedWriter writer = new BufferedWriter(os);
+			final BufferedWriter writer = new BufferedWriter(os);
 			writer.append(content);
 			writer.flush();
-		} catch (Throwable t) {
+			writer.close();
+		}
+		catch (final Throwable t) {
 			System.err.println("Failed to write content of " + file.getAbsolutePath());
 			t.printStackTrace();
-		} finally {
+		}
+		finally {
 			if (os != null) {
 				try {
 					os.close();
-				} catch (IOException ioe) {
+				}
+				catch (final IOException ioe) {
 					System.err.println("Failed to close file " + file.getAbsolutePath());
 					ioe.printStackTrace();
 				}
@@ -211,12 +223,12 @@ public class FileUtils {
 	 * @return folder size in bytes
 	 */
 	public static long folderSize(File directory) {
-		if (directory == null || !directory.exists()) {
+		if ((directory == null) || !directory.exists()) {
 			return -1;
 		}
 		if (directory.isDirectory()) {
 			long length = 0;
-			for (File file : directory.listFiles()) {
+			for (final File file : directory.listFiles()) {
 				length += folderSize(file);
 			}
 			return length;
@@ -235,9 +247,9 @@ public class FileUtils {
 	public static boolean delete(File fileOrFolder) {
 		boolean success = false;
 		if (fileOrFolder.isDirectory()) {
-			File [] files = fileOrFolder.listFiles();
+			final File[] files = fileOrFolder.listFiles();
 			if (files != null) {
-				for (File file : files) {
+				for (final File file : files) {
 					if (file.isDirectory()) {
 						success |= delete(file);
 					} else {
@@ -262,30 +274,37 @@ public class FileUtils {
 	public static void copy(File destinationFolder, File... filesOrFolders)
 			throws FileNotFoundException, IOException {
 		destinationFolder.mkdirs();
-		for (File file : filesOrFolders) {
+		for (final File file : filesOrFolders) {
 			if (file.isDirectory()) {
 				copy(new File(destinationFolder, file.getName()), file.listFiles());
 			} else {
-				File dFile = new File(destinationFolder, file.getName());
+				final File dFile = new File(destinationFolder, file.getName());
 				BufferedInputStream bufin = null;
 				FileOutputStream fos = null;
 				try {
 					bufin = new BufferedInputStream(new FileInputStream(file));
 					fos = new FileOutputStream(dFile);
-					int len = 8196;
-					byte[] buff = new byte[len];
+					final int len = 8196;
+					final byte[] buff = new byte[len];
 					int n = 0;
 					while ((n = bufin.read(buff, 0, len)) != -1) {
 						fos.write(buff, 0, n);
 					}
-				} finally {
+				}
+				finally {
 					try {
-						if (bufin != null) bufin.close();
-					} catch (Throwable t) {
+						if (bufin != null) {
+							bufin.close();
+						}
+					}
+					catch (final Throwable t) {
 					}
 					try {
-						if (fos != null) fos.close();
-					} catch (Throwable t) {
+						if (fos != null) {
+							fos.close();
+						}
+					}
+					catch (final Throwable t) {
 					}
 				}
 				dFile.setLastModified(file.lastModified());
@@ -294,7 +313,7 @@ public class FileUtils {
 	}
 
 	/**
-	 * Determine the relative path between two files.  Takes into account
+	 * Determine the relative path between two files. Takes into account
 	 * canonical paths, if possible.
 	 *
 	 * @param basePath
@@ -302,8 +321,8 @@ public class FileUtils {
 	 * @return a relative path from basePath to path
 	 */
 	public static String getRelativePath(File basePath, File path) {
-		Path exactBase = Paths.get(getExactFile(basePath).toURI());
-		Path exactPath = Paths.get(getExactFile(path).toURI());
+		final Path exactBase = Paths.get(getExactFile(basePath).toURI());
+		final Path exactPath = Paths.get(getExactFile(path).toURI());
 		if (exactPath.startsWith(exactBase)) {
 			return exactBase.relativize(exactPath).toString().replace('\\', '/');
 		}
@@ -321,7 +340,8 @@ public class FileUtils {
 	public static File getExactFile(File path) {
 		try {
 			return path.getCanonicalFile();
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			return path.getAbsoluteFile();
 		}
 	}
@@ -330,7 +350,7 @@ public class FileUtils {
 		if (aFolder == null) {
 			// strip any parameter reference
 			path = path.replace(parameter, "").trim();
-			if (path.length() > 0 && path.charAt(0) == '/') {
+			if ((path.length() > 0) && (path.charAt(0) == '/')) {
 				// strip leading /
 				path = path.substring(1);
 			}

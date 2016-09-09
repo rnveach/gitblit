@@ -22,18 +22,15 @@ import java.util.Comparator;
 /**
  * A comparator of URL instances.
  *
- * Comparing URLs with their implementation of #equals() is
- * bad because it may cause problems like DNS resolving, or other
- * slow checks. This comparator uses the external form of an URL
- * to make a simple comparison of two Strings.
+ * Comparing URLs with their implementation of #equals() is bad because it may
+ * cause problems like DNS resolving, or other slow checks. This comparator uses
+ * the external form of an URL to make a simple comparison of two Strings.
  *
  * @since 1.5.6
  */
-public class UrlExternalFormComparator implements Comparator<URL>
-{
+public class UrlExternalFormComparator implements Comparator<URL> {
 	@Override
-	public int compare(URL url1, URL url2)
-	{
+	public int compare(URL url1, URL url2) {
 		return url1.toExternalForm().compareTo(url2.toExternalForm());
 	}
 }

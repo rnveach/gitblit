@@ -18,8 +18,6 @@ package com.gitblit.servlet;
 import java.io.IOException;
 import java.text.MessageFormat;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -33,6 +31,8 @@ import com.gitblit.Keys;
 import com.gitblit.manager.IAuthenticationManager;
 import com.gitblit.manager.IRuntimeManager;
 import com.gitblit.models.UserModel;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * The RpcFilter is a servlet filter that secures the RpcServlet.
@@ -50,14 +50,12 @@ import com.gitblit.models.UserModel;
 @Singleton
 public class RpcFilter extends AuthenticationFilter {
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private IRuntimeManager runtimeManager;
+	private final IRuntimeManager runtimeManager;
 
 	@Inject
-	public RpcFilter(
-			IStoredSettings settings,
-			IRuntimeManager runtimeManager,
+	public RpcFilter(IStoredSettings settings, IRuntimeManager runtimeManager,
 			IAuthenticationManager authenticationManager) {
 
 		super(authenticationManager);
@@ -77,39 +75,41 @@ public class RpcFilter extends AuthenticationFilter {
 	public void doFilter(final ServletRequest request, final ServletResponse response,
 			final FilterChain chain) throws IOException, ServletException {
 
-		HttpServletRequest httpRequest = (HttpServletRequest) request;
-		HttpServletResponse httpResponse = (HttpServletResponse) response;
+		final HttpServletRequest httpRequest = (HttpServletRequest) request;
+		final HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-		String fullUrl = getFullUrl(httpRequest);
-		RpcRequest requestType = RpcRequest.fromName(httpRequest.getParameter("req"));
+		final String fullUrl = getFullUrl(httpRequest);
+		final RpcRequest requestType = RpcRequest.fromName(httpRequest.getParameter("req"));
 		if (requestType == null) {
 			httpResponse.sendError(HttpServletResponse.SC_NOT_IMPLEMENTED);
 			return;
 		}
 
-		boolean adminRequest = requestType.exceeds(RpcRequest.LIST_SETTINGS);
+		final boolean adminRequest = requestType.exceeds(RpcRequest.LIST_SETTINGS);
 
 		// conditionally reject all rpc requests
-		if (!settings.getBoolean(Keys.web.enableRpcServlet, true)) {
-			logger.warn(Keys.web.enableRpcServlet + " must be set TRUE for rpc requests.");
+		if (!this.settings.getBoolean(Keys.web.enableRpcServlet, true)) {
+			this.logger.warn(Keys.web.enableRpcServlet + " must be set TRUE for rpc requests.");
 			httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
 		}
 
-		boolean authenticateView = settings.getBoolean(Keys.web.authenticateViewPages, false);
-		boolean authenticateAdmin = settings.getBoolean(Keys.web.authenticateAdminPages, true);
+		final boolean authenticateView = this.settings.getBoolean(Keys.web.authenticateViewPages,
+				false);
+		final boolean authenticateAdmin = this.settings.getBoolean(Keys.web.authenticateAdminPages,
+				true);
 
 		// Wrap the HttpServletRequest with the RpcServletRequest which
 		// overrides the servlet container user principal methods.
-		AuthenticatedRequest authenticatedRequest = new AuthenticatedRequest(httpRequest);
-		UserModel user = getUser(httpRequest);
+		final AuthenticatedRequest authenticatedRequest = new AuthenticatedRequest(httpRequest);
+		final UserModel user = getUser(httpRequest);
 		if (user != null) {
 			authenticatedRequest.setUser(user);
 		}
 
 		// conditionally reject rpc management/administration requests
-		if (adminRequest && !settings.getBoolean(Keys.web.enableRpcManagement, false)) {
-			logger.warn(MessageFormat.format("{0} must be set TRUE for {1} rpc requests.",
+		if (adminRequest && !this.settings.getBoolean(Keys.web.enableRpcManagement, false)) {
+			this.logger.warn(MessageFormat.format("{0} must be set TRUE for {1} rpc requests.",
 					Keys.web.enableRpcManagement, requestType.toString()));
 			httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
@@ -119,8 +119,8 @@ public class RpcFilter extends AuthenticationFilter {
 		if ((adminRequest && authenticateAdmin) || (!adminRequest && authenticateView)) {
 			if (user == null) {
 				// challenge client to provide credentials. send 401.
-				if (runtimeManager.isDebugMode()) {
-					logger.info(MessageFormat.format("RPC: CHALLENGE {0}", fullUrl));
+				if (this.runtimeManager.isDebugMode()) {
+					this.logger.info(MessageFormat.format("RPC: CHALLENGE {0}", fullUrl));
 
 				}
 				httpResponse.setHeader("WWW-Authenticate", CHALLENGE);
@@ -132,21 +132,21 @@ public class RpcFilter extends AuthenticationFilter {
 					// authenticated request permitted.
 					// pass processing to the restricted servlet.
 					newSession(authenticatedRequest, httpResponse);
-					logger.info(MessageFormat.format("RPC: {0} ({1}) authenticated", fullUrl,
+					this.logger.info(MessageFormat.format("RPC: {0} ({1}) authenticated", fullUrl,
 							HttpServletResponse.SC_CONTINUE));
 					chain.doFilter(authenticatedRequest, httpResponse);
 					return;
 				}
 				// valid user, but not for requested access. send 403.
-				logger.warn(MessageFormat.format("RPC: {0} forbidden to access {1}",
-							user.username, fullUrl));
+				this.logger.warn(MessageFormat.format("RPC: {0} forbidden to access {1}",
+						user.username, fullUrl));
 				httpResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
 				return;
 			}
 		}
 
-		if (runtimeManager.isDebugMode()) {
-			logger.info(MessageFormat.format("RPC: {0} ({1}) unauthenticated", fullUrl,
+		if (this.runtimeManager.isDebugMode()) {
+			this.logger.info(MessageFormat.format("RPC: {0} ({1}) unauthenticated", fullUrl,
 					HttpServletResponse.SC_CONTINUE));
 		}
 		// unauthenticated request permitted.

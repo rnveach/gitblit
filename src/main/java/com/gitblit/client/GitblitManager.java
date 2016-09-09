@@ -22,6 +22,7 @@ import java.awt.EventQueue;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -54,6 +55,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 
@@ -81,22 +83,23 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 	private static final String FEED = "feed";
 	private final SimpleDateFormat dateFormat;
 	private JTabbedPane serverTabs;
-	private File configFile = new File(System.getProperty("user.home"), ".gitblit/config");
+	private final File configFile = new File(System.getProperty("user.home"), ".gitblit/config");
 
-	private Map<String, GitblitRegistration> registrations = new LinkedHashMap<String, GitblitRegistration>();
+	private final Map<String, GitblitRegistration> registrations = new LinkedHashMap<String, GitblitRegistration>();
 	private JMenu recentMenu;
-	private int maxRecentCount = 5;
+	private final int maxRecentCount = 5;
 
 	private GitblitManager() {
 		super();
-		dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
-		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+		this.dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+		this.dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 	}
 
 	private void initialize() {
 		setContentPane(getCenterPanel());
 		setIconImage(new ImageIcon(getClass().getResource("/gitblt-favicon.png")).getImage());
-		setTitle("Gitblit Manager v" + Constants.getVersion() + " (" + Constants.getBuildDate() + ")");
+		setTitle("Gitblit Manager v" + Constants.getVersion() + " (" + Constants.getBuildDate()
+				+ ")");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			@Override
@@ -119,10 +122,11 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 		String sz = null;
 		String pos = null;
 		try {
-			StoredConfig config = getConfig();
+			final StoredConfig config = getConfig();
 			sz = config.getString("ui", null, "size");
 			pos = config.getString("ui", null, "position");
-		} catch (Throwable t) {
+		}
+		catch (final Throwable t) {
 			t.printStackTrace();
 		}
 
@@ -130,9 +134,9 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 		if (StringUtils.isEmpty(sz)) {
 			setSize(850, 500);
 		} else {
-			String[] chunks = sz.split("x");
-			int width = Integer.parseInt(chunks[0]);
-			int height = Integer.parseInt(chunks[1]);
+			final String[] chunks = sz.split("x");
+			final int width = Integer.parseInt(chunks[0]);
+			final int height = Integer.parseInt(chunks[1]);
 			setSize(width, height);
 		}
 
@@ -140,9 +144,9 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 		if (StringUtils.isEmpty(pos)) {
 			setLocationRelativeTo(null);
 		} else {
-			String[] chunks = pos.split(",");
-			int x = Integer.parseInt(chunks[0]);
-			int y = Integer.parseInt(chunks[1]);
+			final String[] chunks = pos.split(",");
+			final int x = Integer.parseInt(chunks[0]);
+			final int y = Integer.parseInt(chunks[1]);
 			setLocation(x, y);
 		}
 	}
@@ -150,28 +154,30 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 	private void saveSizeAndPosition() {
 		try {
 			// save window size and position
-			StoredConfig config = getConfig();
-			Dimension sz = GitblitManager.this.getSize();
+			final StoredConfig config = getConfig();
+			final Dimension sz = GitblitManager.this.getSize();
 			config.setString("ui", null, "size",
 					MessageFormat.format("{0,number,0}x{1,number,0}", sz.width, sz.height));
-			Point pos = GitblitManager.this.getLocationOnScreen();
+			final Point pos = GitblitManager.this.getLocationOnScreen();
 			config.setString("ui", null, "position",
 					MessageFormat.format("{0,number,0},{1,number,0}", pos.x, pos.y));
 			config.save();
-		} catch (Throwable t) {
+		}
+		catch (final Throwable t) {
 			Utils.showException(GitblitManager.this, t);
 		}
 	}
 
 	private JMenuBar setupMenu() {
-		JMenuBar menuBar = new JMenuBar();
-		JMenu serversMenu = new JMenu(Translation.get("gb.servers"));
+		final JMenuBar menuBar = new JMenuBar();
+		final JMenu serversMenu = new JMenu(Translation.get("gb.servers"));
 		menuBar.add(serversMenu);
-		recentMenu = new JMenu(Translation.get("gb.recent"));
-		serversMenu.add(recentMenu);
+		this.recentMenu = new JMenu(Translation.get("gb.recent"));
+		serversMenu.add(this.recentMenu);
 
-		JMenuItem manage = new JMenuItem(Translation.get("gb.manage") + "...");
-		manage.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.CTRL_DOWN_MASK, false));
+		final JMenuItem manage = new JMenuItem(Translation.get("gb.manage") + "...");
+		manage.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.CTRL_DOWN_MASK,
+				false));
 		manage.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent event) {
@@ -184,29 +190,29 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 	}
 
 	private JPanel getCenterPanel() {
-		serverTabs = new JTabbedPane(JTabbedPane.TOP);
-		JMenuBar menubar = setupMenu();
-		JPanel panel = new JPanel(new BorderLayout());
+		this.serverTabs = new JTabbedPane(SwingConstants.TOP);
+		final JMenuBar menubar = setupMenu();
+		final JPanel panel = new JPanel(new BorderLayout());
 		panel.add(menubar, BorderLayout.NORTH);
-		panel.add(serverTabs, BorderLayout.CENTER);
+		panel.add(this.serverTabs, BorderLayout.CENTER);
 		return panel;
 	}
 
 	private void manageRegistrations() {
-		RegistrationsDialog dialog = new RegistrationsDialog(new ArrayList<GitblitRegistration>(
-				registrations.values()), this);
+		final RegistrationsDialog dialog = new RegistrationsDialog(
+				new ArrayList<GitblitRegistration>(this.registrations.values()), this);
 		dialog.setLocationRelativeTo(GitblitManager.this);
 		dialog.setVisible(true);
 	}
 
 	@Override
 	public void login(GitblitRegistration reg) {
-		if (!reg.savePassword && (reg.password == null || reg.password.length == 0)) {
+		if (!reg.savePassword && ((reg.password == null) || (reg.password.length == 0))) {
 			// prompt for password
-			EditRegistrationDialog dialog = new EditRegistrationDialog(this, reg, true);
+			final EditRegistrationDialog dialog = new EditRegistrationDialog(this, reg, true);
 			dialog.setLocationRelativeTo(GitblitManager.this);
 			dialog.setVisible(true);
-			GitblitRegistration newReg = dialog.getRegistration();
+			final GitblitRegistration newReg = dialog.getRegistration();
 			if (newReg == null) {
 				// user canceled
 				return;
@@ -222,7 +228,7 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 		setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		final GitblitRegistration registration = reg;
 		final GitblitPanel panel = new GitblitPanel(registration, this);
-		SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+		final SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
 
 			@Override
 			protected Boolean doInBackground() throws IOException {
@@ -233,22 +239,24 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 			@Override
 			protected void done() {
 				try {
-					boolean success = get();
-					serverTabs.addTab(registration.name, panel);
-					int idx = serverTabs.getTabCount() - 1;
-					serverTabs.setSelectedIndex(idx);
-					serverTabs.setTabComponentAt(idx, new ClosableTabComponent(registration.name,
-							null, serverTabs, panel));
+					get();
+
+					GitblitManager.this.serverTabs.addTab(registration.name, panel);
+					final int idx = GitblitManager.this.serverTabs.getTabCount() - 1;
+					GitblitManager.this.serverTabs.setSelectedIndex(idx);
+					GitblitManager.this.serverTabs.setTabComponentAt(idx, new ClosableTabComponent(
+							registration.name, null, GitblitManager.this.serverTabs, panel));
 					registration.lastLogin = new Date();
 					saveRegistration(registration.name, registration);
-					registrations.put(registration.name, registration);
+					GitblitManager.this.registrations.put(registration.name, registration);
 					rebuildRecentMenu();
 					if (!registration.savePassword) {
 						// clear password
 						registration.password = null;
 					}
-				} catch (Throwable t) {
-					Throwable cause = t.getCause();
+				}
+				catch (final Throwable t) {
+					final Throwable cause = t.getCause();
 					if (cause instanceof ConnectException) {
 						JOptionPane.showMessageDialog(GitblitManager.this, cause.getMessage(),
 								Translation.get("gb.error"), JOptionPane.ERROR_MESSAGE);
@@ -261,7 +269,8 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 					} else {
 						Utils.showException(GitblitManager.this, t);
 					}
-				} finally {
+				}
+				finally {
 					setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				}
 			}
@@ -270,53 +279,55 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 	}
 
 	private void rebuildRecentMenu() {
-		recentMenu.removeAll();
-		ImageIcon icon = new ImageIcon(getClass().getResource("/gitblt-favicon.png"));
-		List<GitblitRegistration> list = new ArrayList<GitblitRegistration>(registrations.values());
+		this.recentMenu.removeAll();
+		final ImageIcon icon = new ImageIcon(getClass().getResource("/gitblt-favicon.png"));
+		List<GitblitRegistration> list = new ArrayList<GitblitRegistration>(
+				this.registrations.values());
 		Collections.sort(list, new Comparator<GitblitRegistration>() {
 			@Override
 			public int compare(GitblitRegistration o1, GitblitRegistration o2) {
 				return o2.lastLogin.compareTo(o1.lastLogin);
 			}
 		});
-		if (list.size() > maxRecentCount) {
-			list = list.subList(0, maxRecentCount);
+		if (list.size() > this.maxRecentCount) {
+			list = list.subList(0, this.maxRecentCount);
 		}
 		for (int i = 0; i < list.size(); i++) {
 			final GitblitRegistration reg = list.get(i);
-			JMenuItem item = new JMenuItem(reg.name, icon);
-			item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1 + i, KeyEvent.CTRL_DOWN_MASK,
-					false));
+			final JMenuItem item = new JMenuItem(reg.name, icon);
+			item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_1 + i,
+					InputEvent.CTRL_DOWN_MASK, false));
 			item.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					login(reg);
 				}
 			});
-			recentMenu.add(item);
+			this.recentMenu.add(item);
 		}
 	}
 
 	private void loadRegistrations() {
 		try {
-			StoredConfig config = getConfig();
-			Set<String> servers = config.getSubsections(SERVER);
-			for (String server : servers) {
+			final StoredConfig config = getConfig();
+			final Set<String> servers = config.getSubsections(SERVER);
+			for (final String server : servers) {
 				Date lastLogin = new Date(0);
-				String date = config.getString(SERVER, server, "lastLogin");
+				final String date = config.getString(SERVER, server, "lastLogin");
 				if (!StringUtils.isEmpty(date)) {
-					lastLogin = dateFormat.parse(date);
+					lastLogin = this.dateFormat.parse(date);
 				}
-				String url = config.getString(SERVER, server, "url");
-				String account = config.getString(SERVER, server, "account");
+				final String url = config.getString(SERVER, server, "url");
+				final String account = config.getString(SERVER, server, "account");
 				char[] password;
-				String pw = config.getString(SERVER, server, "password");
+				final String pw = config.getString(SERVER, server, "password");
 				if (StringUtils.isEmpty(pw)) {
 					password = new char[0];
 				} else {
 					password = new String(Base64.decode(pw)).toCharArray();
 				}
-				GitblitRegistration reg = new GitblitRegistration(server, url, account, password) {
+				final GitblitRegistration reg = new GitblitRegistration(server, url, account,
+						password) {
 					private static final long serialVersionUID = 1L;
 
 					@Override
@@ -324,19 +335,20 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 						writeFeedCache(this);
 					}
 				};
-				String[] feeds = config.getStringList(SERVER, server, FEED);
+				final String[] feeds = config.getStringList(SERVER, server, FEED);
 				if (feeds != null) {
 					// deserialize the field definitions
-					for (String definition : feeds) {
-						FeedModel feed = new FeedModel(definition);
+					for (final String definition : feeds) {
+						final FeedModel feed = new FeedModel(definition);
 						reg.feeds.add(feed);
 					}
 				}
 				reg.lastLogin = lastLogin;
 				loadFeedCache(reg);
-				registrations.put(reg.name, reg);
+				this.registrations.put(reg.name, reg);
 			}
-		} catch (Throwable t) {
+		}
+		catch (final Throwable t) {
 			Utils.showException(GitblitManager.this, t);
 		}
 	}
@@ -344,10 +356,10 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 	@Override
 	public boolean saveRegistration(String name, GitblitRegistration reg) {
 		try {
-			StoredConfig config = getConfig();
+			final StoredConfig config = getConfig();
 			if (!StringUtils.isEmpty(name) && !name.equals(reg.name)) {
 				// delete old registration
-				registrations.remove(name);
+				this.registrations.remove(name);
 				config.unsetSection(SERVER, name);
 			}
 
@@ -361,11 +373,12 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 				config.setString(SERVER, reg.name, "password", "");
 			}
 			if (reg.lastLogin != null) {
-				config.setString(SERVER, reg.name, "lastLogin", dateFormat.format(reg.lastLogin));
+				config.setString(SERVER, reg.name, "lastLogin",
+						this.dateFormat.format(reg.lastLogin));
 			}
 			// serialize the feed definitions
-			List<String> definitions = new ArrayList<String>();
-			for (FeedModel feed : reg.feeds) {
+			final List<String> definitions = new ArrayList<String>();
+			for (final FeedModel feed : reg.feeds) {
 				definitions.add(feed.toString());
 			}
 			if (definitions.size() > 0) {
@@ -373,7 +386,8 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 			}
 			config.save();
 			return true;
-		} catch (Throwable t) {
+		}
+		catch (final Throwable t) {
 			Utils.showException(GitblitManager.this, t);
 		}
 		return false;
@@ -383,64 +397,67 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 	public boolean deleteRegistrations(List<GitblitRegistration> list) {
 		boolean success = false;
 		try {
-			StoredConfig config = getConfig();
-			for (GitblitRegistration reg : list) {
+			final StoredConfig config = getConfig();
+			for (final GitblitRegistration reg : list) {
 				config.unsetSection(SERVER, reg.name);
-				registrations.remove(reg.name);
+				this.registrations.remove(reg.name);
 			}
 			config.save();
 			success = true;
-		} catch (Throwable t) {
+		}
+		catch (final Throwable t) {
 			Utils.showException(GitblitManager.this, t);
 		}
 		return success;
 	}
 
 	private StoredConfig getConfig() throws IOException, ConfigInvalidException {
-		FileBasedConfig config = new FileBasedConfig(configFile, FS.detect());
+		final FileBasedConfig config = new FileBasedConfig(this.configFile, FS.detect());
 		config.load();
 		return config;
 	}
 
 	private void loadFeedCache(GitblitRegistration reg) {
-		File feedCache = new File(configFile.getParentFile(), StringUtils.getSHA1(reg.toString())
-				+ ".cache");
+		final File feedCache = new File(this.configFile.getParentFile(), StringUtils.getSHA1(reg
+				.toString()) + ".cache");
 		if (!feedCache.exists()) {
 			// no cache for this registration
 			return;
 		}
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(feedCache));
-			Map<String, Date> cache = new HashMap<String, Date>();
-			SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			final BufferedReader reader = new BufferedReader(new FileReader(feedCache));
+			final Map<String, Date> cache = new HashMap<String, Date>();
+			final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 			String line = null;
 			while ((line = reader.readLine()) != null) {
-				String[] kvp = line.split("=");
+				final String[] kvp = line.split("=");
 				cache.put(kvp[0], df.parse(kvp[1]));
 			}
 			reader.close();
-			for (FeedModel feed : reg.feeds) {
-				String name = feed.toString();
+			for (final FeedModel feed : reg.feeds) {
+				final String name = feed.toString();
 				if (cache.containsKey(name)) {
 					feed.currentRefreshDate = cache.get(name);
 				}
 			}
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			Utils.showException(GitblitManager.this, e);
 		}
 	}
 
 	private void writeFeedCache(GitblitRegistration reg) {
 		try {
-			File feedCache = new File(configFile.getParentFile(), StringUtils.getSHA1(reg
-					.toString()) + ".cache");
-			FileWriter writer = new FileWriter(feedCache);
-			for (FeedModel feed : reg.feeds) {
+			final File feedCache = new File(this.configFile.getParentFile(),
+					StringUtils.getSHA1(reg.toString()) + ".cache");
+			final FileWriter writer = new FileWriter(feedCache);
+			for (final FeedModel feed : reg.feeds) {
 				writer.append(MessageFormat.format("{0}={1,date,yyyy-MM-dd'T'HH:mm:ss}\n",
 						feed.toString(), feed.currentRefreshDate));
 			}
 			writer.close();
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			Utils.showException(GitblitManager.this, e);
 		}
 	}
@@ -451,9 +468,10 @@ public class GitblitManager extends JFrame implements RegistrationsDialog.Regist
 			public void run() {
 				try {
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-				} catch (Exception e) {
 				}
-				GitblitManager frame = new GitblitManager();
+				catch (final Exception e) {
+				}
+				final GitblitManager frame = new GitblitManager();
 				frame.initialize();
 				frame.setVisible(true);
 			}

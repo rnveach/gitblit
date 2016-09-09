@@ -27,8 +27,6 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
-import org.apache.wicket.model.StringResourceModel;
-import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
@@ -39,8 +37,8 @@ import com.gitblit.utils.ByteFormat;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.StringUtils;
 import com.gitblit.wicket.CacheControl;
-import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.CacheControl.LastModified;
+import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.MarkupProcessor;
 import com.gitblit.wicket.MarkupProcessor.MarkupDocument;
 import com.gitblit.wicket.MarkupProcessor.MarkupSyntax;
@@ -53,21 +51,22 @@ public class DocsPage extends RepositoryPage {
 	public DocsPage(PageParameters params) {
 		super(params);
 
-		String objectId = WicketUtils.getObject(params);
+		final String objectId = WicketUtils.getObject(params);
 
-		MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
+		final MarkupProcessor processor = new MarkupProcessor(app().settings(), app().xssFilter());
 
-		Repository r = getRepository();
-		UserModel currentUser = (GitBlitWebSession.get().getUser() != null) ? GitBlitWebSession.get().getUser() : UserModel.ANONYMOUS;
+		final Repository r = getRepository();
+		final UserModel currentUser = (GitBlitWebSession.get().getUser() != null) ? GitBlitWebSession
+				.get().getUser() : UserModel.ANONYMOUS;
 		final boolean userCanEdit = currentUser.canEdit(getRepositoryModel());
-		
-		RevCommit head = JGitUtils.getCommit(r, objectId);
+
+		final RevCommit head = JGitUtils.getCommit(r, objectId);
 		final String commitId = getBestCommitId(head);
 
-		List<String> extensions = processor.getAllExtensions();
-		List<PathModel> paths = JGitUtils.getDocuments(r, extensions);
+		final List<String> extensions = processor.getAllExtensions();
+		final List<PathModel> paths = JGitUtils.getDocuments(r, extensions);
 
-		List<MarkupDocument> roots = processor.getRootDocs(r, repositoryName, commitId);
+		final List<MarkupDocument> roots = processor.getRootDocs(r, this.repositoryName, commitId);
 		Fragment fragment = null;
 		if (roots.isEmpty()) {
 			// no identified root documents
@@ -76,25 +75,27 @@ public class DocsPage extends RepositoryPage {
 		} else {
 			// root documents, use tabbed ui of index/root and document list
 			fragment = new Fragment("docs", "tabsFragment", this);
-			ListDataProvider<MarkupDocument> docDp = new ListDataProvider<MarkupDocument>(roots);
+			final ListDataProvider<MarkupDocument> docDp = new ListDataProvider<MarkupDocument>(
+					roots);
 
 			// tab titles
-			DataView<MarkupDocument> tabTitles = new DataView<MarkupDocument>("tabTitle", docDp) {
+			final DataView<MarkupDocument> tabTitles = new DataView<MarkupDocument>("tabTitle",
+					docDp) {
 				private static final long serialVersionUID = 1L;
 				int counter;
 
 				@Override
 				public void populateItem(final Item<MarkupDocument> item) {
-					MarkupDocument doc = item.getModelObject();
+					final MarkupDocument doc = item.getModelObject();
 					String file = StringUtils.getLastPathElement(doc.documentPath);
 					file = StringUtils.stripFileExtension(file);
-					String name = file.replace('_', ' ').replace('-',  ' ');
+					final String name = file.replace('_', ' ').replace('-', ' ');
 
-					ExternalLink link = new ExternalLink("link", "#" + file);
+					final ExternalLink link = new ExternalLink("link", "#" + file);
 					link.add(new Label("label", name.toUpperCase()).setRenderBodyOnly(true));
 					item.add(link);
-					if (counter == 0) {
-						counter++;
+					if (this.counter == 0) {
+						this.counter++;
 						item.add(new SimpleAttributeModifier("class", "active"));
 					}
 				}
@@ -102,38 +103,42 @@ public class DocsPage extends RepositoryPage {
 			fragment.add(tabTitles);
 
 			// tab content
-			DataView<MarkupDocument> tabsView = new DataView<MarkupDocument>("tabContent", docDp) {
+			final DataView<MarkupDocument> tabsView = new DataView<MarkupDocument>("tabContent",
+					docDp) {
 				private static final long serialVersionUID = 1L;
 				int counter;
 
 				@Override
 				public void populateItem(final Item<MarkupDocument> item) {
-					MarkupDocument doc = item.getModelObject();
-					
+					final MarkupDocument doc = item.getModelObject();
+
 					item.add(new BookmarkablePageLink<Void>("editLink", EditFilePage.class,
-							WicketUtils.newPathParameter(repositoryName, commitId, doc.documentPath))
-							.setEnabled(userCanEdit));
-					
-					// document page links					
+							WicketUtils.newPathParameter(DocsPage.this.repositoryName, commitId,
+									doc.documentPath)).setEnabled(userCanEdit));
+
+					// document page links
 					item.add(new BookmarkablePageLink<Void>("blameLink", BlamePage.class,
-							WicketUtils.newPathParameter(repositoryName, commitId, doc.documentPath)));
+							WicketUtils.newPathParameter(DocsPage.this.repositoryName, commitId,
+									doc.documentPath)));
 					item.add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class,
-							WicketUtils.newPathParameter(repositoryName, commitId, doc.documentPath)));
-					String rawUrl = RawServlet.asLink(getContextUrl(), repositoryName, commitId, doc.documentPath);
+							WicketUtils.newPathParameter(DocsPage.this.repositoryName, commitId,
+									doc.documentPath)));
+					final String rawUrl = RawServlet.asLink(getContextUrl(),
+							DocsPage.this.repositoryName, commitId, doc.documentPath);
 					item.add(new ExternalLink("rawLink", rawUrl));
 
 					// document content
 					String file = StringUtils.getLastPathElement(doc.documentPath);
 					file = StringUtils.stripFileExtension(file);
-					Component content = new Label("content", doc.html)
-						.setEscapeModelStrings(false);
+					final Component content = new Label("content", doc.html)
+							.setEscapeModelStrings(false);
 					if (!MarkupSyntax.PLAIN.equals(doc.syntax)) {
 						content.add(new SimpleAttributeModifier("class", "markdown"));
 					}
 					item.add(content);
 					item.add(new SimpleAttributeModifier("id", file));
-					if (counter == 0) {
-						counter++;
+					if (this.counter == 0) {
+						this.counter++;
 						item.add(new SimpleAttributeModifier("class", "tab-pane active"));
 					}
 				}
@@ -143,34 +148,36 @@ public class DocsPage extends RepositoryPage {
 
 		// document list
 		final ByteFormat byteFormat = new ByteFormat();
-		Fragment docs = new Fragment("documents", "documentsFragment", this);
-		ListDataProvider<PathModel> pathsDp = new ListDataProvider<PathModel>(paths);
-		DataView<PathModel> pathsView = new DataView<PathModel>("document", pathsDp) {
+		final Fragment docs = new Fragment("documents", "documentsFragment", this);
+		final ListDataProvider<PathModel> pathsDp = new ListDataProvider<PathModel>(paths);
+		final DataView<PathModel> pathsView = new DataView<PathModel>("document", pathsDp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
 			@Override
 			public void populateItem(final Item<PathModel> item) {
-				PathModel entry = item.getModelObject();
+				final PathModel entry = item.getModelObject();
 				item.add(WicketUtils.newImage("docIcon", "file_world_16x16.png"));
 				item.add(new Label("docSize", byteFormat.format(entry.size)));
-				item.add(new LinkPanel("docName", "list", StringUtils.stripFileExtension(entry.name),
-						DocPage.class, WicketUtils.newPathParameter(repositoryName, commitId, entry.path)));
+				item.add(new LinkPanel("docName", "list", StringUtils
+						.stripFileExtension(entry.name), DocPage.class, WicketUtils
+						.newPathParameter(DocsPage.this.repositoryName, commitId, entry.path)));
 
 				// links
 				item.add(new BookmarkablePageLink<Void>("view", DocPage.class, WicketUtils
-						.newPathParameter(repositoryName, commitId, entry.path)));
+						.newPathParameter(DocsPage.this.repositoryName, commitId, entry.path)));
 				item.add(new BookmarkablePageLink<Void>("edit", EditFilePage.class, WicketUtils
-						.newPathParameter(repositoryName, commitId, entry.path))
+						.newPathParameter(DocsPage.this.repositoryName, commitId, entry.path))
 						.setEnabled(userCanEdit));
-				String rawUrl = RawServlet.asLink(getContextUrl(), repositoryName, commitId, entry.path);
+				final String rawUrl = RawServlet.asLink(getContextUrl(),
+						DocsPage.this.repositoryName, commitId, entry.path);
 				item.add(new ExternalLink("raw", rawUrl));
 				item.add(new BookmarkablePageLink<Void>("blame", BlamePage.class, WicketUtils
-						.newPathParameter(repositoryName, commitId, entry.path)));
+						.newPathParameter(DocsPage.this.repositoryName, commitId, entry.path)));
 				item.add(new BookmarkablePageLink<Void>("history", HistoryPage.class, WicketUtils
-						.newPathParameter(repositoryName, commitId, entry.path)));
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+						.newPathParameter(DocsPage.this.repositoryName, commitId, entry.path)));
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		docs.add(pathsView);

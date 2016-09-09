@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 package com.gitblit.transport.ssh.commands;
-
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+
 /**
-* Annotation tagged on a concrete Command to describe how to use it.
-*/
-@Target({ElementType.TYPE})
+ * Annotation tagged on a concrete Command to describe how to use it.
+ */
+@Target({ ElementType.TYPE })
 @Retention(RUNTIME)
 public @interface UsageExamples {
-UsageExample [] examples() default {};
+	UsageExample[] examples() default {};
 }

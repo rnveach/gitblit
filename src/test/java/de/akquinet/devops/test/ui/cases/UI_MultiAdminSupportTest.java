@@ -43,51 +43,48 @@ public class UI_MultiAdminSupportTest extends AbstractUITest {
 	@Before
 	public void before() {
 		System.out.println("IN BEFORE");
-		this.view = new RepoListView(AbstractUITest.getDriver(), baseUrl);
+		this.view = new RepoListView(AbstractUITest.getDriver(), this.baseUrl);
 		this.editView = new RepoEditView(AbstractUITest.getDriver());
-		AbstractUITest.getDriver().navigate().to(baseUrl);
+		AbstractUITest.getDriver().navigate().to(this.baseUrl);
 	}
 
 	@Test
 	public void test_MultiAdminSelectionInStandardRepo() {
 		// login
-		view.login("repocreator", "repocreator");
+		this.view.login("repocreator", "repocreator");
 
 		// create new repo
-		view.navigateToNewRepo(1);
-		editView.changeName(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH);
-		Assert.assertTrue(editView.navigateToPermissionsTab());
+		this.view.navigateToNewRepo(1);
+		this.editView.changeName(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH);
+		Assert.assertTrue(this.editView.navigateToPermissionsTab());
 
-		Assert.assertTrue(editView
+		Assert.assertTrue(this.editView
 				.changeAccessRestriction(RepoEditView.RESTRICTION_AUTHENTICATED_VCP));
-		Assert.assertTrue(editView
-				.changeAuthorizationControl(RepoEditView.AUTHCONTROL_RWALL));
+		Assert.assertTrue(this.editView.changeAuthorizationControl(RepoEditView.AUTHCONTROL_RWALL));
 
 		// with a second admin
-		editView.addOwner("admin");
-		Assert.assertTrue(editView.save());
+		this.editView.addOwner("admin");
+		Assert.assertTrue(this.editView.save());
 		// user is automatically forwarded to repo list view
-		Assert.assertTrue(view.isEmptyRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH));
-		Assert.assertTrue(view
-				.isEditableRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH));
-		Assert.assertTrue(view
+		Assert.assertTrue(this.view.isEmptyRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH));
+		Assert.assertTrue(this.view.isEditableRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH));
+		Assert.assertTrue(this.view
 				.isDeletableRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH_WITHOUT_SUFFIX));
 		// logout repocreator
-		view.logout();
+		this.view.logout();
 
 		// check with admin account if second admin has the same rights
-		view.login("admin", "admin");
-		Assert.assertTrue(view.isEmptyRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH));
-		Assert.assertTrue(view
-				.isEditableRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH));
-		Assert.assertTrue(view
+		this.view.login("admin", "admin");
+		Assert.assertTrue(this.view.isEmptyRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH));
+		Assert.assertTrue(this.view.isEditableRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH));
+		Assert.assertTrue(this.view
 				.isDeletableRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH_WITHOUT_SUFFIX));
 		// delete repo to reach state as before test execution
-		view.navigateToDeleteRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH_WITHOUT_SUFFIX);
-		view.acceptAlertDialog();
-		view.logout();
+		this.view.navigateToDeleteRepo(TEST_MULTI_ADMIN_SUPPORT_REPO_PATH_WITHOUT_SUFFIX);
+		this.view.acceptAlertDialog();
+		this.view.logout();
 
-		Assert.assertTrue(view.isLoginPartVisible());
+		Assert.assertTrue(this.view.isLoginPartVisible());
 	}
 
 }

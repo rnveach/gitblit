@@ -46,11 +46,11 @@ public class GitblitParamUrlCodingStrategy extends MixedParamUrlCodingStrategy {
 
 	private final String[] parameterNames;
 
-	private Logger logger = LoggerFactory.getLogger(GitblitParamUrlCodingStrategy.class);
+	private final Logger logger = LoggerFactory.getLogger(GitblitParamUrlCodingStrategy.class);
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private XssFilter xssFilter;
+	private final XssFilter xssFilter;
 
 	/**
 	 * Construct.
@@ -63,11 +63,9 @@ public class GitblitParamUrlCodingStrategy extends MixedParamUrlCodingStrategy {
 	 * @param parameterNames
 	 *            the parameter names (not null)
 	 */
-	public <C extends Page> GitblitParamUrlCodingStrategy(
-			IStoredSettings settings,
-			XssFilter xssFilter,
-			String mountPath,
-			Class<C> bookmarkablePageClass, String[] parameterNames) {
+	public <C extends Page> GitblitParamUrlCodingStrategy(IStoredSettings settings,
+			XssFilter xssFilter, String mountPath, Class<C> bookmarkablePageClass,
+			String[] parameterNames) {
 
 		super(mountPath, bookmarkablePageClass, parameterNames);
 		this.parameterNames = parameterNames;
@@ -84,7 +82,7 @@ public class GitblitParamUrlCodingStrategy extends MixedParamUrlCodingStrategy {
 	 */
 	@Override
 	protected String urlEncodePathComponent(String string) {
-		char altChar = settings.getChar(Keys.web.forwardSlashCharacter, '/');
+		final char altChar = this.settings.getChar(Keys.web.forwardSlashCharacter, '/');
 		if (altChar != '/') {
 			string = string.replace('/', altChar);
 		}
@@ -100,7 +98,7 @@ public class GitblitParamUrlCodingStrategy extends MixedParamUrlCodingStrategy {
 	 */
 	@Override
 	protected String urlDecodePathComponent(String value) {
-		char altChar = settings.getChar(Keys.web.forwardSlashCharacter, '/');
+		final char altChar = this.settings.getChar(Keys.web.forwardSlashCharacter, '/');
 		if (altChar != '/') {
 			value = value.replace(altChar, '/');
 		}
@@ -116,31 +114,33 @@ public class GitblitParamUrlCodingStrategy extends MixedParamUrlCodingStrategy {
 	 */
 	@Override
 	public IRequestTarget decode(RequestParameters requestParameters) {
-		Map<String, Object> parameterMap = (Map<String, Object>) requestParameters.getParameters();
-		for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
-			String parameter = entry.getKey();
+		@SuppressWarnings("unchecked")
+		final Map<String, Object> parameterMap = (Map<String, Object>) requestParameters
+				.getParameters();
+		for (final Map.Entry<String, Object> entry : parameterMap.entrySet()) {
+			final String parameter = entry.getKey();
 			if (parameter.startsWith(WebRequestCodingStrategy.NAME_SPACE)) {
 				// ignore Wicket parameters
 				continue;
 			}
 
 			// sanitize Gitblit request parameters
-			Object o = entry.getValue();
+			final Object o = entry.getValue();
 			if (o instanceof String) {
-				String value = o.toString();
-				String safeValue = xssFilter.none(value);
+				final String value = o.toString();
+				final String safeValue = this.xssFilter.none(value);
 				if (!value.equals(safeValue)) {
-					logger.warn("XSS filter triggered on {} URL parameter: {}={}",
+					this.logger.warn("XSS filter triggered on {} URL parameter: {}={}",
 							getMountPath(), parameter, value);
 					parameterMap.put(parameter, safeValue);
 				}
 			} else if (o instanceof String[]) {
-				String[] values = (String[]) o;
+				final String[] values = (String[]) o;
 				for (int i = 0; i < values.length; i++) {
-					String value = values[i].toString();
-					String safeValue = xssFilter.none(value);
+					final String value = values[i].toString();
+					final String safeValue = this.xssFilter.none(value);
 					if (!value.equals(safeValue)) {
-						logger.warn("XSS filter triggered on {} URL parameter: {}={}",
+						this.logger.warn("XSS filter triggered on {} URL parameter: {}={}",
 								getMountPath(), parameter, value);
 						values[i] = safeValue;
 					}
@@ -156,37 +156,30 @@ public class GitblitParamUrlCodingStrategy extends MixedParamUrlCodingStrategy {
 	 *      java.util.Map)
 	 */
 	@Override
-	protected void appendParameters(AppendingStringBuffer url, Map<String, ?> parameters)
-	{
-		if (!url.endsWith("/"))
-		{
+	protected void appendParameters(AppendingStringBuffer url, Map<String, ?> parameters) {
+		if (!url.endsWith("/")) {
 			url.append("/");
 		}
 
-		Set<String> parameterNamesToAdd = new HashSet<String>(parameters.keySet());
+		final Set<String> parameterNamesToAdd = new HashSet<String>(parameters.keySet());
 
 		// Find index of last specified parameter
 		boolean foundParameter = false;
-		int lastSpecifiedParameter = parameterNames.length;
-		while (lastSpecifiedParameter != 0 && !foundParameter)
-		{
-			foundParameter = parameters.containsKey(parameterNames[--lastSpecifiedParameter]);
+		int lastSpecifiedParameter = this.parameterNames.length;
+		while ((lastSpecifiedParameter != 0) && !foundParameter) {
+			foundParameter = parameters.containsKey(this.parameterNames[--lastSpecifiedParameter]);
 		}
 
-		if (foundParameter)
-		{
-			for (int i = 0; i <= lastSpecifiedParameter; i++)
-			{
-				String parameterName = parameterNames[i];
+		if (foundParameter) {
+			for (int i = 0; i <= lastSpecifiedParameter; i++) {
+				final String parameterName = this.parameterNames[i];
 				final Object param = parameters.get(parameterName);
-				String value = param instanceof String[] ? ((String[])param)[0] : ((param == null)
-					? null : param.toString());
-				if (value == null)
-				{
+				String value = param instanceof String[] ? ((String[]) param)[0]
+						: ((param == null) ? null : param.toString());
+				if (value == null) {
 					value = "";
 				}
-				if (!url.endsWith("/"))
-				{
+				if (!url.endsWith("/")) {
 					url.append("/");
 				}
 				url.append(urlEncodePathComponent(value));
@@ -194,25 +187,23 @@ public class GitblitParamUrlCodingStrategy extends MixedParamUrlCodingStrategy {
 			}
 		}
 
-		if (!parameterNamesToAdd.isEmpty())
-		{
+		if (!parameterNamesToAdd.isEmpty()) {
 			boolean first = true;
-			for (String parameterName : parameterNamesToAdd)
-			{
+			for (final String parameterName : parameterNamesToAdd) {
 				final Object param = parameters.get(parameterName);
 				if (param instanceof String[]) {
-					String [] values = (String[]) param;
-					for (String value : values) {
+					final String[] values = (String[]) param;
+					for (final String value : values) {
 						url.append(first ? '?' : '&');
-						url.append(urlEncodeQueryComponent(parameterName)).append("=").append(
-								urlEncodeQueryComponent(value));
+						url.append(urlEncodeQueryComponent(parameterName)).append("=")
+								.append(urlEncodeQueryComponent(value));
 						first = false;
 					}
 				} else {
 					url.append(first ? '?' : '&');
-					String value = String.valueOf(param);
-					url.append(urlEncodeQueryComponent(parameterName)).append("=").append(
-						urlEncodeQueryComponent(value));
+					final String value = String.valueOf(param);
+					url.append(urlEncodeQueryComponent(parameterName)).append("=")
+							.append(urlEncodeQueryComponent(value));
 				}
 				first = false;
 			}

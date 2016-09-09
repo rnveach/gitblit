@@ -33,7 +33,7 @@ public class FilestoreUI {
 	}
 
 	public static Label getStatusIcon(String wicketId, Status status) {
-		Label label = new Label(wicketId);
+		final Label label = new Label(wicketId);
 
 		switch (status) {
 		case Upload_Pending:
@@ -58,5 +58,5 @@ public class FilestoreUI {
 
 		return label;
 	}
-	
+
 }

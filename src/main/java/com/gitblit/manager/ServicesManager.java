@@ -89,9 +89,7 @@ public class ServicesManager implements IServicesManager {
 	private SshDaemon sshDaemon;
 
 	@Inject
-	public ServicesManager(
-			Provider<WorkQueue> workQueueProvider,
-			IStoredSettings settings,
+	public ServicesManager(Provider<WorkQueue> workQueueProvider, IStoredSettings settings,
 			IGitblit gitblit) {
 
 		this.workQueueProvider = workQueueProvider;
@@ -112,26 +110,27 @@ public class ServicesManager implements IServicesManager {
 
 	@Override
 	public ServicesManager stop() {
-		scheduledExecutor.shutdownNow();
-		if (fanoutService != null) {
-			fanoutService.stop();
+		this.scheduledExecutor.shutdownNow();
+		if (this.fanoutService != null) {
+			this.fanoutService.stop();
 		}
-		if (gitDaemon != null) {
-			gitDaemon.stop();
+		if (this.gitDaemon != null) {
+			this.gitDaemon.stop();
 		}
-		if (sshDaemon != null) {
-			sshDaemon.stop();
+		if (this.sshDaemon != null) {
+			this.sshDaemon.stop();
 		}
-		workQueueProvider.get().stop();
+		this.workQueueProvider.get().stop();
 		return this;
 	}
 
-	protected String getRepositoryUrl(HttpServletRequest request, String username, RepositoryModel repository) {
-		String gitblitUrl = settings.getString(Keys.web.canonicalUrl, null);
+	protected String getRepositoryUrl(HttpServletRequest request, String username,
+			RepositoryModel repository) {
+		String gitblitUrl = this.settings.getString(Keys.web.canonicalUrl, null);
 		if (StringUtils.isEmpty(gitblitUrl)) {
 			gitblitUrl = HttpUtils.getGitblitURL(request);
 		}
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(gitblitUrl);
 		sb.append(Constants.R_PATH);
 		sb.append(repository.name);
@@ -153,21 +152,23 @@ public class ServicesManager implements IServicesManager {
 	 * @return a list of repository urls
 	 */
 	@Override
-	public List<RepositoryUrl> getRepositoryUrls(HttpServletRequest request, UserModel user, RepositoryModel repository) {
+	public List<RepositoryUrl> getRepositoryUrls(HttpServletRequest request, UserModel user,
+			RepositoryModel repository) {
 		if (user == null) {
 			user = UserModel.ANONYMOUS;
 		}
-		String username = StringUtils.encodeUsername(UserModel.ANONYMOUS.equals(user) ? "" : user.username);
+		final String username = StringUtils.encodeUsername(UserModel.ANONYMOUS.equals(user) ? ""
+				: user.username);
 
-		List<RepositoryUrl> list = new ArrayList<RepositoryUrl>();
+		final List<RepositoryUrl> list = new ArrayList<RepositoryUrl>();
 
 		// http/https url
-		if (settings.getBoolean(Keys.git.enableGitServlet, true) &&
-			settings.getBoolean(Keys.web.showHttpServletUrls, true)) {
+		if (this.settings.getBoolean(Keys.git.enableGitServlet, true)
+				&& this.settings.getBoolean(Keys.web.showHttpServletUrls, true)) {
 			AccessPermission permission = user.getRepositoryPermission(repository).permission;
 			if (permission.exceeds(AccessPermission.NONE)) {
-				String repoUrl = getRepositoryUrl(request, username, repository);
-				Transport transport = Transport.fromUrl(repoUrl);
+				final String repoUrl = getRepositoryUrl(request, username, repository);
+				final Transport transport = Transport.fromUrl(repoUrl);
 				if (permission.atLeast(AccessPermission.PUSH) && !acceptsPush(transport)) {
 					// downgrade the repo permission for this transport
 					// because it is not an acceptable PUSH transport
@@ -178,9 +179,9 @@ public class ServicesManager implements IServicesManager {
 		}
 
 		// ssh daemon url
-		String sshDaemonUrl = getSshDaemonUrl(request, user, repository);
-		if (!StringUtils.isEmpty(sshDaemonUrl) &&
-			settings.getBoolean(Keys.web.showSshDaemonUrls, true)) {
+		final String sshDaemonUrl = getSshDaemonUrl(request, user, repository);
+		if (!StringUtils.isEmpty(sshDaemonUrl)
+				&& this.settings.getBoolean(Keys.web.showSshDaemonUrls, true)) {
 			AccessPermission permission = user.getRepositoryPermission(repository).permission;
 			if (permission.exceeds(AccessPermission.NONE)) {
 				if (permission.atLeast(AccessPermission.PUSH) && !acceptsPush(Transport.SSH)) {
@@ -194,9 +195,9 @@ public class ServicesManager implements IServicesManager {
 		}
 
 		// git daemon url
-		String gitDaemonUrl = getGitDaemonUrl(request, user, repository);
-		if (!StringUtils.isEmpty(gitDaemonUrl) &&
-				settings.getBoolean(Keys.web.showGitDaemonUrls, true)) {
+		final String gitDaemonUrl = getGitDaemonUrl(request, user, repository);
+		if (!StringUtils.isEmpty(gitDaemonUrl)
+				&& this.settings.getBoolean(Keys.web.showGitDaemonUrls, true)) {
 			AccessPermission permission = getGitDaemonAccessPermission(user, repository);
 			if (permission.exceeds(AccessPermission.NONE)) {
 				if (permission.atLeast(AccessPermission.PUSH) && !acceptsPush(Transport.GIT)) {
@@ -211,8 +212,9 @@ public class ServicesManager implements IServicesManager {
 		// add all other urls
 		// {0} = repository
 		// {1} = username
-		boolean advertisePermsForOther = settings.getBoolean(Keys.web.advertiseAccessPermissionForOtherUrls, false);
-		for (String url : settings.getStrings(Keys.web.otherUrls)) {
+		final boolean advertisePermsForOther = this.settings.getBoolean(
+				Keys.web.advertiseAccessPermissionForOtherUrls, false);
+		for (final String url : this.settings.getStrings(Keys.web.otherUrls)) {
 			String externalUrl = null;
 
 			if (url.contains("{1}")) {
@@ -223,7 +225,8 @@ public class ServicesManager implements IServicesManager {
 					externalUrl = MessageFormat.format(url, repository.name, username);
 				}
 			} else {
-				// external url does not require username, just do repo name formatting
+				// external url does not require username, just do repo name
+				// formatting
 				externalUrl = MessageFormat.format(url, repository.name);
 			}
 
@@ -231,7 +234,7 @@ public class ServicesManager implements IServicesManager {
 			if (advertisePermsForOther) {
 				permission = user.getRepositoryPermission(repository).permission;
 				if (permission.exceeds(AccessPermission.NONE)) {
-					Transport transport = Transport.fromUrl(externalUrl);
+					final Transport transport = Transport.fromUrl(externalUrl);
 					if (permission.atLeast(AccessPermission.PUSH) && !acceptsPush(transport)) {
 						// downgrade the repo permission for this transport
 						// because it is not an acceptable PUSH transport
@@ -271,11 +274,11 @@ public class ServicesManager implements IServicesManager {
 
 		// consider the user's transport preference
 		RepositoryUrl preferredUrl = null;
-		Transport preferredTransport = user.getPreferences().getTransport();
+		final Transport preferredTransport = user.getPreferences().getTransport();
 		if (preferredTransport != null) {
-			Iterator<RepositoryUrl> itr = list.iterator();
+			final Iterator<RepositoryUrl> itr = list.iterator();
 			while (itr.hasNext()) {
-				RepositoryUrl url = itr.next();
+				final RepositoryUrl url = itr.next();
 				if (url.transport.equals(preferredTransport)) {
 					itr.remove();
 					preferredUrl = url;
@@ -290,94 +293,101 @@ public class ServicesManager implements IServicesManager {
 		return list;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.manager.IServicesManager#isServingRepositories()
 	 */
 	@Override
 	public boolean isServingRepositories() {
-		return isServingHTTPS()
-				|| isServingHTTP()
-				|| isServingGIT()
-				|| isServingSSH();
+		return isServingHTTPS() || isServingHTTP() || isServingGIT() || isServingSSH();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.manager.IServicesManager#isServingHTTP()
 	 */
 	@Override
 	public boolean isServingHTTP() {
-		return settings.getBoolean(Keys.git.enableGitServlet, true)
-				&& ((gitblit.getStatus().isGO && settings.getInteger(Keys.server.httpPort, 0) > 0)
-						|| !gitblit.getStatus().isGO);
+		return this.settings.getBoolean(Keys.git.enableGitServlet, true)
+				&& ((this.gitblit.getStatus().isGO && (this.settings.getInteger(
+						Keys.server.httpPort, 0) > 0)) || !this.gitblit.getStatus().isGO);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.manager.IServicesManager#isServingHTTPS()
 	 */
 	@Override
 	public boolean isServingHTTPS() {
-		return settings.getBoolean(Keys.git.enableGitServlet, true)
-				&& ((gitblit.getStatus().isGO && settings.getInteger(Keys.server.httpsPort, 0) > 0)
-						|| !gitblit.getStatus().isGO);
+		return this.settings.getBoolean(Keys.git.enableGitServlet, true)
+				&& ((this.gitblit.getStatus().isGO && (this.settings.getInteger(
+						Keys.server.httpsPort, 0) > 0)) || !this.gitblit.getStatus().isGO);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.manager.IServicesManager#isServingGIT()
 	 */
 	@Override
 	public boolean isServingGIT() {
-		return gitDaemon != null && gitDaemon.isRunning();
+		return (this.gitDaemon != null) && this.gitDaemon.isRunning();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see com.gitblit.manager.IServicesManager#isServingSSH()
 	 */
 	@Override
 	public boolean isServingSSH() {
-		return sshDaemon != null && sshDaemon.isRunning();
+		return (this.sshDaemon != null) && this.sshDaemon.isRunning();
 	}
 
 	protected void configureFederation() {
 		boolean validPassphrase = true;
-		String passphrase = settings.getString(Keys.federation.passphrase, "");
+		final String passphrase = this.settings.getString(Keys.federation.passphrase, "");
 		if (StringUtils.isEmpty(passphrase)) {
-			logger.info("Federation passphrase is blank! This server can not be PULLED from.");
+			this.logger.info("Federation passphrase is blank! This server can not be PULLED from.");
 			validPassphrase = false;
 		}
 		if (validPassphrase) {
 			// standard tokens
-			for (FederationToken tokenType : FederationToken.values()) {
-				logger.info(MessageFormat.format("Federation {0} token = {1}", tokenType.name(),
-						gitblit.getFederationToken(tokenType)));
+			for (final FederationToken tokenType : FederationToken.values()) {
+				this.logger.info(MessageFormat.format("Federation {0} token = {1}",
+						tokenType.name(), this.gitblit.getFederationToken(tokenType)));
 			}
 
 			// federation set tokens
-			for (String set : settings.getStrings(Keys.federation.sets)) {
-				logger.info(MessageFormat.format("Federation Set {0} token = {1}", set,
-						gitblit.getFederationToken(set)));
+			for (final String set : this.settings.getStrings(Keys.federation.sets)) {
+				this.logger.info(MessageFormat.format("Federation Set {0} token = {1}", set,
+						this.gitblit.getFederationToken(set)));
 			}
 		}
 
 		// Schedule or run the federation executor
-		List<FederationModel> registrations = gitblit.getFederationRegistrations();
+		final List<FederationModel> registrations = this.gitblit.getFederationRegistrations();
 		if (registrations.size() > 0) {
-			FederationPuller executor = new FederationPuller(registrations);
-			scheduledExecutor.schedule(executor, 1, TimeUnit.MINUTES);
+			final FederationPuller executor = new FederationPuller(registrations);
+			this.scheduledExecutor.schedule(executor, 1, TimeUnit.MINUTES);
 		}
 	}
 
 	@Override
 	public boolean acceptsPush(Transport byTransport) {
 		if (byTransport == null) {
-			logger.info("Unknown transport, push rejected!");
+			this.logger.info("Unknown transport, push rejected!");
 			return false;
 		}
 
-		Set<Transport> transports = new HashSet<Transport>();
-		for (String value : settings.getStrings(Keys.git.acceptedPushTransports)) {
-			Transport transport = Transport.fromString(value);
+		final Set<Transport> transports = new HashSet<Transport>();
+		for (final String value : this.settings.getStrings(Keys.git.acceptedPushTransports)) {
+			final Transport transport = Transport.fromString(value);
 			if (transport == null) {
-				logger.info(String.format("Ignoring unknown registered transport %s", value));
+				this.logger.info(String.format("Ignoring unknown registered transport %s", value));
 				continue;
 			}
 
@@ -394,76 +404,86 @@ public class ServicesManager implements IServicesManager {
 	}
 
 	protected void configureGitDaemon() {
-		int port = settings.getInteger(Keys.git.daemonPort, 0);
-		String bindInterface = settings.getString(Keys.git.daemonBindInterface, "localhost");
+		final int port = this.settings.getInteger(Keys.git.daemonPort, 0);
+		final String bindInterface = this.settings.getString(Keys.git.daemonBindInterface,
+				"localhost");
 		if (port > 0) {
 			try {
-				gitDaemon = new GitDaemon(gitblit);
-				gitDaemon.start();
-			} catch (IOException e) {
-				gitDaemon = null;
-				logger.error(MessageFormat.format("Failed to start Git Daemon on {0}:{1,number,0}", bindInterface, port), e);
+				this.gitDaemon = new GitDaemon(this.gitblit);
+				this.gitDaemon.start();
+			}
+			catch (final IOException e) {
+				this.gitDaemon = null;
+				this.logger.error(MessageFormat.format(
+						"Failed to start Git Daemon on {0}:{1,number,0}", bindInterface, port), e);
 			}
 		} else {
-			logger.info("Git Daemon is disabled.");
+			this.logger.info("Git Daemon is disabled.");
 		}
 	}
 
 	protected void configureSshDaemon() {
-		int port = settings.getInteger(Keys.git.sshPort, 0);
-		String bindInterface = settings.getString(Keys.git.sshBindInterface, "localhost");
+		final int port = this.settings.getInteger(Keys.git.sshPort, 0);
+		final String bindInterface = this.settings
+				.getString(Keys.git.sshBindInterface, "localhost");
 		if (port > 0) {
 			try {
-				sshDaemon = new SshDaemon(gitblit, workQueueProvider.get());
-				sshDaemon.start();
-			} catch (IOException e) {
-				sshDaemon = null;
-				logger.error(MessageFormat.format("Failed to start SSH daemon on {0}:{1,number,0}", bindInterface, port), e);
+				this.sshDaemon = new SshDaemon(this.gitblit, this.workQueueProvider.get());
+				this.sshDaemon.start();
+			}
+			catch (final IOException e) {
+				this.sshDaemon = null;
+				this.logger.error(MessageFormat.format(
+						"Failed to start SSH daemon on {0}:{1,number,0}", bindInterface, port), e);
 			}
 		}
 	}
 
 	protected void configureFanout() {
 		// startup Fanout PubSub service
-		if (settings.getInteger(Keys.fanout.port, 0) > 0) {
-			String bindInterface = settings.getString(Keys.fanout.bindInterface, null);
-			int port = settings.getInteger(Keys.fanout.port, FanoutService.DEFAULT_PORT);
-			boolean useNio = settings.getBoolean(Keys.fanout.useNio, true);
-			int limit = settings.getInteger(Keys.fanout.connectionLimit, 0);
+		if (this.settings.getInteger(Keys.fanout.port, 0) > 0) {
+			final String bindInterface = this.settings.getString(Keys.fanout.bindInterface, null);
+			final int port = this.settings.getInteger(Keys.fanout.port, FanoutService.DEFAULT_PORT);
+			final boolean useNio = this.settings.getBoolean(Keys.fanout.useNio, true);
+			final int limit = this.settings.getInteger(Keys.fanout.connectionLimit, 0);
 
 			if (useNio) {
 				if (StringUtils.isEmpty(bindInterface)) {
-					fanoutService = new FanoutNioService(port);
+					this.fanoutService = new FanoutNioService(port);
 				} else {
-					fanoutService = new FanoutNioService(bindInterface, port);
+					this.fanoutService = new FanoutNioService(bindInterface, port);
 				}
 			} else {
 				if (StringUtils.isEmpty(bindInterface)) {
-					fanoutService = new FanoutSocketService(port);
+					this.fanoutService = new FanoutSocketService(port);
 				} else {
-					fanoutService = new FanoutSocketService(bindInterface, port);
+					this.fanoutService = new FanoutSocketService(bindInterface, port);
 				}
 			}
 
-			fanoutService.setConcurrentConnectionLimit(limit);
-			fanoutService.setAllowAllChannelAnnouncements(false);
-			fanoutService.start();
+			this.fanoutService.setConcurrentConnectionLimit(limit);
+			this.fanoutService.setAllowAllChannelAnnouncements(false);
+			this.fanoutService.start();
 		} else {
-			logger.info("Fanout PubSub service is disabled.");
+			this.logger.info("Fanout PubSub service is disabled.");
 		}
 	}
 
-	public String getGitDaemonUrl(HttpServletRequest request, UserModel user, RepositoryModel repository) {
-		if (gitDaemon != null) {
-			String bindInterface = settings.getString(Keys.git.daemonBindInterface, "localhost");
+	public String getGitDaemonUrl(HttpServletRequest request, UserModel user,
+			RepositoryModel repository) {
+		if (this.gitDaemon != null) {
+			final String bindInterface = this.settings.getString(Keys.git.daemonBindInterface,
+					"localhost");
 			if (bindInterface.equals("localhost")
-					&& (!request.getServerName().equals("localhost") && !request.getServerName().equals("127.0.0.1"))) {
-				// git daemon is bound to localhost and the request is from elsewhere
+					&& (!request.getServerName().equals("localhost") && !request.getServerName()
+							.equals("127.0.0.1"))) {
+				// git daemon is bound to localhost and the request is from
+				// elsewhere
 				return null;
 			}
 			if (user.canClone(repository)) {
-				String hostname = getHostname(request);
-				String url = gitDaemon.formatUrl(hostname, repository.name);
+				final String hostname = getHostname(request);
+				final String url = this.gitDaemon.formatUrl(hostname, repository.name);
 				return url;
 			}
 		}
@@ -471,7 +491,7 @@ public class ServicesManager implements IServicesManager {
 	}
 
 	public AccessPermission getGitDaemonAccessPermission(UserModel user, RepositoryModel repository) {
-		if (gitDaemon != null && user.canClone(repository)) {
+		if ((this.gitDaemon != null) && user.canClone(repository)) {
 			AccessPermission gitDaemonPermission = user.getRepositoryPermission(repository).permission;
 			if (gitDaemonPermission.atLeast(AccessPermission.CLONE)) {
 				if (repository.accessRestriction.atLeast(AccessRestrictionType.CLONE)) {
@@ -489,46 +509,51 @@ public class ServicesManager implements IServicesManager {
 		return AccessPermission.NONE;
 	}
 
-	public String getSshDaemonUrl(HttpServletRequest request, UserModel user, RepositoryModel repository) {
-		if (user == null || UserModel.ANONYMOUS.equals(user)) {
+	public String getSshDaemonUrl(HttpServletRequest request, UserModel user,
+			RepositoryModel repository) {
+		if ((user == null) || UserModel.ANONYMOUS.equals(user)) {
 			// SSH always requires authentication - anonymous access prohibited
 			return null;
 		}
-		if (sshDaemon != null) {
-			String bindInterface = settings.getString(Keys.git.sshBindInterface, "localhost");
+		if (this.sshDaemon != null) {
+			final String bindInterface = this.settings.getString(Keys.git.sshBindInterface,
+					"localhost");
 			if (bindInterface.equals("localhost")
-					&& (!request.getServerName().equals("localhost") && !request.getServerName().equals("127.0.0.1"))) {
-				// ssh daemon is bound to localhost and the request is from elsewhere
+					&& (!request.getServerName().equals("localhost") && !request.getServerName()
+							.equals("127.0.0.1"))) {
+				// ssh daemon is bound to localhost and the request is from
+				// elsewhere
 				return null;
 			}
 			if (user.canClone(repository)) {
-				String hostname = getHostname(request);
-				String url = sshDaemon.formatUrl(user.username, hostname, repository.name);
+				final String hostname = getHostname(request);
+				final String url = this.sshDaemon.formatUrl(user.username, hostname,
+						repository.name);
 				return url;
 			}
 		}
 		return null;
 	}
 
-
 	/**
-	 * Extract the hostname from the canonical url or return the
-	 * hostname from the servlet request.
+	 * Extract the hostname from the canonical url or return the hostname from
+	 * the servlet request.
 	 *
 	 * @param request
 	 * @return
 	 */
 	protected String getHostname(HttpServletRequest request) {
 		String hostname = request.getServerName();
-		String canonicalUrl = settings.getString(Keys.web.canonicalUrl, null);
+		final String canonicalUrl = this.settings.getString(Keys.web.canonicalUrl, null);
 		if (!StringUtils.isEmpty(canonicalUrl)) {
 			try {
-				URI uri = new URI(canonicalUrl);
-				String host = uri.getHost();
+				final URI uri = new URI(canonicalUrl);
+				final String host = uri.getHost();
 				if (!StringUtils.isEmpty(host) && !"localhost".equals(host)) {
 					hostname = host;
 				}
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 			}
 		}
 		return hostname;
@@ -537,20 +562,21 @@ public class ServicesManager implements IServicesManager {
 	private class FederationPuller extends FederationPullService {
 
 		public FederationPuller(FederationModel registration) {
-			super(gitblit, Arrays.asList(registration));
+			super(ServicesManager.this.gitblit, Arrays.asList(registration));
 		}
 
 		public FederationPuller(List<FederationModel> registrations) {
-			super(gitblit, registrations);
+			super(ServicesManager.this.gitblit, registrations);
 		}
 
 		@Override
 		public void reschedule(FederationModel registration) {
 			// schedule the next pull
-			int mins = TimeUtils.convertFrequencyToMinutes(registration.frequency, 5);
+			final int mins = TimeUtils.convertFrequencyToMinutes(registration.frequency, 5);
 			registration.nextPull = new Date(System.currentTimeMillis() + (mins * 60 * 1000L));
-			scheduledExecutor.schedule(new FederationPuller(registration), mins, TimeUnit.MINUTES);
-			logger.info(MessageFormat.format(
+			ServicesManager.this.scheduledExecutor.schedule(new FederationPuller(registration),
+					mins, TimeUnit.MINUTES);
+			ServicesManager.this.logger.info(MessageFormat.format(
 					"Next pull of {0} @ {1} scheduled for {2,date,yyyy-MM-dd HH:mm}",
 					registration.name, registration.url, registration.nextPull));
 		}

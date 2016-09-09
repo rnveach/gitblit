@@ -17,7 +17,6 @@ package com.gitblit.tests;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.lib.RepositoryCache.FileKey;
@@ -25,17 +24,16 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.util.FS;
 import org.junit.Test;
 
-import com.gitblit.models.RefLogEntry;
 import com.gitblit.utils.RefLogUtils;
 
 public class PushLogTest extends GitblitUnitTest {
 
 	@Test
 	public void testPushLog() throws IOException {
-		String name = "~james/helloworld.git";
-		File gitDir = FileKey.resolve(new File(GitBlitSuite.REPOSITORIES, name), FS.DETECTED);
-		Repository repository = new FileRepositoryBuilder().setGitDir(gitDir).build();
-		List<RefLogEntry> pushes = RefLogUtils.getRefLog(name, repository);
+		final String name = "~james/helloworld.git";
+		final File gitDir = FileKey.resolve(new File(GitBlitSuite.REPOSITORIES, name), FS.DETECTED);
+		final Repository repository = new FileRepositoryBuilder().setGitDir(gitDir).build();
+		RefLogUtils.getRefLog(name, repository);
 		GitBlitSuite.close(repository);
 	}
 }

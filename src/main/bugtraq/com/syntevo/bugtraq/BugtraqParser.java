@@ -29,21 +29,26 @@
  */
 package com.syntevo.bugtraq;
 
-import java.util.*;
-import java.util.regex.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 final class BugtraqParser {
 
 	// Static =================================================================
 
 	@NotNull
-	public static BugtraqParser createInstance(@NotNull String idRegex, @Nullable String linkRegex, @Nullable String filterRegex) throws BugtraqException {
+	public static BugtraqParser createInstance(@NotNull String idRegex, @Nullable String linkRegex,
+			@Nullable String filterRegex) throws BugtraqException {
 		try {
 			return new BugtraqParser(idRegex, linkRegex, filterRegex);
 		}
-		catch (PatternSyntaxException ex) {
+		catch (final PatternSyntaxException ex) {
 			throw new BugtraqException(ex);
 		}
 	}
@@ -56,10 +61,11 @@ final class BugtraqParser {
 
 	// Setup ==================================================================
 
-	private BugtraqParser(@NotNull String idRegex, @Nullable String linkRegex, @Nullable String filterRegex) {
-		idPattern = compilePatternSafe(idRegex);
-		linkPattern = linkRegex != null ? compilePatternSafe(linkRegex) : null;
-		filterPattern = filterRegex != null ? compilePatternSafe(filterRegex) : null;
+	private BugtraqParser(@NotNull String idRegex, @Nullable String linkRegex,
+			@Nullable String filterRegex) {
+		this.idPattern = compilePatternSafe(idRegex);
+		this.linkPattern = linkRegex != null ? compilePatternSafe(linkRegex) : null;
+		this.filterPattern = filterRegex != null ? compilePatternSafe(filterRegex) : null;
 	}
 
 	// Accessing ==============================================================
@@ -69,33 +75,33 @@ final class BugtraqParser {
 		List<Part> parts = new ArrayList<Part>();
 		parts.add(new Part(message, 0, message.length() - 1));
 
-		if (filterPattern != null) {
-			parts = collectParts(parts, filterPattern);
+		if (this.filterPattern != null) {
+			parts = collectParts(parts, this.filterPattern);
 		}
 
-		if (linkPattern != null) {
-			parts = collectParts(parts, linkPattern);
+		if (this.linkPattern != null) {
+			parts = collectParts(parts, this.linkPattern);
 		}
 
 		final List<BugtraqParserIssueId> ids = new ArrayList<BugtraqParserIssueId>();
 		for (final Part part : parts) {
-			final Matcher matcher = idPattern.matcher(part.text);
+			final Matcher matcher = this.idPattern.matcher(part.text);
 			while (matcher.find()) {
 				final Part subPart = createSubPart(part, matcher, matcher.groupCount() == 0 ? 0 : 1);
 				if (subPart == null) {
 					continue;
 				}
-				
+
 				final BugtraqParserIssueId id;
-				if (linkPattern == null) {
+				if (this.linkPattern == null) {
 					id = new BugtraqParserIssueId(subPart.from, subPart.to, subPart.text);
-				}
-				else {
+				} else {
 					if (matcher.find()) {
-						// If we are using links, the last pattern (link) must produce exactly one id.
+						// If we are using links, the last pattern (link) must
+						// produce exactly one id.
 						continue;
 					}
-					
+
 					id = new BugtraqParserIssueId(part.from, part.to, subPart.text);
 				}
 
@@ -105,7 +111,7 @@ final class BugtraqParser {
 						continue;
 					}
 				}
-				
+
 				ids.add(id);
 			}
 		}
@@ -133,7 +139,7 @@ final class BugtraqParser {
 	@Nullable
 	private static Part createSubPart(Part part, Matcher matcher, int group) {
 		final int textStart = matcher.start(group) + part.from;
-		final int textEnd = matcher.end(group) - 1 + part.from;
+		final int textEnd = (matcher.end(group) - 1) + part.from;
 		if (textEnd < 0) {
 			return null;
 		}

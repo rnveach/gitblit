@@ -37,12 +37,12 @@ import com.gitblit.wicket.pages.BasePage;
  * bookmarkable page regardless of the pagemap and even after session expiration
  * or a server restart.
  *
- * The trick is to embed "wicket:bookmarkablePage" as a hidden field of the form.
- * Wicket already has logic to extract this parameter when it is trying
- * to determine which page should receive the request.
+ * The trick is to embed "wicket:bookmarkablePage" as a hidden field of the
+ * form. Wicket already has logic to extract this parameter when it is trying to
+ * determine which page should receive the request.
  *
  * The parameters of the containing page can optionally be included as hidden
- * fields in this form.  Note that if a page parameter's name collides with any
+ * fields in this form. Note that if a page parameter's name collides with any
  * child's wicket:id in this form then the page parameter is excluded.
  *
  * @author James Moger
@@ -61,7 +61,7 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 	private final Logger log = LoggerFactory.getLogger(SessionlessForm.class);
 
 	/**
-	 * Sessionless forms must have a bookmarkable page class.  A bookmarkable
+	 * Sessionless forms must have a bookmarkable page class. A bookmarkable
 	 * page is defined as a page that has only a default and/or a PageParameter
 	 * constructor.
 	 *
@@ -73,7 +73,7 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 	}
 
 	/**
-	 * Sessionless forms must have a bookmarkable page class.  A bookmarkable
+	 * Sessionless forms must have a bookmarkable page class. A bookmarkable
 	 * page is defined as a page that has only a default and/or a PageParameter
 	 * constructor.
 	 *
@@ -88,11 +88,10 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 		this.pageParameters = pageParameters;
 	}
 
-
 	/**
 	 * Append an additional hidden input tag that forces Wicket to correctly
-	 * determine the destination page class even after a session expiration or
-	 * a server restart.
+	 * determine the destination page class even after a session expiration or a
+	 * server restart.
 	 *
 	 * @param markupStream
 	 *            The markup stream
@@ -100,33 +99,29 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 	 *            The open tag for the body
 	 */
 	@Override
-	protected void onComponentTagBody(final MarkupStream markupStream, final ComponentTag openTag)
-	{
+	protected void onComponentTagBody(final MarkupStream markupStream, final ComponentTag openTag) {
 		// render the hidden bookmarkable page field
-		AppendingStringBuffer buffer = new AppendingStringBuffer(HIDDEN_DIV_START);
+		final AppendingStringBuffer buffer = new AppendingStringBuffer(HIDDEN_DIV_START);
 		buffer.append("<input type=\"hidden\" name=\"")
-			.append(WebRequestCodingStrategy.BOOKMARKABLE_PAGE_PARAMETER_NAME)
-			.append("\" value=\":")
-			.append(pageClass.getName())
-			.append("\" />");
+				.append(WebRequestCodingStrategy.BOOKMARKABLE_PAGE_PARAMETER_NAME)
+				.append("\" value=\":").append(this.pageClass.getName()).append("\" />");
 
 		// insert the page parameters, if any, as hidden fields as long as they
 		// do not collide with any child wicket:id of the form.
-		if (pageParameters != null) {
-			for (String key : pageParameters.keySet()) {
-				Component c = get(key);
+		if (this.pageParameters != null) {
+			for (final String key : this.pageParameters.keySet()) {
+				final Component c = get(key);
 				if (c != null) {
 					// this form has a field id which matches the
 					// parameter name, skip embedding a hidden value
-					log.warn(MessageFormat.format("Skipping page parameter \"{0}\" from sessionless form hidden fields because it collides with a form child wicket:id", key));
+					this.log.warn(MessageFormat
+							.format("Skipping page parameter \"{0}\" from sessionless form hidden fields because it collides with a form child wicket:id",
+									key));
 					continue;
 				}
-				String value = pageParameters.getString(key);
-				buffer.append("<input type=\"hidden\" name=\"")
-				.append(recode(key))
-				.append("\" value=\"")
-				.append(recode(value))
-				.append("\" />");
+				final String value = this.pageParameters.getString(key);
+				buffer.append("<input type=\"hidden\" name=\"").append(recode(key))
+						.append("\" value=\"").append(recode(value)).append("\" />");
 			}
 		}
 
@@ -136,24 +131,26 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 	}
 
 	/**
-	 * Take URL-encoded query string value, unencode it and return HTML-escaped version
+	 * Take URL-encoded query string value, unencode it and return HTML-escaped
+	 * version
 	 *
 	 * @param s
 	 *            value to reencode
 	 * @return reencoded value
 	 */
-	private String recode(String s) {
-		String un = WicketURLDecoder.QUERY_INSTANCE.decode(s);
+	private static String recode(String s) {
+		final String un = WicketURLDecoder.QUERY_INSTANCE.decode(s);
 		return Strings.escapeMarkup(un).toString();
 	}
 
 	protected String getAbsoluteUrl() {
-		return getAbsoluteUrl(pageClass, pageParameters);
+		return getAbsoluteUrl(this.pageClass, this.pageParameters);
 	}
 
-	protected String getAbsoluteUrl(Class<? extends BasePage> pageClass, PageParameters pageParameters) {
-		String relativeUrl = urlFor(pageClass, pageParameters).toString();
-		String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+	protected String getAbsoluteUrl(Class<? extends BasePage> pageClass,
+			PageParameters pageParameters) {
+		final String relativeUrl = urlFor(pageClass, pageParameters).toString();
+		final String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
 		return absoluteUrl;
 	}
 }

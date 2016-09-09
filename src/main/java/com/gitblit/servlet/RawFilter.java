@@ -15,9 +15,6 @@
  */
 package com.gitblit.servlet;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import org.eclipse.jgit.lib.Repository;
 
 import com.gitblit.Constants.AccessRestrictionType;
@@ -26,6 +23,8 @@ import com.gitblit.manager.IRepositoryManager;
 import com.gitblit.manager.IRuntimeManager;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.UserModel;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * The RawFilter is an AccessRestrictionFilter which ensures http branch
@@ -38,9 +37,7 @@ import com.gitblit.models.UserModel;
 public class RawFilter extends AccessRestrictionFilter {
 
 	@Inject
-	public RawFilter(
-			IRuntimeManager runtimeManager,
-			IAuthenticationManager authenticationManager,
+	public RawFilter(IRuntimeManager runtimeManager, IAuthenticationManager authenticationManager,
 			IRepositoryManager repositoryManager) {
 
 		super(runtimeManager, authenticationManager, repositoryManager);
@@ -59,13 +56,13 @@ public class RawFilter extends AccessRestrictionFilter {
 		Repository r = null;
 		int offset = 0;
 		while (r == null) {
-			int slash = url.indexOf('/', offset);
+			final int slash = url.indexOf('/', offset);
 			if (slash == -1) {
 				repository = url;
 			} else {
 				repository = url.substring(0, slash);
 			}
-			r = repositoryManager.getRepository(repository, false);
+			r = this.repositoryManager.getRepository(repository, false);
 			if (r == null) {
 				// try again
 				offset = slash + 1;
@@ -124,7 +121,8 @@ public class RawFilter extends AccessRestrictionFilter {
 	 * @return true if authentication required
 	 */
 	@Override
-	protected boolean requiresAuthentication(RepositoryModel repository, String action, String method) {
+	protected boolean requiresAuthentication(RepositoryModel repository, String action,
+			String method) {
 		return repository.accessRestriction.atLeast(AccessRestrictionType.VIEW);
 	}
 

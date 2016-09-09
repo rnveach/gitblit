@@ -34,11 +34,11 @@ import com.gitblit.utils.StringUtils;
 
 public class HttpHeaderAuthProvider extends AuthenticationProvider {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+	protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected String userHeaderName;
-    protected String teamHeaderName;
-    protected String teamHeaderSeparator;
+	protected String userHeaderName;
+	protected String teamHeaderName;
+	protected String teamHeaderSeparator;
 
 	public HttpHeaderAuthProvider() {
 		super("httpheader");
@@ -47,37 +47,44 @@ public class HttpHeaderAuthProvider extends AuthenticationProvider {
 	@Override
 	public void setup() {
 		// Load HTTP header configuration
-		userHeaderName = settings.getString(Keys.realm.httpheader.userheader, null);
-		teamHeaderName = settings.getString(Keys.realm.httpheader.teamheader, null);
-		teamHeaderSeparator = settings.getString(Keys.realm.httpheader.teamseparator, ",");
+		this.userHeaderName = this.settings.getString(Keys.realm.httpheader.userheader, null);
+		this.teamHeaderName = this.settings.getString(Keys.realm.httpheader.teamheader, null);
+		this.teamHeaderSeparator = this.settings
+				.getString(Keys.realm.httpheader.teamseparator, ",");
 
-		if (StringUtils.isEmpty(userHeaderName)) {
-			logger.warn("HTTP Header authentication is enabled, but no header is not defined in " + Keys.realm.httpheader.userheader);
+		if (StringUtils.isEmpty(this.userHeaderName)) {
+			this.logger
+					.warn("HTTP Header authentication is enabled, but no header is not defined in "
+							+ Keys.realm.httpheader.userheader);
 		}
 	}
 
 	@Override
-	public void stop() {}
-
+	public void stop() {
+	}
 
 	@Override
 	public UserModel authenticate(HttpServletRequest httpRequest) {
-		// Try to authenticate using custom HTTP header if user header is defined
-		if (!StringUtils.isEmpty(userHeaderName)) {
-			String headerUserName = httpRequest.getHeader(userHeaderName);
-			if (!StringUtils.isEmpty(headerUserName) && !userManager.isInternalAccount(headerUserName)) {
+		// Try to authenticate using custom HTTP header if user header is
+		// defined
+		if (!StringUtils.isEmpty(this.userHeaderName)) {
+			final String headerUserName = httpRequest.getHeader(this.userHeaderName);
+			if (!StringUtils.isEmpty(headerUserName)
+					&& !this.userManager.isInternalAccount(headerUserName)) {
 				// We have a user, try to load team names as well
-				Set<TeamModel> userTeams = new HashSet<>();
-				if (!StringUtils.isEmpty(teamHeaderName)) {
-					String headerTeamValue = httpRequest.getHeader(teamHeaderName);
+				final Set<TeamModel> userTeams = new HashSet<>();
+				if (!StringUtils.isEmpty(this.teamHeaderName)) {
+					final String headerTeamValue = httpRequest.getHeader(this.teamHeaderName);
 					if (!StringUtils.isEmpty(headerTeamValue)) {
-						String[] headerTeamNames = headerTeamValue.split(teamHeaderSeparator);
+						final String[] headerTeamNames = headerTeamValue
+								.split(this.teamHeaderSeparator);
 						for (String teamName : headerTeamNames) {
 							teamName = teamName.trim();
 							if (!StringUtils.isEmpty(teamName)) {
-								TeamModel team = userManager.getTeamModel(teamName);
+								TeamModel team = this.userManager.getTeamModel(teamName);
 								if (null == team) {
-									// Create teams here so they can marked with the correct AccountType
+									// Create teams here so they can marked with
+									// the correct AccountType
 									team = new TeamModel(teamName);
 									team.accountType = AccountType.HTTPHEADER;
 									updateTeam(team);
@@ -88,16 +95,18 @@ public class HttpHeaderAuthProvider extends AuthenticationProvider {
 					}
 				}
 
-				UserModel user = userManager.getUserModel(headerUserName);
+				UserModel user = this.userManager.getUserModel(headerUserName);
 				if (user != null) {
-					// If team header is provided in request, reset all team memberships, even if resetting to empty set
-					if (!StringUtils.isEmpty(teamHeaderName)) {
+					// If team header is provided in request, reset all team
+					// memberships, even if resetting to empty set
+					if (!StringUtils.isEmpty(this.teamHeaderName)) {
 						user.teams.clear();
 						user.teams.addAll(userTeams);
 					}
 					updateUser(user);
 					return user;
-				} else if (settings.getBoolean(Keys.realm.httpheader.autoCreateAccounts, false)) {
+				} else if (this.settings
+						.getBoolean(Keys.realm.httpheader.autoCreateAccounts, false)) {
 					// auto-create user from HTTP header
 					user = new UserModel(headerUserName.toLowerCase());
 					user.displayName = headerUserName;
@@ -114,7 +123,7 @@ public class HttpHeaderAuthProvider extends AuthenticationProvider {
 	}
 
 	@Override
-	public UserModel authenticate(String username, char[] password){
+	public UserModel authenticate(String username, char[] password) {
 		// Username/password is not supported for HTTP header authentication
 		return null;
 	}
@@ -146,7 +155,7 @@ public class HttpHeaderAuthProvider extends AuthenticationProvider {
 
 	@Override
 	public boolean supportsTeamMembershipChanges() {
-		return StringUtils.isEmpty(teamHeaderName);
+		return StringUtils.isEmpty(this.teamHeaderName);
 	}
 
 	@Override

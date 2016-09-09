@@ -45,7 +45,8 @@ import com.gitblit.utils.StringUtils;
  *
  * @author James Moger
  *
- * @param <X> the connection type
+ * @param <X>
+ *            the connection type
  */
 public class GitblitReceivePackFactory<X> implements ReceivePackFactory<X> {
 
@@ -62,8 +63,8 @@ public class GitblitReceivePackFactory<X> implements ReceivePackFactory<X> {
 	}
 
 	@Override
-	public ReceivePack create(X req, Repository db)
-			throws ServiceNotEnabledException, ServiceNotAuthorizedException {
+	public ReceivePack create(X req, Repository db) throws ServiceNotEnabledException,
+			ServiceNotAuthorizedException {
 
 		UserModel user = UserModel.ANONYMOUS;
 		String repositoryName = "";
@@ -74,15 +75,15 @@ public class GitblitReceivePackFactory<X> implements ReceivePackFactory<X> {
 
 		if (req instanceof HttpServletRequest) {
 			// http/https request may or may not be authenticated
-			HttpServletRequest client = (HttpServletRequest) req;
+			final HttpServletRequest client = (HttpServletRequest) req;
 			repositoryName = client.getAttribute("gitblitRepositoryName").toString();
 			origin = client.getRemoteHost();
 			gitblitUrl = HttpUtils.getGitblitURL(client);
 
 			// determine pushing user
-			String username = client.getRemoteUser();
+			final String username = client.getRemoteUser();
 			if (!StringUtils.isEmpty(username)) {
-				UserModel u = gitblit.getUserModel(username);
+				final UserModel u = this.gitblit.getUserModel(username);
 				if (u != null) {
 					user = u;
 				}
@@ -96,7 +97,7 @@ public class GitblitReceivePackFactory<X> implements ReceivePackFactory<X> {
 			}
 		} else if (req instanceof GitDaemonClient) {
 			// git daemon request is always anonymous
-			GitDaemonClient client = (GitDaemonClient) req;
+			final GitDaemonClient client = (GitDaemonClient) req;
 			repositoryName = client.getRepositoryName();
 			origin = client.getRemoteAddress().getHostAddress();
 
@@ -106,7 +107,7 @@ public class GitblitReceivePackFactory<X> implements ReceivePackFactory<X> {
 			transport = Transport.GIT;
 		} else if (req instanceof SshDaemonClient) {
 			// SSH request is always authenticated
-			SshDaemonClient client = (SshDaemonClient) req;
+			final SshDaemonClient client = (SshDaemonClient) req;
 			repositoryName = client.getRepositoryName();
 			origin = client.getRemoteAddress().toString();
 			user = client.getUser();
@@ -118,25 +119,26 @@ public class GitblitReceivePackFactory<X> implements ReceivePackFactory<X> {
 			throw new ServiceNotAuthorizedException();
 		}
 
-		boolean allowAnonymousPushes = settings.getBoolean(Keys.git.allowAnonymousPushes, false);
+		final boolean allowAnonymousPushes = this.settings.getBoolean(
+				Keys.git.allowAnonymousPushes, false);
 		if (!allowAnonymousPushes && UserModel.ANONYMOUS.equals(user)) {
 			// prohibit anonymous pushes
 			throw new ServiceNotEnabledException();
 		}
 
-		String url = settings.getString(Keys.web.canonicalUrl, null);
+		String url = this.settings.getString(Keys.web.canonicalUrl, null);
 		if (StringUtils.isEmpty(url)) {
 			url = gitblitUrl;
 		}
 
-		final RepositoryModel repository = gitblit.getRepositoryModel(repositoryName);
+		final RepositoryModel repository = this.gitblit.getRepositoryModel(repositoryName);
 
 		// Determine which receive pack to use for pushes
 		final GitblitReceivePack rp;
-		if (gitblit.getTicketService().isAcceptingNewPatchsets(repository)) {
-			rp = new PatchsetReceivePack(gitblit, db, repository, user);
+		if (this.gitblit.getTicketService().isAcceptingNewPatchsets(repository)) {
+			rp = new PatchsetReceivePack(this.gitblit, db, repository, user);
 		} else {
-			rp = new GitblitReceivePack(gitblit, db, repository, user);
+			rp = new GitblitReceivePack(this.gitblit, db, repository, user);
 		}
 
 		rp.setGitblitUrl(url);
@@ -148,15 +150,16 @@ public class GitblitReceivePackFactory<X> implements ReceivePackFactory<X> {
 
 	protected boolean acceptPush(Transport byTransport) {
 		if (byTransport == null) {
-			logger.info("Unknown transport, push rejected!");
+			this.logger.info("Unknown transport, push rejected!");
 			return false;
 		}
 
-		Set<Transport> transports = new HashSet<Transport>();
-		for (String value : gitblit.getSettings().getStrings(Keys.git.acceptedPushTransports)) {
-			Transport transport = Transport.fromString(value);
+		final Set<Transport> transports = new HashSet<Transport>();
+		for (final String value : this.gitblit.getSettings().getStrings(
+				Keys.git.acceptedPushTransports)) {
+			final Transport transport = Transport.fromString(value);
 			if (transport == null) {
-				logger.info(String.format("Ignoring unknown registered transport %s", value));
+				this.logger.info(String.format("Ignoring unknown registered transport %s", value));
 				continue;
 			}
 

@@ -23,14 +23,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
-* Annotation tagged on a concrete Command to describe what it is doing
-*/
-@Target({ElementType.TYPE})
+ * Annotation tagged on a concrete Command to describe what it is doing
+ */
+@Target({ ElementType.TYPE })
 @Retention(RUNTIME)
 public @interface CommandMetaData {
-String name();
-String [] aliases() default {};
-String description() default "";
-boolean admin() default false;
-boolean hidden() default false;
+	String name();
+
+	String[] aliases() default {};
+
+	String description() default "";
+
+	boolean admin() default false;
+
+	boolean hidden() default false;
 }

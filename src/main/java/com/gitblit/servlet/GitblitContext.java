@@ -65,9 +65,9 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 
 /**
- * This class is the main entry point for the entire webapp.  It is a singleton
+ * This class is the main entry point for the entire webapp. It is a singleton
  * created manually by Gitblit GO or dynamically by the WAR/Express servlet
- * container.  This class instantiates and starts all managers.
+ * container. This class instantiates and starts all managers.
  *
  * Servlets and filters are injected which allows Gitblit to be completely
  * code-driven.
@@ -114,7 +114,7 @@ public class GitblitContext extends GuiceServletContextListener {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <X extends IManager> X getManager(Class<X> managerClass) {
-		for (IManager manager : gitblit.managers) {
+		for (final IManager manager : gitblit.managers) {
 			if (managerClass.isAssignableFrom(manager.getClass())) {
 				return (X) manager;
 			}
@@ -130,8 +130,8 @@ public class GitblitContext extends GuiceServletContextListener {
 	/**
 	 * Returns Gitblit's Guice injection modules.
 	 */
-	protected AbstractModule [] getModules() {
-		return new AbstractModule [] { new CoreModule(), new WebModule() };
+	protected AbstractModule[] getModules() {
+		return new AbstractModule[] { new CoreModule(), new WebModule() };
 	}
 
 	/**
@@ -144,7 +144,7 @@ public class GitblitContext extends GuiceServletContextListener {
 	public final void contextInitialized(ServletContextEvent contextEvent) {
 		super.contextInitialized(contextEvent);
 
-		ServletContext context = contextEvent.getServletContext();
+		final ServletContext context = contextEvent.getServletContext();
 		startCore(context);
 	}
 
@@ -152,28 +152,32 @@ public class GitblitContext extends GuiceServletContextListener {
 	 * Prepare runtime settings and start all manager instances.
 	 */
 	protected void startCore(ServletContext context) {
-		Injector injector = (Injector) context.getAttribute(Injector.class.getName());
+		final Injector injector = (Injector) context.getAttribute(Injector.class.getName());
 
 		// create the runtime settings object
-		IStoredSettings runtimeSettings = injector.getInstance(IStoredSettings.class);
+		final IStoredSettings runtimeSettings = injector.getInstance(IStoredSettings.class);
 		final File baseFolder;
 
-		if (goSettings != null) {
+		if (this.goSettings != null) {
 			// Gitblit GO
-			baseFolder = configureGO(context, goSettings, goBaseFolder, runtimeSettings);
+			baseFolder = configureGO(context, this.goSettings, this.goBaseFolder, runtimeSettings);
 		} else {
 			// servlet container
-			WebXmlSettings webxmlSettings = new WebXmlSettings(context);
-			String contextRealPath = context.getRealPath("/");
-			File contextFolder = (contextRealPath != null) ? new File(contextRealPath) : null;
+			final WebXmlSettings webxmlSettings = new WebXmlSettings(context);
+			final String contextRealPath = context.getRealPath("/");
+			final File contextFolder = (contextRealPath != null) ? new File(contextRealPath) : null;
 
-			// if the base folder dosen't match the default assume they don't want to use express,
-			// this allows for other containers to customise the basefolder per context.
-			String defaultBase = Constants.contextFolder$ + "/WEB-INF/data";
-			String base = getBaseFolderPath(defaultBase);
-			if (!StringUtils.isEmpty(System.getenv("OPENSHIFT_DATA_DIR")) && defaultBase.equals(base)) {
+			// if the base folder dosen't match the default assume they don't
+			// want to use express,
+			// this allows for other containers to customise the basefolder per
+			// context.
+			final String defaultBase = Constants.contextFolder$ + "/WEB-INF/data";
+			final String base = getBaseFolderPath(defaultBase);
+			if (!StringUtils.isEmpty(System.getenv("OPENSHIFT_DATA_DIR"))
+					&& defaultBase.equals(base)) {
 				// RedHat OpenShift
-				baseFolder = configureExpress(context, webxmlSettings, contextFolder, runtimeSettings);
+				baseFolder = configureExpress(context, webxmlSettings, contextFolder,
+						runtimeSettings);
 			} else {
 				// standard WAR
 				baseFolder = configureWAR(context, webxmlSettings, contextFolder, runtimeSettings);
@@ -185,12 +189,12 @@ public class GitblitContext extends GuiceServletContextListener {
 
 		// Manually configure IRuntimeManager
 		logManager(IRuntimeManager.class);
-		IRuntimeManager runtime = injector.getInstance(IRuntimeManager.class);
+		final IRuntimeManager runtime = injector.getInstance(IRuntimeManager.class);
 		runtime.setBaseFolder(baseFolder);
-		runtime.getStatus().isGO = goSettings != null;
+		runtime.getStatus().isGO = this.goSettings != null;
 		runtime.getStatus().servletContainer = context.getServerInfo();
 		runtime.start();
-		managers.add(runtime);
+		this.managers.add(runtime);
 
 		// create the plugin manager instance but do not start it
 		loadManager(injector, IPluginManager.class);
@@ -212,16 +216,18 @@ public class GitblitContext extends GuiceServletContextListener {
 		// deterministic access to all other managers in their start() methods
 		startManager(injector, IPluginManager.class);
 
-		logger.info("");
-		logger.info("All managers started.");
-		logger.info("");
+		this.logger.info("");
+		this.logger.info("All managers started.");
+		this.logger.info("");
 
-		IPluginManager pluginManager = injector.getInstance(IPluginManager.class);
-		for (LifeCycleListener listener : pluginManager.getExtensions(LifeCycleListener.class)) {
+		final IPluginManager pluginManager = injector.getInstance(IPluginManager.class);
+		for (final LifeCycleListener listener : pluginManager
+				.getExtensions(LifeCycleListener.class)) {
 			try {
 				listener.onStartup();
-			} catch (Throwable t) {
-				logger.error(null, t);
+			}
+			catch (final Throwable t) {
+				this.logger.error(null, t);
 			}
 		}
 	}
@@ -229,11 +235,12 @@ public class GitblitContext extends GuiceServletContextListener {
 	private String lookupBaseFolderFromJndi() {
 		try {
 			// try to lookup JNDI env-entry for the baseFolder
-			InitialContext ic = new InitialContext();
-			Context env = (Context) ic.lookup("java:comp/env");
+			final InitialContext ic = new InitialContext();
+			final Context env = (Context) ic.lookup("java:comp/env");
 			return (String) env.lookup("baseFolder");
-		} catch (NamingException n) {
-			logger.error("Failed to get JNDI env-entry: " + n.getExplanation());
+		}
+		catch (final NamingException n) {
+			this.logger.error("Failed to get JNDI env-entry: " + n.getExplanation());
 		}
 		return null;
 	}
@@ -257,31 +264,31 @@ public class GitblitContext extends GuiceServletContextListener {
 	}
 
 	protected <X extends IManager> X loadManager(Injector injector, Class<X> clazz) {
-		X x = injector.getInstance(clazz);
+		final X x = injector.getInstance(clazz);
 		return x;
 	}
 
 	protected <X extends IManager> X startManager(Injector injector, Class<X> clazz) {
-		X x = loadManager(injector, clazz);
+		final X x = loadManager(injector, clazz);
 		logManager(clazz);
 		return startManager(x);
 	}
 
 	protected <X extends IManager> X startManager(X x) {
-	    x.start();
-	    managers.add(x);
-	    return x;
+		x.start();
+		this.managers.add(x);
+		return x;
 	}
 
 	protected void logManager(Class<? extends IManager> clazz) {
-		logger.info("");
-		logger.info("----[{}]----", clazz.getName());
+		this.logger.info("");
+		this.logger.info("----[{}]----", clazz.getName());
 	}
 
 	@Override
 	public final void contextDestroyed(ServletContextEvent contextEvent) {
 		super.contextDestroyed(contextEvent);
-		ServletContext context = contextEvent.getServletContext();
+		final ServletContext context = contextEvent.getServletContext();
 		destroyContext(context);
 	}
 
@@ -290,19 +297,21 @@ public class GitblitContext extends GuiceServletContextListener {
 	 * shutting down or because the servlet container is re-deploying Gitblit.
 	 */
 	protected void destroyContext(ServletContext context) {
-		logger.info("Gitblit context destroyed by servlet container.");
+		this.logger.info("Gitblit context destroyed by servlet container.");
 
-		IPluginManager pluginManager = getManager(IPluginManager.class);
-		for (LifeCycleListener listener : pluginManager.getExtensions(LifeCycleListener.class)) {
+		final IPluginManager pluginManager = getManager(IPluginManager.class);
+		for (final LifeCycleListener listener : pluginManager
+				.getExtensions(LifeCycleListener.class)) {
 			try {
 				listener.onShutdown();
-			} catch (Throwable t) {
-				logger.error(null, t);
+			}
+			catch (final Throwable t) {
+				this.logger.error(null, t);
 			}
 		}
 
-		for (IManager manager : managers) {
-			logger.debug("stopping {}", manager.getClass().getSimpleName());
+		for (final IManager manager : this.managers) {
+			this.logger.debug("stopping {}", manager.getClass().getSimpleName());
 			manager.stop();
 		}
 	}
@@ -316,23 +325,20 @@ public class GitblitContext extends GuiceServletContextListener {
 	 * @param runtimeSettings
 	 * @return the base folder
 	 */
-	protected File configureGO(
-			ServletContext context,
-			IStoredSettings goSettings,
-			File goBaseFolder,
-			IStoredSettings runtimeSettings) {
+	protected File configureGO(ServletContext context, IStoredSettings goSettings,
+			File goBaseFolder, IStoredSettings runtimeSettings) {
 
-		logger.debug("configuring Gitblit GO");
+		this.logger.debug("configuring Gitblit GO");
 
 		// merge the stored settings into the runtime settings
 		//
-		// if runtimeSettings is also a FileSettings w/o a specified target file,
+		// if runtimeSettings is also a FileSettings w/o a specified target
+		// file,
 		// the target file for runtimeSettings is set to "localSettings".
 		runtimeSettings.merge(goSettings);
-		File base = goBaseFolder;
+		final File base = goBaseFolder;
 		return base;
 	}
-
 
 	/**
 	 * Configures a standard WAR instance of Gitblit.
@@ -343,43 +349,50 @@ public class GitblitContext extends GuiceServletContextListener {
 	 * @param runtimeSettings
 	 * @return the base folder
 	 */
-	protected File configureWAR(
-			ServletContext context,
-			WebXmlSettings webxmlSettings,
-			File contextFolder,
-			IStoredSettings runtimeSettings) {
+	protected File configureWAR(ServletContext context, WebXmlSettings webxmlSettings,
+			File contextFolder, IStoredSettings runtimeSettings) {
 
 		// Gitblit is running in a standard servlet container
-		logger.debug("configuring Gitblit WAR");
-		logger.info("WAR contextFolder is " + ((contextFolder != null) ? contextFolder.getAbsolutePath() : "<empty>"));
+		this.logger.debug("configuring Gitblit WAR");
+		this.logger.info("WAR contextFolder is "
+				+ ((contextFolder != null) ? contextFolder.getAbsolutePath() : "<empty>"));
 
-		String webXmlPath = webxmlSettings.getString(Constants.baseFolder, Constants.contextFolder$ + "/WEB-INF/data");
+		final String webXmlPath = webxmlSettings.getString(Constants.baseFolder,
+				Constants.contextFolder$ + "/WEB-INF/data");
 
-		if (webXmlPath.contains(Constants.contextFolder$) && contextFolder == null) {
+		if (webXmlPath.contains(Constants.contextFolder$) && (contextFolder == null)) {
 			// warn about null contextFolder (issue-199)
-			logger.error("");
-			logger.error(MessageFormat.format("\"{0}\" depends on \"{1}\" but \"{2}\" is returning NULL for \"{1}\"!",
+			this.logger.error("");
+			this.logger.error(MessageFormat.format(
+					"\"{0}\" depends on \"{1}\" but \"{2}\" is returning NULL for \"{1}\"!",
 					Constants.baseFolder, Constants.contextFolder$, context.getServerInfo()));
-			logger.error(MessageFormat.format("Please specify a non-parameterized path for <context-param> {0} in web.xml!!", Constants.baseFolder));
-			logger.error(MessageFormat.format("OR configure your servlet container to specify a \"{0}\" parameter in the context configuration!!", Constants.baseFolder));
-			logger.error("");
+			this.logger.error(MessageFormat.format(
+					"Please specify a non-parameterized path for <context-param> {0} in web.xml!!",
+					Constants.baseFolder));
+			this.logger
+					.error(MessageFormat
+							.format("OR configure your servlet container to specify a \"{0}\" parameter in the context configuration!!",
+									Constants.baseFolder));
+			this.logger.error("");
 		}
 
-		String baseFolderPath = getBaseFolderPath(webXmlPath);
+		final String baseFolderPath = getBaseFolderPath(webXmlPath);
 
-		File baseFolder = com.gitblit.utils.FileUtils.resolveParameter(Constants.contextFolder$, contextFolder, baseFolderPath);
+		final File baseFolder = com.gitblit.utils.FileUtils.resolveParameter(
+				Constants.contextFolder$, contextFolder, baseFolderPath);
 		baseFolder.mkdirs();
 
 		// try to extract the data folder resource to the baseFolder
 		extractResources(context, "/WEB-INF/data/", baseFolder);
 
 		// delegate all config to baseFolder/gitblit.properties file
-		File localSettings = new File(baseFolder, "gitblit.properties");
-		FileSettings fileSettings = new FileSettings(localSettings.getAbsolutePath());
+		final File localSettings = new File(baseFolder, "gitblit.properties");
+		final FileSettings fileSettings = new FileSettings(localSettings.getAbsolutePath());
 
 		// merge the stored settings into the runtime settings
 		//
-		// if runtimeSettings is also a FileSettings w/o a specified target file,
+		// if runtimeSettings is also a FileSettings w/o a specified target
+		// file,
 		// the target file for runtimeSettings is set to "localSettings".
 		runtimeSettings.merge(fileSettings);
 
@@ -395,60 +408,64 @@ public class GitblitContext extends GuiceServletContextListener {
 	 * @param runtimeSettings
 	 * @return the base folder
 	 */
-	private File configureExpress(
-			ServletContext context,
-			WebXmlSettings webxmlSettings,
-			File contextFolder,
-			IStoredSettings runtimeSettings) {
+	private File configureExpress(ServletContext context, WebXmlSettings webxmlSettings,
+			File contextFolder, IStoredSettings runtimeSettings) {
 
 		// Gitblit is running in OpenShift/JBoss
-		logger.debug("configuring Gitblit Express");
-		String openShift = System.getenv("OPENSHIFT_DATA_DIR");
-		File base = new File(openShift);
-		logger.info("EXPRESS contextFolder is " + contextFolder.getAbsolutePath());
+		this.logger.debug("configuring Gitblit Express");
+		final String openShift = System.getenv("OPENSHIFT_DATA_DIR");
+		final File base = new File(openShift);
+		this.logger.info("EXPRESS contextFolder is " + contextFolder.getAbsolutePath());
 
 		// Copy the included scripts to the configured groovy folder
-		String path = webxmlSettings.getString(Keys.groovy.scriptsFolder, "groovy");
-		File localScripts = com.gitblit.utils.FileUtils.resolveParameter(Constants.baseFolder$, base, path);
+		final String path = webxmlSettings.getString(Keys.groovy.scriptsFolder, "groovy");
+		final File localScripts = com.gitblit.utils.FileUtils.resolveParameter(
+				Constants.baseFolder$, base, path);
 		if (!localScripts.exists()) {
-			File warScripts = new File(contextFolder, "/WEB-INF/data/groovy");
+			final File warScripts = new File(contextFolder, "/WEB-INF/data/groovy");
 			if (!warScripts.equals(localScripts)) {
 				try {
 					com.gitblit.utils.FileUtils.copy(localScripts, warScripts.listFiles());
-				} catch (IOException e) {
-					logger.error(MessageFormat.format(
-							"Failed to copy included Groovy scripts from {0} to {1}",
-							warScripts, localScripts));
+				}
+				catch (final IOException e) {
+					this.logger.error(MessageFormat.format(
+							"Failed to copy included Groovy scripts from {0} to {1}", warScripts,
+							localScripts));
 				}
 			}
 		}
 
 		// Copy the included gitignore files to the configured gitignore folder
-		String gitignorePath = webxmlSettings.getString(Keys.git.gitignoreFolder, "gitignore");
-		File localGitignores = com.gitblit.utils.FileUtils.resolveParameter(Constants.baseFolder$, base, gitignorePath);
+		final String gitignorePath = webxmlSettings
+				.getString(Keys.git.gitignoreFolder, "gitignore");
+		final File localGitignores = com.gitblit.utils.FileUtils.resolveParameter(
+				Constants.baseFolder$, base, gitignorePath);
 		if (!localGitignores.exists()) {
-			File warGitignores = new File(contextFolder, "/WEB-INF/data/gitignore");
+			final File warGitignores = new File(contextFolder, "/WEB-INF/data/gitignore");
 			if (!warGitignores.equals(localGitignores)) {
 				try {
 					com.gitblit.utils.FileUtils.copy(localGitignores, warGitignores.listFiles());
-				} catch (IOException e) {
-					logger.error(MessageFormat.format(
+				}
+				catch (final IOException e) {
+					this.logger.error(MessageFormat.format(
 							"Failed to copy included .gitignore files from {0} to {1}",
 							warGitignores, localGitignores));
 				}
 			}
 		}
 
-		// merge the WebXmlSettings into the runtime settings (for backwards-compatibilty)
+		// merge the WebXmlSettings into the runtime settings (for
+		// backwards-compatibilty)
 		runtimeSettings.merge(webxmlSettings);
 
 		// settings are to be stored in openshift/gitblit.properties
-		File localSettings = new File(base, "gitblit.properties");
-		FileSettings fileSettings = new FileSettings(localSettings.getAbsolutePath());
+		final File localSettings = new File(base, "gitblit.properties");
+		final FileSettings fileSettings = new FileSettings(localSettings.getAbsolutePath());
 
 		// merge the stored settings into the runtime settings
 		//
-		// if runtimeSettings is also a FileSettings w/o a specified target file,
+		// if runtimeSettings is also a FileSettings w/o a specified target
+		// file,
 		// the target file for runtimeSettings is set to "localSettings".
 		runtimeSettings.merge(fileSettings);
 
@@ -456,14 +473,14 @@ public class GitblitContext extends GuiceServletContextListener {
 	}
 
 	protected void extractResources(ServletContext context, String path, File toDir) {
-		Set<String> resources = context.getResourcePaths(path);
+		final Set<String> resources = context.getResourcePaths(path);
 		if (resources == null) {
-			logger.warn("There are no WAR resources to extract from {}", path);
+			this.logger.warn("There are no WAR resources to extract from {}", path);
 			return;
 		}
-		for (String resource : resources) {
+		for (final String resource : resources) {
 			// extract the resource to the directory if it does not exist
-			File f = new File(toDir, resource.substring(path.length()));
+			final File f = new File(toDir, resource.substring(path.length()));
 			if (!f.exists()) {
 				InputStream is = null;
 				OutputStream os = null;
@@ -477,28 +494,33 @@ public class GitblitContext extends GuiceServletContextListener {
 						f.getParentFile().mkdirs();
 						is = context.getResourceAsStream(resource);
 						os = new FileOutputStream(f);
-						byte [] buffer = new byte[4096];
+						final byte[] buffer = new byte[4096];
 						int len = 0;
 						while ((len = is.read(buffer)) > -1) {
 							os.write(buffer, 0, len);
 						}
 					}
-				} catch (FileNotFoundException e) {
-					logger.error("Failed to find resource \"" + resource + "\"", e);
-				} catch (IOException e) {
-					logger.error("Failed to copy resource \"" + resource + "\" to " + f, e);
-				} finally {
+				}
+				catch (final FileNotFoundException e) {
+					this.logger.error("Failed to find resource \"" + resource + "\"", e);
+				}
+				catch (final IOException e) {
+					this.logger.error("Failed to copy resource \"" + resource + "\" to " + f, e);
+				}
+				finally {
 					if (is != null) {
 						try {
 							is.close();
-						} catch (IOException e) {
+						}
+						catch (final IOException e) {
 							// ignore
 						}
 					}
 					if (os != null) {
 						try {
 							os.close();
-						} catch (IOException e) {
+						}
+						catch (final IOException e) {
 							// ignore
 						}
 					}

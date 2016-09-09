@@ -47,7 +47,7 @@ public class X509CertificateViewer extends JDialog {
 
 		setTitle(Translation.get("gb.viewCertificate"));
 
-		JPanel content = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN)) {
+		final JPanel content = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN)) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -57,33 +57,39 @@ public class X509CertificateViewer extends JDialog {
 			}
 		};
 
-		DateFormat df = DateFormat.getDateTimeInstance();
+		final DateFormat df = DateFormat.getDateTimeInstance();
 
-		int l1 = 15;
-		int l2 = 25;
-		int l3 = 45;
-		JPanel panel = new JPanel(new GridLayout(0, 1, 0, 2*Utils.MARGIN));
+		final int l1 = 15;
+		final int l2 = 25;
+		final int l3 = 45;
+		final JPanel panel = new JPanel(new GridLayout(0, 1, 0, 2 * Utils.MARGIN));
 		panel.add(newField(Translation.get("gb.version"), "" + cert.getVersion(), 3));
 		panel.add(newField(Translation.get("gb.subject"), cert.getSubjectDN().getName(), l3));
 		panel.add(newField(Translation.get("gb.issuer"), cert.getIssuerDN().getName(), l3));
-		panel.add(newField(Translation.get("gb.serialNumber"), "0x" + cert.getSerialNumber().toString(16), l2));
-		panel.add(newField(Translation.get("gb.serialNumber"), cert.getSerialNumber().toString(), l2));
+		panel.add(newField(Translation.get("gb.serialNumber"), "0x"
+				+ cert.getSerialNumber().toString(16), l2));
+		panel.add(newField(Translation.get("gb.serialNumber"), cert.getSerialNumber().toString(),
+				l2));
 		panel.add(newField(Translation.get("gb.validFrom"), df.format(cert.getNotBefore()), l2));
 		panel.add(newField(Translation.get("gb.validUntil"), df.format(cert.getNotAfter()), l2));
 		panel.add(newField(Translation.get("gb.publicKey"), cert.getPublicKey().getAlgorithm(), l1));
 		panel.add(newField(Translation.get("gb.signatureAlgorithm"), cert.getSigAlgName(), l1));
 		try {
-			panel.add(newField(Translation.get("gb.sha1FingerPrint"), fingerprint(StringUtils.getSHA1(cert.getEncoded())), l3));
-		} catch (CertificateEncodingException e1) {
+			panel.add(newField(Translation.get("gb.sha1FingerPrint"),
+					fingerprint(StringUtils.getSHA1(cert.getEncoded())), l3));
+		}
+		catch (final CertificateEncodingException e1) {
 		}
 		try {
-			panel.add(newField(Translation.get("gb.md5FingerPrint"), fingerprint(StringUtils.getMD5(cert.getEncoded())), l3));
-		} catch (CertificateEncodingException e1) {
+			panel.add(newField(Translation.get("gb.md5FingerPrint"),
+					fingerprint(StringUtils.getMD5(cert.getEncoded())), l3));
+		}
+		catch (final CertificateEncodingException e1) {
 		}
 
 		content.add(panel, BorderLayout.CENTER);
 
-		JButton ok = new JButton(Translation.get("gb.ok"));
+		final JButton ok = new JButton(Translation.get("gb.ok"));
 		ok.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -91,34 +97,36 @@ public class X509CertificateViewer extends JDialog {
 			}
 		});
 
-		JPanel controls = new JPanel();
+		final JPanel controls = new JPanel();
 		controls.add(ok);
 
 		content.add(controls, BorderLayout.SOUTH);
 
-		getContentPane().add(new HeaderPanel(Translation.get("gb.certificate"), "rosette_16x16.png"), BorderLayout.NORTH);
+		getContentPane().add(
+				new HeaderPanel(Translation.get("gb.certificate"), "rosette_16x16.png"),
+				BorderLayout.NORTH);
 		getContentPane().add(content, BorderLayout.CENTER);
 		pack();
 
 		setLocationRelativeTo(owner);
 	}
 
-	private JPanel newField(String label, String value, int cols) {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2*Utils.MARGIN, 0));
-		JLabel lbl = new JLabel(label);
+	private static JPanel newField(String label, String value, int cols) {
+		final JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 2 * Utils.MARGIN, 0));
+		final JLabel lbl = new JLabel(label);
 		lbl.setHorizontalAlignment(SwingConstants.RIGHT);
 		lbl.setPreferredSize(new Dimension(125, 20));
 		panel.add(lbl);
-		JTextField tf = new JTextField(value, cols);
+		final JTextField tf = new JTextField(value, cols);
 		tf.setCaretPosition(0);
 		tf.setEditable(false);
 		panel.add(tf);
 		return panel;
 	}
 
-	private String fingerprint(String value) {
+	private static String fingerprint(String value) {
 		value = value.toUpperCase();
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < value.length(); i += 2) {
 			sb.append(value.charAt(i));
 			sb.append(value.charAt(i + 1));

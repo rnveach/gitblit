@@ -53,78 +53,78 @@ public class RepositoryCommit implements Serializable, Comparable<RepositoryComm
 	}
 
 	public List<RefModel> getRefs() {
-		return refs;
+		return this.refs;
 	}
 
 	public ObjectId getId() {
-		return commit.getId();
+		return this.commit.getId();
 	}
 
 	public String getName() {
-		return commit.getName();
+		return this.commit.getName();
 	}
 
 	public String getShortName() {
-		return commit.getName().substring(0, 8);
+		return this.commit.getName().substring(0, 8);
 	}
 
 	public String getShortMessage() {
-		return commit.getShortMessage();
+		return this.commit.getShortMessage();
 	}
 
 	public Date getCommitDate() {
-		return new Date(commit.getCommitTime() * 1000L);
+		return new Date(this.commit.getCommitTime() * 1000L);
 	}
 
 	public int getParentCount() {
-		return commit.getParentCount();
+		return this.commit.getParentCount();
 	}
 
-	public RevCommit [] getParents() {
-		return commit.getParents();
+	public RevCommit[] getParents() {
+		return this.commit.getParents();
 	}
 
 	public PersonIdent getAuthorIdent() {
-		return commit.getAuthorIdent();
+		return this.commit.getAuthorIdent();
 	}
 
 	public PersonIdent getCommitterIdent() {
-		return commit.getCommitterIdent();
+		return this.commit.getCommitterIdent();
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof RepositoryCommit) {
-			RepositoryCommit commit = (RepositoryCommit) o;
-			return repository.equals(commit.repository) && getName().equals(commit.getName());
+			final RepositoryCommit commit = (RepositoryCommit) o;
+			return this.repository.equals(commit.repository) && getName().equals(commit.getName());
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return (repository + commit).hashCode();
+		return (this.repository + this.commit).hashCode();
 	}
 
 	@Override
 	public int compareTo(RepositoryCommit o) {
 		// reverse-chronological order
-		if (commit.getCommitTime() > o.commit.getCommitTime()) {
+		if (this.commit.getCommitTime() > o.commit.getCommitTime()) {
 			return -1;
-		} else if (commit.getCommitTime() < o.commit.getCommitTime()) {
+		} else if (this.commit.getCommitTime() < o.commit.getCommitTime()) {
 			return 1;
 		}
 		return 0;
 	}
 
 	public RepositoryCommit clone(String withRef) {
-		return new RepositoryCommit(repository, withRef, commit);
+		return new RepositoryCommit(this.repository, withRef, this.commit);
 	}
 
 	@Override
 	public String toString() {
-		return MessageFormat.format("{0} {1} {2,date,yyyy-MM-dd HH:mm} {3} {4}",
-				getShortName(), branch, getCommitterIdent().getWhen(), getAuthorIdent().getName(),
+		return MessageFormat.format("{0} {1} {2,date,yyyy-MM-dd HH:mm} {3} {4}", getShortName(),
+				this.branch, getCommitterIdent().getWhen(), getAuthorIdent().getName(),
 				getShortMessage());
 	}
 }

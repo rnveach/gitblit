@@ -17,9 +17,6 @@ package com.gitblit.servlet;
 
 import java.text.MessageFormat;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import javax.servlet.http.HttpServletRequest;
 
 import com.gitblit.Constants.AccessRestrictionType;
@@ -34,6 +31,8 @@ import com.gitblit.manager.IRuntimeManager;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.UserModel;
 import com.gitblit.utils.StringUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * The GitFilter is an AccessRestrictionFilter which ensures that Git client
@@ -41,7 +40,7 @@ import com.gitblit.utils.StringUtils;
  * and authorized.
  *
  * @author James Moger
- *
+ * 
  */
 @Singleton
 public class GitFilter extends AccessRestrictionFilter {
@@ -49,22 +48,19 @@ public class GitFilter extends AccessRestrictionFilter {
 	protected static final String gitReceivePack = "/git-receive-pack";
 
 	protected static final String gitUploadPack = "/git-upload-pack";
-	
+
 	protected static final String gitLfs = "/info/lfs";
-	
-	protected static final String[] suffixes = { gitReceivePack, gitUploadPack, "/info/refs", "/HEAD",
-			"/objects", gitLfs };
 
-	private IStoredSettings settings;
+	protected static final String[] suffixes = { gitReceivePack, gitUploadPack, "/info/refs",
+			"/HEAD", "/objects", gitLfs };
 
-	private IFederationManager federationManager;
+	private final IStoredSettings settings;
+
+	private final IFederationManager federationManager;
 
 	@Inject
-	public GitFilter(
-			IStoredSettings settings,
-			IRuntimeManager runtimeManager,
-			IAuthenticationManager authenticationManager,
-			IRepositoryManager repositoryManager,
+	public GitFilter(IStoredSettings settings, IRuntimeManager runtimeManager,
+			IAuthenticationManager authenticationManager, IRepositoryManager repositoryManager,
 			IFederationManager federationManager) {
 
 		super(runtimeManager, authenticationManager, repositoryManager);
@@ -82,7 +78,7 @@ public class GitFilter extends AccessRestrictionFilter {
 	public static String getRepositoryName(String value) {
 		String repository = value;
 		// get the repository name from the url by finding a known url suffix
-		for (String urlSuffix : suffixes) {
+		for (final String urlSuffix : suffixes) {
 			if (repository.indexOf(urlSuffix) > -1) {
 				repository = repository.substring(0, repository.indexOf(urlSuffix));
 			}
@@ -136,9 +132,10 @@ public class GitFilter extends AccessRestrictionFilter {
 	 */
 	@Override
 	protected UserModel getUser(HttpServletRequest httpRequest) {
-		UserModel user = authenticationManager.authenticate(httpRequest, requiresClientCertificate());
+		UserModel user = this.authenticationManager.authenticate(httpRequest,
+				requiresClientCertificate());
 		if (user == null) {
-			user = federationManager.authenticate(httpRequest);
+			user = this.federationManager.authenticate(httpRequest);
 		}
 		return user;
 	}
@@ -150,13 +147,13 @@ public class GitFilter extends AccessRestrictionFilter {
 	 */
 	@Override
 	protected boolean isCreationAllowed(String action) {
-		
-		//Repository must already exist before large files can be deposited
+
+		// Repository must already exist before large files can be deposited
 		if (action.equals(gitLfs)) {
 			return false;
 		}
-		
-		return settings.getBoolean(Keys.git.allowCreateOnPush, true);
+
+		return this.settings.getBoolean(Keys.git.allowCreateOnPush, true);
 	}
 
 	/**
@@ -175,13 +172,13 @@ public class GitFilter extends AccessRestrictionFilter {
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
 
 	@Override
 	protected boolean requiresClientCertificate() {
-		return settings.getBoolean(Keys.git.requiresClientCertificate, false);
+		return this.settings.getBoolean(Keys.git.requiresClientCertificate, false);
 	}
 
 	/**
@@ -193,7 +190,8 @@ public class GitFilter extends AccessRestrictionFilter {
 	 * @return true if authentication required
 	 */
 	@Override
-	protected boolean requiresAuthentication(RepositoryModel repository, String action, String method) {
+	protected boolean requiresAuthentication(RepositoryModel repository, String action,
+			String method) {
 		if (gitUploadPack.equals(action)) {
 			// send to client
 			return repository.accessRestriction.atLeast(AccessRestrictionType.CLONE);
@@ -201,11 +199,12 @@ public class GitFilter extends AccessRestrictionFilter {
 			// receive from client
 			return repository.accessRestriction.atLeast(AccessRestrictionType.PUSH);
 		} else if (gitLfs.equals(action)) {
-			
+
 			if (method.matches("GET|HEAD")) {
 				return repository.accessRestriction.atLeast(AccessRestrictionType.CLONE);
 			} else {
-				//NOTE: Treat POST as PUT as as without reading message type cannot determine 
+				// NOTE: Treat POST as PUT as as without reading message type
+				// cannot determine
 				return repository.accessRestriction.atLeast(AccessRestrictionType.PUSH);
 			}
 		}
@@ -223,7 +222,7 @@ public class GitFilter extends AccessRestrictionFilter {
 	 */
 	@Override
 	protected boolean canAccess(RepositoryModel repository, UserModel user, String action) {
-		if (!settings.getBoolean(Keys.git.enableGitServlet, true)) {
+		if (!this.settings.getBoolean(Keys.git.enableGitServlet, true)) {
 			// Git Servlet disabled
 			return false;
 		}
@@ -236,7 +235,7 @@ public class GitFilter extends AccessRestrictionFilter {
 				return true;
 			} else {
 				// user is unauthorized to clone this repository
-				logger.warn(MessageFormat.format("user {0} is not authorized to clone {1}",
+				this.logger.warn(MessageFormat.format("user {0} is not authorized to clone {1}",
 						user.username, repository));
 				return false;
 			}
@@ -255,35 +254,38 @@ public class GitFilter extends AccessRestrictionFilter {
 	 */
 	@Override
 	protected RepositoryModel createRepository(UserModel user, String repository, String action) {
-		boolean isPush = !StringUtils.isEmpty(action) && gitReceivePack.equals(action);
-		
+		final boolean isPush = !StringUtils.isEmpty(action) && gitReceivePack.equals(action);
+
 		if (action.equals(gitLfs)) {
-			//Repository must already exist for any filestore actions
+			// Repository must already exist for any filestore actions
 			return null;
 		}
-		
+
 		if (isPush) {
 			if (user.canCreate(repository)) {
 				// user is pushing to a new repository
 				// validate name
 				if (repository.startsWith("../")) {
-					logger.error(MessageFormat.format("Illegal relative path in repository name! {0}", repository));
+					this.logger.error(MessageFormat.format(
+							"Illegal relative path in repository name! {0}", repository));
 					return null;
 				}
 				if (repository.contains("/../")) {
-					logger.error(MessageFormat.format("Illegal relative path in repository name! {0}", repository));
+					this.logger.error(MessageFormat.format(
+							"Illegal relative path in repository name! {0}", repository));
 					return null;
 				}
 
 				// confirm valid characters in repository name
-				Character c = StringUtils.findInvalidCharacter(repository);
+				final Character c = StringUtils.findInvalidCharacter(repository);
 				if (c != null) {
-					logger.error(MessageFormat.format("Invalid character '{0}' in repository name {1}!", c, repository));
+					this.logger.error(MessageFormat.format(
+							"Invalid character '{0}' in repository name {1}!", c, repository));
 					return null;
 				}
 
 				// create repository
-				RepositoryModel model = new RepositoryModel();
+				final RepositoryModel model = new RepositoryModel();
 				model.name = repository;
 				model.addOwner(user.username);
 				model.projectPath = StringUtils.getFirstPathElement(repository);
@@ -293,30 +295,38 @@ public class GitFilter extends AccessRestrictionFilter {
 					model.accessRestriction = AccessRestrictionType.VIEW;
 				} else {
 					// common repository, user default server settings
-					model.authorizationControl = AuthorizationControl.fromName(settings.getString(Keys.git.defaultAuthorizationControl, ""));
-					model.accessRestriction = AccessRestrictionType.fromName(settings.getString(Keys.git.defaultAccessRestriction, "PUSH"));
+					model.authorizationControl = AuthorizationControl.fromName(this.settings
+							.getString(Keys.git.defaultAuthorizationControl, ""));
+					model.accessRestriction = AccessRestrictionType.fromName(this.settings
+							.getString(Keys.git.defaultAccessRestriction, "PUSH"));
 				}
 
 				// create the repository
 				try {
-					repositoryManager.updateRepositoryModel(model.name, model, true);
-					logger.info(MessageFormat.format("{0} created {1} ON-PUSH", user.username, model.name));
-					return repositoryManager.getRepositoryModel(model.name);
-				} catch (GitBlitException e) {
-					logger.error(MessageFormat.format("{0} failed to create repository {1} ON-PUSH!", user.username, model.name), e);
+					this.repositoryManager.updateRepositoryModel(model.name, model, true);
+					this.logger.info(MessageFormat.format("{0} created {1} ON-PUSH", user.username,
+							model.name));
+					return this.repositoryManager.getRepositoryModel(model.name);
+				}
+				catch (final GitBlitException e) {
+					this.logger.error(MessageFormat.format(
+							"{0} failed to create repository {1} ON-PUSH!", user.username,
+							model.name), e);
 				}
 			} else {
-				logger.warn(MessageFormat.format("{0} is not permitted to create repository {1} ON-PUSH!", user.username, repository));
+				this.logger.warn(MessageFormat.format(
+						"{0} is not permitted to create repository {1} ON-PUSH!", user.username,
+						repository));
 			}
 		}
 
 		// repository could not be created or action was not a push
 		return null;
 	}
-	
+
 	/**
-	 * Git lfs action uses an alternative authentication header, 
-	 * dependent on the viewing method.
+	 * Git lfs action uses an alternative authentication header, dependent on
+	 * the viewing method.
 	 * 
 	 * @param httpRequest
 	 * @param action
@@ -330,27 +340,28 @@ public class GitFilter extends AccessRestrictionFilter {
 				return "LFS-Authenticate";
 			}
 		}
-		
+
 		return super.getAuthenticationHeader(httpRequest, action);
 	}
-	
+
 	/**
 	 * Interrogates the request headers based on the action
+	 * 
 	 * @param action
 	 * @param request
 	 * @return
 	 */
 	@Override
-	protected boolean hasValidRequestHeader(String action,
-			HttpServletRequest request) {
+	protected boolean hasValidRequestHeader(String action, HttpServletRequest request) {
 
 		if (action.equals(gitLfs) && request.getMethod().equals("POST")) {
-			if ( 	!hasContentInRequestHeader(request, "Accept", FilestoreServlet.GIT_LFS_META_MIME)
-				 || !hasContentInRequestHeader(request, "Content-Type", FilestoreServlet.GIT_LFS_META_MIME)) {
+			if (!hasContentInRequestHeader(request, "Accept", FilestoreServlet.GIT_LFS_META_MIME)
+					|| !hasContentInRequestHeader(request, "Content-Type",
+							FilestoreServlet.GIT_LFS_META_MIME)) {
 				return false;
-			}				
+			}
 		}
-			
+
 		return super.hasValidRequestHeader(action, request);
 	}
 }

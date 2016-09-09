@@ -63,7 +63,7 @@ public class StatusPanel extends JPanel {
 	}
 
 	private void initialize() {
-		JButton refreshStatus = new JButton(Translation.get("gb.refresh"));
+		final JButton refreshStatus = new JButton(Translation.get("gb.refresh"));
 		refreshStatus.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -71,17 +71,17 @@ public class StatusPanel extends JPanel {
 			}
 		});
 
-		version = new JLabel();
-		releaseDate = new JLabel();
-		bootDate = new JLabel();
-		url = new JLabel();
-		servletContainer = new JLabel();
+		this.version = new JLabel();
+		this.releaseDate = new JLabel();
+		this.bootDate = new JLabel();
+		this.url = new JLabel();
+		this.servletContainer = new JLabel();
 
-		heapMaximum = new JLabel();
-		heapAllocated = new JLabel();
-		heapUsed = new JLabel();
+		this.heapMaximum = new JLabel();
+		this.heapAllocated = new JLabel();
+		this.heapUsed = new JLabel();
 
-		JPanel fieldsPanel = new JPanel(new GridLayout(0, 1, 0, Utils.MARGIN)) {
+		final JPanel fieldsPanel = new JPanel(new GridLayout(0, 1, 0, Utils.MARGIN)) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -90,38 +90,39 @@ public class StatusPanel extends JPanel {
 				return Utils.INSETS;
 			}
 		};
-		fieldsPanel.add(createFieldPanel("gb.version", version));
-		fieldsPanel.add(createFieldPanel("gb.releaseDate", releaseDate));
-		fieldsPanel.add(createFieldPanel("gb.bootDate", bootDate));
-		fieldsPanel.add(createFieldPanel("gb.url", url));
-		fieldsPanel.add(createFieldPanel("gb.servletContainer", servletContainer));
-		fieldsPanel.add(createFieldPanel("gb.heapUsed", heapUsed));
-		fieldsPanel.add(createFieldPanel("gb.heapAllocated", heapAllocated));
-		fieldsPanel.add(createFieldPanel("gb.heapMaximum", heapMaximum));
+		fieldsPanel.add(createFieldPanel("gb.version", this.version));
+		fieldsPanel.add(createFieldPanel("gb.releaseDate", this.releaseDate));
+		fieldsPanel.add(createFieldPanel("gb.bootDate", this.bootDate));
+		fieldsPanel.add(createFieldPanel("gb.url", this.url));
+		fieldsPanel.add(createFieldPanel("gb.servletContainer", this.servletContainer));
+		fieldsPanel.add(createFieldPanel("gb.heapUsed", this.heapUsed));
+		fieldsPanel.add(createFieldPanel("gb.heapAllocated", this.heapAllocated));
+		fieldsPanel.add(createFieldPanel("gb.heapMaximum", this.heapMaximum));
 
-		tableModel = new PropertiesTableModel();
-		JTable propertiesTable = Utils.newTable(tableModel, Utils.DATE_FORMAT);
-		String name = propertiesTable.getColumnName(PropertiesTableModel.Columns.Name.ordinal());
-		NameRenderer nameRenderer = new NameRenderer();
+		this.tableModel = new PropertiesTableModel();
+		final JTable propertiesTable = Utils.newTable(this.tableModel, Utils.DATE_FORMAT);
+		final String name = propertiesTable.getColumnName(PropertiesTableModel.Columns.Name
+				.ordinal());
+		final NameRenderer nameRenderer = new NameRenderer();
 		propertiesTable.getColumn(name).setCellRenderer(nameRenderer);
 
-		JPanel centerPanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
+		final JPanel centerPanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
 		centerPanel.add(fieldsPanel, BorderLayout.NORTH);
 		centerPanel.add(new JScrollPane(propertiesTable), BorderLayout.CENTER);
 
-		JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, Utils.MARGIN, 0));
+		final JPanel controls = new JPanel(new FlowLayout(FlowLayout.CENTER, Utils.MARGIN, 0));
 		controls.add(refreshStatus);
 
-		header = new HeaderPanel(Translation.get("gb.status"), "health_16x16.png");
+		this.header = new HeaderPanel(Translation.get("gb.status"), "health_16x16.png");
 		setLayout(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
-		add(header, BorderLayout.NORTH);
+		add(this.header, BorderLayout.NORTH);
 		add(centerPanel, BorderLayout.CENTER);
 		add(controls, BorderLayout.SOUTH);
 	}
 
-	private JPanel createFieldPanel(String key, JLabel valueLabel) {
-		JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, Utils.MARGIN, 0));
-		JLabel textLabel = new JLabel(Translation.get(key));
+	private static JPanel createFieldPanel(String key, JLabel valueLabel) {
+		final JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, Utils.MARGIN, 0));
+		final JLabel textLabel = new JLabel(Translation.get(key));
 		textLabel.setFont(textLabel.getFont().deriveFont(Font.BOLD));
 		textLabel.setPreferredSize(new Dimension(120, 10));
 		panel.add(textLabel);
@@ -135,10 +136,10 @@ public class StatusPanel extends JPanel {
 	}
 
 	protected void refreshStatus() {
-		GitblitWorker worker = new GitblitWorker(StatusPanel.this, RpcRequest.LIST_STATUS) {
+		final GitblitWorker worker = new GitblitWorker(StatusPanel.this, RpcRequest.LIST_STATUS) {
 			@Override
 			protected Boolean doRequest() throws IOException {
-				gitblit.refreshStatus();
+				StatusPanel.this.gitblit.refreshStatus();
 				return true;
 			}
 
@@ -151,20 +152,20 @@ public class StatusPanel extends JPanel {
 	}
 
 	protected void updateTable(boolean pack) {
-		ServerStatus status = gitblit.getStatus();
-		header.setText(Translation.get("gb.status"));
-		version.setText(Constants.NAME + (status.isGO ? " GO v" : " WAR v") + status.version);
-		releaseDate.setText(status.releaseDate);
-		bootDate.setText(status.bootDate.toString() + " (" + Translation.getTimeUtils().timeAgo(status.bootDate)
-				+ ")");
-		url.setText(gitblit.url);
-		servletContainer.setText(status.servletContainer);
-		ByteFormat byteFormat = new ByteFormat();
-		heapMaximum.setText(byteFormat.format(status.heapMaximum));
-		heapAllocated.setText(byteFormat.format(status.heapAllocated));
-		heapUsed.setText(byteFormat.format(status.heapAllocated - status.heapFree) + " ("
+		final ServerStatus status = this.gitblit.getStatus();
+		this.header.setText(Translation.get("gb.status"));
+		this.version.setText(Constants.NAME + (status.isGO ? " GO v" : " WAR v") + status.version);
+		this.releaseDate.setText(status.releaseDate);
+		this.bootDate.setText(status.bootDate.toString() + " ("
+				+ Translation.getTimeUtils().timeAgo(status.bootDate) + ")");
+		this.url.setText(this.gitblit.url);
+		this.servletContainer.setText(status.servletContainer);
+		final ByteFormat byteFormat = new ByteFormat();
+		this.heapMaximum.setText(byteFormat.format(status.heapMaximum));
+		this.heapAllocated.setText(byteFormat.format(status.heapAllocated));
+		this.heapUsed.setText(byteFormat.format(status.heapAllocated - status.heapFree) + " ("
 				+ byteFormat.format(status.heapFree) + " " + Translation.get("gb.free") + ")");
-		tableModel.setProperties(status.systemProperties);
-		tableModel.fireTableDataChanged();
+		this.tableModel.setProperties(status.systemProperties);
+		this.tableModel.fireTableDataChanged();
 	}
 }

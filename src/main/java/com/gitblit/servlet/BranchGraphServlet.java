@@ -26,7 +26,6 @@ import java.awt.RenderingHints;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -36,8 +35,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -61,6 +58,8 @@ import com.gitblit.Keys;
 import com.gitblit.manager.IRepositoryManager;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.StringUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Handles requests for branch graphs
@@ -84,21 +83,19 @@ public class BranchGraphServlet extends HttpServlet {
 
 	private final Stroke[] strokeCache;
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private IRepositoryManager repositoryManager;
+	private final IRepositoryManager repositoryManager;
 
 	@Inject
-	public BranchGraphServlet(
-			IStoredSettings settings,
-			IRepositoryManager repositoryManager) {
+	public BranchGraphServlet(IStoredSettings settings, IRepositoryManager repositoryManager) {
 
 		this.settings = settings;
 		this.repositoryManager = repositoryManager;
 
-		strokeCache = new Stroke[4];
-		for (int i = 1; i < strokeCache.length; i++) {
-			strokeCache[i] = new BasicStroke(i);
+		this.strokeCache = new Stroke[4];
+		for (int i = 1; i < this.strokeCache.length; i++) {
+			this.strokeCache[i] = new BasicStroke(i);
 		}
 	}
 
@@ -111,8 +108,9 @@ public class BranchGraphServlet extends HttpServlet {
 	 * @param numberCommits
 	 * @return an url
 	 */
-	public static String asLink(String baseURL, String repository, String objectId, int numberCommits) {
-		if (baseURL.length() > 0 && baseURL.charAt(baseURL.length() - 1) == '/') {
+	public static String asLink(String baseURL, String repository, String objectId,
+			int numberCommits) {
+		if ((baseURL.length() > 0) && (baseURL.charAt(baseURL.length() - 1) == '/')) {
 			baseURL = baseURL.substring(0, baseURL.length() - 1);
 		}
 		return baseURL + Constants.BRANCH_GRAPH_PATH + "?r=" + repository
@@ -122,27 +120,29 @@ public class BranchGraphServlet extends HttpServlet {
 
 	@Override
 	protected long getLastModified(HttpServletRequest req) {
-		String repository = req.getParameter("r");
+		final String repository = req.getParameter("r");
 		if (StringUtils.isEmpty(repository)) {
 			return 0;
 		}
 		String objectId = req.getParameter("h");
 		Repository r = null;
 		try {
-			r = repositoryManager.getRepository(repository);
+			r = this.repositoryManager.getRepository(repository);
 			if (StringUtils.isEmpty(objectId)) {
 				objectId = JGitUtils.getHEADRef(r);
 			}
-			ObjectId id = r.resolve(objectId);
+			final ObjectId id = r.resolve(objectId);
 			if (id == null) {
 				return 0;
 			}
-			RevCommit commit = JGitUtils.getCommit(r, objectId);
+			final RevCommit commit = JGitUtils.getCommit(r, objectId);
 			return JGitUtils.getCommitDate(commit).getTime();
-		} catch (Exception e) {
-			log.error("Failed to determine last modified", e);
+		}
+		catch (final Exception e) {
+			this.log.error("Failed to determine last modified", e);
 			return 0;
-		} finally {
+		}
+		finally {
 			if (r != null) {
 				r.close();
 			}
@@ -152,20 +152,19 @@ public class BranchGraphServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		InputStream is = null;
 		Repository r = null;
 		PlotWalk rw = null;
 		try {
-			String repository = request.getParameter("r");
+			final String repository = request.getParameter("r");
 			if (StringUtils.isEmpty(repository)) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.getWriter().append("Bad request");
 				return;
 			}
 			String objectId = request.getParameter("h");
-			String length = request.getParameter("l");
+			final String length = request.getParameter("l");
 
-			r = repositoryManager.getRepository(repository);
+			r = this.repositoryManager.getRepository(repository);
 			if (r == null) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.getWriter().append("Bad request");
@@ -177,8 +176,8 @@ public class BranchGraphServlet extends HttpServlet {
 				objectId = JGitUtils.getHEADRef(r);
 			}
 
-			ObjectId id = r.resolve(objectId);
-			if (id ==  null) {
+			final ObjectId id = r.resolve(objectId);
+			if (id == null) {
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				response.getWriter().append("Bad request");
 				return;
@@ -186,10 +185,10 @@ public class BranchGraphServlet extends HttpServlet {
 			rw.markStart(rw.lookupCommit(id));
 
 			// default to the items-per-page setting, unless specified
-			int maxCommits = settings.getInteger(Keys.web.itemsPerPage, 50);
+			final int maxCommits = this.settings.getInteger(Keys.web.itemsPerPage, 50);
 			int requestedCommits = maxCommits;
 			if (!StringUtils.isEmpty(length)) {
-				int l = Integer.parseInt(length);
+				final int l = Integer.parseInt(length);
 				if (l > 0) {
 					requestedCommits = l;
 				}
@@ -197,18 +196,18 @@ public class BranchGraphServlet extends HttpServlet {
 
 			// fetch the requested commits plus some extra so that the last
 			// commit displayed *likely* has correct lane assignments
-			CommitList commitList = new CommitList();
+			final CommitList commitList = new CommitList();
 			commitList.source(rw);
-			commitList.fillTo(2*Math.max(requestedCommits, maxCommits));
+			commitList.fillTo(2 * Math.max(requestedCommits, maxCommits));
 
 			// determine the appropriate width for the image
 			int numLanes = 1;
-			int numCommits = Math.min(requestedCommits, commitList.size());
+			final int numCommits = Math.min(requestedCommits, commitList.size());
 			if (numCommits > 1) {
 				// determine graph width
-				Set<String> parents = new TreeSet<String>();
+				final Set<String> parents = new TreeSet<String>();
 				for (int i = 0; i < commitList.size(); i++) {
-					PlotCommit<Lane> commit = commitList.get(i);
+					final PlotCommit<Lane> commit = commitList.get(i);
 					boolean checkLane = false;
 
 					if (i < numCommits) {
@@ -216,45 +215,50 @@ public class BranchGraphServlet extends HttpServlet {
 						checkLane = true;
 
 						// remember parents
-						for (RevCommit p : commit.getParents()) {
+						for (final RevCommit p : commit.getParents()) {
 							parents.add(p.getName());
 						}
 					} else if (parents.contains(commit.getName())) {
 						// commit outside visible list, but it is a parent of a
-						// commit in the visible list so we need to know it's lane
+						// commit in the visible list so we need to know it's
+						// lane
 						// assignment
 						checkLane = true;
 					}
 
 					if (checkLane) {
-						int pos = commit.getLane().getPosition();
+						final int pos = commit.getLane().getPosition();
 						numLanes = Math.max(numLanes, pos + 1);
 					}
 				}
 			}
 
-			int graphWidth = numLanes * LANE_WIDTH + RIGHT_PAD;
-			int rowHeight = ROW_HEIGHT;
+			final int graphWidth = (numLanes * LANE_WIDTH) + RIGHT_PAD;
+			final int rowHeight = ROW_HEIGHT;
 
 			// create an image buffer and render the lanes
-			BufferedImage image = new BufferedImage(graphWidth, rowHeight*numCommits, BufferedImage.TYPE_INT_ARGB);
+			BufferedImage image = new BufferedImage(graphWidth, rowHeight * numCommits,
+					BufferedImage.TYPE_INT_ARGB);
 
 			Graphics2D g = null;
 			try {
 				g = image.createGraphics();
-				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-				LanesRenderer renderer = new LanesRenderer();
+				g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+						RenderingHints.VALUE_ANTIALIAS_ON);
+				final LanesRenderer renderer = new LanesRenderer();
 				for (int i = 0; i < commitList.size(); i++) {
-					PlotCommit<Lane> commit = commitList.get(i);
-					Graphics row = g.create(0, i*rowHeight, graphWidth, rowHeight);
+					final PlotCommit<Lane> commit = commitList.get(i);
+					Graphics row = g.create(0, i * rowHeight, graphWidth, rowHeight);
 					try {
 						renderer.paint(row, commit, rowHeight, graphWidth);
-					} finally {
+					}
+					finally {
 						row.dispose();
 						row = null;
 					}
 				}
-			} finally {
+			}
+			finally {
 				if (g != null) {
 					g.dispose();
 					g = null;
@@ -265,20 +269,19 @@ public class BranchGraphServlet extends HttpServlet {
 			response.setContentType("image/png");
 			if (numCommits > 1) {
 				response.setHeader("Cache-Control", "public, max-age=60, must-revalidate");
-				response.setDateHeader("Last-Modified", JGitUtils.getCommitDate(commitList.get(0)).getTime());
+				response.setDateHeader("Last-Modified", JGitUtils.getCommitDate(commitList.get(0))
+						.getTime());
 			}
-			OutputStream os = response.getOutputStream();
+			final OutputStream os = response.getOutputStream();
 			ImageIO.write(image, "png", os);
 			os.flush();
 			image.flush();
 			image = null;
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			e.printStackTrace();
-		} finally {
-			if (is != null) {
-				is.close();
-				is = null;
-			}
+		}
+		finally {
 			if (rw != null) {
 				rw.dispose();
 				rw = null;
@@ -291,8 +294,9 @@ public class BranchGraphServlet extends HttpServlet {
 	}
 
 	private Stroke stroke(final int width) {
-		if (width < strokeCache.length)
-			return strokeCache[width];
+		if (width < this.strokeCache.length) {
+			return this.strokeCache[width];
+		}
 		return new BasicStroke(width);
 	}
 
@@ -301,56 +305,57 @@ public class BranchGraphServlet extends HttpServlet {
 		final LinkedList<Color> colors;
 
 		CommitList() {
-			laneColors = new ArrayList<Color>();
-			laneColors.add(new Color(133, 166, 214));
-			laneColors.add(new Color(221, 205, 93));
-			laneColors.add(new Color(199, 134, 57));
-			laneColors.add(new Color(131, 150, 98));
-			laneColors.add(new Color(197, 123, 127));
-			laneColors.add(new Color(139, 136, 140));
-			laneColors.add(new Color(48, 135, 144));
-			laneColors.add(new Color(190, 93, 66));
-			laneColors.add(new Color(143, 163, 54));
-			laneColors.add(new Color(180, 148, 74));
-			laneColors.add(new Color(101, 101, 217));
-			laneColors.add(new Color(72, 153, 119));
-			laneColors.add(new Color(23, 101, 160));
-			laneColors.add(new Color(132, 164, 118));
-			laneColors.add(new Color(255, 230, 59));
-			laneColors.add(new Color(136, 176, 70));
-			laneColors.add(new Color(255, 138, 1));
-			laneColors.add(new Color(123, 187, 95));
-			laneColors.add(new Color(233, 88, 98));
-			laneColors.add(new Color(93, 158, 254));
-			laneColors.add(new Color(175, 215, 0));
-			laneColors.add(new Color(140, 134, 142));
-			laneColors.add(new Color(232, 168, 21));
-			laneColors.add(new Color(0, 172, 191));
-			laneColors.add(new Color(251, 58, 4));
-			laneColors.add(new Color(63, 64, 255));
-			laneColors.add(new Color(27, 194, 130));
-			laneColors.add(new Color(0, 104, 183));
+			this.laneColors = new ArrayList<Color>();
+			this.laneColors.add(new Color(133, 166, 214));
+			this.laneColors.add(new Color(221, 205, 93));
+			this.laneColors.add(new Color(199, 134, 57));
+			this.laneColors.add(new Color(131, 150, 98));
+			this.laneColors.add(new Color(197, 123, 127));
+			this.laneColors.add(new Color(139, 136, 140));
+			this.laneColors.add(new Color(48, 135, 144));
+			this.laneColors.add(new Color(190, 93, 66));
+			this.laneColors.add(new Color(143, 163, 54));
+			this.laneColors.add(new Color(180, 148, 74));
+			this.laneColors.add(new Color(101, 101, 217));
+			this.laneColors.add(new Color(72, 153, 119));
+			this.laneColors.add(new Color(23, 101, 160));
+			this.laneColors.add(new Color(132, 164, 118));
+			this.laneColors.add(new Color(255, 230, 59));
+			this.laneColors.add(new Color(136, 176, 70));
+			this.laneColors.add(new Color(255, 138, 1));
+			this.laneColors.add(new Color(123, 187, 95));
+			this.laneColors.add(new Color(233, 88, 98));
+			this.laneColors.add(new Color(93, 158, 254));
+			this.laneColors.add(new Color(175, 215, 0));
+			this.laneColors.add(new Color(140, 134, 142));
+			this.laneColors.add(new Color(232, 168, 21));
+			this.laneColors.add(new Color(0, 172, 191));
+			this.laneColors.add(new Color(251, 58, 4));
+			this.laneColors.add(new Color(63, 64, 255));
+			this.laneColors.add(new Color(27, 194, 130));
+			this.laneColors.add(new Color(0, 104, 183));
 
-			colors = new LinkedList<Color>();
+			this.colors = new LinkedList<Color>();
 			repackColors();
 		}
 
 		private void repackColors() {
-			colors.addAll(laneColors);
+			this.colors.addAll(this.laneColors);
 		}
 
 		@Override
 		protected Lane createLane() {
 			final Lane lane = new Lane();
-			if (colors.isEmpty())
+			if (this.colors.isEmpty()) {
 				repackColors();
-			lane.color = colors.removeFirst();
+			}
+			lane.color = this.colors.removeFirst();
 			return lane;
 		}
 
 		@Override
 		protected void recycleLane(final Lane lane) {
-			colors.add(lane.color);
+			this.colors.add(lane.color);
 		}
 	}
 
@@ -362,12 +367,12 @@ public class BranchGraphServlet extends HttpServlet {
 
 		@Override
 		public boolean equals(Object o) {
-			return super.equals(o) && color.equals(((Lane)o).color);
+			return super.equals(o) && this.color.equals(((Lane) o).color);
 		}
 
 		@Override
 		public int hashCode() {
-			return super.hashCode() ^ color.hashCode();
+			return super.hashCode() ^ this.color.hashCode();
 		}
 	}
 
@@ -382,13 +387,15 @@ public class BranchGraphServlet extends HttpServlet {
 		transient Graphics2D g;
 
 		void paint(Graphics in, PlotCommit<Lane> commit, int h, int w) {
-			g = (Graphics2D) in.create();
+			this.g = (Graphics2D) in.create();
 			try {
-				if (commit != null)
+				if (commit != null) {
 					paintCommit(commit, h);
-			} finally {
-				g.dispose();
-				g = null;
+				}
+			}
+			finally {
+				this.g.dispose();
+				this.g = null;
 			}
 		}
 
@@ -402,18 +409,18 @@ public class BranchGraphServlet extends HttpServlet {
 				y2 -= width / 2;
 			}
 
-			g.setColor(color);
-			g.setStroke(stroke(width));
-			g.drawLine(x1, y1, x2, y2);
+			this.g.setColor(color);
+			this.g.setStroke(stroke(width));
+			this.g.drawLine(x1, y1, x2, y2);
 		}
 
 		@Override
 		protected void drawCommitDot(int x, int y, int w, int h) {
-			g.setColor(commitDotFill);
-			g.setStroke(strokeCache[2]);
-			g.fillOval(x + 2, y + 1, w - 2, h - 2);
-			g.setColor(commitDotOutline);
-			g.drawOval(x + 2, y + 1, w - 2, h - 2);
+			this.g.setColor(this.commitDotFill);
+			this.g.setStroke(BranchGraphServlet.this.strokeCache[2]);
+			this.g.fillOval(x + 2, y + 1, w - 2, h - 2);
+			this.g.setColor(this.commitDotOutline);
+			this.g.drawOval(x + 2, y + 1, w - 2, h - 2);
 		}
 
 		@Override

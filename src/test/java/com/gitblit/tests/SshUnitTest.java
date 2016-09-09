@@ -67,7 +67,7 @@ public abstract class SshUnitTest extends GitblitUnitTest {
 	}
 
 	protected MemoryKeyManager getKeyManager() {
-		IPublicKeyManager mgr = gitblit().getPublicKeyManager();
+		final IPublicKeyManager mgr = gitblit().getPublicKeyManager();
 		if (mgr instanceof MemoryKeyManager) {
 			return (MemoryKeyManager) gitblit().getPublicKeyManager();
 		} else {
@@ -77,28 +77,29 @@ public abstract class SshUnitTest extends GitblitUnitTest {
 
 	@Before
 	public void prepare() {
-		rwKeyPair = generator.generateKeyPair();
+		this.rwKeyPair = generator.generateKeyPair();
 
-		MemoryKeyManager keyMgr = getKeyManager();
-		keyMgr.addKey(username, new SshKey(rwKeyPair.getPublic()));
+		final MemoryKeyManager keyMgr = getKeyManager();
+		keyMgr.addKey(this.username, new SshKey(this.rwKeyPair.getPublic()));
 
-		roKeyPair = generator.generateKeyPair();
-		SshKey sshKey = new SshKey(roKeyPair.getPublic());
+		this.roKeyPair = generator.generateKeyPair();
+		final SshKey sshKey = new SshKey(this.roKeyPair.getPublic());
 		sshKey.setPermission(AccessPermission.CLONE);
-		keyMgr.addKey(username, sshKey);
+		keyMgr.addKey(this.username, sshKey);
 	}
 
 	@After
 	public void tearDown() {
-		MemoryKeyManager keyMgr = getKeyManager();
-		keyMgr.removeAllKeys(username);
+		final MemoryKeyManager keyMgr = getKeyManager();
+		keyMgr.removeAllKeys(this.username);
 	}
 
 	protected SshClient getClient() {
-		SshClient client = SshClient.setUpDefaultClient();
+		final SshClient client = SshClient.setUpDefaultClient();
 		client.setServerKeyVerifier(new ServerKeyVerifier() {
 			@Override
-			public boolean verifyServerKey(ClientSession sshClientSession, SocketAddress remoteAddress, PublicKey serverKey) {
+			public boolean verifyServerKey(ClientSession sshClientSession,
+					SocketAddress remoteAddress, PublicKey serverKey) {
 				return true;
 			}
 		});
@@ -106,34 +107,35 @@ public abstract class SshUnitTest extends GitblitUnitTest {
 		return client;
 	}
 
-	protected String testSshCommand(String cmd) throws IOException, InterruptedException {
+	protected String testSshCommand(String cmd) throws IOException {
 		return testSshCommand(cmd, null);
 	}
 
-	protected String testSshCommand(String cmd, String stdin) throws IOException, InterruptedException {
-		SshClient client = getClient();
-		ClientSession session = client.connect(username, "localhost", GitBlitSuite.sshPort).await().getSession();
-		session.addPublicKeyIdentity(rwKeyPair);
+	protected String testSshCommand(String cmd, String stdin) throws IOException {
+		final SshClient client = getClient();
+		final ClientSession session = client
+				.connect(this.username, "localhost", GitBlitSuite.sshPort).await().getSession();
+		session.addPublicKeyIdentity(this.rwKeyPair);
 		assertTrue(session.auth().await().isSuccess());
 
-		ClientChannel channel = session.createChannel(ClientChannel.CHANNEL_EXEC, cmd);
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final ClientChannel channel = session.createChannel(ClientChannel.CHANNEL_EXEC, cmd);
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		if (stdin != null) {
-			Writer w = new OutputStreamWriter(baos);
+			final Writer w = new OutputStreamWriter(baos);
 			w.write(stdin);
 			w.close();
 		}
 		channel.setIn(new ByteArrayInputStream(baos.toByteArray()));
 
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ByteArrayOutputStream err = new ByteArrayOutputStream();
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		final ByteArrayOutputStream err = new ByteArrayOutputStream();
 		channel.setOut(out);
 		channel.setErr(err);
 		channel.open();
 
 		channel.waitFor(ClientChannel.CLOSED, 0);
 
-		String result = out.toString().trim();
+		final String result = out.toString().trim();
 		channel.close(false);
 		client.stop();
 		return result;

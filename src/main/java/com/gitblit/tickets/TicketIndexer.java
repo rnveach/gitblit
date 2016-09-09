@@ -104,7 +104,7 @@ public class TicketIndexer {
 		mergeto(Type.STRING),
 		patchsets(Type.INT),
 		votes(Type.INT),
-		//NOTE: Indexing on the underlying value to allow flexibility on naming
+		// NOTE: Indexing on the underlying value to allow flexibility on naming
 		priority(Type.INT),
 		severity(Type.INT);
 
@@ -122,7 +122,7 @@ public class TicketIndexer {
 			if (StringUtils.isEmpty(value)) {
 				return "";
 			}
-			boolean not = value.charAt(0) == '!';
+			final boolean not = value.charAt(0) == '!';
 			if (not) {
 				return "!" + name() + ":" + escape(value.substring(1));
 			}
@@ -141,12 +141,12 @@ public class TicketIndexer {
 		}
 
 		public SortField asSortField(boolean descending) {
-			return new SortField(name(), fieldType, descending);
+			return new SortField(name(), this.fieldType, descending);
 		}
 
-		private String escape(String value) {
+		private static String escape(String value) {
 			if (value.charAt(0) != '"') {
-				for (char c : value.toCharArray()) {
+				for (final char c : value.toCharArray()) {
 					if (!Character.isLetterOrDigit(c)) {
 						return "\"" + value + "\"";
 					}
@@ -156,7 +156,7 @@ public class TicketIndexer {
 		}
 
 		public static Lucene fromString(String value) {
-			for (Lucene field : values()) {
+			for (final Lucene field : values()) {
 				if (field.name().equalsIgnoreCase(value)) {
 					return field;
 				}
@@ -176,7 +176,8 @@ public class TicketIndexer {
 	private IndexSearcher searcher;
 
 	public TicketIndexer(IRuntimeManager runtimeManager) {
-		this.luceneDir = runtimeManager.getFileOrFolder(Keys.tickets.indexFolder, "${baseFolder}/tickets/lucene");
+		this.luceneDir = runtimeManager.getFileOrFolder(Keys.tickets.indexFolder,
+				"${baseFolder}/tickets/lucene");
 	}
 
 	/**
@@ -192,7 +193,7 @@ public class TicketIndexer {
 	 */
 	public void deleteAll() {
 		close();
-		FileUtils.delete(luceneDir);
+		FileUtils.delete(this.luceneDir);
 	}
 
 	/**
@@ -200,26 +201,29 @@ public class TicketIndexer {
 	 */
 	public boolean deleteAll(RepositoryModel repository) {
 		try {
-			IndexWriter writer = getWriter();
-			StandardAnalyzer analyzer = new StandardAnalyzer(luceneVersion);
-			QueryParser qp = new QueryParser(luceneVersion, Lucene.rid.name(), analyzer);
-			BooleanQuery query = new BooleanQuery();
+			final IndexWriter writer = getWriter();
+			final StandardAnalyzer analyzer = new StandardAnalyzer(this.luceneVersion);
+			final QueryParser qp = new QueryParser(this.luceneVersion, Lucene.rid.name(), analyzer);
+			final BooleanQuery query = new BooleanQuery();
 			query.add(qp.parse(repository.getRID()), Occur.MUST);
 
-			int numDocsBefore = writer.numDocs();
+			final int numDocsBefore = writer.numDocs();
 			writer.deleteDocuments(query);
 			writer.commit();
 			closeSearcher();
-			int numDocsAfter = writer.numDocs();
+			final int numDocsAfter = writer.numDocs();
 			if (numDocsBefore == numDocsAfter) {
-				log.debug(MessageFormat.format("no records found to delete in {0}", repository));
+				this.log.debug(MessageFormat
+						.format("no records found to delete in {0}", repository));
 				return false;
 			} else {
-				log.debug(MessageFormat.format("deleted {0} records in {1}", numDocsBefore - numDocsAfter, repository));
+				this.log.debug(MessageFormat.format("deleted {0} records in {1}", numDocsBefore
+						- numDocsAfter, repository));
 				return true;
 			}
-		} catch (Exception e) {
-			log.error("error", e);
+		}
+		catch (final Exception e) {
+			this.log.error("error", e);
 		}
 		return false;
 	}
@@ -231,15 +235,16 @@ public class TicketIndexer {
 	 */
 	public void index(List<TicketModel> tickets) {
 		try {
-			IndexWriter writer = getWriter();
-			for (TicketModel ticket : tickets) {
-				Document doc = ticketToDoc(ticket);
+			final IndexWriter writer = getWriter();
+			for (final TicketModel ticket : tickets) {
+				final Document doc = ticketToDoc(ticket);
 				writer.addDocument(doc);
 			}
 			writer.commit();
 			closeSearcher();
-		} catch (Exception e) {
-			log.error("error", e);
+		}
+		catch (final Exception e) {
+			this.log.error("error", e);
 		}
 	}
 
@@ -250,14 +255,15 @@ public class TicketIndexer {
 	 */
 	public void index(TicketModel ticket) {
 		try {
-			IndexWriter writer = getWriter();
+			final IndexWriter writer = getWriter();
 			delete(ticket.repository, ticket.number, writer);
-			Document doc = ticketToDoc(ticket);
+			final Document doc = ticketToDoc(ticket);
 			writer.addDocument(doc);
 			writer.commit();
 			closeSearcher();
-		} catch (Exception e) {
-			log.error("error", e);
+		}
+		catch (final Exception e) {
+			this.log.error("error", e);
 		}
 	}
 
@@ -270,10 +276,11 @@ public class TicketIndexer {
 	 */
 	public boolean delete(TicketModel ticket) {
 		try {
-			IndexWriter writer = getWriter();
+			final IndexWriter writer = getWriter();
 			return delete(ticket.repository, ticket.number, writer);
-		} catch (Exception e) {
-			log.error("Failed to delete ticket " + ticket.number, e);
+		}
+		catch (final Exception e) {
+			this.log.error("Failed to delete ticket " + ticket.number, e);
 		}
 		return false;
 	}
@@ -287,21 +294,22 @@ public class TicketIndexer {
 	 * @return true, if deleted, false if no record was deleted
 	 */
 	private boolean delete(String repository, long ticketId, IndexWriter writer) throws Exception {
-		StandardAnalyzer analyzer = new StandardAnalyzer(luceneVersion);
-		QueryParser qp = new QueryParser(luceneVersion, Lucene.did.name(), analyzer);
-		BooleanQuery query = new BooleanQuery();
+		final StandardAnalyzer analyzer = new StandardAnalyzer(this.luceneVersion);
+		final QueryParser qp = new QueryParser(this.luceneVersion, Lucene.did.name(), analyzer);
+		final BooleanQuery query = new BooleanQuery();
 		query.add(qp.parse(StringUtils.getSHA1(repository + ticketId)), Occur.MUST);
 
-		int numDocsBefore = writer.numDocs();
+		final int numDocsBefore = writer.numDocs();
 		writer.deleteDocuments(query);
 		writer.commit();
 		closeSearcher();
-		int numDocsAfter = writer.numDocs();
+		final int numDocsAfter = writer.numDocs();
 		if (numDocsBefore == numDocsAfter) {
-			log.debug(MessageFormat.format("no records found to delete in {0}", repository));
+			this.log.debug(MessageFormat.format("no records found to delete in {0}", repository));
 			return false;
 		} else {
-			log.debug(MessageFormat.format("deleted {0} records in {1}", numDocsBefore - numDocsAfter, repository));
+			this.log.debug(MessageFormat.format("deleted {0} records in {1}", numDocsBefore
+					- numDocsAfter, repository));
 			return true;
 		}
 	}
@@ -317,8 +325,8 @@ public class TicketIndexer {
 	}
 
 	/**
-	 * Search for tickets matching the query.  The returned tickets are
-	 * shadows of the real ticket, but suitable for a results list.
+	 * Search for tickets matching the query. The returned tickets are shadows
+	 * of the real ticket, but suitable for a results list.
 	 *
 	 * @param repository
 	 * @param text
@@ -326,42 +334,43 @@ public class TicketIndexer {
 	 * @param pageSize
 	 * @return search results
 	 */
-	public List<QueryResult> searchFor(RepositoryModel repository, String text, int page, int pageSize) {
+	public List<QueryResult> searchFor(RepositoryModel repository, String text, int page,
+			int pageSize) {
 		if (StringUtils.isEmpty(text)) {
 			return Collections.emptyList();
 		}
-		Set<QueryResult> results = new LinkedHashSet<QueryResult>();
-		StandardAnalyzer analyzer = new StandardAnalyzer(luceneVersion);
+		final Set<QueryResult> results = new LinkedHashSet<QueryResult>();
+		final StandardAnalyzer analyzer = new StandardAnalyzer(this.luceneVersion);
 		try {
 			// search the title, description and content
-			BooleanQuery query = new BooleanQuery();
+			final BooleanQuery query = new BooleanQuery();
 			QueryParser qp;
 
-			qp = new QueryParser(luceneVersion, Lucene.title.name(), analyzer);
+			qp = new QueryParser(this.luceneVersion, Lucene.title.name(), analyzer);
 			qp.setAllowLeadingWildcard(true);
 			query.add(qp.parse(text), Occur.SHOULD);
 
-			qp = new QueryParser(luceneVersion, Lucene.body.name(), analyzer);
+			qp = new QueryParser(this.luceneVersion, Lucene.body.name(), analyzer);
 			qp.setAllowLeadingWildcard(true);
 			query.add(qp.parse(text), Occur.SHOULD);
 
-			qp = new QueryParser(luceneVersion, Lucene.content.name(), analyzer);
+			qp = new QueryParser(this.luceneVersion, Lucene.content.name(), analyzer);
 			qp.setAllowLeadingWildcard(true);
 			query.add(qp.parse(text), Occur.SHOULD);
 
-			IndexSearcher searcher = getSearcher();
-			Query rewrittenQuery = searcher.rewrite(query);
+			final IndexSearcher searcher = getSearcher();
+			final Query rewrittenQuery = searcher.rewrite(query);
 
-			log.debug(rewrittenQuery.toString());
+			this.log.debug(rewrittenQuery.toString());
 
-			TopScoreDocCollector collector = TopScoreDocCollector.create(5000, true);
+			final TopScoreDocCollector collector = TopScoreDocCollector.create(5000, true);
 			searcher.search(rewrittenQuery, collector);
-			int offset = Math.max(0, (page - 1) * pageSize);
-			ScoreDoc[] hits = collector.topDocs(offset, pageSize).scoreDocs;
+			final int offset = Math.max(0, (page - 1) * pageSize);
+			final ScoreDoc[] hits = collector.topDocs(offset, pageSize).scoreDocs;
 			for (int i = 0; i < hits.length; i++) {
-				int docId = hits[i].doc;
-				Document doc = searcher.doc(docId);
-				QueryResult result = docToQueryResult(doc);
+				final int docId = hits[i].doc;
+				final Document doc = searcher.doc(docId);
+				final QueryResult result = docToQueryResult(doc);
 				if (repository != null) {
 					if (!result.repository.equalsIgnoreCase(repository.name)) {
 						continue;
@@ -369,15 +378,16 @@ public class TicketIndexer {
 				}
 				results.add(result);
 			}
-		} catch (Exception e) {
-			log.error(MessageFormat.format("Exception while searching for {0}", text), e);
+		}
+		catch (final Exception e) {
+			this.log.error(MessageFormat.format("Exception while searching for {0}", text), e);
 		}
 		return new ArrayList<QueryResult>(results);
 	}
 
 	/**
-	 * Search for tickets matching the query.  The returned tickets are
-	 * shadows of the real ticket, but suitable for a results list.
+	 * Search for tickets matching the query. The returned tickets are shadows
+	 * of the real ticket, but suitable for a results list.
 	 *
 	 * @param text
 	 * @param page
@@ -386,21 +396,23 @@ public class TicketIndexer {
 	 * @param desc
 	 * @return
 	 */
-	public List<QueryResult> queryFor(String queryText, int page, int pageSize, String sortBy, boolean desc) {
+	public List<QueryResult> queryFor(String queryText, int page, int pageSize, String sortBy,
+			boolean desc) {
 		if (StringUtils.isEmpty(queryText)) {
 			return Collections.emptyList();
 		}
 
-		Set<QueryResult> results = new LinkedHashSet<QueryResult>();
-		StandardAnalyzer analyzer = new StandardAnalyzer(luceneVersion);
+		final Set<QueryResult> results = new LinkedHashSet<QueryResult>();
+		final StandardAnalyzer analyzer = new StandardAnalyzer(this.luceneVersion);
 		try {
-			QueryParser qp = new QueryParser(luceneVersion, Lucene.content.name(), analyzer);
-			Query query = qp.parse(queryText);
+			final QueryParser qp = new QueryParser(this.luceneVersion, Lucene.content.name(),
+					analyzer);
+			final Query query = qp.parse(queryText);
 
-			IndexSearcher searcher = getSearcher();
-			Query rewrittenQuery = searcher.rewrite(query);
+			final IndexSearcher searcher = getSearcher();
+			final Query rewrittenQuery = searcher.rewrite(query);
 
-			log.debug(rewrittenQuery.toString());
+			this.log.debug(rewrittenQuery.toString());
 
 			Sort sort;
 			if (sortBy == null) {
@@ -408,32 +420,34 @@ public class TicketIndexer {
 			} else {
 				sort = new Sort(Lucene.fromString(sortBy).asSortField(desc));
 			}
-			int maxSize = 5000;
-			TopFieldDocs docs = searcher.search(rewrittenQuery, null, maxSize, sort, false, false);
-			int size = (pageSize <= 0) ? maxSize : pageSize;
-			int offset = Math.max(0, (page - 1) * size);
-			ScoreDoc[] hits = subset(docs.scoreDocs, offset, size);
+			final int maxSize = 5000;
+			final TopFieldDocs docs = searcher.search(rewrittenQuery, null, maxSize, sort, false,
+					false);
+			final int size = (pageSize <= 0) ? maxSize : pageSize;
+			final int offset = Math.max(0, (page - 1) * size);
+			final ScoreDoc[] hits = subset(docs.scoreDocs, offset, size);
 			for (int i = 0; i < hits.length; i++) {
-				int docId = hits[i].doc;
-				Document doc = searcher.doc(docId);
-				QueryResult result = docToQueryResult(doc);
+				final int docId = hits[i].doc;
+				final Document doc = searcher.doc(docId);
+				final QueryResult result = docToQueryResult(doc);
 				result.docId = docId;
 				result.totalResults = docs.totalHits;
 				results.add(result);
 			}
-		} catch (Exception e) {
-			log.error(MessageFormat.format("Exception while searching for {0}", queryText), e);
+		}
+		catch (final Exception e) {
+			this.log.error(MessageFormat.format("Exception while searching for {0}", queryText), e);
 		}
 		return new ArrayList<QueryResult>(results);
 	}
 
-	private ScoreDoc [] subset(ScoreDoc [] docs, int offset, int size) {
+	private static ScoreDoc[] subset(ScoreDoc[] docs, int offset, int size) {
 		if (docs.length >= (offset + size)) {
-			ScoreDoc [] set = new ScoreDoc[size];
+			final ScoreDoc[] set = new ScoreDoc[size];
 			System.arraycopy(docs, offset, set, 0, set.length);
 			return set;
 		} else if (docs.length >= offset) {
-			ScoreDoc [] set = new ScoreDoc[docs.length - offset];
+			final ScoreDoc[] set = new ScoreDoc[docs.length - offset];
 			System.arraycopy(docs, offset, set, 0, set.length);
 			return set;
 		} else {
@@ -442,49 +456,53 @@ public class TicketIndexer {
 	}
 
 	private IndexWriter getWriter() throws IOException {
-		if (writer == null) {
-			Directory directory = FSDirectory.open(luceneDir);
+		if (this.writer == null) {
+			final Directory directory = FSDirectory.open(this.luceneDir);
 
-			if (!luceneDir.exists()) {
-				luceneDir.mkdirs();
+			if (!this.luceneDir.exists()) {
+				this.luceneDir.mkdirs();
 			}
 
-			StandardAnalyzer analyzer = new StandardAnalyzer(luceneVersion);
-			IndexWriterConfig config = new IndexWriterConfig(luceneVersion, analyzer);
+			final StandardAnalyzer analyzer = new StandardAnalyzer(this.luceneVersion);
+			final IndexWriterConfig config = new IndexWriterConfig(this.luceneVersion, analyzer);
 			config.setOpenMode(OpenMode.CREATE_OR_APPEND);
-			writer = new IndexWriter(directory, config);
+			this.writer = new IndexWriter(directory, config);
 		}
-		return writer;
+		return this.writer;
 	}
 
 	private synchronized void closeWriter() {
 		try {
-			if (writer != null) {
-				writer.close();
+			if (this.writer != null) {
+				this.writer.close();
 			}
-		} catch (Exception e) {
-			log.error("failed to close writer!", e);
-		} finally {
-			writer = null;
+		}
+		catch (final Exception e) {
+			this.log.error("failed to close writer!", e);
+		}
+		finally {
+			this.writer = null;
 		}
 	}
 
 	private IndexSearcher getSearcher() throws IOException {
-		if (searcher == null) {
-			searcher = new IndexSearcher(DirectoryReader.open(getWriter(), true));
+		if (this.searcher == null) {
+			this.searcher = new IndexSearcher(DirectoryReader.open(getWriter(), true));
 		}
-		return searcher;
+		return this.searcher;
 	}
 
 	private synchronized void closeSearcher() {
 		try {
-			if (searcher != null) {
-				searcher.getIndexReader().close();
+			if (this.searcher != null) {
+				this.searcher.getIndexReader().close();
 			}
-		} catch (Exception e) {
-			log.error("failed to close searcher!", e);
-		} finally {
-			searcher = null;
+		}
+		catch (final Exception e) {
+			this.log.error("failed to close searcher!", e);
+		}
+		finally {
+			this.searcher = null;
 		}
 	}
 
@@ -494,8 +512,8 @@ public class TicketIndexer {
 	 * @param ticket
 	 * @return a Lucene document
 	 */
-	private Document ticketToDoc(TicketModel ticket) {
-		Document doc = new Document();
+	private static Document ticketToDoc(TicketModel ticket) {
+		final Document doc = new Document();
 		// repository and document ids for Lucene querying
 		toDocField(doc, Lucene.rid, StringUtils.getSHA1(ticket.repository));
 		toDocField(doc, Lucene.did, StringUtils.getSHA1(ticket.repository + ticket.number));
@@ -517,31 +535,32 @@ public class TicketIndexer {
 		toDocField(doc, Lucene.type, ticket.type == null ? null : ticket.type.name());
 		toDocField(doc, Lucene.mergesha, ticket.mergeSha);
 		toDocField(doc, Lucene.mergeto, ticket.mergeTo);
-		toDocField(doc, Lucene.labels, StringUtils.flattenStrings(ticket.getLabels(), ";").toLowerCase());
-		toDocField(doc, Lucene.participants, StringUtils.flattenStrings(ticket.getParticipants(), ";").toLowerCase());
-		toDocField(doc, Lucene.watchedby, StringUtils.flattenStrings(ticket.getWatchers(), ";").toLowerCase());
-		toDocField(doc, Lucene.mentions, StringUtils.flattenStrings(ticket.getMentions(), ";").toLowerCase());
+		toDocField(doc, Lucene.labels, StringUtils.flattenStrings(ticket.getLabels(), ";")
+				.toLowerCase());
+		toDocField(doc, Lucene.participants,
+				StringUtils.flattenStrings(ticket.getParticipants(), ";").toLowerCase());
+		toDocField(doc, Lucene.watchedby, StringUtils.flattenStrings(ticket.getWatchers(), ";")
+				.toLowerCase());
+		toDocField(doc, Lucene.mentions, StringUtils.flattenStrings(ticket.getMentions(), ";")
+				.toLowerCase());
 		toDocField(doc, Lucene.votes, ticket.getVoters().size());
 		toDocField(doc, Lucene.priority, ticket.priority.getValue());
 		toDocField(doc, Lucene.severity, ticket.severity.getValue());
 
-		List<String> attachments = new ArrayList<String>();
-		for (Attachment attachment : ticket.getAttachments()) {
+		final List<String> attachments = new ArrayList<String>();
+		for (final Attachment attachment : ticket.getAttachments()) {
 			attachments.add(attachment.name.toLowerCase());
 		}
 		toDocField(doc, Lucene.attachments, StringUtils.flattenStrings(attachments, ";"));
 
-		List<Patchset> patches = ticket.getPatchsets();
+		final List<Patchset> patches = ticket.getPatchsets();
 		if (!patches.isEmpty()) {
 			toDocField(doc, Lucene.patchsets, patches.size());
-			Patchset patchset = patches.get(patches.size() - 1);
-			String flat =
-					patchset.number + ":" +
-					patchset.rev + ":" +
-					patchset.tip + ":" +
-					patchset.base + ":" +
-					patchset.commits;
-			doc.add(new org.apache.lucene.document.Field(Lucene.patchset.name(), flat, TextField.TYPE_STORED));
+			final Patchset patchset = patches.get(patches.size() - 1);
+			final String flat = patchset.number + ":" + patchset.rev + ":" + patchset.tip + ":"
+					+ patchset.base + ":" + patchset.commits;
+			doc.add(new org.apache.lucene.document.Field(Lucene.patchset.name(), flat,
+					TextField.TYPE_STORED));
 		}
 
 		doc.add(new TextField(Lucene.content.name(), ticket.toIndexableString(), Store.NO));
@@ -549,22 +568,22 @@ public class TicketIndexer {
 		return doc;
 	}
 
-	private void toDocField(Document doc, Lucene lucene, Date value) {
+	private static void toDocField(Document doc, Lucene lucene, Date value) {
 		if (value == null) {
 			return;
 		}
 		doc.add(new LongField(lucene.name(), value.getTime(), Store.YES));
 	}
 
-	private void toDocField(Document doc, Lucene lucene, long value) {
+	private static void toDocField(Document doc, Lucene lucene, long value) {
 		doc.add(new LongField(lucene.name(), value, Store.YES));
 	}
 
-	private void toDocField(Document doc, Lucene lucene, int value) {
+	private static void toDocField(Document doc, Lucene lucene, int value) {
 		doc.add(new IntField(lucene.name(), value, Store.YES));
 	}
 
-	private void toDocField(Document doc, Lucene lucene, String value) {
+	private static void toDocField(Document doc, Lucene lucene, String value) {
 		if (StringUtils.isEmpty(value)) {
 			return;
 		}
@@ -572,16 +591,16 @@ public class TicketIndexer {
 	}
 
 	/**
-	 * Creates a query result from the Lucene document.  This result is
-	 * not a high-fidelity representation of the real ticket, but it is
-	 * suitable for display in a table of search results.
+	 * Creates a query result from the Lucene document. This result is not a
+	 * high-fidelity representation of the real ticket, but it is suitable for
+	 * display in a table of search results.
 	 *
 	 * @param doc
 	 * @return a query result
 	 * @throws ParseException
 	 */
-	private QueryResult docToQueryResult(Document doc) throws ParseException {
-		QueryResult result = new QueryResult();
+	private static QueryResult docToQueryResult(Document doc) {
+		final QueryResult result = new QueryResult();
 		result.project = unpackString(doc, Lucene.project);
 		result.repository = unpackString(doc, Lucene.repository);
 		result.number = unpackLong(doc, Lucene.number);
@@ -595,7 +614,8 @@ public class TicketIndexer {
 		result.responsible = unpackString(doc, Lucene.responsible);
 		result.milestone = unpackString(doc, Lucene.milestone);
 		result.topic = unpackString(doc, Lucene.topic);
-		result.type = TicketModel.Type.fromObject(unpackString(doc, Lucene.type), TicketModel.Type.defaultType);
+		result.type = TicketModel.Type.fromObject(unpackString(doc, Lucene.type),
+				TicketModel.Type.defaultType);
 		result.mergeSha = unpackString(doc, Lucene.mergesha);
 		result.mergeTo = unpackString(doc, Lucene.mergeto);
 		result.commentsCount = unpackInt(doc, Lucene.comments);
@@ -605,14 +625,16 @@ public class TicketIndexer {
 		result.participants = unpackStrings(doc, Lucene.participants);
 		result.watchedby = unpackStrings(doc, Lucene.watchedby);
 		result.mentions = unpackStrings(doc, Lucene.mentions);
-		result.priority = TicketModel.Priority.fromObject(unpackInt(doc, Lucene.priority), TicketModel.Priority.defaultPriority);
-		result.severity = TicketModel.Severity.fromObject(unpackInt(doc, Lucene.severity), TicketModel.Severity.defaultSeverity);
+		result.priority = TicketModel.Priority.fromObject(unpackInt(doc, Lucene.priority),
+				TicketModel.Priority.defaultPriority);
+		result.severity = TicketModel.Severity.fromObject(unpackInt(doc, Lucene.severity),
+				TicketModel.Severity.defaultSeverity);
 
 		if (!StringUtils.isEmpty(doc.get(Lucene.patchset.name()))) {
 			// unpack most recent patchset
-			String [] values = doc.get(Lucene.patchset.name()).split(":", 5);
+			final String[] values = doc.get(Lucene.patchset.name()).split(":", 5);
 
-			Patchset patchset = new Patchset();
+			final Patchset patchset = new Patchset();
 			patchset.number = Integer.parseInt(values[0]);
 			patchset.rev = Integer.parseInt(values[1]);
 			patchset.tip = values[2];
@@ -625,42 +647,42 @@ public class TicketIndexer {
 		return result;
 	}
 
-	private String unpackString(Document doc, Lucene lucene) {
+	private static String unpackString(Document doc, Lucene lucene) {
 		return doc.get(lucene.name());
 	}
 
-	private List<String> unpackStrings(Document doc, Lucene lucene) {
+	private static List<String> unpackStrings(Document doc, Lucene lucene) {
 		if (!StringUtils.isEmpty(doc.get(lucene.name()))) {
 			return StringUtils.getStringsFromValue(doc.get(lucene.name()), ";");
 		}
 		return null;
 	}
 
-	private Date unpackDate(Document doc, Lucene lucene) {
-		String val = doc.get(lucene.name());
+	private static Date unpackDate(Document doc, Lucene lucene) {
+		final String val = doc.get(lucene.name());
 		if (!StringUtils.isEmpty(val)) {
-			long time = Long.parseLong(val);
-			Date date = new Date(time);
+			final long time = Long.parseLong(val);
+			final Date date = new Date(time);
 			return date;
 		}
 		return null;
 	}
 
-	private long unpackLong(Document doc, Lucene lucene) {
-		String val = doc.get(lucene.name());
+	private static long unpackLong(Document doc, Lucene lucene) {
+		final String val = doc.get(lucene.name());
 		if (StringUtils.isEmpty(val)) {
 			return 0;
 		}
-		long l = Long.parseLong(val);
+		final long l = Long.parseLong(val);
 		return l;
 	}
 
-	private int unpackInt(Document doc, Lucene lucene) {
-		String val = doc.get(lucene.name());
+	private static int unpackInt(Document doc, Lucene lucene) {
+		final String val = doc.get(lucene.name());
 		if (StringUtils.isEmpty(val)) {
 			return 0;
 		}
-		int i = Integer.parseInt(val);
+		final int i = Integer.parseInt(val);
 		return i;
 	}
 }

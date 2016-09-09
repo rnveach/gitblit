@@ -54,15 +54,15 @@ import com.gitblit.models.TicketModel.TicketLink;
 import com.gitblit.tickets.TicketIndexer.Lucene;
 import com.gitblit.utils.DeepCopier;
 import com.gitblit.utils.DiffUtils;
-import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.DiffUtils.DiffStat;
+import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.StringUtils;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 /**
- * Abstract parent class of a ticket service that stubs out required methods
- * and transparently handles Lucene indexing.
+ * Abstract parent class of a ticket service that stubs out required methods and
+ * transparently handles Lucene indexing.
  *
  * @author James Moger
  *
@@ -126,7 +126,7 @@ public abstract class ITicketService implements IManager {
 
 		@Override
 		public int hashCode() {
-			return (repository + ticketId).hashCode();
+			return (this.repository + this.ticketId).hashCode();
 		}
 
 		@Override
@@ -139,19 +139,15 @@ public abstract class ITicketService implements IManager {
 
 		@Override
 		public String toString() {
-			return repository + ":" + ticketId;
+			return this.repository + ":" + this.ticketId;
 		}
 	}
-
 
 	/**
 	 * Creates a ticket service.
 	 */
-	public ITicketService(
-			IRuntimeManager runtimeManager,
-			IPluginManager pluginManager,
-			INotificationManager notificationManager,
-			IUserManager userManager,
+	public ITicketService(IRuntimeManager runtimeManager, IPluginManager pluginManager,
+			INotificationManager notificationManager, IUserManager userManager,
 			IRepositoryManager repositoryManager) {
 
 		this.log = LoggerFactory.getLogger(getClass());
@@ -164,20 +160,18 @@ public abstract class ITicketService implements IManager {
 
 		this.indexer = new TicketIndexer(runtimeManager);
 
-		CacheBuilder<Object, Object> cb = CacheBuilder.newBuilder();
-		this.ticketsCache = cb
-				.maximumSize(1000)
-				.expireAfterAccess(30, TimeUnit.MINUTES)
-				.build();
+		final CacheBuilder<Object, Object> cb = CacheBuilder.newBuilder();
+		this.ticketsCache = cb.maximumSize(1000).expireAfterAccess(30, TimeUnit.MINUTES).build();
 
 		this.labelsCache = new ConcurrentHashMap<String, List<TicketLabel>>();
 		this.milestonesCache = new ConcurrentHashMap<String, List<TicketMilestone>>();
 
-		this.updateDiffstats = settings.getBoolean(SETTING_UPDATE_DIFFSTATS, true);
+		this.updateDiffstats = this.settings.getBoolean(SETTING_UPDATE_DIFFSTATS, true);
 	}
 
 	/**
 	 * Start the service.
+	 * 
 	 * @since 1.4.0
 	 */
 	@Override
@@ -185,28 +179,26 @@ public abstract class ITicketService implements IManager {
 
 	/**
 	 * Stop the service.
+	 * 
 	 * @since 1.4.0
 	 */
 	@Override
 	public final ITicketService stop() {
-		indexer.close();
-		ticketsCache.invalidateAll();
-		repositoryManager.closeAll();
+		this.indexer.close();
+		this.ticketsCache.invalidateAll();
+		this.repositoryManager.closeAll();
 		close();
 		return this;
 	}
 
 	/**
-	 * Creates a ticket notifier.  The ticket notifier is not thread-safe!
+	 * Creates a ticket notifier. The ticket notifier is not thread-safe!
+	 * 
 	 * @since 1.4.0
 	 */
 	public TicketNotifier createNotifier() {
-		return new TicketNotifier(
-				runtimeManager,
-				notificationManager,
-				userManager,
-				repositoryManager,
-				this);
+		return new TicketNotifier(this.runtimeManager, this.notificationManager, this.userManager,
+				this.repositoryManager, this);
 	}
 
 	/**
@@ -227,10 +219,8 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public boolean isAcceptingNewPatchsets(RepositoryModel repository) {
-		return isReady()
-				&& settings.getBoolean(Keys.tickets.acceptNewPatchsets, true)
-				&& repository.acceptNewPatchsets
-				&& isAcceptingTicketUpdates(repository);
+		return isReady() && this.settings.getBoolean(Keys.tickets.acceptNewPatchsets, true)
+				&& repository.acceptNewPatchsets && isAcceptingTicketUpdates(repository);
 	}
 
 	/**
@@ -242,10 +232,8 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public boolean isAcceptingNewTickets(RepositoryModel repository) {
-		return isReady()
-				&& settings.getBoolean(Keys.tickets.acceptNewTickets, true)
-				&& repository.acceptNewTickets
-				&& isAcceptingTicketUpdates(repository);
+		return isReady() && this.settings.getBoolean(Keys.tickets.acceptNewTickets, true)
+				&& repository.acceptNewTickets && isAcceptingTicketUpdates(repository);
 	}
 
 	/**
@@ -256,60 +244,62 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public boolean isAcceptingTicketUpdates(RepositoryModel repository) {
-		return isReady()
-				&& repository.hasCommits
-				&& repository.isBare
-				&& !repository.isFrozen
+		return isReady() && repository.hasCommits && repository.isBare && !repository.isFrozen
 				&& !repository.isMirror;
 	}
 
 	/**
 	 * Returns true if the repository has any tickets
+	 * 
 	 * @param repository
 	 * @return true if the repository has tickets
 	 * @since 1.4.0
 	 */
 	public boolean hasTickets(RepositoryModel repository) {
-		return indexer.hasTickets(repository);
+		return this.indexer.hasTickets(repository);
 	}
 
 	/**
 	 * Closes any open resources used by this service.
+	 * 
 	 * @since 1.4.0
 	 */
 	protected abstract void close();
 
 	/**
 	 * Reset all caches in the service.
+	 * 
 	 * @since 1.4.0
 	 */
 	public final synchronized void resetCaches() {
-		ticketsCache.invalidateAll();
-		labelsCache.clear();
-		milestonesCache.clear();
+		this.ticketsCache.invalidateAll();
+		this.labelsCache.clear();
+		this.milestonesCache.clear();
 		resetCachesImpl();
 	}
 
 	/**
 	 * Reset all caches in the service.
+	 * 
 	 * @since 1.4.0
 	 */
 	protected abstract void resetCachesImpl();
 
 	/**
 	 * Reset any caches for the repository in the service.
+	 * 
 	 * @since 1.4.0
 	 */
 	public final synchronized void resetCaches(RepositoryModel repository) {
-		List<TicketKey> repoKeys = new ArrayList<TicketKey>();
-		for (TicketKey key : ticketsCache.asMap().keySet()) {
+		final List<TicketKey> repoKeys = new ArrayList<TicketKey>();
+		for (final TicketKey key : this.ticketsCache.asMap().keySet()) {
 			if (key.repository.equals(repository.name)) {
 				repoKeys.add(key);
 			}
 		}
-		ticketsCache.invalidateAll(repoKeys);
-		labelsCache.remove(repository.name);
-		milestonesCache.remove(repository.name);
+		this.ticketsCache.invalidateAll(repoKeys);
+		this.labelsCache.remove(repository.name);
+		this.milestonesCache.remove(repository.name);
 		resetCachesImpl(repository);
 	}
 
@@ -321,7 +311,6 @@ public abstract class ITicketService implements IManager {
 	 */
 	protected abstract void resetCachesImpl(RepositoryModel repository);
 
-
 	/**
 	 * Returns the list of labels for the repository.
 	 *
@@ -330,31 +319,33 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public List<TicketLabel> getLabels(RepositoryModel repository) {
-		String key = repository.name;
-		if (labelsCache.containsKey(key)) {
-			return labelsCache.get(key);
+		final String key = repository.name;
+		if (this.labelsCache.containsKey(key)) {
+			return this.labelsCache.get(key);
 		}
-		List<TicketLabel> list = new ArrayList<TicketLabel>();
-		Repository db = repositoryManager.getRepository(repository.name);
+		final List<TicketLabel> list = new ArrayList<TicketLabel>();
+		final Repository db = this.repositoryManager.getRepository(repository.name);
 		try {
-			StoredConfig config = db.getConfig();
-			Set<String> names = config.getSubsections(LABEL);
-			for (String name : names) {
-				TicketLabel label = new TicketLabel(name);
+			final StoredConfig config = db.getConfig();
+			final Set<String> names = config.getSubsections(LABEL);
+			for (final String name : names) {
+				final TicketLabel label = new TicketLabel(name);
 				label.color = config.getString(LABEL, name, COLOR);
 				list.add(label);
 			}
-			labelsCache.put(key,  Collections.unmodifiableList(list));
-		} catch (Exception e) {
-			log.error("invalid tickets settings for " + repository, e);
-		} finally {
+			this.labelsCache.put(key, Collections.unmodifiableList(list));
+		}
+		catch (final Exception e) {
+			this.log.error("invalid tickets settings for " + repository, e);
+		}
+		finally {
 			db.close();
 		}
 		return list;
 	}
 
 	/**
-	 * Returns a TicketLabel object for a given label.  If the label is not
+	 * Returns a TicketLabel object for a given label. If the label is not
 	 * found, a ticket label object is created.
 	 *
 	 * @param repository
@@ -363,10 +354,11 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public TicketLabel getLabel(RepositoryModel repository, String label) {
-		for (TicketLabel tl : getLabels(repository)) {
+		for (final TicketLabel tl : getLabels(repository)) {
 			if (tl.name.equalsIgnoreCase(label)) {
-				String q = QueryBuilder.q(Lucene.rid.matches(repository.getRID())).and(Lucene.labels.matches(label)).build();
-				tl.tickets = indexer.queryFor(q, 1, 0, Lucene.number.name(), true);
+				final String q = QueryBuilder.q(Lucene.rid.matches(repository.getRID()))
+						.and(Lucene.labels.matches(label)).build();
+				tl.tickets = this.indexer.queryFor(q, 1, 0, Lucene.number.name(), true);
 				return tl;
 			}
 		}
@@ -382,17 +374,20 @@ public abstract class ITicketService implements IManager {
 	 * @return the label
 	 * @since 1.4.0
 	 */
-	public synchronized TicketLabel createLabel(RepositoryModel repository, String label, String createdBy) {
-		TicketLabel lb = new TicketMilestone(label);
+	public synchronized TicketLabel createLabel(RepositoryModel repository, String label,
+			String createdBy) {
+		final TicketLabel lb = new TicketMilestone(label);
 		Repository db = null;
 		try {
-			db = repositoryManager.getRepository(repository.name);
-			StoredConfig config = db.getConfig();
+			db = this.repositoryManager.getRepository(repository.name);
+			final StoredConfig config = db.getConfig();
 			config.setString(LABEL, label, COLOR, lb.color);
 			config.save();
-		} catch (IOException e) {
-			log.error("failed to create label " + label + " in " + repository, e);
-		} finally {
+		}
+		catch (final IOException e) {
+			this.log.error("failed to create label " + label + " in " + repository, e);
+		}
+		finally {
 			if (db != null) {
 				db.close();
 			}
@@ -409,18 +404,21 @@ public abstract class ITicketService implements IManager {
 	 * @return true if the update was successful
 	 * @since 1.4.0
 	 */
-	public synchronized boolean updateLabel(RepositoryModel repository, TicketLabel label, String createdBy) {
+	public synchronized boolean updateLabel(RepositoryModel repository, TicketLabel label,
+			String createdBy) {
 		Repository db = null;
 		try {
-			db = repositoryManager.getRepository(repository.name);
-			StoredConfig config = db.getConfig();
+			db = this.repositoryManager.getRepository(repository.name);
+			final StoredConfig config = db.getConfig();
 			config.setString(LABEL, label.name, COLOR, label.color);
 			config.save();
 
 			return true;
-		} catch (IOException e) {
-			log.error("failed to update label " + label + " in " + repository, e);
-		} finally {
+		}
+		catch (final IOException e) {
+			this.log.error("failed to update label " + label + " in " + repository, e);
+		}
+		finally {
 			if (db != null) {
 				db.close();
 			}
@@ -438,30 +436,33 @@ public abstract class ITicketService implements IManager {
 	 * @return true if the rename was successful
 	 * @since 1.4.0
 	 */
-	public synchronized boolean renameLabel(RepositoryModel repository, String oldName, String newName, String createdBy) {
+	public synchronized boolean renameLabel(RepositoryModel repository, String oldName,
+			String newName, String createdBy) {
 		if (StringUtils.isEmpty(newName)) {
 			throw new IllegalArgumentException("new label can not be empty!");
 		}
 		Repository db = null;
 		try {
-			db = repositoryManager.getRepository(repository.name);
-			TicketLabel label = getLabel(repository, oldName);
-			StoredConfig config = db.getConfig();
+			db = this.repositoryManager.getRepository(repository.name);
+			final TicketLabel label = getLabel(repository, oldName);
+			final StoredConfig config = db.getConfig();
 			config.unsetSection(LABEL, oldName);
 			config.setString(LABEL, newName, COLOR, label.color);
 			config.save();
 
-			for (QueryResult qr : label.tickets) {
-				Change change = new Change(createdBy);
+			for (final QueryResult qr : label.tickets) {
+				final Change change = new Change(createdBy);
 				change.unlabel(oldName);
 				change.label(newName);
 				updateTicket(repository, qr.number, change);
 			}
 
 			return true;
-		} catch (IOException e) {
-			log.error("failed to rename label " + oldName + " in " + repository, e);
-		} finally {
+		}
+		catch (final IOException e) {
+			this.log.error("failed to rename label " + oldName + " in " + repository, e);
+		}
+		finally {
 			if (db != null) {
 				db.close();
 			}
@@ -478,21 +479,24 @@ public abstract class ITicketService implements IManager {
 	 * @return true if the delete was successful
 	 * @since 1.4.0
 	 */
-	public synchronized boolean deleteLabel(RepositoryModel repository, String label, String createdBy) {
+	public synchronized boolean deleteLabel(RepositoryModel repository, String label,
+			String createdBy) {
 		if (StringUtils.isEmpty(label)) {
 			throw new IllegalArgumentException("label can not be empty!");
 		}
 		Repository db = null;
 		try {
-			db = repositoryManager.getRepository(repository.name);
-			StoredConfig config = db.getConfig();
+			db = this.repositoryManager.getRepository(repository.name);
+			final StoredConfig config = db.getConfig();
 			config.unsetSection(LABEL, label);
 			config.save();
 
 			return true;
-		} catch (IOException e) {
-			log.error("failed to delete label " + label + " in " + repository, e);
-		} finally {
+		}
+		catch (final IOException e) {
+			this.log.error("failed to delete label " + label + " in " + repository, e);
+		}
+		finally {
 			if (db != null) {
 				db.close();
 			}
@@ -508,34 +512,38 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public List<TicketMilestone> getMilestones(RepositoryModel repository) {
-		String key = repository.name;
-		if (milestonesCache.containsKey(key)) {
-			return milestonesCache.get(key);
+		final String key = repository.name;
+		if (this.milestonesCache.containsKey(key)) {
+			return this.milestonesCache.get(key);
 		}
-		List<TicketMilestone> list = new ArrayList<TicketMilestone>();
-		Repository db = repositoryManager.getRepository(repository.name);
+		final List<TicketMilestone> list = new ArrayList<TicketMilestone>();
+		final Repository db = this.repositoryManager.getRepository(repository.name);
 		try {
-			StoredConfig config = db.getConfig();
-			Set<String> names = config.getSubsections(MILESTONE);
-			for (String name : names) {
-				TicketMilestone milestone = new TicketMilestone(name);
-				milestone.status = Status.fromObject(config.getString(MILESTONE, name, STATUS), milestone.status);
+			final StoredConfig config = db.getConfig();
+			final Set<String> names = config.getSubsections(MILESTONE);
+			for (final String name : names) {
+				final TicketMilestone milestone = new TicketMilestone(name);
+				milestone.status = Status.fromObject(config.getString(MILESTONE, name, STATUS),
+						milestone.status);
 				milestone.color = config.getString(MILESTONE, name, COLOR);
-				String due = config.getString(MILESTONE, name, DUE);
+				final String due = config.getString(MILESTONE, name, DUE);
 				if (!StringUtils.isEmpty(due)) {
 					try {
 						milestone.due = new SimpleDateFormat(DUE_DATE_PATTERN).parse(due);
-					} catch (ParseException e) {
-						log.error("failed to parse {} milestone {} due date \"{}\"",
-								new Object [] { repository, name, due });
+					}
+					catch (final ParseException e) {
+						this.log.error("failed to parse {} milestone {} due date \"{}\"",
+								new Object[] { repository, name, due });
 					}
 				}
 				list.add(milestone);
 			}
-			milestonesCache.put(key, Collections.unmodifiableList(list));
-		} catch (Exception e) {
-			log.error("invalid tickets settings for " + repository, e);
-		} finally {
+			this.milestonesCache.put(key, Collections.unmodifiableList(list));
+		}
+		catch (final Exception e) {
+			this.log.error("invalid tickets settings for " + repository, e);
+		}
+		finally {
 			db.close();
 		}
 		return list;
@@ -550,8 +558,8 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public List<TicketMilestone> getMilestones(RepositoryModel repository, Status status) {
-		List<TicketMilestone> matches = new ArrayList<TicketMilestone>();
-		for (TicketMilestone milestone : getMilestones(repository)) {
+		final List<TicketMilestone> matches = new ArrayList<TicketMilestone>();
+		for (final TicketMilestone milestone : getMilestones(repository)) {
 			if (status == milestone.status) {
 				matches.add(milestone);
 			}
@@ -568,11 +576,12 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public TicketMilestone getMilestone(RepositoryModel repository, String milestone) {
-		for (TicketMilestone ms : getMilestones(repository)) {
+		for (final TicketMilestone ms : getMilestones(repository)) {
 			if (ms.name.equalsIgnoreCase(milestone)) {
-				TicketMilestone tm = DeepCopier.copy(ms);
-				String q = QueryBuilder.q(Lucene.rid.matches(repository.getRID())).and(Lucene.milestone.matches(milestone)).build();
-				tm.tickets = indexer.queryFor(q, 1, 0, Lucene.number.name(), true);
+				final TicketMilestone tm = DeepCopier.copy(ms);
+				final String q = QueryBuilder.q(Lucene.rid.matches(repository.getRID()))
+						.and(Lucene.milestone.matches(milestone)).build();
+				tm.tickets = this.indexer.queryFor(q, 1, 0, Lucene.number.name(), true);
 				return tm;
 			}
 		}
@@ -588,20 +597,23 @@ public abstract class ITicketService implements IManager {
 	 * @return the milestone
 	 * @since 1.4.0
 	 */
-	public synchronized TicketMilestone createMilestone(RepositoryModel repository, String milestone, String createdBy) {
-		TicketMilestone ms = new TicketMilestone(milestone);
+	public synchronized TicketMilestone createMilestone(RepositoryModel repository,
+			String milestone, String createdBy) {
+		final TicketMilestone ms = new TicketMilestone(milestone);
 		Repository db = null;
 		try {
-			db = repositoryManager.getRepository(repository.name);
-			StoredConfig config = db.getConfig();
+			db = this.repositoryManager.getRepository(repository.name);
+			final StoredConfig config = db.getConfig();
 			config.setString(MILESTONE, milestone, STATUS, ms.status.name());
 			config.setString(MILESTONE, milestone, COLOR, ms.color);
 			config.save();
 
-			milestonesCache.remove(repository.name);
-		} catch (IOException e) {
-			log.error("failed to create milestone " + milestone + " in " + repository, e);
-		} finally {
+			this.milestonesCache.remove(repository.name);
+		}
+		catch (final IOException e) {
+			this.log.error("failed to create milestone " + milestone + " in " + repository, e);
+		}
+		finally {
 			if (db != null) {
 				db.close();
 			}
@@ -618,24 +630,27 @@ public abstract class ITicketService implements IManager {
 	 * @return true if successful
 	 * @since 1.4.0
 	 */
-	public synchronized boolean updateMilestone(RepositoryModel repository, TicketMilestone milestone, String createdBy) {
+	public synchronized boolean updateMilestone(RepositoryModel repository,
+			TicketMilestone milestone, String createdBy) {
 		Repository db = null;
 		try {
-			db = repositoryManager.getRepository(repository.name);
-			StoredConfig config = db.getConfig();
+			db = this.repositoryManager.getRepository(repository.name);
+			final StoredConfig config = db.getConfig();
 			config.setString(MILESTONE, milestone.name, STATUS, milestone.status.name());
 			config.setString(MILESTONE, milestone.name, COLOR, milestone.color);
 			if (milestone.due != null) {
-				config.setString(MILESTONE, milestone.name, DUE,
-						new SimpleDateFormat(DUE_DATE_PATTERN).format(milestone.due));
+				config.setString(MILESTONE, milestone.name, DUE, new SimpleDateFormat(
+						DUE_DATE_PATTERN).format(milestone.due));
 			}
 			config.save();
 
-			milestonesCache.remove(repository.name);
+			this.milestonesCache.remove(repository.name);
 			return true;
-		} catch (IOException e) {
-			log.error("failed to update milestone " + milestone + " in " + repository, e);
-		} finally {
+		}
+		catch (final IOException e) {
+			this.log.error("failed to update milestone " + milestone + " in " + repository, e);
+		}
+		finally {
 			if (db != null) {
 				db.close();
 			}
@@ -653,7 +668,8 @@ public abstract class ITicketService implements IManager {
 	 * @return true if successful
 	 * @since 1.4.0
 	 */
-	public synchronized boolean renameMilestone(RepositoryModel repository, String oldName, String newName, String createdBy) {
+	public synchronized boolean renameMilestone(RepositoryModel repository, String oldName,
+			String newName, String createdBy) {
 		return renameMilestone(repository, oldName, newName, createdBy, true);
 	}
 
@@ -675,12 +691,12 @@ public abstract class ITicketService implements IManager {
 		}
 		Repository db = null;
 		try {
-			db = repositoryManager.getRepository(repository.name);
-			TicketMilestone tm = getMilestone(repository, oldName);
+			db = this.repositoryManager.getRepository(repository.name);
+			final TicketMilestone tm = getMilestone(repository, oldName);
 			if (tm == null) {
 				return false;
 			}
-			StoredConfig config = db.getConfig();
+			final StoredConfig config = db.getConfig();
 			config.unsetSection(MILESTONE, oldName);
 			config.setString(MILESTONE, newName, STATUS, tm.status.name());
 			config.setString(MILESTONE, newName, COLOR, tm.color);
@@ -690,13 +706,13 @@ public abstract class ITicketService implements IManager {
 			}
 			config.save();
 
-			milestonesCache.remove(repository.name);
+			this.milestonesCache.remove(repository.name);
 
-			TicketNotifier notifier = createNotifier();
-			for (QueryResult qr : tm.tickets) {
-				Change change = new Change(createdBy);
+			final TicketNotifier notifier = createNotifier();
+			for (final QueryResult qr : tm.tickets) {
+				final Change change = new Change(createdBy);
 				change.setField(Field.milestone, newName);
-				TicketModel ticket = updateTicket(repository, qr.number, change);
+				final TicketModel ticket = updateTicket(repository, qr.number, change);
 				if (notifyOpenTickets && ticket.isOpen()) {
 					notifier.queueMailing(ticket);
 				}
@@ -706,9 +722,11 @@ public abstract class ITicketService implements IManager {
 			}
 
 			return true;
-		} catch (IOException e) {
-			log.error("failed to rename milestone " + oldName + " in " + repository, e);
-		} finally {
+		}
+		catch (final IOException e) {
+			this.log.error("failed to rename milestone " + oldName + " in " + repository, e);
+		}
+		finally {
 			if (db != null) {
 				db.close();
 			}
@@ -725,7 +743,8 @@ public abstract class ITicketService implements IManager {
 	 * @return true if successful
 	 * @since 1.4.0
 	 */
-	public synchronized boolean deleteMilestone(RepositoryModel repository, String milestone, String createdBy) {
+	public synchronized boolean deleteMilestone(RepositoryModel repository, String milestone,
+			String createdBy) {
 		return deleteMilestone(repository, milestone, createdBy, true);
 	}
 
@@ -746,22 +765,22 @@ public abstract class ITicketService implements IManager {
 		}
 		Repository db = null;
 		try {
-			TicketMilestone tm = getMilestone(repository, milestone);
+			final TicketMilestone tm = getMilestone(repository, milestone);
 			if (tm == null) {
 				return false;
 			}
-			db = repositoryManager.getRepository(repository.name);
-			StoredConfig config = db.getConfig();
+			db = this.repositoryManager.getRepository(repository.name);
+			final StoredConfig config = db.getConfig();
 			config.unsetSection(MILESTONE, milestone);
 			config.save();
 
-			milestonesCache.remove(repository.name);
+			this.milestonesCache.remove(repository.name);
 
-			TicketNotifier notifier = createNotifier();
-			for (QueryResult qr : tm.tickets) {
-				Change change = new Change(createdBy);
+			final TicketNotifier notifier = createNotifier();
+			for (final QueryResult qr : tm.tickets) {
+				final Change change = new Change(createdBy);
 				change.setField(Field.milestone, "");
-				TicketModel ticket = updateTicket(repository, qr.number, change);
+				final TicketModel ticket = updateTicket(repository, qr.number, change);
 				if (notifyOpenTickets && ticket.isOpen()) {
 					notifier.queueMailing(ticket);
 				}
@@ -770,9 +789,11 @@ public abstract class ITicketService implements IManager {
 				notifier.sendAll();
 			}
 			return true;
-		} catch (IOException e) {
-			log.error("failed to delete milestone " + milestone + " in " + repository, e);
-		} finally {
+		}
+		catch (final IOException e) {
+			this.log.error("failed to delete milestone " + milestone + " in " + repository, e);
+		}
+		finally {
 			if (db != null) {
 				db.close();
 			}
@@ -809,7 +830,7 @@ public abstract class ITicketService implements IManager {
 	public abstract boolean hasTicket(RepositoryModel repository, long ticketId);
 
 	/**
-	 * Returns all tickets.  This is not a Lucene search!
+	 * Returns all tickets. This is not a Lucene search!
 	 *
 	 * @param repository
 	 * @return all tickets
@@ -822,7 +843,7 @@ public abstract class ITicketService implements IManager {
 	/**
 	 * Returns all tickets that satisfy the filter. Retrieving tickets from the
 	 * service requires deserializing all journals and building ticket models.
-	 * This is an  expensive process and not recommended. Instead, the queryFor
+	 * This is an expensive process and not recommended. Instead, the queryFor
 	 * method should be used which executes against the Lucene index.
 	 *
 	 * @param repository
@@ -842,33 +863,36 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public final TicketModel getTicket(RepositoryModel repository, long ticketId) {
-		TicketKey key = new TicketKey(repository, ticketId);
-		TicketModel ticket = ticketsCache.getIfPresent(key);
+		final TicketKey key = new TicketKey(repository, ticketId);
+		TicketModel ticket = this.ticketsCache.getIfPresent(key);
 
 		// if ticket not cached
 		if (ticket == null) {
-			//load ticket
+			// load ticket
 			ticket = getTicketImpl(repository, ticketId);
 			// if ticket exists
 			if (ticket != null) {
-				if (ticket.hasPatchsets() && updateDiffstats) {
-					Repository r = repositoryManager.getRepository(repository.name);
+				if (ticket.hasPatchsets() && this.updateDiffstats) {
+					final Repository r = this.repositoryManager.getRepository(repository.name);
 					try {
-						Patchset patchset = ticket.getCurrentPatchset();
-						DiffStat diffStat = DiffUtils.getDiffStat(r, patchset.base, patchset.tip);
-						// diffstat could be null if we have ticket data without the
-						// commit objects.  e.g. ticket replication without repo
+						final Patchset patchset = ticket.getCurrentPatchset();
+						final DiffStat diffStat = DiffUtils.getDiffStat(r, patchset.base,
+								patchset.tip);
+						// diffstat could be null if we have ticket data without
+						// the
+						// commit objects. e.g. ticket replication without repo
 						// mirroring
 						if (diffStat != null) {
 							ticket.insertions = diffStat.getInsertions();
 							ticket.deletions = diffStat.getDeletions();
 						}
-					} finally {
+					}
+					finally {
 						r.close();
 					}
 				}
-				//cache ticket
-				ticketsCache.put(key, ticket);
+				// cache ticket
+				this.ticketsCache.put(key, ticket);
 			}
 		}
 		return ticket;
@@ -884,7 +908,6 @@ public abstract class ITicketService implements IManager {
 	 */
 	protected abstract TicketModel getTicketImpl(RepositoryModel repository, long ticketId);
 
-
 	/**
 	 * Returns the journal used to build a ticket.
 	 *
@@ -895,7 +918,7 @@ public abstract class ITicketService implements IManager {
 	 */
 	public final List<Change> getJournal(RepositoryModel repository, long ticketId) {
 		if (hasTicket(repository, ticketId)) {
-			List<Change> journal = getJournalImpl(repository, ticketId);
+			final List<Change> journal = getJournalImpl(repository, ticketId);
 			return journal;
 		}
 		return null;
@@ -919,7 +942,8 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public String getTicketUrl(TicketModel ticket) {
-		final String canonicalUrl = settings.getString(Keys.web.canonicalUrl, "https://localhost:8443");
+		final String canonicalUrl = this.settings.getString(Keys.web.canonicalUrl,
+				"https://localhost:8443");
 		final String hrefPattern = "{0}/tickets?r={1}&h={2,number,0}";
 		return MessageFormat.format(hrefPattern, canonicalUrl, ticket.repository, ticket.number);
 	}
@@ -933,7 +957,8 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public String getCompareUrl(TicketModel ticket, String base, String tip) {
-		final String canonicalUrl = settings.getString(Keys.web.canonicalUrl, "https://localhost:8443");
+		final String canonicalUrl = this.settings.getString(Keys.web.canonicalUrl,
+				"https://localhost:8443");
 		final String hrefPattern = "{0}/compare?r={1}&h={2}..{3}";
 		return MessageFormat.format(hrefPattern, canonicalUrl, ticket.repository, base, tip);
 	}
@@ -955,10 +980,11 @@ public abstract class ITicketService implements IManager {
 	 * @return an attachment, if found, null otherwise
 	 * @since 1.4.0
 	 */
-	public abstract Attachment getAttachment(RepositoryModel repository, long ticketId, String filename);
+	public abstract Attachment getAttachment(RepositoryModel repository, long ticketId,
+			String filename);
 
 	/**
-	 * Creates a ticket.  Your change must include a repository, author & title,
+	 * Creates a ticket. Your change must include a repository, author & title,
 	 * at a minimum. If your change does not have those minimum requirements a
 	 * RuntimeException will be thrown.
 	 *
@@ -972,12 +998,13 @@ public abstract class ITicketService implements IManager {
 	}
 
 	/**
-	 * Creates a ticket.  Your change must include a repository, author & title,
+	 * Creates a ticket. Your change must include a repository, author & title,
 	 * at a minimum. If your change does not have those minimum requirements a
 	 * RuntimeException will be thrown.
 	 *
 	 * @param repository
-	 * @param ticketId (if <=0 the ticket id will be assigned)
+	 * @param ticketId
+	 *            (if <=0 the ticket id will be assigned)
 	 * @param change
 	 * @return true if successful
 	 * @since 1.4.0
@@ -1002,18 +1029,19 @@ public abstract class ITicketService implements IManager {
 
 		change.setField(Field.status, Status.New);
 
-		boolean success = commitChangeImpl(repository, ticketId, change);
+		final boolean success = commitChangeImpl(repository, ticketId, change);
 		if (success) {
-			TicketModel ticket = getTicket(repository, ticketId);
-			indexer.index(ticket);
+			final TicketModel ticket = getTicket(repository, ticketId);
+			this.indexer.index(ticket);
 
 			// call the ticket hooks
-			if (pluginManager != null) {
-				for (TicketHook hook : pluginManager.getExtensions(TicketHook.class)) {
+			if (this.pluginManager != null) {
+				for (final TicketHook hook : this.pluginManager.getExtensions(TicketHook.class)) {
 					try {
 						hook.onNewTicket(ticket);
-					} catch (Exception e) {
-						log.error("Failed to execute extension", e);
+					}
+					catch (final Exception e) {
+						this.log.error("Failed to execute extension", e);
 					}
 				}
 			}
@@ -1026,9 +1054,11 @@ public abstract class ITicketService implements IManager {
 	 * Updates a ticket and promotes pending links into references.
 	 *
 	 * @param repository
-	 * @param ticketId, or 0 to action pending links in general
+	 * @param ticketId
+	 *            , or 0 to action pending links in general
 	 * @param change
-	 * @return the ticket model if successful, null if failure or using 0 ticketId
+	 * @return the ticket model if successful, null if failure or using 0
+	 *         ticketId
 	 * @since 1.4.0
 	 */
 	public final TicketModel updateTicket(RepositoryModel repository, long ticketId, Change change) {
@@ -1042,63 +1072,68 @@ public abstract class ITicketService implements IManager {
 
 		boolean success = true;
 		TicketModel ticket = null;
-		
+
 		if (ticketId > 0) {
-			TicketKey key = new TicketKey(repository, ticketId);
-			ticketsCache.invalidate(key);
-	
+			final TicketKey key = new TicketKey(repository, ticketId);
+			this.ticketsCache.invalidate(key);
+
 			success = commitChangeImpl(repository, ticketId, change);
-			
+
 			if (success) {
 				ticket = getTicket(repository, ticketId);
-				ticketsCache.put(key, ticket);
-				indexer.index(ticket);
-	
+				this.ticketsCache.put(key, ticket);
+				this.indexer.index(ticket);
+
 				// call the ticket hooks
-				if (pluginManager != null) {
-					for (TicketHook hook : pluginManager.getExtensions(TicketHook.class)) {
+				if (this.pluginManager != null) {
+					for (final TicketHook hook : this.pluginManager.getExtensions(TicketHook.class)) {
 						try {
 							hook.onUpdateTicket(ticket, change);
-						} catch (Exception e) {
-							log.error("Failed to execute extension", e);
+						}
+						catch (final Exception e) {
+							this.log.error("Failed to execute extension", e);
 						}
 					}
 				}
 			}
 		}
-		
+
 		if (success) {
-			//Now that the ticket has been successfully persisted add references to this ticket from linked tickets
+			// Now that the ticket has been successfully persisted add
+			// references to this ticket from linked tickets
 			if (change.hasPendingLinks()) {
-				for (TicketLink link : change.pendingLinks) {
-					TicketModel linkedTicket = getTicket(repository, link.targetTicketId);
+				for (final TicketLink link : change.pendingLinks) {
+					final TicketModel linkedTicket = getTicket(repository, link.targetTicketId);
 					Change dstChange = null;
-					
-					//Ignore if not available or self reference 
-					if (linkedTicket != null && link.targetTicketId != ticketId) {
+
+					// Ignore if not available or self reference
+					if ((linkedTicket != null) && (link.targetTicketId != ticketId)) {
 						dstChange = new Change(change.author, change.date);
-						
+
 						switch (link.action) {
-							case Comment: {
-								if (ticketId == 0) {
-									throw new RuntimeException("must specify a ticket when linking a comment!");
-								}
-								dstChange.referenceTicket(ticketId, change.comment.id);
-							} break;
-							
-							case Commit: {
-								dstChange.referenceCommit(link.hash);
-							} break;
-							
-							default: {
+						case Comment: {
+							if (ticketId == 0) {
 								throw new RuntimeException(
-										String.format("must add persist logic for link of type %s", link.action));
+										"must specify a ticket when linking a comment!");
 							}
+							dstChange.referenceTicket(ticketId, change.comment.id);
+						}
+							break;
+
+						case Commit: {
+							dstChange.referenceCommit(link.hash);
+						}
+							break;
+
+						default: {
+							throw new RuntimeException(String.format(
+									"must add persist logic for link of type %s", link.action));
+						}
 						}
 					}
-					
+
 					if (dstChange != null) {
-						//If not deleted then remain null in journal
+						// If not deleted then remain null in journal
 						if (link.isDelete) {
 							dstChange.reference.deleted = true;
 						}
@@ -1110,7 +1145,7 @@ public abstract class ITicketService implements IManager {
 				}
 			}
 		}
-		
+
 		return ticket;
 	}
 
@@ -1121,17 +1156,17 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public boolean deleteAll() {
-		List<String> repositories = repositoryManager.getRepositoryList();
-		BitSet bitset = new BitSet(repositories.size());
+		final List<String> repositories = this.repositoryManager.getRepositoryList();
+		final BitSet bitset = new BitSet(repositories.size());
 		for (int i = 0; i < repositories.size(); i++) {
-			String name = repositories.get(i);
-			RepositoryModel repository = repositoryManager.getRepositoryModel(name);
-			boolean success = deleteAll(repository);
+			final String name = repositories.get(i);
+			final RepositoryModel repository = this.repositoryManager.getRepositoryModel(name);
+			final boolean success = deleteAll(repository);
 			bitset.set(i, success);
 		}
-		boolean success = bitset.cardinality() == repositories.size();
+		final boolean success = bitset.cardinality() == repositories.size();
 		if (success) {
-			indexer.deleteAll();
+			this.indexer.deleteAll();
 			resetCaches();
 		}
 		return success;
@@ -1139,22 +1174,24 @@ public abstract class ITicketService implements IManager {
 
 	/**
 	 * Deletes all tickets in the specified repository.
+	 * 
 	 * @param repository
 	 * @return true if succesful
 	 * @since 1.4.0
 	 */
 	public boolean deleteAll(RepositoryModel repository) {
-		boolean success = deleteAllImpl(repository);
+		final boolean success = deleteAllImpl(repository);
 		if (success) {
-			log.info("Deleted all tickets for {}", repository.name);
+			this.log.info("Deleted all tickets for {}", repository.name);
 			resetCaches(repository);
-			indexer.deleteAll(repository);
+			this.indexer.deleteAll(repository);
 		}
 		return success;
 	}
 
 	/**
 	 * Delete all tickets for the specified repository.
+	 * 
 	 * @param repository
 	 * @return true if successful
 	 * @since 1.4.0
@@ -1172,7 +1209,7 @@ public abstract class ITicketService implements IManager {
 	public boolean rename(RepositoryModel oldRepository, RepositoryModel newRepository) {
 		if (renameImpl(oldRepository, newRepository)) {
 			resetCaches(oldRepository);
-			indexer.deleteAll(oldRepository);
+			this.indexer.deleteAll(oldRepository);
 			reindex(newRepository);
 			return true;
 		}
@@ -1187,7 +1224,8 @@ public abstract class ITicketService implements IManager {
 	 * @return true if successful
 	 * @since 1.4.0
 	 */
-	protected abstract boolean renameImpl(RepositoryModel oldRepository, RepositoryModel newRepository);
+	protected abstract boolean renameImpl(RepositoryModel oldRepository,
+			RepositoryModel newRepository);
 
 	/**
 	 * Deletes a ticket.
@@ -1199,13 +1237,13 @@ public abstract class ITicketService implements IManager {
 	 * @since 1.4.0
 	 */
 	public boolean deleteTicket(RepositoryModel repository, long ticketId, String deletedBy) {
-		TicketModel ticket = getTicket(repository, ticketId);
-		boolean success = deleteTicketImpl(repository, ticket, deletedBy);
+		final TicketModel ticket = getTicket(repository, ticketId);
+		final boolean success = deleteTicketImpl(repository, ticket, deletedBy);
 		if (success) {
-			log.info(MessageFormat.format("Deleted {0} ticket #{1,number,0}: {2}",
+			this.log.info(MessageFormat.format("Deleted {0} ticket #{1,number,0}: {2}",
 					repository.name, ticketId, ticket.title));
-			ticketsCache.invalidate(new TicketKey(repository, ticketId));
-			indexer.delete(ticket);
+			this.ticketsCache.invalidate(new TicketKey(repository, ticketId));
+			this.indexer.delete(ticket);
 			return true;
 		}
 		return false;
@@ -1220,8 +1258,8 @@ public abstract class ITicketService implements IManager {
 	 * @return true if successful
 	 * @since 1.4.0
 	 */
-	protected abstract boolean deleteTicketImpl(RepositoryModel repository, TicketModel ticket, String deletedBy);
-
+	protected abstract boolean deleteTicketImpl(RepositoryModel repository, TicketModel ticket,
+			String deletedBy);
 
 	/**
 	 * Updates the text of an ticket comment.
@@ -1236,13 +1274,14 @@ public abstract class ITicketService implements IManager {
 	 * @return the revised ticket if the change was successful
 	 * @since 1.4.0
 	 */
-	public final TicketModel updateComment(TicketModel ticket, String commentId,
-			String updatedBy, String comment) {
-		Change revision = new Change(updatedBy);
+	public final TicketModel updateComment(TicketModel ticket, String commentId, String updatedBy,
+			String comment) {
+		final Change revision = new Change(updatedBy);
 		revision.comment(comment);
 		revision.comment.id = commentId;
-		RepositoryModel repository = repositoryManager.getRepositoryModel(ticket.repository);
-		TicketModel revisedTicket = updateTicket(repository, ticket.number, revision);
+		final RepositoryModel repository = this.repositoryManager
+				.getRepositoryModel(ticket.repository);
+		final TicketModel revisedTicket = updateTicket(repository, ticket.number, revision);
 		return revisedTicket;
 	}
 
@@ -1253,20 +1292,21 @@ public abstract class ITicketService implements IManager {
 	 * @param commentId
 	 *            the id of the comment to delete
 	 * @param deletedBy
-	 * 			the user deleting the comment
+	 *            the user deleting the comment
 	 * @return the revised ticket if the deletion was successful
 	 * @since 1.4.0
 	 */
 	public final TicketModel deleteComment(TicketModel ticket, String commentId, String deletedBy) {
-		Change deletion = new Change(deletedBy);
+		final Change deletion = new Change(deletedBy);
 		deletion.comment("");
 		deletion.comment.id = commentId;
 		deletion.comment.deleted = true;
-		RepositoryModel repository = repositoryManager.getRepositoryModel(ticket.repository);
-		TicketModel revisedTicket = updateTicket(repository, ticket.number, deletion);
+		final RepositoryModel repository = this.repositoryManager
+				.getRepositoryModel(ticket.repository);
+		final TicketModel revisedTicket = updateTicket(repository, ticket.number, deletion);
 		return revisedTicket;
 	}
-	
+
 	/**
 	 * Deletes a patchset from a ticket.
 	 *
@@ -1274,31 +1314,32 @@ public abstract class ITicketService implements IManager {
 	 * @param patchset
 	 *            the patchset to delete (should be the highest revision)
 	 * @param userName
-	 * 			the user deleting the commit
+	 *            the user deleting the commit
 	 * @return the revised ticket if the deletion was successful
 	 * @since 1.8.0
 	 */
 	public final TicketModel deletePatchset(TicketModel ticket, Patchset patchset, String userName) {
-		Change deletion = new Change(userName);
+		final Change deletion = new Change(userName);
 		deletion.patchset = new Patchset();
 		deletion.patchset.number = patchset.number;
 		deletion.patchset.rev = patchset.rev;
 		deletion.patchset.type = PatchsetType.Delete;
-		//Find and delete references to tickets by the removed commits
-		List<TicketLink> patchsetTicketLinks = JGitUtils.identifyTicketsBetweenCommits(
-				repositoryManager.getRepository(ticket.repository),
-				settings, patchset.base, patchset.tip);
-		
-		for (TicketLink link : patchsetTicketLinks) {
+		// Find and delete references to tickets by the removed commits
+		final List<TicketLink> patchsetTicketLinks = JGitUtils.identifyTicketsBetweenCommits(
+				this.repositoryManager.getRepository(ticket.repository), this.settings,
+				patchset.base, patchset.tip);
+
+		for (final TicketLink link : patchsetTicketLinks) {
 			link.isDelete = true;
 		}
 		deletion.pendingLinks = patchsetTicketLinks;
-		
-		RepositoryModel repositoryModel = repositoryManager.getRepositoryModel(ticket.repository);
-		TicketModel revisedTicket = updateTicket(repositoryModel, ticket.number, deletion);
-		
+
+		final RepositoryModel repositoryModel = this.repositoryManager
+				.getRepositoryModel(ticket.repository);
+		final TicketModel revisedTicket = updateTicket(repositoryModel, ticket.number, deletion);
+
 		return revisedTicket;
-	} 
+	}
 
 	/**
 	 * Commit a ticket change to the repository.
@@ -1309,11 +1350,11 @@ public abstract class ITicketService implements IManager {
 	 * @return true, if the change was committed
 	 * @since 1.4.0
 	 */
-	protected abstract boolean commitChangeImpl(RepositoryModel repository, long ticketId, Change change);
-
+	protected abstract boolean commitChangeImpl(RepositoryModel repository, long ticketId,
+			Change change);
 
 	/**
-	 * Searches for the specified text.  This will use the indexer, if available,
+	 * Searches for the specified text. This will use the indexer, if available,
 	 * or will fall back to brute-force retrieval of all tickets and string
 	 * matching.
 	 *
@@ -1324,8 +1365,9 @@ public abstract class ITicketService implements IManager {
 	 * @return a list of matching tickets
 	 * @since 1.4.0
 	 */
-	public List<QueryResult> searchFor(RepositoryModel repository, String text, int page, int pageSize) {
-		return indexer.searchFor(repository, text, page, pageSize);
+	public List<QueryResult> searchFor(RepositoryModel repository, String text, int page,
+			int pageSize) {
+		return this.indexer.searchFor(repository, text, page, pageSize);
 	}
 
 	/**
@@ -1339,50 +1381,54 @@ public abstract class ITicketService implements IManager {
 	 * @return a list of matching tickets or an empty list
 	 * @since 1.4.0
 	 */
-	public List<QueryResult> queryFor(String query, int page, int pageSize, String sortBy, boolean descending) {
-		return indexer.queryFor(query, page, pageSize, sortBy, descending);
+	public List<QueryResult> queryFor(String query, int page, int pageSize, String sortBy,
+			boolean descending) {
+		return this.indexer.queryFor(query, page, pageSize, sortBy, descending);
 	}
 
 	/**
-	 * Destroys an existing index and reindexes all tickets.
-	 * This operation may be expensive and time-consuming.
+	 * Destroys an existing index and reindexes all tickets. This operation may
+	 * be expensive and time-consuming.
+	 * 
 	 * @since 1.4.0
 	 */
 	public void reindex() {
-		long start = System.nanoTime();
-		indexer.deleteAll();
-		for (String name : repositoryManager.getRepositoryList()) {
-			RepositoryModel repository = repositoryManager.getRepositoryModel(name);
+		final long start = System.nanoTime();
+		this.indexer.deleteAll();
+		for (final String name : this.repositoryManager.getRepositoryList()) {
+			final RepositoryModel repository = this.repositoryManager.getRepositoryModel(name);
 			try {
-			List<TicketModel> tickets = getTickets(repository);
-			if (!tickets.isEmpty()) {
-				log.info("reindexing {} tickets from {} ...", tickets.size(), repository);
-				indexer.index(tickets);
-				System.gc();
+				final List<TicketModel> tickets = getTickets(repository);
+				if (!tickets.isEmpty()) {
+					this.log.info("reindexing {} tickets from {} ...", tickets.size(), repository);
+					this.indexer.index(tickets);
+					System.gc();
+				}
 			}
-			} catch (Exception e) {
-				log.error("failed to reindex {}", repository.name);
-				log.error(null, e);
+			catch (final Exception e) {
+				this.log.error("failed to reindex {}", repository.name);
+				this.log.error(null, e);
 			}
 		}
-		long end = System.nanoTime();
-		long secs = TimeUnit.NANOSECONDS.toMillis(end - start);
-		log.info("reindexing completed in {} msecs.", secs);
+		final long end = System.nanoTime();
+		final long secs = TimeUnit.NANOSECONDS.toMillis(end - start);
+		this.log.info("reindexing completed in {} msecs.", secs);
 	}
 
 	/**
-	 * Destroys any existing index and reindexes all tickets.
-	 * This operation may be expensive and time-consuming.
+	 * Destroys any existing index and reindexes all tickets. This operation may
+	 * be expensive and time-consuming.
+	 * 
 	 * @since 1.4.0
 	 */
 	public void reindex(RepositoryModel repository) {
-		long start = System.nanoTime();
-		List<TicketModel> tickets = getTickets(repository);
-		indexer.index(tickets);
-		log.info("reindexing {} tickets from {} ...", tickets.size(), repository);
-		long end = System.nanoTime();
-		long secs = TimeUnit.NANOSECONDS.toMillis(end - start);
-		log.info("reindexing completed in {} msecs.", secs);
+		final long start = System.nanoTime();
+		final List<TicketModel> tickets = getTickets(repository);
+		this.indexer.index(tickets);
+		this.log.info("reindexing {} tickets from {} ...", tickets.size(), repository);
+		final long end = System.nanoTime();
+		final long secs = TimeUnit.NANOSECONDS.toMillis(end - start);
+		this.log.info("reindexing completed in {} msecs.", secs);
 		resetCaches(repository);
 	}
 

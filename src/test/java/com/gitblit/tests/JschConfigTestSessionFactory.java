@@ -18,16 +18,17 @@ public class JschConfigTestSessionFactory extends JschConfigSessionFactory {
 		this.keyPair = keyPair;
 	}
 
-    @Override
-    protected void configure(OpenSshConfig.Host host, Session session) {
-        session.setConfig("StrictHostKeyChecking", "no");
-    }
+	@Override
+	protected void configure(OpenSshConfig.Host host, Session session) {
+		session.setConfig("StrictHostKeyChecking", "no");
+	}
 
-    @Override
+	@Override
 	protected JSch getJSch(final OpenSshConfig.Host hc, FS fs) throws JSchException {
-    	JSch jsch = super.getJSch(hc, fs);
-//    	jsch.removeAllIdentity();
-//    	jsch.addIdentity("unittest", keyPair.getPrivate().getEncoded(), keyPair.getPublic().getEncoded(), null);
-    	return jsch;
-    }
+		final JSch jsch = super.getJSch(hc, fs);
+		// jsch.removeAllIdentity();
+		// jsch.addIdentity("unittest", keyPair.getPrivate().getEncoded(),
+		// keyPair.getPublic().getEncoded(), null);
+		return jsch;
+	}
 }

@@ -39,7 +39,9 @@ public class SettingsTableModel extends AbstractTableModel {
 	List<String> keys;
 
 	enum Columns {
-		Name, Value, Since;
+		Name,
+		Value,
+		Since;
 
 		@Override
 		public String toString() {
@@ -58,16 +60,16 @@ public class SettingsTableModel extends AbstractTableModel {
 	public void setSettings(ServerSettings settings) {
 		this.settings = settings;
 		if (settings == null) {
-			keys = new ArrayList<String>();
+			this.keys = new ArrayList<String>();
 		} else {
-			keys = new ArrayList<String>(settings.getKeys());
-			Collections.sort(keys);
+			this.keys = new ArrayList<String>(settings.getKeys());
+			Collections.sort(this.keys);
 		}
 	}
 
 	@Override
 	public int getRowCount() {
-		return keys.size();
+		return this.keys.size();
 	}
 
 	@Override
@@ -77,12 +79,14 @@ public class SettingsTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Name:
 			return Translation.get("gb.name");
 		case Since:
 			return Translation.get("gb.since");
+		case Value:
+			break;
 		}
 		return "";
 	}
@@ -104,9 +108,9 @@ public class SettingsTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		String key = keys.get(rowIndex);
-		SettingModel setting = settings.get(key);
-		Columns col = Columns.values()[columnIndex];
+		final String key = this.keys.get(rowIndex);
+		final SettingModel setting = this.settings.get(key);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Name:
 			return key;
@@ -119,7 +123,7 @@ public class SettingsTableModel extends AbstractTableModel {
 	}
 
 	public SettingModel get(int modelRow) {
-		String key = keys.get(modelRow);
-		return settings.get(key);
+		final String key = this.keys.get(modelRow);
+		return this.settings.get(key);
 	}
 }

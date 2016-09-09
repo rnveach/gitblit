@@ -59,14 +59,15 @@ public class RepositoryUrlPanel extends BasePanel {
 
 	private final String externalPermission = "?";
 
-	private boolean onlyUrls;
-	private UserModel user;
-	private RepositoryModel repository;
+	private final boolean onlyUrls;
+	private final UserModel user;
+	private final RepositoryModel repository;
 	private RepositoryUrl primaryUrl;
-	private Map<String, String> urlPermissionsMap;
+	private final Map<String, String> urlPermissionsMap;
 	private Map<AccessRestrictionType, String> accessRestrictionsMap;
 
-	public RepositoryUrlPanel(String wicketId, boolean onlyUrls, UserModel user, RepositoryModel repository) {
+	public RepositoryUrlPanel(String wicketId, boolean onlyUrls, UserModel user,
+			RepositoryModel repository) {
 		super(wicketId);
 		this.onlyUrls = onlyUrls;
 		this.user = user == null ? UserModel.ANONYMOUS : user;
@@ -78,15 +79,18 @@ public class RepositoryUrlPanel extends BasePanel {
 	protected void onInitialize() {
 		super.onInitialize();
 
-		HttpServletRequest req = ((WebRequest) getRequest()).getHttpServletRequest();
+		final HttpServletRequest req = ((WebRequest) getRequest()).getHttpServletRequest();
 
-		List<RepositoryUrl> repositoryUrls = app().services().getRepositoryUrls(req, user, repository);
+		final List<RepositoryUrl> repositoryUrls = app().services().getRepositoryUrls(req,
+				this.user, this.repository);
 		// grab primary url from the top of the list
-		primaryUrl = repositoryUrls.size() == 0 ? null : repositoryUrls.get(0);
+		this.primaryUrl = repositoryUrls.size() == 0 ? null : repositoryUrls.get(0);
 
-		boolean canClone = primaryUrl != null && (!primaryUrl.hasPermission() || primaryUrl.permission.atLeast(AccessPermission.CLONE));
+		final boolean canClone = (this.primaryUrl != null)
+				&& (!this.primaryUrl.hasPermission() || this.primaryUrl.permission
+						.atLeast(AccessPermission.CLONE));
 
-		if (repositoryUrls.size() == 0 || !canClone) {
+		if ((repositoryUrls.size() == 0) || !canClone) {
 			// no urls, nothing to show.
 			add(new Label("repositoryUrlPanel").setVisible(false));
 			add(new Label("applicationMenusPanel").setVisible(false));
@@ -95,31 +99,34 @@ public class RepositoryUrlPanel extends BasePanel {
 		}
 
 		// display primary url
-		add(createPrimaryUrlPanel("repositoryUrlPanel", repository, repositoryUrls));
+		add(createPrimaryUrlPanel("repositoryUrlPanel", this.repository, repositoryUrls));
 
-		if (onlyUrls) {
+		if (this.onlyUrls) {
 			add(new Label("repositoryIndicators").setVisible(false));
 		} else {
-			add(createRepositoryIndicators(repository));
+			add(createRepositoryIndicators(this.repository));
 		}
 
-		boolean allowAppLinks = app().settings().getBoolean(Keys.web.allowAppCloneLinks, true);
-		if (onlyUrls || !canClone || !allowAppLinks) {
+		final boolean allowAppLinks = app().settings()
+				.getBoolean(Keys.web.allowAppCloneLinks, true);
+		if (this.onlyUrls || !canClone || !allowAppLinks) {
 			// only display the url(s)
 			add(new Label("applicationMenusPanel").setVisible(false));
 			return;
 		}
 		// create the git client application menus
-		add(createApplicationMenus("applicationMenusPanel", user, repository, repositoryUrls));
+		add(createApplicationMenus("applicationMenusPanel", this.user, this.repository,
+				repositoryUrls));
 	}
 
 	public String getPrimaryUrl() {
-		return primaryUrl == null ? "" : primaryUrl.url;
+		return this.primaryUrl == null ? "" : this.primaryUrl.url;
 	}
 
-	protected Fragment createPrimaryUrlPanel(String wicketId, final RepositoryModel repository, List<RepositoryUrl> repositoryUrls) {
+	protected Fragment createPrimaryUrlPanel(String wicketId, final RepositoryModel repository,
+			List<RepositoryUrl> repositoryUrls) {
 
-		Fragment urlPanel = new Fragment(wicketId, "repositoryUrlFragment", this);
+		final Fragment urlPanel = new Fragment(wicketId, "repositoryUrlFragment", this);
 		urlPanel.setRenderBodyOnly(true);
 
 		if (repositoryUrls.size() == 1) {
@@ -131,30 +138,35 @@ public class RepositoryUrlPanel extends BasePanel {
 			//
 			// Multiple repository urls, show url drop down menu
 			//
-			ListDataProvider<RepositoryUrl> urlsDp = new ListDataProvider<RepositoryUrl>(repositoryUrls);
-			DataView<RepositoryUrl> repoUrlMenuItems = new DataView<RepositoryUrl>("repoUrls", urlsDp) {
+			final ListDataProvider<RepositoryUrl> urlsDp = new ListDataProvider<RepositoryUrl>(
+					repositoryUrls);
+			final DataView<RepositoryUrl> repoUrlMenuItems = new DataView<RepositoryUrl>(
+					"repoUrls", urlsDp) {
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void populateItem(final Item<RepositoryUrl> item) {
-					RepositoryUrl repoUrl = item.getModelObject();
+					final RepositoryUrl repoUrl = item.getModelObject();
 					// repository url
-					Fragment fragment = new Fragment("repoUrl", "actionFragment", this);
-					Component content = new Label("content", repoUrl.url).setRenderBodyOnly(true);
+					final Fragment fragment = new Fragment("repoUrl", "actionFragment", this);
+					final Component content = new Label("content", repoUrl.url)
+							.setRenderBodyOnly(true);
 					WicketUtils.setCssClass(content, "commandMenuItem");
 					fragment.add(content);
 					item.add(fragment);
 
-					Label permissionLabel = new Label("permission", repoUrl.hasPermission() ? repoUrl.permission.toString() : externalPermission);
+					final Label permissionLabel = new Label("permission",
+							repoUrl.hasPermission() ? repoUrl.permission.toString()
+									: RepositoryUrlPanel.this.externalPermission);
 					WicketUtils.setPermissionClass(permissionLabel, repoUrl.permission);
-					String tooltip = getProtocolPermissionDescription(repository, repoUrl);
+					final String tooltip = getProtocolPermissionDescription(repository, repoUrl);
 					WicketUtils.setHtmlTooltip(permissionLabel, tooltip);
 					fragment.add(permissionLabel);
 					fragment.add(createCopyFragment(repoUrl.url));
 				}
 			};
 
-			Fragment urlMenuFragment = new Fragment("menu", "urlProtocolMenuFragment", this);
+			final Fragment urlMenuFragment = new Fragment("menu", "urlProtocolMenuFragment", this);
 			urlMenuFragment.setRenderBodyOnly(true);
 			urlMenuFragment.add(new Label("menuText", getString("gb.url")));
 			urlMenuFragment.add(repoUrlMenuItems);
@@ -187,7 +199,8 @@ public class RepositoryUrlPanel extends BasePanel {
 					// force left end cap to have some width
 					urlPanel.add(WicketUtils.newBlankIcon("accessRestrictionIcon"));
 				} else {
-					urlPanel.add(WicketUtils.newClearPixel("accessRestrictionIcon").setVisible(false));
+					urlPanel.add(WicketUtils.newClearPixel("accessRestrictionIcon").setVisible(
+							false));
 				}
 			}
 		} else {
@@ -199,23 +212,27 @@ public class RepositoryUrlPanel extends BasePanel {
 			}
 		}
 
-		urlPanel.add(new Label("primaryUrl", primaryUrl.url).setRenderBodyOnly(true));
+		urlPanel.add(new Label("primaryUrl", this.primaryUrl.url).setRenderBodyOnly(true));
 
-		Label permissionLabel = new Label("primaryUrlPermission", primaryUrl.hasPermission() ? primaryUrl.permission.toString() : externalPermission);
-		String tooltip = getProtocolPermissionDescription(repository, primaryUrl);
+		final Label permissionLabel = new Label("primaryUrlPermission",
+				this.primaryUrl.hasPermission() ? this.primaryUrl.permission.toString()
+						: this.externalPermission);
+		final String tooltip = getProtocolPermissionDescription(repository, this.primaryUrl);
 		WicketUtils.setHtmlTooltip(permissionLabel, tooltip);
 		urlPanel.add(permissionLabel);
-		urlPanel.add(createCopyFragment(primaryUrl.url));
+		urlPanel.add(createCopyFragment(this.primaryUrl.url));
 
 		return urlPanel;
 	}
 
-	protected Fragment createApplicationMenus(String wicketId, final UserModel user, final RepositoryModel repository, final List<RepositoryUrl> repositoryUrls) {
+	protected Fragment createApplicationMenus(String wicketId, final UserModel user,
+			final RepositoryModel repository, final List<RepositoryUrl> repositoryUrls) {
 		final List<GitClientApplication> displayedApps = new ArrayList<GitClientApplication>();
-		final String userAgent = ((WebClientInfo) GitBlitWebSession.get().getClientInfo()).getUserAgent();
+		final String userAgent = ((WebClientInfo) GitBlitWebSession.get().getClientInfo())
+				.getUserAgent();
 
 		if (user.canClone(repository)) {
-			for (GitClientApplication app : app().gitblit().getClientApplications()) {
+			for (final GitClientApplication app : app().gitblit().getClientApplications()) {
 				if (app.isActive && app.allowsPlatform(userAgent)) {
 					displayedApps.add(app);
 				}
@@ -223,8 +240,10 @@ public class RepositoryUrlPanel extends BasePanel {
 		}
 
 		final String baseURL = WicketUtils.getGitblitURL(RequestCycle.get().getRequest());
-		ListDataProvider<GitClientApplication> displayedAppsDp = new ListDataProvider<GitClientApplication>(displayedApps);
-		DataView<GitClientApplication> appMenus = new DataView<GitClientApplication>("appMenus", displayedAppsDp) {
+		final ListDataProvider<GitClientApplication> displayedAppsDp = new ListDataProvider<GitClientApplication>(
+				displayedApps);
+		final DataView<GitClientApplication> appMenus = new DataView<GitClientApplication>(
+				"appMenus", displayedAppsDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -232,10 +251,11 @@ public class RepositoryUrlPanel extends BasePanel {
 				final GitClientApplication clientApp = item.getModelObject();
 
 				// filter the urls for the client app
-				List<RepositoryUrl> urls = new ArrayList<RepositoryUrl>();
-				for (RepositoryUrl repoUrl : repositoryUrls) {
-					if (clientApp.minimumPermission == null || !repoUrl.hasPermission()) {
-						// no minimum permission or untracked permissions, assume it is satisfactory
+				final List<RepositoryUrl> urls = new ArrayList<RepositoryUrl>();
+				for (final RepositoryUrl repoUrl : repositoryUrls) {
+					if ((clientApp.minimumPermission == null) || !repoUrl.hasPermission()) {
+						// no minimum permission or untracked permissions,
+						// assume it is satisfactory
 						if (clientApp.supportsTransport(repoUrl.url)) {
 							urls.add(repoUrl);
 						}
@@ -253,7 +273,7 @@ public class RepositoryUrlPanel extends BasePanel {
 					return;
 				}
 
-				Fragment appMenu = new Fragment("appMenu", "appMenuFragment", this);
+				final Fragment appMenu = new Fragment("appMenu", "appMenuFragment", this);
 				appMenu.setRenderBodyOnly(true);
 				item.add(appMenu);
 
@@ -279,7 +299,8 @@ public class RepositoryUrlPanel extends BasePanel {
 				if (StringUtils.isEmpty(clientApp.productUrl)) {
 					appMenu.add(new Label("applicationTitle", clientApp.toString()));
 				} else {
-					appMenu.add(new LinkPanel("applicationTitle", null, clientApp.toString(), clientApp.productUrl, true));
+					appMenu.add(new LinkPanel("applicationTitle", null, clientApp.toString(),
+							clientApp.productUrl, true));
 				}
 
 				// brief application description
@@ -297,26 +318,31 @@ public class RepositoryUrlPanel extends BasePanel {
 				}
 
 				// a nested repeater for all action items
-				ListDataProvider<RepositoryUrl> urlsDp = new ListDataProvider<RepositoryUrl>(urls);
-				DataView<RepositoryUrl> actionItems = new DataView<RepositoryUrl>("actionItems", urlsDp) {
+				final ListDataProvider<RepositoryUrl> urlsDp = new ListDataProvider<RepositoryUrl>(
+						urls);
+				final DataView<RepositoryUrl> actionItems = new DataView<RepositoryUrl>(
+						"actionItems", urlsDp) {
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					public void populateItem(final Item<RepositoryUrl> repoLinkItem) {
-						RepositoryUrl repoUrl = repoLinkItem.getModelObject();
-						Fragment fragment = new Fragment("actionItem", "actionFragment", this);
+						final RepositoryUrl repoUrl = repoLinkItem.getModelObject();
+						final Fragment fragment = new Fragment("actionItem", "actionFragment", this);
 						fragment.add(createPermissionBadge("permission", repoUrl));
 
 						if (!StringUtils.isEmpty(clientApp.cloneUrl)) {
 							// custom registered url
-							String url = substitute(clientApp.cloneUrl, repoUrl.url, baseURL, user.username, repository.name);
-							fragment.add(new LinkPanel("content", "applicationMenuItem", getString("gb.clone") + " " + repoUrl.url, url));
+							final String url = substitute(clientApp.cloneUrl, repoUrl.url, baseURL,
+									user.username, repository.name);
+							fragment.add(new LinkPanel("content", "applicationMenuItem",
+									getString("gb.clone") + " " + repoUrl.url, url));
 							repoLinkItem.add(fragment);
 							fragment.add(new Label("copyFunction").setVisible(false));
 						} else if (!StringUtils.isEmpty(clientApp.command)) {
 							// command-line
-							String command = substitute(clientApp.command, repoUrl.url, baseURL, user.username, repository.name);
-							Label content = new Label("content", command);
+							final String command = substitute(clientApp.command, repoUrl.url,
+									baseURL, user.username, repository.name);
+							final Label content = new Label("content", command);
 							WicketUtils.setCssClass(content, "commandMenuItem");
 							fragment.add(content);
 							repoLinkItem.add(fragment);
@@ -324,24 +350,28 @@ public class RepositoryUrlPanel extends BasePanel {
 							// copy function for command
 							fragment.add(createCopyFragment(command));
 						}
-					}};
-					appMenu.add(actionItems);
+					}
+				};
+				appMenu.add(actionItems);
 			}
 		};
 
-		Fragment applicationMenus = new Fragment(wicketId, "applicationMenusFragment", this);
+		final Fragment applicationMenus = new Fragment(wicketId, "applicationMenusFragment", this);
 		applicationMenus.add(appMenus);
 		return applicationMenus;
 	}
 
-	protected String substitute(String pattern, String repoUrl, String baseUrl, String username, String repository) {
-		return pattern.replace("${repoUrl}", repoUrl).replace("${baseUrl}", baseUrl).replace("${username}", username).replace("${repository}", repository);
+	protected String substitute(String pattern, String repoUrl, String baseUrl, String username,
+			String repository) {
+		return pattern.replace("${repoUrl}", repoUrl).replace("${baseUrl}", baseUrl)
+				.replace("${username}", username).replace("${repository}", repository);
 	}
 
 	protected Label createPermissionBadge(String wicketId, RepositoryUrl repoUrl) {
-		Label permissionLabel = new Label(wicketId, repoUrl.hasPermission() ? repoUrl.permission.toString() : externalPermission);
+		final Label permissionLabel = new Label(wicketId,
+				repoUrl.hasPermission() ? repoUrl.permission.toString() : this.externalPermission);
 		WicketUtils.setPermissionClass(permissionLabel, repoUrl.permission);
-		String tooltip = getProtocolPermissionDescription(repository, repoUrl);
+		final String tooltip = getProtocolPermissionDescription(this.repository, repoUrl);
 		WicketUtils.setHtmlTooltip(permissionLabel, tooltip);
 		return permissionLabel;
 	}
@@ -349,16 +379,17 @@ public class RepositoryUrlPanel extends BasePanel {
 	protected Fragment createCopyFragment(String text) {
 		if (app().settings().getBoolean(Keys.web.allowFlashCopyToClipboard, true)) {
 			// clippy: flash-based copy & paste
-			Fragment copyFragment = new Fragment("copyFunction", "clippyPanel", this);
-			String baseUrl = WicketUtils.getGitblitURL(getRequest());
-			ShockWaveComponent clippy = new ShockWaveComponent("clippy", baseUrl + "/clippy.swf");
+			final Fragment copyFragment = new Fragment("copyFunction", "clippyPanel", this);
+			final String baseUrl = WicketUtils.getGitblitURL(getRequest());
+			final ShockWaveComponent clippy = new ShockWaveComponent("clippy", baseUrl
+					+ "/clippy.swf");
 			clippy.setValue("flashVars", "text=" + StringUtils.encodeURL(text));
 			copyFragment.add(clippy);
 			return copyFragment;
 		} else {
 			// javascript: manual copy & paste with modal browser prompt dialog
-			Fragment copyFragment = new Fragment("copyFunction", "jsPanel", this);
-			ContextImage img = WicketUtils.newImage("copyIcon", "clippy.png");
+			final Fragment copyFragment = new Fragment("copyFunction", "jsPanel", this);
+			final ContextImage img = WicketUtils.newImage("copyIcon", "clippy.png");
 			img.add(new JavascriptTextPrompt("onclick", "Copy to Clipboard (Ctrl+C, Enter)", text));
 			copyFragment.add(img);
 			return copyFragment;
@@ -367,7 +398,7 @@ public class RepositoryUrlPanel extends BasePanel {
 
 	protected String getProtocolPermissionDescription(RepositoryModel repository,
 			RepositoryUrl repoUrl) {
-		if (!urlPermissionsMap.containsKey(repoUrl.url)) {
+		if (!this.urlPermissionsMap.containsKey(repoUrl.url)) {
 			String note;
 			if (repoUrl.hasPermission()) {
 				note = null;
@@ -396,13 +427,14 @@ public class RepositoryUrlPanel extends BasePanel {
 				}
 
 				if (note == null) {
-					String pattern = getString(key);
-					String description = MessageFormat.format(pattern, repoUrl.permission.toString());
+					final String pattern = getString(key);
+					final String description = MessageFormat.format(pattern,
+							repoUrl.permission.toString());
 					note = description;
 				}
 			} else {
 				String protocol;
-				int protocolIndex = repoUrl.url.indexOf("://");
+				final int protocolIndex = repoUrl.url.indexOf("://");
 				if (protocolIndex > -1) {
 					// explicit protocol specified
 					protocol = repoUrl.url.substring(0, protocolIndex);
@@ -412,61 +444,62 @@ public class RepositoryUrlPanel extends BasePanel {
 				}
 				note = MessageFormat.format(getString("gb.externalPermissions"), protocol);
 			}
-			urlPermissionsMap.put(repoUrl.url, note);
+			this.urlPermissionsMap.put(repoUrl.url, note);
 		}
-		return urlPermissionsMap.get(repoUrl.url);
+		return this.urlPermissionsMap.get(repoUrl.url);
 	}
 
 	protected Map<AccessRestrictionType, String> getAccessRestrictions() {
-		if (accessRestrictionsMap == null) {
-			accessRestrictionsMap = new HashMap<AccessRestrictionType, String>();
-			for (AccessRestrictionType type : AccessRestrictionType.values()) {
+		if (this.accessRestrictionsMap == null) {
+			this.accessRestrictionsMap = new HashMap<AccessRestrictionType, String>();
+			for (final AccessRestrictionType type : AccessRestrictionType.values()) {
 				switch (type) {
 				case NONE:
-					accessRestrictionsMap.put(type, getString("gb.notRestricted"));
+					this.accessRestrictionsMap.put(type, getString("gb.notRestricted"));
 					break;
 				case PUSH:
-					accessRestrictionsMap.put(type, getString("gb.pushRestricted"));
+					this.accessRestrictionsMap.put(type, getString("gb.pushRestricted"));
 					break;
 				case CLONE:
-					accessRestrictionsMap.put(type, getString("gb.cloneRestricted"));
+					this.accessRestrictionsMap.put(type, getString("gb.cloneRestricted"));
 					break;
 				case VIEW:
-					accessRestrictionsMap.put(type, getString("gb.viewRestricted"));
+					this.accessRestrictionsMap.put(type, getString("gb.viewRestricted"));
 					break;
 				}
 			}
 		}
-		return accessRestrictionsMap;
+		return this.accessRestrictionsMap;
 	}
 
 	protected Component createRepositoryIndicators(RepositoryModel repository) {
-		Fragment fragment = new Fragment("repositoryIndicators", "indicatorsFragment", this);
+		final Fragment fragment = new Fragment("repositoryIndicators", "indicatorsFragment", this);
 		if (repository.isBare) {
 			fragment.add(new Label("workingCopyIndicator").setVisible(false));
 		} else {
-			Fragment wc = new Fragment("workingCopyIndicator", "workingCopyFragment", this);
-			Label lbl = new Label("workingCopy", getString("gb.workingCopy"));
-			WicketUtils.setHtmlTooltip(lbl,  getString("gb.workingCopyWarning"));
+			final Fragment wc = new Fragment("workingCopyIndicator", "workingCopyFragment", this);
+			final Label lbl = new Label("workingCopy", getString("gb.workingCopy"));
+			WicketUtils.setHtmlTooltip(lbl, getString("gb.workingCopyWarning"));
 			wc.add(lbl);
 			fragment.add(wc);
 		}
 
-		boolean allowForking = app().settings().getBoolean(Keys.web.allowForking, true);
-		if (!allowForking || user == null || !user.isAuthenticated) {
+		final boolean allowForking = app().settings().getBoolean(Keys.web.allowForking, true);
+		if (!allowForking || (this.user == null) || !this.user.isAuthenticated) {
 			// must be logged-in to fork, hide all fork controls
 			fragment.add(new Label("forksProhibitedIndicator").setVisible(false));
 		} else {
-			String fork = app().repositories().getFork(user.username, repository.name);
-			boolean hasFork = fork != null;
-			boolean canFork = user.canFork(repository);
+			final String fork = app().repositories().getFork(this.user.username, repository.name);
+			final boolean hasFork = fork != null;
+			final boolean canFork = this.user.canFork(repository);
 
 			if (hasFork || !canFork) {
-				if (user.canFork() && !repository.allowForks) {
+				if (this.user.canFork() && !repository.allowForks) {
 					// show forks prohibited indicator
-					Fragment wc = new Fragment("forksProhibitedIndicator", "forksProhibitedFragment", this);
-					Label lbl = new Label("forksProhibited", getString("gb.forksProhibited"));
-					WicketUtils.setHtmlTooltip(lbl,  getString("gb.forksProhibitedWarning"));
+					final Fragment wc = new Fragment("forksProhibitedIndicator",
+							"forksProhibitedFragment", this);
+					final Label lbl = new Label("forksProhibited", getString("gb.forksProhibited"));
+					WicketUtils.setHtmlTooltip(lbl, getString("gb.forksProhibitedWarning"));
 					wc.add(lbl);
 					fragment.add(wc);
 				} else {

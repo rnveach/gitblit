@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * GitblitTrustManager is a wrapper trust manager that hot-reloads a local file
- * CRL and enforces client certificate revocations.  The GitblitTrustManager
- * also implements fuzzy revocation enforcement in case of issuer mismatch BUT
- * serial number match.  These rejecions are specially noted in the log.
+ * CRL and enforces client certificate revocations. The GitblitTrustManager also
+ * implements fuzzy revocation enforcement in case of issuer mismatch BUT serial
+ * number match. These rejecions are specially noted in the log.
  *
  * @author James Moger
  */
@@ -57,67 +57,71 @@ public class GitblitTrustManager implements X509TrustManager {
 	@Override
 	public void checkClientTrusted(X509Certificate[] chain, String authType)
 			throws CertificateException {
-		X509Certificate cert = chain[0];
+		final X509Certificate cert = chain[0];
 		if (isRevoked(cert)) {
-			String message = MessageFormat.format("Rejecting revoked certificate {0,number,0} for {1}",
-					cert.getSerialNumber(), cert.getSubjectDN().getName());
+			final String message = MessageFormat.format(
+					"Rejecting revoked certificate {0,number,0} for {1}", cert.getSerialNumber(),
+					cert.getSubjectDN().getName());
 			logger.warn(message);
 			throw new CertificateException(message);
 		}
-		delegate.checkClientTrusted(chain, authType);
+		this.delegate.checkClientTrusted(chain, authType);
 	}
 
 	@Override
 	public void checkServerTrusted(X509Certificate[] chain, String authType)
 			throws CertificateException {
-		delegate.checkServerTrusted(chain, authType);
+		this.delegate.checkServerTrusted(chain, authType);
 	}
 
 	@Override
 	public X509Certificate[] getAcceptedIssuers() {
-		return delegate.getAcceptedIssuers();
+		return this.delegate.getAcceptedIssuers();
 	}
 
-	protected boolean isRevoked(X509Certificate cert) {
-		if (!caRevocationList.exists()) {
+	private boolean isRevoked(X509Certificate cert) {
+		if (!this.caRevocationList.exists()) {
 			return false;
 		}
 		read();
 
-		if (crl.isRevoked(cert)) {
+		if (this.crl.isRevoked(cert)) {
 			// exact cert is revoked
 			return true;
 		}
 
-		X509CRLEntry entry = crl.getRevokedCertificate(cert.getSerialNumber());
+		final X509CRLEntry entry = this.crl.getRevokedCertificate(cert.getSerialNumber());
 		if (entry != null) {
 			logger.warn("Certificate issuer does not match CRL issuer, but serial number has been revoked!");
 			logger.warn("   cert issuer = " + cert.getIssuerX500Principal());
-			logger.warn("   crl issuer  = " + crl.getIssuerX500Principal());
+			logger.warn("   crl issuer  = " + this.crl.getIssuerX500Principal());
 			return true;
 		}
 
 		return false;
 	}
 
-	protected synchronized void read() {
-		if (lastModified.get() == caRevocationList.lastModified()) {
+	private synchronized void read() {
+		if (this.lastModified.get() == this.caRevocationList.lastModified()) {
 			return;
 		}
-		logger.info("Reloading CRL from " + caRevocationList.getAbsolutePath());
+		logger.info("Reloading CRL from " + this.caRevocationList.getAbsolutePath());
 		InputStream inStream = null;
 		try {
-			inStream = new FileInputStream(caRevocationList);
-			CertificateFactory cf = CertificateFactory.getInstance("X.509");
-			X509CRL list = (X509CRL)cf.generateCRL(inStream);
-			crl = list;
-			lastModified.set(caRevocationList.lastModified());
-		} catch (Exception e) {
-		} finally {
+			inStream = new FileInputStream(this.caRevocationList);
+			final CertificateFactory cf = CertificateFactory.getInstance("X.509");
+			final X509CRL list = (X509CRL) cf.generateCRL(inStream);
+			this.crl = list;
+			this.lastModified.set(this.caRevocationList.lastModified());
+		}
+		catch (final Exception e) {
+		}
+		finally {
 			if (inStream != null) {
 				try {
 					inStream.close();
-				} catch (Exception e) {
+				}
+				catch (final Exception e) {
 				}
 			}
 		}

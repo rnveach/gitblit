@@ -29,12 +29,11 @@ import com.gitblit.models.UserModel;
 /**
  * https://code.google.com/p/gitblit/issues/detail?id=259
  *
- * Reported Problem:
- * We have an user with RWD access rights, but he can’t push.
+ * Reported Problem: We have an user with RWD access rights, but he can’t push.
  *
  * @see src/test/resources/issue0259.conf
  *
- * At the next day he try again and he can push to the project.
+ *      At the next day he try again and he can push to the project.
  *
  * @author James Moger
  *
@@ -42,7 +41,7 @@ import com.gitblit.models.UserModel;
 public class Issue0259Test extends GitblitUnitTest {
 
 	RepositoryModel repo(String name, AccessRestrictionType restriction) {
-		RepositoryModel repo = new RepositoryModel();
+		final RepositoryModel repo = new RepositoryModel();
 		repo.name = name;
 		repo.accessRestriction = restriction;
 		return repo;
@@ -54,16 +53,16 @@ public class Issue0259Test extends GitblitUnitTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void testFile() throws Exception {
-		File realmFile = new File("src/test/resources/issue0259.conf");
-		ConfigUserService service = new ConfigUserService(realmFile);
+	public void testFile() {
+		final File realmFile = new File("src/test/resources/issue0259.conf");
+		final ConfigUserService service = new ConfigUserService(realmFile);
 
-		RepositoryModel test = repo("test.git", AccessRestrictionType.VIEW);
-		RepositoryModel projects_test = repo("projects/test.git", AccessRestrictionType.VIEW);
+		final RepositoryModel test = repo("test.git", AccessRestrictionType.VIEW);
+		final RepositoryModel projects_test = repo("projects/test.git", AccessRestrictionType.VIEW);
 
-		UserModel a = service.getUserModel("a");
-		UserModel b = service.getUserModel("b");
-		UserModel c = service.getUserModel("c");
+		final UserModel a = service.getUserModel("a");
+		final UserModel b = service.getUserModel("b");
+		final UserModel c = service.getUserModel("c");
 
 		// assert RWD or RW+ for projects/test.git
 		assertEquals(AccessPermission.DELETE, a.getRepositoryPermission(projects_test).permission);
@@ -96,33 +95,33 @@ public class Issue0259Test extends GitblitUnitTest {
 	}
 
 	@Test
-	public void testTeamsOrder() throws Exception {
+	public void testTeamsOrder() {
 		testTeams(false);
 	}
 
 	@Test
-	public void testTeamsReverseOrder() throws Exception {
+	public void testTeamsReverseOrder() {
 		testTeams(true);
 	}
 
 	/**
-	 * Tests multiple teams each with a regex permisson that will match.  The
-	 * highest matching permission should be used.  Order should be irrelevant.
+	 * Tests multiple teams each with a regex permisson that will match. The
+	 * highest matching permission should be used. Order should be irrelevant.
 	 *
 	 * @param reverseOrder
 	 * @throws Exception
 	 */
-	private void testTeams(boolean reverseOrder) throws Exception {
-		RepositoryModel test = repo("test.git", AccessRestrictionType.VIEW);
-		RepositoryModel projects_test = repo("projects/test.git", AccessRestrictionType.VIEW);
+	private void testTeams(boolean reverseOrder) {
+		final RepositoryModel test = repo("test.git", AccessRestrictionType.VIEW);
+		final RepositoryModel projects_test = repo("projects/test.git", AccessRestrictionType.VIEW);
 
-		TeamModel t1 = new TeamModel("t1");
+		final TeamModel t1 = new TeamModel("t1");
 		t1.setRepositoryPermission(".*", AccessPermission.CLONE);
 
-		TeamModel t2 = new TeamModel("t2");
+		final TeamModel t2 = new TeamModel("t2");
 		t2.setRepositoryPermission("projects/.*", AccessPermission.DELETE);
 
-		UserModel a = new UserModel("a");
+		final UserModel a = new UserModel("a");
 		if (reverseOrder) {
 			a.teams.add(t2);
 			a.teams.add(t1);
@@ -147,39 +146,35 @@ public class Issue0259Test extends GitblitUnitTest {
 	}
 
 	@Test
-	public void testTeam() throws Exception {
+	public void testTeam() {
 		testTeam(false);
 	}
 
 	@Test
-	public void testTeamReverseOrder() throws Exception {
+	public void testTeamReverseOrder() {
 		testTeam(true);
 	}
 
 	/**
-	 * Test a single team that has multiple repository permissions that all match.
-	 * Here defined order IS important.  The first permission match wins so it is
-	 * important to define permissions from most-specific match to least-specific
-	 * match.
+	 * Test a single team that has multiple repository permissions that all
+	 * match. Here defined order IS important. The first permission match wins
+	 * so it is important to define permissions from most-specific match to
+	 * least-specific match.
 	 *
-	 * If the defined permissions are:
-	 *   R:.*
-	 *   RWD:projects/.*
-	 * then the expected result is R for all repositories because it is first.
+	 * If the defined permissions are: R:.* RWD:projects/.* then the expected
+	 * result is R for all repositories because it is first.
 	 *
-	 * But if the defined permissions are:
-	 *   RWD:projects/.*
-	 *   R:.*
-	 * then the expected result is RWD for projects/test.git and R for test.git
+	 * But if the defined permissions are: RWD:projects/.* R:.* then the
+	 * expected result is RWD for projects/test.git and R for test.git
 	 *
 	 * @param reverseOrder
 	 * @throws Exception
 	 */
-	private void testTeam(boolean reverseOrder) throws Exception {
-		RepositoryModel test = repo("test.git", AccessRestrictionType.VIEW);
-		RepositoryModel projects_test = repo("projects/test.git", AccessRestrictionType.VIEW);
+	private void testTeam(boolean reverseOrder) {
+		final RepositoryModel test = repo("test.git", AccessRestrictionType.VIEW);
+		final RepositoryModel projects_test = repo("projects/test.git", AccessRestrictionType.VIEW);
 
-		TeamModel t1 = new TeamModel("t1");
+		final TeamModel t1 = new TeamModel("t1");
 		if (reverseOrder) {
 			t1.setRepositoryPermission("projects/.*", AccessPermission.DELETE);
 			t1.setRepositoryPermission(".*", AccessPermission.CLONE);
@@ -187,7 +182,7 @@ public class Issue0259Test extends GitblitUnitTest {
 			t1.setRepositoryPermission(".*", AccessPermission.CLONE);
 			t1.setRepositoryPermission("projects/.*", AccessPermission.DELETE);
 		}
-		UserModel a = new UserModel("a");
+		final UserModel a = new UserModel("a");
 		a.teams.add(t1);
 
 		// simulate a repository rename
@@ -201,11 +196,13 @@ public class Issue0259Test extends GitblitUnitTest {
 
 		if (reverseOrder) {
 			// RWD permission is found first
-			assertEquals(AccessPermission.DELETE, a.getRepositoryPermission(projects_test).permission);
+			assertEquals(AccessPermission.DELETE,
+					a.getRepositoryPermission(projects_test).permission);
 			assertTrue(a.canDeleteRef(projects_test));
 		} else {
 			// R permission is found first
-			assertEquals(AccessPermission.CLONE, a.getRepositoryPermission(projects_test).permission);
+			assertEquals(AccessPermission.CLONE,
+					a.getRepositoryPermission(projects_test).permission);
 			assertFalse(a.canDeleteRef(projects_test));
 		}
 	}

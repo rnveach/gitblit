@@ -19,7 +19,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.io.Serializable;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -40,7 +39,7 @@ import com.gitblit.models.FeedEntryModel;
  * @author James Moger
  *
  */
-public class MessageRenderer extends JPanel implements TableCellRenderer, Serializable {
+public class MessageRenderer extends JPanel implements TableCellRenderer {
 
 	private static final long serialVersionUID = 1L;
 
@@ -68,34 +67,34 @@ public class MessageRenderer extends JPanel implements TableCellRenderer, Serial
 		super(new FlowLayout(FlowLayout.LEFT, Utils.MARGIN, 1));
 		this.gitblit = gitblit;
 
-		mergeIcon = new ImageIcon(getClass().getResource("/commit_merge_16x16.png"));
-		blankIcon = new ImageIcon(getClass().getResource("/blank.png"));
+		this.mergeIcon = new ImageIcon(getClass().getResource("/commit_merge_16x16.png"));
+		this.blankIcon = new ImageIcon(getClass().getResource("/blank.png"));
 
-		messageLabel = new JLabel();
+		this.messageLabel = new JLabel();
 
-		headLabel = newRefLabel();
-		branchLabel = newRefLabel();
-		remoteLabel = newRefLabel();
-		tagLabel = newRefLabel();
+		this.headLabel = newRefLabel();
+		this.branchLabel = newRefLabel();
+		this.remoteLabel = newRefLabel();
+		this.tagLabel = newRefLabel();
 
-		add(messageLabel);
-		add(headLabel);
-		add(branchLabel);
-		add(remoteLabel);
-		add(tagLabel);
+		add(this.messageLabel);
+		add(this.headLabel);
+		add(this.branchLabel);
+		add(this.remoteLabel);
+		add(this.tagLabel);
 	}
 
-	private JLabel newRefLabel() {
-		JLabel label = new JLabel();
+	private static JLabel newRefLabel() {
+		final JLabel label = new JLabel();
 		label.setOpaque(true);
-		Font font = label.getFont();
+		final Font font = label.getFont();
 		label.setFont(font.deriveFont(font.getSize2D() - 1f));
 		return label;
 	}
 
 	private void resetRef(JLabel label) {
 		label.setText("");
-		label.setBackground(messageLabel.getBackground());
+		label.setBackground(this.messageLabel.getBackground());
 		label.setBorder(null);
 		label.setVisible(false);
 	}
@@ -134,34 +133,36 @@ public class MessageRenderer extends JPanel implements TableCellRenderer, Serial
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 			boolean hasFocus, int row, int column) {
-		if (isSelected)
+		if (isSelected) {
 			setBackground(table.getSelectionBackground());
-		else
+		} else {
 			setBackground(table.getBackground());
-		messageLabel.setForeground(isSelected ? table.getSelectionForeground() : table
-				.getForeground());
+		}
+		this.messageLabel
+				.setForeground(isSelected ? table.getSelectionForeground() : table.getForeground());
 		if (value == null) {
 			return this;
 		}
-		FeedEntryModel entry = (FeedEntryModel) value;
+		final FeedEntryModel entry = (FeedEntryModel) value;
 
-		if (gitblit == null) {
+		if (this.gitblit == null) {
 			// no gitblit client, just display message
-			messageLabel.setText(entry.title);
+			this.messageLabel.setText(entry.title);
 		} else {
 			// show message in BOLD if its a new entry
-			if (entry.published.after(gitblit.getLastFeedRefresh(entry.repository, entry.branch))) {
-				messageLabel.setText("<html><body><b>" + entry.title);
+			if (entry.published
+					.after(this.gitblit.getLastFeedRefresh(entry.repository, entry.branch))) {
+				this.messageLabel.setText("<html><body><b>" + entry.title);
 			} else {
-				messageLabel.setText(entry.title);
+				this.messageLabel.setText(entry.title);
 			}
 		}
 
 		// reset ref label
-		resetRef(headLabel);
-		resetRef(branchLabel);
-		resetRef(remoteLabel);
-		resetRef(tagLabel);
+		resetRef(this.headLabel);
+		resetRef(this.branchLabel);
+		resetRef(this.remoteLabel);
+		resetRef(this.tagLabel);
 
 		int parentCount = 0;
 		if (entry.tags != null) {
@@ -181,25 +182,25 @@ public class MessageRenderer extends JPanel implements TableCellRenderer, Serial
 				}
 				if (tag.startsWith(Constants.R_HEADS)) {
 					// local branch
-					showRef(tag, branchLabel);
+					showRef(tag, this.branchLabel);
 				} else if (tag.startsWith(Constants.R_REMOTES)) {
 					// remote branch
-					showRef(tag, remoteLabel);
+					showRef(tag, this.remoteLabel);
 				} else if (tag.startsWith(Constants.R_TAGS)) {
 					// tag
-					showRef(tag, tagLabel);
+					showRef(tag, this.tagLabel);
 				} else if (tag.equals(Constants.HEAD)) {
 					// HEAD
-					showRef(tag, headLabel);
+					showRef(tag, this.headLabel);
 				}
 			}
 		}
 
 		if (parentCount > 1) {
 			// multiple parents, show merge icon
-			messageLabel.setIcon(mergeIcon);
+			this.messageLabel.setIcon(this.mergeIcon);
 		} else {
-			messageLabel.setIcon(blankIcon);
+			this.messageLabel.setIcon(this.blankIcon);
 		}
 		return this;
 	}

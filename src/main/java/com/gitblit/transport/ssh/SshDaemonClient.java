@@ -40,11 +40,11 @@ public class SshDaemonClient {
 	}
 
 	public SocketAddress getRemoteAddress() {
-		return remoteAddress;
+		return this.remoteAddress;
 	}
 
 	public UserModel getUser() {
-		return user;
+		return this.user;
 	}
 
 	public void setUser(UserModel user) {
@@ -52,7 +52,7 @@ public class SshDaemonClient {
 	}
 
 	public String getUsername() {
-		return user == null ? null : user.username;
+		return this.user == null ? null : this.user.username;
 	}
 
 	public void setRepositoryName(String repositoryName) {
@@ -60,11 +60,11 @@ public class SshDaemonClient {
 	}
 
 	public String getRepositoryName() {
-		return repositoryName;
+		return this.repositoryName;
 	}
 
 	public SshKey getKey() {
-		return key;
+		return this.key;
 	}
 
 	public void setKey(SshKey key) {

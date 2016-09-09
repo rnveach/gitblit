@@ -30,38 +30,39 @@ public class GitSearchPage extends RepositoryPage {
 	public GitSearchPage(PageParameters params) {
 		super(params);
 
-		String value = WicketUtils.getSearchString(params);
-		String type = WicketUtils.getSearchType(params);
-		Constants.SearchType searchType = Constants.SearchType.forName(type);
+		final String value = WicketUtils.getSearchString(params);
+		final String type = WicketUtils.getSearchType(params);
+		final Constants.SearchType searchType = Constants.SearchType.forName(type);
 
-		int pageNumber = WicketUtils.getPage(params);
-		int prevPage = Math.max(0, pageNumber - 1);
-		int nextPage = pageNumber + 1;
+		final int pageNumber = WicketUtils.getPage(params);
+		final int prevPage = Math.max(0, pageNumber - 1);
+		final int nextPage = pageNumber + 1;
 
-		SearchPanel search = new SearchPanel("searchPanel", repositoryName, objectId, value,
-				searchType, getRepository(), -1, pageNumber - 1, getRepositoryModel().showRemoteBranches);
-		boolean hasMore = search.hasMore();
+		final SearchPanel search = new SearchPanel("searchPanel", this.repositoryName,
+				this.objectId, value, searchType, getRepository(), -1, pageNumber - 1,
+				getRepositoryModel().showRemoteBranches);
+		final boolean hasMore = search.hasMore();
 		add(search);
 
 		add(new BookmarkablePageLink<Void>("firstPageTop", GitSearchPage.class,
-				WicketUtils.newSearchParameter(repositoryName, objectId, value, searchType))
-				.setEnabled(pageNumber > 1));
+				WicketUtils.newSearchParameter(this.repositoryName, this.objectId, value,
+						searchType)).setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("prevPageTop", GitSearchPage.class,
-				WicketUtils.newSearchParameter(repositoryName, objectId, value, searchType,
-						prevPage)).setEnabled(pageNumber > 1));
+				WicketUtils.newSearchParameter(this.repositoryName, this.objectId, value,
+						searchType, prevPage)).setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("nextPageTop", GitSearchPage.class,
-				WicketUtils.newSearchParameter(repositoryName, objectId, value, searchType,
-						nextPage)).setEnabled(hasMore));
+				WicketUtils.newSearchParameter(this.repositoryName, this.objectId, value,
+						searchType, nextPage)).setEnabled(hasMore));
 
 		add(new BookmarkablePageLink<Void>("firstPageBottom", GitSearchPage.class,
-				WicketUtils.newSearchParameter(repositoryName, objectId, value, searchType))
-				.setEnabled(pageNumber > 1));
+				WicketUtils.newSearchParameter(this.repositoryName, this.objectId, value,
+						searchType)).setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("prevPageBottom", GitSearchPage.class,
-				WicketUtils.newSearchParameter(repositoryName, objectId, value, searchType,
-						prevPage)).setEnabled(pageNumber > 1));
+				WicketUtils.newSearchParameter(this.repositoryName, this.objectId, value,
+						searchType, prevPage)).setEnabled(pageNumber > 1));
 		add(new BookmarkablePageLink<Void>("nextPageBottom", GitSearchPage.class,
-				WicketUtils.newSearchParameter(repositoryName, objectId, value, searchType,
-						nextPage)).setEnabled(hasMore));
+				WicketUtils.newSearchParameter(this.repositoryName, this.objectId, value,
+						searchType, nextPage)).setEnabled(hasMore));
 
 	}
 

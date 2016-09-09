@@ -87,8 +87,7 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 		}
 
 		@Override
-		public void setCharacterEncoding(String env)
-				throws UnsupportedEncodingException {
+		public void setCharacterEncoding(String env) throws UnsupportedEncodingException {
 		}
 
 		@Override
@@ -231,8 +230,7 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 
 		@Override
 		public AsyncContext startAsync(ServletRequest servletRequest,
-				ServletResponse servletResponse)
-						throws IllegalStateException {
+				ServletResponse servletResponse) throws IllegalStateException {
 			return null;
 		}
 
@@ -323,7 +321,7 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 
 		@Override
 		public boolean isUserInRole(String role) {
-			if(role != null && "admin".equals(role)) {
+			if ((role != null) && "admin".equals(role)) {
 				return true;
 			}
 			return false;
@@ -331,7 +329,7 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 
 		@Override
 		public Principal getUserPrincipal() {
-			return new Principal(){
+			return new Principal() {
 				@Override
 				public String getName() {
 					return "sunnyjim";
@@ -366,6 +364,7 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 		}
 
 		final Map<String, Object> sessionAttributes = new HashMap<String, Object>();
+
 		@Override
 		public HttpSession getSession() {
 			return new HttpSession() {
@@ -406,7 +405,7 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 
 				@Override
 				public Object getAttribute(String name) {
-					return sessionAttributes.get(name);
+					return DummyHttpServletRequest.this.sessionAttributes.get(name);
 				}
 
 				@Override
@@ -416,7 +415,8 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 
 				@Override
 				public Enumeration<String> getAttributeNames() {
-					return Collections.enumeration(sessionAttributes.keySet());
+					return Collections.enumeration(DummyHttpServletRequest.this.sessionAttributes
+							.keySet());
 				}
 
 				@Override
@@ -425,8 +425,7 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 				}
 
 				@Override
-				public void setAttribute(String name,
-						Object value) {
+				public void setAttribute(String name, Object value) {
 				}
 
 				@Override
@@ -479,14 +478,13 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 		}
 
 		@Override
-		public boolean authenticate(HttpServletResponse response)
-				throws IOException, ServletException {
+		public boolean authenticate(HttpServletResponse response) throws IOException,
+				ServletException {
 			return false;
 		}
 
 		@Override
-		public void login(String username, String password)
-				throws ServletException {
+		public void login(String username, String password) throws ServletException {
 		}
 
 		@Override
@@ -494,20 +492,17 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 		}
 
 		@Override
-		public Collection<Part> getParts() throws IOException,
-		ServletException {
+		public Collection<Part> getParts() throws IOException, ServletException {
 			return null;
 		}
 
 		@Override
-		public Part getPart(String name) throws IOException,
-		ServletException {
+		public Part getPart(String name) throws IOException, ServletException {
 			return null;
 		}
 
 		@Override
-		public <T extends HttpUpgradeHandler> T upgrade(
-				Class<T> handlerClass) throws IOException,
+		public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException,
 				ServletException {
 			return null;
 		}
@@ -517,15 +512,16 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 	HashMap<String, Object> settings = new HashMap<String, Object>();
 
 	MemorySettings getSettings() {
-		return new MemorySettings(settings);
+		return new MemorySettings(this.settings);
 	}
 
 	IAuthenticationManager newAuthenticationManager() {
-		XssFilter xssFilter = new AllowXssFilter();
-		RuntimeManager runtime = new RuntimeManager(getSettings(), xssFilter, GitBlitSuite.BASEFOLDER).start();
-		users = new UserManager(runtime, null).start();
+		final XssFilter xssFilter = new AllowXssFilter();
+		final RuntimeManager runtime = new RuntimeManager(getSettings(), xssFilter,
+				GitBlitSuite.BASEFOLDER).start();
+		this.users = new UserManager(runtime, null).start();
 		final Map<String, UserModel> virtualUsers = new HashMap<String, UserModel>();
-		users.setUserService(new IUserService() {
+		this.users.setUserService(new IUserService() {
 
 			@Override
 			public void setup(IRuntimeManager runtimeManager) {
@@ -634,8 +630,7 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 			}
 
 			@Override
-			public boolean renameRepositoryRole(String oldRole,
-					String newRole) {
+			public boolean renameRepositoryRole(String oldRole, String newRole) {
 				return false;
 			}
 
@@ -645,42 +640,42 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 			}
 
 		});
-		AuthenticationManager auth = new AuthenticationManager(runtime, users).start();
+		final AuthenticationManager auth = new AuthenticationManager(runtime, this.users).start();
 		return auth;
 	}
 
 	@Test
-	public void testAuthenticate() throws Exception {
-		IAuthenticationManager auth = newAuthenticationManager();
+	public void testAuthenticate() {
+		final IAuthenticationManager auth = newAuthenticationManager();
 
-		UserModel user = new UserModel("sunnyjim");
+		final UserModel user = new UserModel("sunnyjim");
 		user.password = "password";
-		users.updateUserModel(user);
+		this.users.updateUserModel(user);
 
 		assertNotNull(auth.authenticate(user.username, user.password.toCharArray(), null));
 		user.disabled = true;
 
-		users.updateUserModel(user);
+		this.users.updateUserModel(user);
 		assertNull(auth.authenticate(user.username, user.password.toCharArray(), null));
-		users.deleteUserModel(user);
+		this.users.deleteUserModel(user);
 	}
 
 	@Test
-	public void testContenairAuthenticate() throws Exception {
-		settings.put(Keys.realm.container.autoCreateAccounts, "true");
-		settings.put(Keys.realm.container.autoAccounts.displayName, "displayName");
-		settings.put(Keys.realm.container.autoAccounts.emailAddress, "emailAddress");
-		settings.put(Keys.realm.container.autoAccounts.adminRole, "admin");
-		settings.put(Keys.realm.container.autoAccounts.locale, "locale");
+	public void testContenairAuthenticate() {
+		this.settings.put(Keys.realm.container.autoCreateAccounts, "true");
+		this.settings.put(Keys.realm.container.autoAccounts.displayName, "displayName");
+		this.settings.put(Keys.realm.container.autoAccounts.emailAddress, "emailAddress");
+		this.settings.put(Keys.realm.container.autoAccounts.adminRole, "admin");
+		this.settings.put(Keys.realm.container.autoAccounts.locale, "locale");
 
-		DummyHttpServletRequest request = new DummyHttpServletRequest();
+		final DummyHttpServletRequest request = new DummyHttpServletRequest();
 		request.sessionAttributes.put("displayName", "Sunny Jim");
 		request.sessionAttributes.put("emailAddress", "Jim.Sunny@gitblit.com");
 		request.sessionAttributes.put("locale", "it");
 
-		IAuthenticationManager auth = newAuthenticationManager();
+		final IAuthenticationManager auth = newAuthenticationManager();
 
-		UserModel user = auth.authenticate(request);
+		final UserModel user = auth.authenticate(request);
 
 		assertTrue(user.canAdmin);
 		assertEquals("Sunny Jim", user.displayName);
@@ -689,17 +684,17 @@ public class AuthenticationManagerTest extends GitblitUnitTest {
 	}
 
 	@Test
-	public void testContenairAuthenticateEmpty() throws Exception {
-		settings.put(Keys.realm.container.autoCreateAccounts, "true");
-		settings.put(Keys.realm.container.autoAccounts.displayName, "displayName");
-		settings.put(Keys.realm.container.autoAccounts.emailAddress, "emailAddress");
-		settings.put(Keys.realm.container.autoAccounts.adminRole, "notAdmin");
+	public void testContenairAuthenticateEmpty() {
+		this.settings.put(Keys.realm.container.autoCreateAccounts, "true");
+		this.settings.put(Keys.realm.container.autoAccounts.displayName, "displayName");
+		this.settings.put(Keys.realm.container.autoAccounts.emailAddress, "emailAddress");
+		this.settings.put(Keys.realm.container.autoAccounts.adminRole, "notAdmin");
 
-		DummyHttpServletRequest request = new DummyHttpServletRequest();
+		final DummyHttpServletRequest request = new DummyHttpServletRequest();
 
-		IAuthenticationManager auth = newAuthenticationManager();
+		final IAuthenticationManager auth = newAuthenticationManager();
 
-		UserModel user = auth.authenticate(request);
+		final UserModel user = auth.authenticate(request);
 
 		assertFalse(user.canAdmin);
 		assertEquals("sunnyjim", user.displayName);

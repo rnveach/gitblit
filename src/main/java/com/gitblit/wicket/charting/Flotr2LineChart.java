@@ -30,8 +30,7 @@ public class Flotr2LineChart extends Chart {
 	private static final long serialVersionUID = 1L;
 	boolean xAxisIsDate = false;
 
-	public Flotr2LineChart(String tagId, String title, String keyName,
-			String valueName) {
+	public Flotr2LineChart(String tagId, String title, String keyName, String valueName) {
 		super(tagId, title, keyName, valueName);
 
 	}
@@ -39,28 +38,27 @@ public class Flotr2LineChart extends Chart {
 	@Override
 	protected void appendChart(StringBuilder sb) {
 
-		String dName = "data_" + dataName;
-		sb.append("var labels_" + dataName + " = [");
-		if(xAxisIsDate){
+		final String dName = "data_" + this.dataName;
+		sb.append("var labels_" + this.dataName + " = [");
+		if (this.xAxisIsDate) {
 			// Generate labels for the dates
-			SimpleDateFormat df = new SimpleDateFormat(dateFormat);
+			final SimpleDateFormat df = new SimpleDateFormat(this.dateFormat);
 			df.setTimeZone(getTimeZone());
 
-			for (int i = 0; i < values.size(); i++) {
-				ChartValue value = values.get(i);
-				Date date = new Date(Long.parseLong(value.name));
-				String label = df.format(date);
-				if(i > 0){
+			for (int i = 0; i < this.values.size(); i++) {
+				final ChartValue value = this.values.get(i);
+				final Date date = new Date(Long.parseLong(value.name));
+				final String label = df.format(date);
+				if (i > 0) {
 					sb.append(",");
 				}
 				sb.append("\"" + label + "\"");
 			}
 
-		}
-		else {
-			for (int i = 0; i < values.size(); i++) {
-				ChartValue value = values.get(i);
-				if(i > 0){
+		} else {
+			for (int i = 0; i < this.values.size(); i++) {
+				final ChartValue value = this.values.get(i);
+				if (i > 0) {
 					sb.append(",");
 				}
 				sb.append("\"" + value.name + "\"");
@@ -68,45 +66,53 @@ public class Flotr2LineChart extends Chart {
 		}
 		line(sb, "];");
 
-		line(sb, MessageFormat.format("var {0} = Flotr.draw(document.getElementById(''{1}''),", dName, tagId));
+		line(sb, MessageFormat.format("var {0} = Flotr.draw(document.getElementById(''{1}''),",
+				dName, this.tagId));
 
 		// Add the data
 		line(sb, "[");
 		line(sb, "{ data : [ ");
-		for (int i = 0; i < values.size(); i++) {
-			ChartValue value = values.get(i);
-			if(i > 0){
+		for (int i = 0; i < this.values.size(); i++) {
+			final ChartValue value = this.values.get(i);
+			if (i > 0) {
 				sb.append(",");
 			}
-			line(sb, MessageFormat.format("[{0}, {1}] ",  value.name, Float.toString(value.value)));
+			line(sb, MessageFormat.format("[{0}, {1}] ", value.name, Float.toString(value.value)));
 		}
-		line(sb, MessageFormat.format(" ], label : \"{0}\", lines : '{' show : true '}', color: ''#ff9900'' '}'", valueName));
+		line(sb, MessageFormat.format(
+				" ], label : \"{0}\", lines : '{' show : true '}', color: ''#ff9900'' '}'",
+				this.valueName));
 
-		if(highlights.size() > 0){
+		if (this.highlights.size() > 0) {
 			// get the highlights
 			line(sb, ", { data : [ ");
-			for (int i = 0; i < highlights.size(); i++) {
-				ChartValue value = highlights.get(i);
-				if(i > 0){
+			for (int i = 0; i < this.highlights.size(); i++) {
+				final ChartValue value = this.highlights.get(i);
+				if (i > 0) {
 					sb.append(",");
 				}
-				line(sb, MessageFormat.format("[{0}, {1}] ",  value.name, Float.toString(value.value)));
+				line(sb, MessageFormat.format("[{0}, {1}] ", value.name,
+						Float.toString(value.value)));
 			}
-			line(sb, MessageFormat.format(" ], label : \"{0}\", points : '{' show : true, fill: true, fillColor:''#002060'' '}', color: ''#ff9900'' '}'", valueName));
+			line(sb,
+					MessageFormat
+							.format(" ], label : \"{0}\", points : '{' show : true, fill: true, fillColor:''#002060'' '}', color: ''#ff9900'' '}'",
+									this.valueName));
 		}
 		line(sb, "]");
 
 		// Add the options
 		line(sb, ", {");
-		if(title != null && title.isEmpty() == false){
-			line(sb, MessageFormat.format("title : \"{0}\",", title));
+		if ((this.title != null) && (this.title.isEmpty() == false)) {
+			line(sb, MessageFormat.format("title : \"{0}\",", this.title));
 		}
 		line(sb, "mouse: {");
 		line(sb, "  track: true,");
 		line(sb, "  lineColor: '#002060',");
 		line(sb, "  position: 'ne',");
 		line(sb, "  trackFormatter: function (obj) {");
-		line(sb, "    return labels_" + dataName + "[obj.index] + ': ' + parseInt(obj.y) + ' ' +  obj.series.label;");
+		line(sb, "    return labels_" + this.dataName
+				+ "[obj.index] + ': ' + parseInt(obj.y) + ' ' +  obj.series.label;");
 		line(sb, "  }");
 		line(sb, "},");
 		line(sb, "xaxis: {");
@@ -141,10 +147,8 @@ public class Flotr2LineChart extends Chart {
 
 	@Override
 	public void addValue(Date date, int value) {
-		xAxisIsDate = true;
+		this.xAxisIsDate = true;
 		super.addValue(date, value);
 	}
-
-
 
 }

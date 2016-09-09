@@ -47,30 +47,30 @@ public class DateCellRenderer extends DefaultTableCellRenderer {
 			boolean hasFocus, int row, int column) {
 		super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 		if (value instanceof Date) {
-			Date date = (Date) value;
+			final Date date = (Date) value;
 			String title;
 			String dateString;
 			if (date.getTime() == 0) {
 				title = "--";
 				dateString = "never";
 			} else {
-				if (date.getTime() - System.currentTimeMillis() > 0) {
+				if ((date.getTime() - System.currentTimeMillis()) > 0) {
 					// future
 					title = Translation.getTimeUtils().inFuture(date);
 				} else {
 					// past
 					title = Translation.getTimeUtils().timeAgo(date);
 				}
-				dateString = new SimpleDateFormat(pattern).format((Date) value);
+				dateString = new SimpleDateFormat(this.pattern).format((Date) value);
 			}
 
-			if ((System.currentTimeMillis() - date.getTime()) > 10 * 24 * 60 * 60 * 1000L) {
-				String tmp = dateString;
+			if ((System.currentTimeMillis() - date.getTime()) > (10 * 24 * 60 * 60 * 1000L)) {
+				final String tmp = dateString;
 				dateString = title;
 				title = tmp;
 			}
-			this.setText(title);
-			this.setToolTipText(dateString);
+			setText(title);
+			setToolTipText(dateString);
 		}
 		return this;
 	}

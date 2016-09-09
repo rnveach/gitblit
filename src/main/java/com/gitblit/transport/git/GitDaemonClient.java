@@ -69,31 +69,31 @@ public class GitDaemonClient {
 	private String repositoryName;
 
 	GitDaemonClient(final GitDaemon d) {
-		daemon = d;
+		this.daemon = d;
 	}
 
 	void setRemoteAddress(final InetAddress ia) {
-		peer = ia;
+		this.peer = ia;
 	}
 
 	/** @return the daemon which spawned this client. */
 	public GitDaemon getDaemon() {
-		return daemon;
+		return this.daemon;
 	}
 
 	/** @return Internet address of the remote client. */
 	public InetAddress getRemoteAddress() {
-		return peer;
+		return this.peer;
 	}
 
 	/** @return input stream to read from the connected client. */
 	public InputStream getInputStream() {
-		return rawIn;
+		return this.rawIn;
 	}
 
 	/** @return output stream to send data to the connected client. */
 	public OutputStream getOutputStream() {
-		return rawOut;
+		return this.rawOut;
 	}
 
 	public void setRepositoryName(String repositoryName) {
@@ -102,17 +102,18 @@ public class GitDaemonClient {
 
 	/** @return the name of the requested repository. */
 	public String getRepositoryName() {
-		return repositoryName;
+		return this.repositoryName;
 	}
 
-	void execute(final Socket sock) throws IOException,
-			ServiceNotEnabledException, ServiceNotAuthorizedException {
-		rawIn = new BufferedInputStream(sock.getInputStream());
-		rawOut = new SafeBufferedOutputStream(sock.getOutputStream());
+	void execute(final Socket sock) throws IOException, ServiceNotEnabledException,
+			ServiceNotAuthorizedException {
+		this.rawIn = new BufferedInputStream(sock.getInputStream());
+		this.rawOut = new SafeBufferedOutputStream(sock.getOutputStream());
 
-		if (0 < daemon.getTimeout())
-			sock.setSoTimeout(daemon.getTimeout() * 1000);
-		String cmd = new PacketLineIn(rawIn).readStringRaw();
+		if (0 < this.daemon.getTimeout()) {
+			sock.setSoTimeout(this.daemon.getTimeout() * 1000);
+		}
+		String cmd = new PacketLineIn(this.rawIn).readStringRaw();
 		final int nul = cmd.indexOf('\0');
 		if (nul >= 0) {
 			// Newer clients hide a "host" header behind this byte.
@@ -123,8 +124,9 @@ public class GitDaemonClient {
 		}
 
 		final GitDaemonService srv = getDaemon().matchService(cmd);
-		if (srv == null)
+		if (srv == null) {
 			return;
+		}
 		sock.setSoTimeout(0);
 		srv.execute(this, cmd);
 	}

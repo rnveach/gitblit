@@ -59,8 +59,8 @@ public class RepositoriesPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
 
-	public RepositoriesPanel(String wicketId, final boolean showAdmin, final boolean showManagement,
-			List<RepositoryModel> models, boolean enableLinks,
+	public RepositoriesPanel(String wicketId, final boolean showAdmin,
+			final boolean showManagement, List<RepositoryModel> models, boolean enableLinks,
 			final Map<AccessRestrictionType, String> accessRestrictionTranslations) {
 		super(wicketId);
 
@@ -85,23 +85,26 @@ public class RepositoriesPanel extends BasePanel {
 					setResponsePage(RepositoriesPage.class);
 				}
 			}.setVisible(app().settings().getBoolean(Keys.git.cacheRepositoryList, true)));
-			managementLinks.add(new BookmarkablePageLink<Void>("newRepository", app().getNewRepositoryPage()));
+			managementLinks.add(new BookmarkablePageLink<Void>("newRepository", app()
+					.getNewRepositoryPage()));
 			add(managementLinks);
-		} else if (showManagement && user != null && user.canCreate()) {
+		} else if (showManagement && (user != null) && user.canCreate()) {
 			// user can create personal repositories
 			managementLinks = new Fragment("managementPanel", "personalLinks", this);
-			managementLinks.add(new BookmarkablePageLink<Void>("newRepository", app().getNewRepositoryPage()));
+			managementLinks.add(new BookmarkablePageLink<Void>("newRepository", app()
+					.getNewRepositoryPage()));
 			add(managementLinks);
 		} else {
 			// user has no management permissions
-			add (new Label("managementPanel").setVisible(false));
+			add(new Label("managementPanel").setVisible(false));
 		}
 
-		if (app().settings().getString(Keys.web.repositoryListType, "flat").equalsIgnoreCase("grouped")) {
-			List<RepositoryModel> rootRepositories = new ArrayList<RepositoryModel>();
-			Map<String, List<RepositoryModel>> groups = new HashMap<String, List<RepositoryModel>>();
-			for (RepositoryModel model : models) {
-				String rootPath = StringUtils.getRootPath(model.name);
+		if (app().settings().getString(Keys.web.repositoryListType, "flat")
+				.equalsIgnoreCase("grouped")) {
+			final List<RepositoryModel> rootRepositories = new ArrayList<RepositoryModel>();
+			final Map<String, List<RepositoryModel>> groups = new HashMap<String, List<RepositoryModel>>();
+			for (final RepositoryModel model : models) {
+				final String rootPath = StringUtils.getRootPath(model.name);
 				if (StringUtils.isEmpty(rootPath)) {
 					// root repository
 					rootRepositories.add(model);
@@ -113,7 +116,7 @@ public class RepositoriesPanel extends BasePanel {
 					groups.get(rootPath).add(model);
 				}
 			}
-			List<String> roots = new ArrayList<String>(groups.keySet());
+			final List<String> roots = new ArrayList<String>(groups.keySet());
 			Collections.sort(roots);
 
 			if (rootRepositories.size() > 0) {
@@ -122,11 +125,12 @@ public class RepositoriesPanel extends BasePanel {
 				groups.put("", rootRepositories);
 			}
 
-			List<RepositoryModel> groupedModels = new ArrayList<RepositoryModel>();
-			for (String root : roots) {
-				List<RepositoryModel> subModels = groups.get(root);
-				ProjectModel project = app().projects().getProjectModel(root);
-				GroupRepositoryModel group = new GroupRepositoryModel(project == null ? root : project.name, subModels.size());
+			final List<RepositoryModel> groupedModels = new ArrayList<RepositoryModel>();
+			for (final String root : roots) {
+				final List<RepositoryModel> subModels = groups.get(root);
+				final ProjectModel project = app().projects().getProjectModel(root);
+				final GroupRepositoryModel group = new GroupRepositoryModel(project == null ? root
+						: project.name, subModels.size());
 				if (project != null) {
 					group.title = project.title;
 					group.description = project.description;
@@ -140,9 +144,10 @@ public class RepositoriesPanel extends BasePanel {
 			dp = new SortableRepositoriesProvider(models);
 		}
 
-		final boolean showSwatch = app().settings().getBoolean(Keys.web.repositoryListSwatches, true);
+		final boolean showSwatch = app().settings().getBoolean(Keys.web.repositoryListSwatches,
+				true);
 
-		DataView<RepositoryModel> dataView = new DataView<RepositoryModel>("row", dp) {
+		final DataView<RepositoryModel> dataView = new DataView<RepositoryModel>("row", dp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 			String currGroupName;
@@ -150,36 +155,40 @@ public class RepositoriesPanel extends BasePanel {
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
 			public void populateItem(final Item<RepositoryModel> item) {
 				final RepositoryModel entry = item.getModelObject();
 				if (entry instanceof GroupRepositoryModel) {
-					GroupRepositoryModel groupRow = (GroupRepositoryModel) entry;
-					currGroupName = entry.name;
-					Fragment row = new Fragment("rowContent", "groupRepositoryRow", this);
+					final GroupRepositoryModel groupRow = (GroupRepositoryModel) entry;
+					this.currGroupName = entry.name;
+					final Fragment row = new Fragment("rowContent", "groupRepositoryRow", this);
 					item.add(row);
 
-					String name = groupRow.name;
+					final String name = groupRow.name;
 					if (name.startsWith(ModelUtils.getUserRepoPrefix())) {
 						// user page
-						String username = ModelUtils.getUserNameFromRepoPath(name);
-						UserModel user = app().users().getUserModel(username);
-						row.add(new LinkPanel("groupName", null, (user == null ? username : user.getDisplayName()) + " (" + groupRow.count + ")", UserPage.class, WicketUtils.newUsernameParameter(username)));
+						final String username = ModelUtils.getUserNameFromRepoPath(name);
+						final UserModel user = app().users().getUserModel(username);
+						row.add(new LinkPanel("groupName", null, (user == null ? username : user
+								.getDisplayName()) + " (" + groupRow.count + ")", UserPage.class,
+								WicketUtils.newUsernameParameter(username)));
 						row.add(new Label("groupDescription", getString("gb.personalRepositories")));
 					} else {
 						// project page
-						row.add(new LinkPanel("groupName", null, groupRow.toString(), ProjectPage.class, WicketUtils.newProjectParameter(entry.name)));
-						row.add(new Label("groupDescription", entry.description == null ? "":entry.description));
+						row.add(new LinkPanel("groupName", null, groupRow.toString(),
+								ProjectPage.class, WicketUtils.newProjectParameter(entry.name)));
+						row.add(new Label("groupDescription", entry.description == null ? ""
+								: entry.description));
 					}
 					WicketUtils.setCssClass(item, "group");
 					// reset counter so that first row is light background
-					counter = 0;
+					this.counter = 0;
 					return;
 				}
-				Fragment row = new Fragment("rowContent", "repositoryRow", this);
+				final Fragment row = new Fragment("rowContent", "repositoryRow", this);
 				item.add(row);
 
 				// show colored repository type icon
@@ -194,19 +203,20 @@ public class RepositoriesPanel extends BasePanel {
 					iconFragment = new Fragment("repoIcon", "cloneIconFragment", this);
 				}
 				if (showSwatch) {
-					WicketUtils.setCssStyle(iconFragment, "color:" + StringUtils.getColor(entry.toString()));
+					WicketUtils.setCssStyle(iconFragment,
+							"color:" + StringUtils.getColor(entry.toString()));
 				}
 				row.add(iconFragment);
 
 				// try to strip group name for less cluttered list
 				String repoName = entry.toString();
-				if (!StringUtils.isEmpty(currGroupName) && (repoName.indexOf('/') > -1)) {
-					repoName = repoName.substring(currGroupName.length() + 1);
+				if (!StringUtils.isEmpty(this.currGroupName) && (repoName.indexOf('/') > -1)) {
+					repoName = repoName.substring(this.currGroupName.length() + 1);
 				}
 
 				if (linksActive) {
-					Class<? extends BasePage> linkPage = SummaryPage.class;
-					PageParameters pp = WicketUtils.newRepositoryParameter(entry.name);
+					final Class<? extends BasePage> linkPage = SummaryPage.class;
+					final PageParameters pp = WicketUtils.newRepositoryParameter(entry.name);
 					row.add(new LinkPanel("repositoryName", "list", repoName, linkPage, pp));
 					row.add(new LinkPanel("repositoryDescription", "list", entry.description,
 							linkPage, pp));
@@ -220,8 +230,8 @@ public class RepositoriesPanel extends BasePanel {
 					row.add(new Label("repositorySize", entry.size).setVisible(showSize));
 				} else {
 					// New repository
-					row.add(new Label("repositorySize", "<span class='empty'>(" + getString("gb.empty") + ")</span>")
-							.setEscapeModelStrings(false));
+					row.add(new Label("repositorySize", "<span class='empty'>("
+							+ getString("gb.empty") + ")</span>").setEscapeModelStrings(false));
 				}
 
 				if (entry.isSparkleshared()) {
@@ -258,7 +268,8 @@ public class RepositoriesPanel extends BasePanel {
 								accessRestrictionTranslations.get(entry.accessRestriction)));
 						break;
 					case CLONE:
-						row.add(WicketUtils.newImage("accessRestrictionIcon", "lock_pull_16x16.png",
+						row.add(WicketUtils.newImage("accessRestrictionIcon",
+								"lock_pull_16x16.png",
 								accessRestrictionTranslations.get(entry.accessRestriction)));
 						break;
 					case VIEW:
@@ -273,8 +284,8 @@ public class RepositoriesPanel extends BasePanel {
 				String owner = "";
 				if (!ArrayUtils.isEmpty(entry.owners)) {
 					// display first owner
-					for (String username : entry.owners) {
-						UserModel ownerModel = app().users().getUserModel(username);
+					for (final String username : entry.owners) {
+						final UserModel ownerModel = app().users().getUserModel(username);
 						if (ownerModel != null) {
 							owner = ownerModel.getDisplayName();
 							break;
@@ -284,7 +295,7 @@ public class RepositoriesPanel extends BasePanel {
 						owner += ", ...";
 					}
 				}
-				Label ownerLabel = new Label("repositoryOwner", owner);
+				final Label ownerLabel = new Label("repositoryOwner", owner);
 				WicketUtils.setHtmlTooltip(ownerLabel, ArrayUtils.toString(entry.owners));
 				row.add(ownerLabel);
 
@@ -294,23 +305,25 @@ public class RepositoriesPanel extends BasePanel {
 				} else {
 					lastChange = getTimeUtils().timeAgo(entry.lastChange);
 				}
-				Label lastChangeLabel = new Label("repositoryLastChange", lastChange);
+				final Label lastChangeLabel = new Label("repositoryLastChange", lastChange);
 				row.add(lastChangeLabel);
-				WicketUtils.setCssClass(lastChangeLabel, getTimeUtils().timeAgoCss(entry.lastChange));
+				WicketUtils.setCssClass(lastChangeLabel, getTimeUtils()
+						.timeAgoCss(entry.lastChange));
 				if (!StringUtils.isEmpty(entry.lastChangeAuthor)) {
-					WicketUtils.setHtmlTooltip(lastChangeLabel, getString("gb.author") + ": " + entry.lastChangeAuthor);
+					WicketUtils.setHtmlTooltip(lastChangeLabel, getString("gb.author") + ": "
+							+ entry.lastChangeAuthor);
 				}
 
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(dataView);
 
 		if (dp instanceof SortableDataProvider<?>) {
 			// add sortable header
-			SortableDataProvider<?> sdp = (SortableDataProvider<?>) dp;
-			Fragment fragment = new Fragment("headerContent", "flatRepositoryHeader", this);
+			final SortableDataProvider<?> sdp = (SortableDataProvider<?>) dp;
+			final Fragment fragment = new Fragment("headerContent", "flatRepositoryHeader", this);
 			fragment.add(newSort("orderByRepository", SortBy.repository, sdp, dataView));
 			fragment.add(newSort("orderByDescription", SortBy.description, sdp, dataView));
 			fragment.add(newSort("orderByOwner", SortBy.owner, sdp, dataView));
@@ -318,7 +331,7 @@ public class RepositoriesPanel extends BasePanel {
 			add(fragment);
 		} else {
 			// not sortable
-			Fragment fragment = new Fragment("headerContent", "groupRepositoryHeader", this);
+			final Fragment fragment = new Fragment("headerContent", "groupRepositoryHeader", this);
 			add(fragment);
 		}
 	}
@@ -337,12 +350,16 @@ public class RepositoriesPanel extends BasePanel {
 
 		@Override
 		public String toString() {
-			return (StringUtils.isEmpty(title) ? name  : title) + " (" + count + ")";
+			return (StringUtils.isEmpty(this.title) ? this.name : this.title) + " (" + this.count
+					+ ")";
 		}
 	}
 
 	protected enum SortBy {
-		repository, description, owner, date;
+		repository,
+		description,
+		owner,
+		date;
 	}
 
 	protected OrderByBorder newSort(String wicketId, SortBy field, SortableDataProvider<?> dp,
@@ -361,7 +378,7 @@ public class RepositoriesPanel extends BasePanel {
 
 		private static final long serialVersionUID = 1L;
 
-		private List<RepositoryModel> list;
+		private final List<RepositoryModel> list;
 
 		protected SortableRepositoriesProvider(List<RepositoryModel> list) {
 			this.list = list;
@@ -370,10 +387,10 @@ public class RepositoriesPanel extends BasePanel {
 
 		@Override
 		public int size() {
-			if (list == null) {
+			if (this.list == null) {
 				return 0;
 			}
-			return list.size();
+			return this.list.size();
 		}
 
 		@Override
@@ -383,12 +400,12 @@ public class RepositoriesPanel extends BasePanel {
 
 		@Override
 		public Iterator<RepositoryModel> iterator(int first, int count) {
-			SortParam sp = getSort();
-			String prop = sp.getProperty();
+			final SortParam sp = getSort();
+			final String prop = sp.getProperty();
 			final boolean asc = sp.isAscending();
 
-			if (prop == null || prop.equals(SortBy.date.name())) {
-				Collections.sort(list, new Comparator<RepositoryModel>() {
+			if ((prop == null) || prop.equals(SortBy.date.name())) {
+				Collections.sort(this.list, new Comparator<RepositoryModel>() {
 					@Override
 					public int compare(RepositoryModel o1, RepositoryModel o2) {
 						if (asc) {
@@ -398,7 +415,7 @@ public class RepositoriesPanel extends BasePanel {
 					}
 				});
 			} else if (prop.equals(SortBy.repository.name())) {
-				Collections.sort(list, new Comparator<RepositoryModel>() {
+				Collections.sort(this.list, new Comparator<RepositoryModel>() {
 					@Override
 					public int compare(RepositoryModel o1, RepositoryModel o2) {
 						if (asc) {
@@ -408,11 +425,11 @@ public class RepositoriesPanel extends BasePanel {
 					}
 				});
 			} else if (prop.equals(SortBy.owner.name())) {
-				Collections.sort(list, new Comparator<RepositoryModel>() {
+				Collections.sort(this.list, new Comparator<RepositoryModel>() {
 					@Override
 					public int compare(RepositoryModel o1, RepositoryModel o2) {
-						String own1 = ArrayUtils.toString(o1.owners);
-						String own2 = ArrayUtils.toString(o2.owners);
+						final String own1 = ArrayUtils.toString(o1.owners);
+						final String own2 = ArrayUtils.toString(o2.owners);
 						if (asc) {
 							return own1.compareTo(own2);
 						}
@@ -420,7 +437,7 @@ public class RepositoriesPanel extends BasePanel {
 					}
 				});
 			} else if (prop.equals(SortBy.description.name())) {
-				Collections.sort(list, new Comparator<RepositoryModel>() {
+				Collections.sort(this.list, new Comparator<RepositoryModel>() {
 					@Override
 					public int compare(RepositoryModel o1, RepositoryModel o2) {
 						if (asc) {
@@ -430,7 +447,7 @@ public class RepositoriesPanel extends BasePanel {
 					}
 				});
 			}
-			return list.subList(first, first + count).iterator();
+			return this.list.subList(first, first + count).iterator();
 		}
 	}
 }

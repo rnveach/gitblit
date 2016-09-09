@@ -74,32 +74,33 @@ public abstract class FanoutServiceConnection implements Comparable<FanoutServic
 		}
 		try {
 			reply(content);
-		} catch (Exception e) {
-			logger.error("failed to reply to fanout connection " + id, e);
+		}
+		catch (final Exception e) {
+			logger.error("failed to reply to fanout connection " + this.id, e);
 		}
 		return content;
 	}
 
 	@Override
 	public int compareTo(FanoutServiceConnection c) {
-		return id.compareTo(c.id);
+		return this.id.compareTo(c.id);
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof FanoutServiceConnection) {
-			return id.equals(((FanoutServiceConnection) o).id);
+			return this.id.equals(((FanoutServiceConnection) o).id);
 		}
 		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		return id.hashCode();
+		return this.id.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		return id;
+		return this.id;
 	}
 }

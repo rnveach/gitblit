@@ -55,8 +55,8 @@ public class FanoutNioService extends FanoutService {
 	private volatile ServerSocketChannel serviceCh;
 	private volatile Selector selector;
 
-	public static void main(String[] args) throws Exception {
-		FanoutNioService pubsub = new FanoutNioService(null, DEFAULT_PORT);
+	public static void main(String[] args) {
+		final FanoutNioService pubsub = new FanoutNioService(null, DEFAULT_PORT);
 		pubsub.setStrictRequestTermination(false);
 		pubsub.setAllowAllChannelAnnouncements(false);
 		pubsub.start();
@@ -89,24 +89,28 @@ public class FanoutNioService extends FanoutService {
 
 	@Override
 	protected boolean isConnected() {
-		return serviceCh != null;
+		return this.serviceCh != null;
 	}
 
 	@Override
 	protected boolean connect() {
-		if (serviceCh == null) {
+		if (this.serviceCh == null) {
 			try {
-				serviceCh = ServerSocketChannel.open();
-				serviceCh.configureBlocking(false);
-				serviceCh.socket().setReuseAddress(true);
-				serviceCh.socket().bind(host == null ? new InetSocketAddress(port) : new InetSocketAddress(host, port));
-				selector = Selector.open();
-				serviceCh.register(selector, SelectionKey.OP_ACCEPT);
-				logger.info(MessageFormat.format("{0} is ready on {1}:{2,number,0}",
-						name, host == null ? "0.0.0.0" : host, port));
-			} catch (IOException e) {
-				logger.error(MessageFormat.format("failed to open {0} on {1}:{2,number,0}",
-						name, name, host == null ? "0.0.0.0" : host, port), e);
+				this.serviceCh = ServerSocketChannel.open();
+				this.serviceCh.configureBlocking(false);
+				this.serviceCh.socket().setReuseAddress(true);
+				this.serviceCh.socket().bind(
+						this.host == null ? new InetSocketAddress(this.port)
+								: new InetSocketAddress(this.host, this.port));
+				this.selector = Selector.open();
+				this.serviceCh.register(this.selector, SelectionKey.OP_ACCEPT);
+				logger.info(MessageFormat.format("{0} is ready on {1}:{2,number,0}", this.name,
+						this.host == null ? "0.0.0.0" : this.host, this.port));
+			}
+			catch (final IOException e) {
+				logger.error(
+						MessageFormat.format("failed to open {0} on {1}:{2,number,0}", this.name,
+								this.name, this.host == null ? "0.0.0.0" : this.host, this.port), e);
 				return false;
 			}
 		}
@@ -116,60 +120,62 @@ public class FanoutNioService extends FanoutService {
 	@Override
 	protected void disconnect() {
 		try {
-			if (serviceCh != null) {
+			if (this.serviceCh != null) {
 				// close all active client connections
-				Map<String, SocketChannel> clients = getCurrentClientSockets();
-				for (Map.Entry<String, SocketChannel> client : clients.entrySet()) {
+				final Map<String, SocketChannel> clients = getCurrentClientSockets();
+				for (final Map.Entry<String, SocketChannel> client : clients.entrySet()) {
 					closeClientSocket(client.getKey(), client.getValue());
 				}
 
 				// close service socket channel
-				logger.debug(MessageFormat.format("closing {0} socket channel", name));
-				serviceCh.socket().close();
-				serviceCh.close();
-				serviceCh = null;
-				selector.close();
-				selector = null;
+				logger.debug(MessageFormat.format("closing {0} socket channel", this.name));
+				this.serviceCh.socket().close();
+				this.serviceCh.close();
+				this.serviceCh = null;
+				this.selector.close();
+				this.selector = null;
 			}
-		} catch (IOException e) {
-			logger.error(MessageFormat.format("failed to disconnect {0}", name), e);
+		}
+		catch (final IOException e) {
+			logger.error(MessageFormat.format("failed to disconnect {0}", this.name), e);
 		}
 	}
 
 	@Override
 	protected void listen() throws IOException {
-		while (selector.select(serviceTimeout) > 0) {
-			Set<SelectionKey> keys = selector.selectedKeys();
-			Iterator<SelectionKey> keyItr = keys.iterator();
+		while (this.selector.select(serviceTimeout) > 0) {
+			final Set<SelectionKey> keys = this.selector.selectedKeys();
+			final Iterator<SelectionKey> keyItr = keys.iterator();
 			while (keyItr.hasNext()) {
-				SelectionKey key = keyItr.next();
+				final SelectionKey key = keyItr.next();
 				if (key.isAcceptable()) {
 					// new fanout client connection
-					ServerSocketChannel sch = (ServerSocketChannel) key.channel();
+					final ServerSocketChannel sch = (ServerSocketChannel) key.channel();
 					try {
-						SocketChannel ch = sch.accept();
+						final SocketChannel ch = sch.accept();
 						ch.configureBlocking(false);
 						configureClientSocket(ch.socket());
 
-						FanoutNioConnection connection = new FanoutNioConnection(ch);
+						final FanoutNioConnection connection = new FanoutNioConnection(ch);
 						addConnection(connection);
 
 						// register to send the queued message
-						ch.register(selector, SelectionKey.OP_WRITE, connection);
-					} catch (IOException e) {
+						ch.register(this.selector, SelectionKey.OP_WRITE, connection);
+					}
+					catch (final IOException e) {
 						logger.error("error accepting fanout connection", e);
 					}
 				} else if (key.isReadable()) {
 					// read fanout client request
-					SocketChannel ch = (SocketChannel) key.channel();
-					FanoutNioConnection connection = (FanoutNioConnection) key.attachment();
+					final SocketChannel ch = (SocketChannel) key.channel();
+					final FanoutNioConnection connection = (FanoutNioConnection) key.attachment();
 					try {
 						connection.read(ch, isStrictRequestTermination());
 						int replies = 0;
-						Iterator<String> reqItr = connection.requestQueue.iterator();
+						final Iterator<String> reqItr = connection.requestQueue.iterator();
 						while (reqItr.hasNext()) {
-							String req = reqItr.next();
-							String reply = processRequest(connection, req);
+							final String req = reqItr.next();
+							final String reply = processRequest(connection, req);
 							reqItr.remove();
 							if (reply != null) {
 								replies++;
@@ -178,33 +184,37 @@ public class FanoutNioService extends FanoutService {
 
 						if (replies > 0) {
 							// register to send the replies to requests
-							ch.register(selector, SelectionKey.OP_WRITE, connection);
+							ch.register(this.selector, SelectionKey.OP_WRITE, connection);
 						} else {
 							// re-register for next read
-							ch.register(selector, SelectionKey.OP_READ, connection);
+							ch.register(this.selector, SelectionKey.OP_READ, connection);
 						}
-					} catch (IOException e) {
-						logger.error(MessageFormat.format("fanout connection {0} error: {1}", connection.id, e.getMessage()));
+					}
+					catch (final IOException e) {
+						logger.error(MessageFormat.format("fanout connection {0} error: {1}",
+								connection.id, e.getMessage()));
 						removeConnection(connection);
 						closeClientSocket(connection.id, ch);
 					}
 				} else if (key.isWritable()) {
 					// asynchronous reply to fanout client request
-					SocketChannel ch = (SocketChannel) key.channel();
-					FanoutNioConnection connection = (FanoutNioConnection) key.attachment();
+					final SocketChannel ch = (SocketChannel) key.channel();
+					final FanoutNioConnection connection = (FanoutNioConnection) key.attachment();
 					try {
 						connection.write(ch);
 
 						if (hasConnection(connection)) {
 							// register for next read
-							ch.register(selector, SelectionKey.OP_READ, connection);
+							ch.register(this.selector, SelectionKey.OP_READ, connection);
 						} else {
 							// Connection was rejected due to load or
 							// some other reason. Close it.
 							closeClientSocket(connection.id, ch);
 						}
-					} catch (IOException e) {
-						logger.error(MessageFormat.format("fanout connection {0}: {1}", connection.id, e.getMessage()));
+					}
+					catch (final IOException e) {
+						logger.error(MessageFormat.format("fanout connection {0}: {1}",
+								connection.id, e.getMessage()));
 						removeConnection(connection);
 						closeClientSocket(connection.id, ch);
 					}
@@ -217,38 +227,43 @@ public class FanoutNioService extends FanoutService {
 	protected void closeClientSocket(String id, SocketChannel ch) {
 		try {
 			ch.close();
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			logger.error(MessageFormat.format("fanout connection {0}", id), e);
 		}
 	}
 
 	@Override
-	protected void broadcast(Collection<FanoutServiceConnection> connections, String channel, String message) {
+	protected void broadcast(Collection<FanoutServiceConnection> connections, String channel,
+			String message) {
 		super.broadcast(connections, channel, message);
 
 		// register queued write
-		Map<String, SocketChannel> sockets = getCurrentClientSockets();
-		for (FanoutServiceConnection connection : connections) {
-			SocketChannel ch = sockets.get(connection.id);
+		final Map<String, SocketChannel> sockets = getCurrentClientSockets();
+		for (final FanoutServiceConnection connection : connections) {
+			final SocketChannel ch = sockets.get(connection.id);
 			if (ch == null) {
-				logger.warn(MessageFormat.format("fanout connection {0} has been disconnected", connection.id));
+				logger.warn(MessageFormat.format("fanout connection {0} has been disconnected",
+						connection.id));
 				removeConnection(connection);
 				continue;
 			}
 			try {
-				ch.register(selector, SelectionKey.OP_WRITE, connection);
-			} catch (IOException e) {
-				logger.error(MessageFormat.format("failed to register write op for fanout connection {0}", connection.id));
+				ch.register(this.selector, SelectionKey.OP_WRITE, connection);
+			}
+			catch (final IOException e) {
+				logger.error(MessageFormat.format(
+						"failed to register write op for fanout connection {0}", connection.id));
 			}
 		}
 	}
 
 	protected Map<String, SocketChannel> getCurrentClientSockets() {
-		Map<String, SocketChannel> sockets = new HashMap<String, SocketChannel>();
-		for (SelectionKey key : selector.keys()) {
+		final Map<String, SocketChannel> sockets = new HashMap<String, SocketChannel>();
+		for (final SelectionKey key : this.selector.keys()) {
 			if (key.channel() instanceof SocketChannel) {
-				SocketChannel ch = (SocketChannel) key.channel();
-				String id = FanoutConstants.getRemoteSocketId(ch.socket());
+				final SocketChannel ch = (SocketChannel) key.channel();
+				final String id = FanoutConstants.getRemoteSocketId(ch.socket());
 				sockets.put(id, ch);
 			}
 		}
@@ -271,63 +286,65 @@ public class FanoutNioService extends FanoutService {
 
 		FanoutNioConnection(SocketChannel ch) {
 			super(ch.socket());
-			readBuffer = ByteBuffer.allocate(FanoutConstants.BUFFER_LENGTH);
-			writeBuffer = ByteBuffer.allocate(FanoutConstants.BUFFER_LENGTH);
-			requestQueue = new ArrayList<String>();
-			replyQueue = new ArrayList<String>();
-			decoder = Charset.forName(FanoutConstants.CHARSET).newDecoder();
+			this.readBuffer = ByteBuffer.allocate(FanoutConstants.BUFFER_LENGTH);
+			this.writeBuffer = ByteBuffer.allocate(FanoutConstants.BUFFER_LENGTH);
+			this.requestQueue = new ArrayList<String>();
+			this.replyQueue = new ArrayList<String>();
+			this.decoder = Charset.forName(FanoutConstants.CHARSET).newDecoder();
 		}
 
-		protected void read(SocketChannel ch, boolean strictRequestTermination) throws CharacterCodingException, IOException {
+		protected void read(SocketChannel ch, boolean strictRequestTermination)
+				throws CharacterCodingException, IOException {
 			long bytesRead = 0;
-			readBuffer.clear();
-			bytesRead = ch.read(readBuffer);
-			readBuffer.flip();
+			this.readBuffer.clear();
+			bytesRead = ch.read(this.readBuffer);
+			this.readBuffer.flip();
 			if (bytesRead == -1) {
 				throw new IOException("lost client connection, end of stream");
 			}
-			if (readBuffer.limit() == 0) {
+			if (this.readBuffer.limit() == 0) {
 				return;
 			}
-			CharBuffer cbuf = decoder.decode(readBuffer);
-			String req = cbuf.toString();
-			String [] lines = req.split(strictRequestTermination ? "\n" : "\n|\r");
-			requestQueue.addAll(Arrays.asList(lines));
+			final CharBuffer cbuf = this.decoder.decode(this.readBuffer);
+			final String req = cbuf.toString();
+			final String[] lines = req.split(strictRequestTermination ? "\n" : "\n|\r");
+			this.requestQueue.addAll(Arrays.asList(lines));
 		}
 
 		protected void write(SocketChannel ch) throws IOException {
-			Iterator<String> itr = replyQueue.iterator();
+			final Iterator<String> itr = this.replyQueue.iterator();
 			while (itr.hasNext()) {
-				String reply = itr.next();
-				writeBuffer.clear();
-				logger.debug(MessageFormat.format("fanout reply to {0}: {1}", id, reply));
-				byte [] bytes = reply.getBytes(FanoutConstants.CHARSET);
-				writeBuffer.put(bytes);
+				final String reply = itr.next();
+				this.writeBuffer.clear();
+				logger.debug(MessageFormat.format("fanout reply to {0}: {1}", this.id, reply));
+				final byte[] bytes = reply.getBytes(FanoutConstants.CHARSET);
+				this.writeBuffer.put(bytes);
 				if (bytes[bytes.length - 1] != 0xa) {
-					writeBuffer.put((byte) 0xa);
+					this.writeBuffer.put((byte) 0xa);
 				}
-				writeBuffer.flip();
+				this.writeBuffer.flip();
 
 				// loop until write buffer has been completely sent
 				int written = 0;
-				int toWrite = writeBuffer.remaining();
+				final int toWrite = this.writeBuffer.remaining();
 				while (written != toWrite) {
-					written += ch.write(writeBuffer);
+					written += ch.write(this.writeBuffer);
 					try {
 						Thread.sleep(10);
-					} catch (Exception x) {
+					}
+					catch (final Exception x) {
 					}
 				}
 				itr.remove();
 			}
-			writeBuffer.clear();
+			this.writeBuffer.clear();
 		}
 
 		@Override
 		protected void reply(String content) throws IOException {
 			// queue the reply
 			// replies are transmitted asynchronously from the requests
-			replyQueue.add(content);
+			this.replyQueue.add(content);
 		}
 	}
 }

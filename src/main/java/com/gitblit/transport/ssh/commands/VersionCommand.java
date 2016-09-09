@@ -18,11 +18,11 @@ package com.gitblit.transport.ssh.commands;
 
 import com.gitblit.Constants;
 
-@CommandMetaData(name="version", description = "Display the Gitblit version")
+@CommandMetaData(name = "version", description = "Display the Gitblit version")
 public class VersionCommand extends SshCommand {
 
-  @Override
-  public void run() {
-	  stdout.println(Constants.getGitBlitVersion());
-  }
+	@Override
+	public void run() {
+		this.stdout.println(Constants.getGitBlitVersion());
+	}
 }

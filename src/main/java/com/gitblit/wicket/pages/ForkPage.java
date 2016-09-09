@@ -30,29 +30,30 @@ import com.gitblit.wicket.WicketUtils;
 
 public class ForkPage extends RepositoryPage {
 
-
 	public ForkPage(PageParameters params) {
 		super(params);
 
 		setVersioned(false);
 
-		GitBlitWebSession session = GitBlitWebSession.get();
+		final GitBlitWebSession session = GitBlitWebSession.get();
 
-		RepositoryModel repository = getRepositoryModel();
-		UserModel user = session.getUser();
-		boolean canFork = user.canFork(repository);
+		final RepositoryModel repository = getRepositoryModel();
+		final UserModel user = session.getUser();
+		final boolean canFork = user.canFork(repository);
 
 		if (!canFork) {
 			// redirect to the summary page if this repository is not empty
 			GitBlitWebSession.get().cacheErrorMessage(
 					MessageFormat.format(getString("gb.forkNotAuthorized"), repository.name));
-			throw new GitblitRedirectException(SummaryPage.class, WicketUtils.newRepositoryParameter(repository.name));
+			throw new GitblitRedirectException(SummaryPage.class,
+					WicketUtils.newRepositoryParameter(repository.name));
 		}
 
-		String fork = app().repositories().getFork(user.username, repository.name);
+		final String fork = app().repositories().getFork(user.username, repository.name);
 		if (fork != null) {
 			// redirect to user's fork
-			throw new GitblitRedirectException(SummaryPage.class, WicketUtils.newRepositoryParameter(fork));
+			throw new GitblitRedirectException(SummaryPage.class,
+					WicketUtils.newRepositoryParameter(fork));
 		}
 
 		add(new Label("forkText", getString("gb.preparingFork")));
@@ -62,7 +63,7 @@ public class ForkPage extends RepositoryPage {
 			session.isForking(true);
 
 			// fork it
-			ForkThread forker = new ForkThread(app(), repository, session);
+			final ForkThread forker = new ForkThread(app(), repository, session);
 			forker.start();
 		}
 	}
@@ -96,13 +97,17 @@ public class ForkPage extends RepositoryPage {
 
 		@Override
 		public void run() {
-			UserModel user = session.getUser();
+			final UserModel user = this.session.getUser();
 			try {
-				app.gitblit().fork(repository, user);
-			} catch (Exception e) {
-				LoggerFactory.getLogger(ForkPage.class).error(MessageFormat.format("Failed to fork {0} for {1}", repository.name, user.username), e);
-			} finally {
-				session.isForking(false);
+				this.app.gitblit().fork(this.repository, user);
+			}
+			catch (final Exception e) {
+				LoggerFactory.getLogger(ForkPage.class).error(
+						MessageFormat.format("Failed to fork {0} for {1}", this.repository.name,
+								user.username), e);
+			}
+			finally {
+				this.session.isForking(false);
 			}
 		}
 	}

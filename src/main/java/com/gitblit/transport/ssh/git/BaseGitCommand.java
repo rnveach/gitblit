@@ -44,10 +44,10 @@ abstract class BaseGitCommand extends BaseCommand {
 	public void destroy() {
 		super.destroy();
 
-		repositoryResolver = null;
-		receivePackFactory = null;
-		uploadPackFactory = null;
-		repo = null;
+		this.repositoryResolver = null;
+		this.receivePackFactory = null;
+		this.uploadPackFactory = null;
+		this.repo = null;
 	}
 
 	@Override
@@ -61,18 +61,19 @@ abstract class BaseGitCommand extends BaseCommand {
 
 			@Override
 			public String getRepository() {
-				return repository;
+				return BaseGitCommand.this.repository;
 			}
 		});
 	}
 
 	private void service() throws IOException, Failure {
 		try {
-			repo = openRepository();
+			this.repo = openRepository();
 			runImpl();
-		} finally {
-			if (repo != null) {
-				repo.close();
+		}
+		finally {
+			if (this.repo != null) {
+				this.repo.close();
 			}
 		}
 	}
@@ -83,16 +84,17 @@ abstract class BaseGitCommand extends BaseCommand {
 		// Assume any attempt to use \ was by a Windows client
 		// and correct to the more typical / used in Git URIs.
 		//
-		repository = repository.replace('\\', '/');
+		this.repository = this.repository.replace('\\', '/');
 		// ssh://git@thishost/path should always be name="/path" here
 		//
-		if (repository.startsWith("/")) {
-			repository = repository.substring(1);
+		if (this.repository.startsWith("/")) {
+			this.repository = this.repository.substring(1);
 		}
 		try {
-			return repositoryResolver.open(getContext().getClient(), repository);
-		} catch (Exception e) {
-			throw new Failure(1, "fatal: '" + repository + "': not a git archive", e);
+			return this.repositoryResolver.open(getContext().getClient(), this.repository);
+		}
+		catch (final Exception e) {
+			throw new Failure(1, "fatal: '" + this.repository + "': not a git archive", e);
 		}
 	}
 

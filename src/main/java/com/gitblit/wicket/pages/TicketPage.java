@@ -84,9 +84,9 @@ import com.gitblit.tickets.TicketLabel;
 import com.gitblit.tickets.TicketMilestone;
 import com.gitblit.tickets.TicketResponsible;
 import com.gitblit.utils.ArrayUtils;
+import com.gitblit.utils.CommitCache;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.JGitUtils.MergeStatus;
-import com.gitblit.utils.CommitCache;
 import com.gitblit.utils.MarkdownUtils;
 import com.gitblit.utils.RefLogUtils;
 import com.gitblit.utils.StringUtils;
@@ -114,7 +114,7 @@ public class TicketPage extends RepositoryPage {
 
 	static final String NIL = "<nil>";
 
-	static final String ESC_NIL = StringUtils.escapeForHtml(NIL,  false);
+	static final String ESC_NIL = StringUtils.escapeForHtml(NIL, false);
 
 	final int avatarWidth = 40;
 
@@ -123,23 +123,26 @@ public class TicketPage extends RepositoryPage {
 	public TicketPage(PageParameters params) {
 		super(params);
 
-		final UserModel user = GitBlitWebSession.get().getUser() == null ? UserModel.ANONYMOUS : GitBlitWebSession.get().getUser();
+		final UserModel user = GitBlitWebSession.get().getUser() == null ? UserModel.ANONYMOUS
+				: GitBlitWebSession.get().getUser();
 		final RepositoryModel repository = getRepositoryModel();
 		final String id = WicketUtils.getObject(params);
-		long ticketId = Long.parseLong(id);
-		ticket = app().tickets().getTicket(repository, ticketId);
+		final long ticketId = Long.parseLong(id);
+		this.ticket = app().tickets().getTicket(repository, ticketId);
 
-		if (ticket == null) {
+		if (this.ticket == null) {
 			// ticket not found
-			throw new RestartResponseException(TicketsPage.class, WicketUtils.newRepositoryParameter(repositoryName));
+			throw new RestartResponseException(TicketsPage.class,
+					WicketUtils.newRepositoryParameter(this.repositoryName));
 		}
 
 		final List<Change> revisions = new ArrayList<Change>();
-		List<Change> comments = new ArrayList<Change>();
-		List<Change> statusChanges = new ArrayList<Change>();
-		List<Change> discussion = new ArrayList<Change>();
-		for (Change change : ticket.changes) {
-			if (change.hasComment() || (change.isStatusChange() && (change.getStatus() != Status.New))) {
+		final List<Change> comments = new ArrayList<Change>();
+		final List<Change> statusChanges = new ArrayList<Change>();
+		final List<Change> discussion = new ArrayList<Change>();
+		for (final Change change : this.ticket.changes) {
+			if (change.hasComment()
+					|| (change.isStatusChange() && (change.getStatus() != Status.New))) {
 				discussion.add(change);
 			}
 			if (change.hasComment()) {
@@ -153,45 +156,45 @@ public class TicketPage extends RepositoryPage {
 			}
 		}
 
-		final Change currentRevision = revisions.isEmpty() ? null : revisions.get(revisions.size() - 1);
-		final Patchset currentPatchset = ticket.getCurrentPatchset();
+		final Change currentRevision = revisions.isEmpty() ? null
+				: revisions.get(revisions.size() - 1);
+		final Patchset currentPatchset = this.ticket.getCurrentPatchset();
 
 		/*
 		 * TICKET HEADER
 		 */
-		String href = urlFor(TicketsPage.class, params).toString();
-		add(new ExternalLink("ticketNumber", href, "#" + ticket.number));
-		Label headerStatus = new Label("headerStatus", ticket.status.toString());
-		WicketUtils.setCssClass(headerStatus, TicketsUI.getLozengeClass(ticket.status, false));
+		final String href = urlFor(TicketsPage.class, params).toString();
+		add(new ExternalLink("ticketNumber", href, "#" + this.ticket.number));
+		final Label headerStatus = new Label("headerStatus", this.ticket.status.toString());
+		WicketUtils.setCssClass(headerStatus, TicketsUI.getLozengeClass(this.ticket.status, false));
 		add(headerStatus);
-		add(new Label("ticketTitle", ticket.title));
+		add(new Label("ticketTitle", this.ticket.title));
 		if (currentPatchset == null) {
 			add(new Label("diffstat").setVisible(false));
 		} else {
 			// calculate the current diffstat of the patchset
-			add(new DiffStatPanel("diffstat", ticket.insertions, ticket.deletions));
+			add(new DiffStatPanel("diffstat", this.ticket.insertions, this.ticket.deletions));
 		}
-
 
 		/*
 		 * TAB TITLES
 		 */
 		add(new Label("commentCount", "" + comments.size()).setVisible(!comments.isEmpty()));
-		add(new Label("commitCount", "" + (currentPatchset == null ? 0 : currentPatchset.commits)).setVisible(currentPatchset != null));
-
+		add(new Label("commitCount", "" + (currentPatchset == null ? 0 : currentPatchset.commits))
+				.setVisible(currentPatchset != null));
 
 		/*
 		 * TICKET AUTHOR and DATE (DISCUSSION TAB)
 		 */
-		UserModel createdBy = app().users().getUserModel(ticket.createdBy);
+		final UserModel createdBy = app().users().getUserModel(this.ticket.createdBy);
 		if (createdBy == null) {
-			add(new Label("whoCreated", ticket.createdBy));
+			add(new Label("whoCreated", this.ticket.createdBy));
 		} else {
-			add(new LinkPanel("whoCreated", null, createdBy.getDisplayName(),
-					UserPage.class, WicketUtils.newUsernameParameter(createdBy.username)));
+			add(new LinkPanel("whoCreated", null, createdBy.getDisplayName(), UserPage.class,
+					WicketUtils.newUsernameParameter(createdBy.username)));
 		}
 
-		if (ticket.isProposal()) {
+		if (this.ticket.isProposal()) {
 			// clearly indicate this is a change ticket
 			add(new Label("creationMessage", getString("gb.proposedThisChange")));
 		} else {
@@ -199,8 +202,10 @@ public class TicketPage extends RepositoryPage {
 			add(new Label("creationMessage", getString("gb.createdThisTicket")));
 		}
 
-		String dateFormat = app().settings().getString(Keys.web.datestampLongFormat, "EEEE, MMMM d, yyyy");
-		String timestampFormat = app().settings().getString(Keys.web.datetimestampLongFormat, "EEEE, MMMM d, yyyy");
+		final String dateFormat = app().settings().getString(Keys.web.datestampLongFormat,
+				"EEEE, MMMM d, yyyy");
+		final String timestampFormat = app().settings().getString(Keys.web.datetimestampLongFormat,
+				"EEEE, MMMM d, yyyy");
 		final TimeZone timezone = getTimeZone();
 		final DateFormat df = new SimpleDateFormat(dateFormat);
 		df.setTimeZone(timezone);
@@ -209,112 +214,113 @@ public class TicketPage extends RepositoryPage {
 		final Calendar cal = Calendar.getInstance(timezone);
 
 		String fuzzydate;
-		TimeUtils tu = getTimeUtils();
-		Date createdDate = ticket.created;
+		final TimeUtils tu = getTimeUtils();
+		Date createdDate = this.ticket.created;
 		if (TimeUtils.isToday(createdDate, timezone)) {
 			fuzzydate = tu.today();
 		} else if (TimeUtils.isYesterday(createdDate, timezone)) {
 			fuzzydate = tu.yesterday();
 		} else {
 			// calculate a fuzzy time ago date
-        	cal.setTime(createdDate);
-        	cal.set(Calendar.HOUR_OF_DAY, 0);
-        	cal.set(Calendar.MINUTE, 0);
-        	cal.set(Calendar.SECOND, 0);
-        	cal.set(Calendar.MILLISECOND, 0);
-        	createdDate = cal.getTime();
+			cal.setTime(createdDate);
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 0);
+			cal.set(Calendar.MILLISECOND, 0);
+			createdDate = cal.getTime();
 			fuzzydate = getTimeUtils().timeAgo(createdDate);
 		}
-		Label when = new Label("whenCreated", fuzzydate + ", " + df.format(createdDate));
-		WicketUtils.setHtmlTooltip(when, tsf.format(ticket.created));
+		final Label when = new Label("whenCreated", fuzzydate + ", " + df.format(createdDate));
+		WicketUtils.setHtmlTooltip(when, tsf.format(this.ticket.created));
 		add(when);
 
-		String exportHref = urlFor(ExportTicketPage.class, params).toString();
+		final String exportHref = urlFor(ExportTicketPage.class, params).toString();
 		add(new ExternalLink("exportJson", exportHref, "json"));
-
 
 		/*
 		 * RESPONSIBLE (DISCUSSION TAB)
 		 */
-		if (StringUtils.isEmpty(ticket.responsible)) {
+		if (StringUtils.isEmpty(this.ticket.responsible)) {
 			add(new Label("responsible"));
 		} else {
-			UserModel responsible = app().users().getUserModel(ticket.responsible);
+			final UserModel responsible = app().users().getUserModel(this.ticket.responsible);
 			if (responsible == null) {
-				add(new Label("responsible", ticket.responsible));
+				add(new Label("responsible", this.ticket.responsible));
 			} else {
-				add(new LinkPanel("responsible", null, responsible.getDisplayName(),
-						UserPage.class, WicketUtils.newUsernameParameter(responsible.username)));
+				add(new LinkPanel("responsible", null, responsible.getDisplayName(), UserPage.class,
+						WicketUtils.newUsernameParameter(responsible.username)));
 			}
 		}
 
 		/*
 		 * MILESTONE PROGRESS (DISCUSSION TAB)
 		 */
-		if (StringUtils.isEmpty(ticket.milestone)) {
+		if (StringUtils.isEmpty(this.ticket.milestone)) {
 			add(new Label("milestone"));
 		} else {
 			// link to milestone query
-			TicketMilestone tm = app().tickets().getMilestone(repository, ticket.milestone);
+			TicketMilestone tm = app().tickets().getMilestone(repository, this.ticket.milestone);
 			if (tm == null) {
-				tm = new TicketMilestone(ticket.milestone);
+				tm = new TicketMilestone(this.ticket.milestone);
 			}
 			PageParameters milestoneParameters;
 			if (tm.isOpen()) {
-				milestoneParameters = WicketUtils.newOpenTicketsParameter(repositoryName);
+				milestoneParameters = WicketUtils.newOpenTicketsParameter(this.repositoryName);
 			} else {
-				milestoneParameters = WicketUtils.newRepositoryParameter(repositoryName);
+				milestoneParameters = WicketUtils.newRepositoryParameter(this.repositoryName);
 			}
-			milestoneParameters.put(Lucene.milestone.name(), ticket.milestone);
-			int progress = 0;
-			int open = 0;
-			int closed = 0;
-			if (tm != null) {
-				progress = tm.getProgress();
-				open = tm.getOpenTickets();
-				closed = tm.getClosedTickets();
-			}
+			milestoneParameters.put(Lucene.milestone.name(), this.ticket.milestone);
+			final int progress = 0;
+			final int open = 0;
+			final int closed = 0;
 
-			Fragment milestoneProgress = new Fragment("milestone", "milestoneProgressFragment", this);
-			milestoneProgress.add(new LinkPanel("link", null, ticket.milestone, TicketsPage.class, milestoneParameters));
-			Label label = new Label("progress");
+			final Fragment milestoneProgress = new Fragment("milestone",
+					"milestoneProgressFragment", this);
+			milestoneProgress.add(new LinkPanel("link", null, this.ticket.milestone,
+					TicketsPage.class, milestoneParameters));
+			final Label label = new Label("progress");
 			WicketUtils.setCssStyle(label, "width:" + progress + "%;");
 			milestoneProgress.add(label);
-			WicketUtils.setHtmlTooltip(milestoneProgress, MessageFormat.format(getString("gb.milestoneProgress"), open, closed));
+			WicketUtils.setHtmlTooltip(milestoneProgress,
+					MessageFormat.format(getString("gb.milestoneProgress"), open, closed));
 			add(milestoneProgress);
 		}
-
 
 		/*
 		 * TICKET DESCRIPTION (DISCUSSION TAB)
 		 */
 		String desc;
-		if (StringUtils.isEmpty(ticket.body)) {
+		if (StringUtils.isEmpty(this.ticket.body)) {
 			desc = getString("gb.noDescriptionGiven");
 		} else {
-			String bugtraq = bugtraqProcessor().processText(getRepository(), repositoryName, ticket.body);
-			String html = MarkdownUtils.transformGFM(app().settings(), bugtraq, ticket.repository);
-			String safeHtml = app().xssFilter().relaxed(html);
+			final String bugtraq = bugtraqProcessor().processText(getRepository(),
+					this.repositoryName, this.ticket.body);
+			final String html = MarkdownUtils.transformGFM(app().settings(), bugtraq,
+					this.ticket.repository);
+			final String safeHtml = app().xssFilter().relaxed(html);
 			desc = safeHtml;
 		}
 		add(new Label("ticketDescription", desc).setEscapeModelStrings(false));
-
 
 		/*
 		 * PARTICIPANTS (DISCUSSION TAB)
 		 */
 		if (app().settings().getBoolean(Keys.web.allowGravatar, true)) {
 			// gravatar allowed
-			List<String> participants = ticket.getParticipants();
-			add(new Label("participantsLabel", MessageFormat.format(getString(participants.size() > 1 ? "gb.nParticipants" : "gb.oneParticipant"),
-					"<b>" + participants.size() + "</b>")).setEscapeModelStrings(false));
-			ListDataProvider<String> participantsDp = new ListDataProvider<String>(participants);
-			DataView<String> participantsView = new DataView<String>("participants", participantsDp) {
+			final List<String> participants = this.ticket.getParticipants();
+			add(new Label("participantsLabel",
+					MessageFormat.format(getString(
+							participants.size() > 1 ? "gb.nParticipants" : "gb.oneParticipant"),
+							"<b>" + participants.size() + "</b>")).setEscapeModelStrings(false));
+			final ListDataProvider<String> participantsDp = new ListDataProvider<String>(
+					participants);
+			final DataView<String> participantsView = new DataView<String>("participants",
+					participantsDp) {
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void populateItem(final Item<String> item) {
-					String username = item.getModelObject();
+					final String username = item.getModelObject();
 					UserModel user = app().users().getUserModel(username);
 					if (user == null) {
 						user = new UserModel(username);
@@ -330,65 +336,66 @@ public class TicketPage extends RepositoryPage {
 			add(new Label("participants").setVisible(false));
 		}
 
-
 		/*
 		 * LARGE STATUS INDICATOR WITH ICON (DISCUSSION TAB->SIDE BAR)
 		 */
-		Fragment ticketStatus = new Fragment("ticketStatus", "ticketStatusFragment", this);
-		Label ticketIcon = TicketsUI.getStateIcon("ticketIcon", ticket);
+		final Fragment ticketStatus = new Fragment("ticketStatus", "ticketStatusFragment", this);
+		final Label ticketIcon = TicketsUI.getStateIcon("ticketIcon", this.ticket);
 		ticketStatus.add(ticketIcon);
-		ticketStatus.add(new Label("ticketStatus", ticket.status.toString()));
-		WicketUtils.setCssClass(ticketStatus, TicketsUI.getLozengeClass(ticket.status, false));
+		ticketStatus.add(new Label("ticketStatus", this.ticket.status.toString()));
+		WicketUtils.setCssClass(ticketStatus, TicketsUI.getLozengeClass(this.ticket.status, false));
 		add(ticketStatus);
-
 
 		/*
 		 * UPDATE FORM (DISCUSSION TAB)
 		 */
-		if (user.canEdit(ticket, repository) && app().tickets().isAcceptingTicketUpdates(repository)) {
-			if (user.canAdmin(ticket, repository) && ticket.isOpen()) {
+		if (user.canEdit(this.ticket, repository)
+				&& app().tickets().isAcceptingTicketUpdates(repository)) {
+			if (user.canAdmin(this.ticket, repository) && this.ticket.isOpen()) {
 				/*
 				 * OPEN TICKET
 				 */
-				Fragment controls = new Fragment("controls", "openControlsFragment", this);
+				final Fragment controls = new Fragment("controls", "openControlsFragment", this);
 
 				/*
 				 * STATUS
 				 */
-				List<Status> choices = new ArrayList<Status>();
-				if (ticket.isProposal()) {
+				final List<Status> choices = new ArrayList<Status>();
+				if (this.ticket.isProposal()) {
 					choices.addAll(Arrays.asList(TicketModel.Status.proposalWorkflow));
-				} else if (ticket.isBug()) {
+				} else if (this.ticket.isBug()) {
 					choices.addAll(Arrays.asList(TicketModel.Status.bugWorkflow));
 				} else {
 					choices.addAll(Arrays.asList(TicketModel.Status.requestWorkflow));
 				}
-				choices.remove(ticket.status);
+				choices.remove(this.ticket.status);
 
-				ListDataProvider<Status> workflowDp = new ListDataProvider<Status>(choices);
-				DataView<Status> statusView = new DataView<Status>("newStatus", workflowDp) {
+				final ListDataProvider<Status> workflowDp = new ListDataProvider<Status>(choices);
+				final DataView<Status> statusView = new DataView<Status>("newStatus", workflowDp) {
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					public void populateItem(final Item<Status> item) {
-						SimpleAjaxLink<Status> link = new SimpleAjaxLink<Status>("link", item.getModel()) {
+						final SimpleAjaxLink<Status> link = new SimpleAjaxLink<Status>("link",
+								item.getModel()) {
 
 							private static final long serialVersionUID = 1L;
 
 							@Override
 							public void onClick(AjaxRequestTarget target) {
-								Status status = getModel().getObject();
-								Change change = new Change(user.username);
+								final Status status = getModel().getObject();
+								final Change change = new Change(user.username);
 								change.setField(Field.status, status);
-								if (!ticket.isWatching(user.username)) {
+								if (!TicketPage.this.ticket.isWatching(user.username)) {
 									change.watch(user.username);
 								}
-								TicketModel update = app().tickets().updateTicket(repository, ticket.number, change);
+								final TicketModel update = app().tickets().updateTicket(repository,
+										TicketPage.this.ticket.number, change);
 								app().tickets().createNotifier().sendMailing(update);
 								redirectTo(TicketsPage.class, getPageParameters());
 							}
 						};
-						String css = TicketsUI.getStatusClass(item.getModel().getObject());
+						final String css = TicketsUI.getStatusClass(item.getModel().getObject());
 						WicketUtils.setCssClass(link, css);
 						item.add(link);
 					}
@@ -398,56 +405,63 @@ public class TicketPage extends RepositoryPage {
 				/*
 				 * RESPONSIBLE LIST
 				 */
-				Set<String> userlist = new TreeSet<String>(ticket.getParticipants());
+				final Set<String> userlist = new TreeSet<String>(this.ticket.getParticipants());
 				if (UserModel.ANONYMOUS.canPush(getRepositoryModel())
-						|| AuthorizationControl.AUTHENTICATED == getRepositoryModel().authorizationControl) {
-					// 	authorization is ANONYMOUS or AUTHENTICATED (i.e. all users can be set responsible)
+						|| (AuthorizationControl.AUTHENTICATED == getRepositoryModel().authorizationControl)) {
+					// authorization is ANONYMOUS or AUTHENTICATED (i.e. all
+					// users can be set responsible)
 					userlist.addAll(app().users().getAllUsernames());
 				} else {
-					// authorization is by NAMED users (users with PUSH permission can be set responsible)
-					for (RegistrantAccessPermission rp : app().repositories().getUserAccessPermissions(getRepositoryModel())) {
+					// authorization is by NAMED users (users with PUSH
+					// permission can be set responsible)
+					for (final RegistrantAccessPermission rp : app().repositories()
+							.getUserAccessPermissions(getRepositoryModel())) {
 						if (rp.permission.atLeast(AccessPermission.PUSH)) {
 							userlist.add(rp.registrant);
 						}
 					}
 				}
-				List<TicketResponsible> responsibles = new ArrayList<TicketResponsible>();
-				if (!StringUtils.isEmpty(ticket.responsible)) {
+				final List<TicketResponsible> responsibles = new ArrayList<TicketResponsible>();
+				if (!StringUtils.isEmpty(this.ticket.responsible)) {
 					// exclude the current responsible
-					userlist.remove(ticket.responsible);
+					userlist.remove(this.ticket.responsible);
 				}
-				for (String username : userlist) {
-					UserModel u = app().users().getUserModel(username);
+				for (final String username : userlist) {
+					final UserModel u = app().users().getUserModel(username);
 					if (u != null) {
 						responsibles.add(new TicketResponsible(u));
 					}
 				}
 				Collections.sort(responsibles);
 				responsibles.add(new TicketResponsible(ESC_NIL, "", ""));
-				ListDataProvider<TicketResponsible> responsibleDp = new ListDataProvider<TicketResponsible>(responsibles);
-				DataView<TicketResponsible> responsibleView = new DataView<TicketResponsible>("newResponsible", responsibleDp) {
+				final ListDataProvider<TicketResponsible> responsibleDp = new ListDataProvider<TicketResponsible>(
+						responsibles);
+				final DataView<TicketResponsible> responsibleView = new DataView<TicketResponsible>(
+						"newResponsible", responsibleDp) {
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					public void populateItem(final Item<TicketResponsible> item) {
-						SimpleAjaxLink<TicketResponsible> link = new SimpleAjaxLink<TicketResponsible>("link", item.getModel()) {
+						final SimpleAjaxLink<TicketResponsible> link = new SimpleAjaxLink<TicketResponsible>(
+								"link", item.getModel()) {
 
 							private static final long serialVersionUID = 1L;
 
 							@Override
 							public void onClick(AjaxRequestTarget target) {
-								TicketResponsible responsible = getModel().getObject();
-								Change change = new Change(user.username);
+								final TicketResponsible responsible = getModel().getObject();
+								final Change change = new Change(user.username);
 								change.setField(Field.responsible, responsible.username);
 								if (!StringUtils.isEmpty(responsible.username)) {
-									if (!ticket.isWatching(responsible.username)) {
+									if (!TicketPage.this.ticket.isWatching(responsible.username)) {
 										change.watch(responsible.username);
 									}
 								}
-								if (!ticket.isWatching(user.username)) {
+								if (!TicketPage.this.ticket.isWatching(user.username)) {
 									change.watch(user.username);
 								}
-								TicketModel update = app().tickets().updateTicket(repository, ticket.number, change);
+								final TicketModel update = app().tickets().updateTicket(repository,
+										TicketPage.this.ticket.number, change);
 								app().tickets().createNotifier().sendMailing(update);
 								redirectTo(TicketsPage.class, getPageParameters());
 							}
@@ -460,39 +474,44 @@ public class TicketPage extends RepositoryPage {
 				/*
 				 * MILESTONE LIST
 				 */
-				List<TicketMilestone> milestones = app().tickets().getMilestones(repository, Status.Open);
-				if (!StringUtils.isEmpty(ticket.milestone)) {
-					for (TicketMilestone milestone : milestones) {
-						if (milestone.name.equals(ticket.milestone)) {
+				final List<TicketMilestone> milestones = app().tickets().getMilestones(repository,
+						Status.Open);
+				if (!StringUtils.isEmpty(this.ticket.milestone)) {
+					for (final TicketMilestone milestone : milestones) {
+						if (milestone.name.equals(this.ticket.milestone)) {
 							milestones.remove(milestone);
 							break;
 						}
 					}
 				}
 				milestones.add(new TicketMilestone(ESC_NIL));
-				ListDataProvider<TicketMilestone> milestoneDp = new ListDataProvider<TicketMilestone>(milestones);
-				DataView<TicketMilestone> milestoneView = new DataView<TicketMilestone>("newMilestone", milestoneDp) {
+				final ListDataProvider<TicketMilestone> milestoneDp = new ListDataProvider<TicketMilestone>(
+						milestones);
+				final DataView<TicketMilestone> milestoneView = new DataView<TicketMilestone>(
+						"newMilestone", milestoneDp) {
 					private static final long serialVersionUID = 1L;
 
 					@Override
 					public void populateItem(final Item<TicketMilestone> item) {
-						SimpleAjaxLink<TicketMilestone> link = new SimpleAjaxLink<TicketMilestone>("link", item.getModel()) {
+						final SimpleAjaxLink<TicketMilestone> link = new SimpleAjaxLink<TicketMilestone>(
+								"link", item.getModel()) {
 
 							private static final long serialVersionUID = 1L;
 
 							@Override
 							public void onClick(AjaxRequestTarget target) {
-								TicketMilestone milestone = getModel().getObject();
-								Change change = new Change(user.username);
+								final TicketMilestone milestone = getModel().getObject();
+								final Change change = new Change(user.username);
 								if (NIL.equals(milestone.name) || ESC_NIL.equals(milestone.name)) {
 									change.setField(Field.milestone, "");
 								} else {
 									change.setField(Field.milestone, milestone.name);
 								}
-								if (!ticket.isWatching(user.username)) {
+								if (!TicketPage.this.ticket.isWatching(user.username)) {
 									change.watch(user.username);
 								}
-								TicketModel update = app().tickets().updateTicket(repository, ticket.number, change);
+								final TicketModel update = app().tickets().updateTicket(repository,
+										TicketPage.this.ticket.number, change);
 								app().tickets().createNotifier().sendMailing(update);
 								redirectTo(TicketsPage.class, getPageParameters());
 							}
@@ -502,7 +521,7 @@ public class TicketPage extends RepositoryPage {
 				};
 				controls.add(milestoneView);
 
-				String editHref = urlFor(EditTicketPage.class, params).toString();
+				final String editHref = urlFor(EditTicketPage.class, params).toString();
 				controls.add(new ExternalLink("editLink", editHref, getString("gb.edit")));
 
 				add(controls);
@@ -510,9 +529,9 @@ public class TicketPage extends RepositoryPage {
 				/*
 				 * CLOSED TICKET
 				 */
-				Fragment controls = new Fragment("controls", "closedControlsFragment", this);
+				final Fragment controls = new Fragment("controls", "closedControlsFragment", this);
 
-				String editHref = urlFor(EditTicketPage.class, params).toString();
+				final String editHref = urlFor(EditTicketPage.class, params).toString();
 				controls.add(new ExternalLink("editLink", editHref, getString("gb.edit")));
 
 				add(controls);
@@ -521,32 +540,29 @@ public class TicketPage extends RepositoryPage {
 			add(new Label("controls").setVisible(false));
 		}
 
-
 		/*
 		 * TICKET METADATA
 		 */
-		add(new Label("ticketType", ticket.type.toString()));
+		add(new Label("ticketType", this.ticket.type.toString()));
 
-		add(new Label("priority", ticket.priority.toString()));
-		add(new Label("severity", ticket.severity.toString()));
+		add(new Label("priority", this.ticket.priority.toString()));
+		add(new Label("severity", this.ticket.severity.toString()));
 
-		if (StringUtils.isEmpty(ticket.topic)) {
+		if (StringUtils.isEmpty(this.ticket.topic)) {
 			add(new Label("ticketTopic").setVisible(false));
 		} else {
 			// process the topic using the bugtraq config to link things
-			String topic = bugtraqProcessor().processText(getRepository(), repositoryName, ticket.topic);
-			String safeTopic = app().xssFilter().relaxed(topic);
+			final String topic = bugtraqProcessor().processText(getRepository(),
+					this.repositoryName, this.ticket.topic);
+			final String safeTopic = app().xssFilter().relaxed(topic);
 			add(new Label("ticketTopic", safeTopic).setEscapeModelStrings(false));
 		}
-
-
-
 
 		/*
 		 * VOTERS
 		 */
-		List<String> voters = ticket.getVoters();
-		Label votersCount = new Label("votes", "" + voters.size());
+		final List<String> voters = this.ticket.getVoters();
+		final Label votersCount = new Label("votes", "" + voters.size());
 		if (voters.size() == 0) {
 			WicketUtils.setCssClass(votersCount, "badge");
 		} else {
@@ -555,24 +571,25 @@ public class TicketPage extends RepositoryPage {
 		add(votersCount);
 		if (user.isAuthenticated && app().tickets().isAcceptingTicketUpdates(repository)) {
 			Model<String> model;
-			if (ticket.isVoter(user.username)) {
+			if (this.ticket.isVoter(user.username)) {
 				model = Model.of(getString("gb.removeVote"));
 			} else {
-				model = Model.of(MessageFormat.format(getString("gb.vote"), ticket.type.toString()));
+				model = Model.of(
+						MessageFormat.format(getString("gb.vote"), this.ticket.type.toString()));
 			}
-			SimpleAjaxLink<String> link = new SimpleAjaxLink<String>("voteLink", model) {
+			final SimpleAjaxLink<String> link = new SimpleAjaxLink<String>("voteLink", model) {
 
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void onClick(AjaxRequestTarget target) {
-					Change change = new Change(user.username);
-					if (ticket.isVoter(user.username)) {
+					final Change change = new Change(user.username);
+					if (TicketPage.this.ticket.isVoter(user.username)) {
 						change.unvote(user.username);
 					} else {
 						change.vote(user.username);
 					}
-					app().tickets().updateTicket(repository, ticket.number, change);
+					app().tickets().updateTicket(repository, TicketPage.this.ticket.number, change);
 					redirectTo(TicketsPage.class, getPageParameters());
 				}
 			};
@@ -581,12 +598,11 @@ public class TicketPage extends RepositoryPage {
 			add(new Label("voteLink").setVisible(false));
 		}
 
-
 		/*
 		 * WATCHERS
 		 */
-		List<String> watchers = ticket.getWatchers();
-		Label watchersCount = new Label("watchers", "" + watchers.size());
+		final List<String> watchers = this.ticket.getWatchers();
+		final Label watchersCount = new Label("watchers", "" + watchers.size());
 		if (watchers.size() == 0) {
 			WicketUtils.setCssClass(watchersCount, "badge");
 		} else {
@@ -595,24 +611,25 @@ public class TicketPage extends RepositoryPage {
 		add(watchersCount);
 		if (user.isAuthenticated && app().tickets().isAcceptingTicketUpdates(repository)) {
 			Model<String> model;
-			if (ticket.isWatching(user.username)) {
+			if (this.ticket.isWatching(user.username)) {
 				model = Model.of(getString("gb.stopWatching"));
 			} else {
-				model = Model.of(MessageFormat.format(getString("gb.watch"), ticket.type.toString()));
+				model = Model.of(
+						MessageFormat.format(getString("gb.watch"), this.ticket.type.toString()));
 			}
-			SimpleAjaxLink<String> link = new SimpleAjaxLink<String>("watchLink", model) {
+			final SimpleAjaxLink<String> link = new SimpleAjaxLink<String>("watchLink", model) {
 
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void onClick(AjaxRequestTarget target) {
-					Change change = new Change(user.username);
-					if (ticket.isWatching(user.username)) {
+					final Change change = new Change(user.username);
+					if (TicketPage.this.ticket.isWatching(user.username)) {
 						change.unwatch(user.username);
 					} else {
 						change.watch(user.username);
 					}
-					app().tickets().updateTicket(repository, ticket.number, change);
+					app().tickets().updateTicket(repository, TicketPage.this.ticket.number, change);
 					redirectTo(TicketsPage.class, getPageParameters());
 				}
 			};
@@ -621,20 +638,21 @@ public class TicketPage extends RepositoryPage {
 			add(new Label("watchLink").setVisible(false));
 		}
 
-
 		/*
 		 * TOPIC & LABELS (DISCUSSION TAB->SIDE BAR)
 		 */
-		ListDataProvider<String> labelsDp = new ListDataProvider<String>(ticket.getLabels());
-		DataView<String> labelsView = new DataView<String>("labels", labelsDp) {
+		final ListDataProvider<String> labelsDp = new ListDataProvider<String>(
+				this.ticket.getLabels());
+		final DataView<String> labelsView = new DataView<String>("labels", labelsDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<String> item) {
 				final String value = item.getModelObject();
-				Label label = new Label("label", value);
-				TicketLabel tLabel = app().tickets().getLabel(repository, value);
-				String background = MessageFormat.format("background-color:{0};", tLabel.color);
+				final Label label = new Label("label", value);
+				final TicketLabel tLabel = app().tickets().getLabel(repository, value);
+				final String background = MessageFormat.format("background-color:{0};",
+						tLabel.color);
 				label.add(new SimpleAttributeModifier("style", background));
 				item.add(label);
 			}
@@ -642,16 +660,17 @@ public class TicketPage extends RepositoryPage {
 
 		add(labelsView);
 
-
 		/*
 		 * COMMENTS & STATUS CHANGES (DISCUSSION TAB)
 		 */
 		if (comments.size() == 0) {
 			add(new Label("discussion").setVisible(false));
 		} else {
-			Fragment discussionFragment = new Fragment("discussion", "discussionFragment", this);
-			ListDataProvider<Change> discussionDp = new ListDataProvider<Change>(discussion);
-			DataView<Change> discussionView = new DataView<Change>("discussion", discussionDp) {
+			final Fragment discussionFragment = new Fragment("discussion", "discussionFragment",
+					this);
+			final ListDataProvider<Change> discussionDp = new ListDataProvider<Change>(discussion);
+			final DataView<Change> discussionView = new DataView<Change>("discussion",
+					discussionDp) {
 				private static final long serialVersionUID = 1L;
 
 				@Override
@@ -661,11 +680,11 @@ public class TicketPage extends RepositoryPage {
 						/*
 						 * MERGE
 						 */
-						String resolvedBy = entry.getString(Field.mergeSha);
+						final String resolvedBy = entry.getString(Field.mergeSha);
 
 						// identify the merged patch, it is likely the last
 						Patchset mergedPatch = null;
-						for (Change c : revisions) {
+						for (final Change c : revisions) {
 							if (c.patchset.tip.equals(resolvedBy)) {
 								mergedPatch = c.patchset;
 								break;
@@ -675,43 +694,50 @@ public class TicketPage extends RepositoryPage {
 						String commitLink;
 						if (mergedPatch == null) {
 							// shouldn't happen, but just-in-case
-							int len = app().settings().getInteger(Keys.web.shortCommitIdLength, 6);
+							final int len = app().settings()
+									.getInteger(Keys.web.shortCommitIdLength, 6);
 							commitLink = resolvedBy.substring(0, len);
 						} else {
 							// expected result
 							commitLink = mergedPatch.toString();
 						}
 
-						Fragment mergeFragment = new Fragment("entry", "mergeFragment", this);
+						final Fragment mergeFragment = new Fragment("entry", "mergeFragment", this);
 						mergeFragment.add(new LinkPanel("commitLink", null, commitLink,
-								CommitPage.class, WicketUtils.newObjectParameter(repositoryName, resolvedBy)));
-						mergeFragment.add(new Label("toBranch", MessageFormat.format(getString("gb.toBranch"),
-								"<b>" + ticket.mergeTo + "</b>")).setEscapeModelStrings(false));
+								CommitPage.class, WicketUtils.newObjectParameter(
+										TicketPage.this.repositoryName, resolvedBy)));
+						mergeFragment.add(new Label("toBranch",
+								MessageFormat.format(getString("gb.toBranch"),
+										"<b>" + TicketPage.this.ticket.mergeTo + "</b>"))
+												.setEscapeModelStrings(false));
 						addUserAttributions(mergeFragment, entry, 0);
 						addDateAttributions(mergeFragment, entry);
 
 						item.add(mergeFragment);
 					} else if (entry.isStatusChange()) {
 						/*
-						 *  STATUS CHANGE
+						 * STATUS CHANGE
 						 */
-						Fragment frag = new Fragment("entry", "statusFragment", this);
-						Label status = new Label("statusChange", entry.getStatus().toString());
-						String css = TicketsUI.getLozengeClass(entry.getStatus(), false);
+						final Fragment frag = new Fragment("entry", "statusFragment", this);
+						final Label status = new Label("statusChange",
+								entry.getStatus().toString());
+						final String css = TicketsUI.getLozengeClass(entry.getStatus(), false);
 						WicketUtils.setCssClass(status, css);
 						frag.add(status);
-						addUserAttributions(frag, entry, avatarWidth);
+						addUserAttributions(frag, entry, TicketPage.this.avatarWidth);
 						addDateAttributions(frag, entry);
 						item.add(frag);
 					} else {
 						/*
 						 * COMMENT
 						 */
-						String bugtraq = bugtraqProcessor().processText(getRepository(), repositoryName, entry.comment.text);
-						String comment = MarkdownUtils.transformGFM(app().settings(), bugtraq, repositoryName);
-						String safeComment = app().xssFilter().relaxed(comment);
-						Fragment frag = new Fragment("entry", "commentFragment", this);
-						Label commentIcon = new Label("commentIcon");
+						final String bugtraq = bugtraqProcessor().processText(getRepository(),
+								TicketPage.this.repositoryName, entry.comment.text);
+						final String comment = MarkdownUtils.transformGFM(app().settings(), bugtraq,
+								TicketPage.this.repositoryName);
+						final String safeComment = app().xssFilter().relaxed(comment);
+						final Fragment frag = new Fragment("entry", "commentFragment", this);
+						final Label commentIcon = new Label("commentIcon");
 						if (entry.comment.src == CommentSource.Email) {
 							WicketUtils.setCssClass(commentIcon, "iconic-mail");
 						} else {
@@ -719,7 +745,7 @@ public class TicketPage extends RepositoryPage {
 						}
 						frag.add(commentIcon);
 						frag.add(new Label("comment", safeComment).setEscapeModelStrings(false));
-						addUserAttributions(frag, entry, avatarWidth);
+						addUserAttributions(frag, entry, TicketPage.this.avatarWidth);
 						addDateAttributions(frag, entry);
 						item.add(frag);
 					}
@@ -732,9 +758,7 @@ public class TicketPage extends RepositoryPage {
 		/*
 		 * ADD COMMENT PANEL
 		 */
-		if (UserModel.ANONYMOUS.equals(user)
-				|| !repository.isBare
-				|| repository.isFrozen
+		if (UserModel.ANONYMOUS.equals(user) || !repository.isBare || repository.isFrozen
 				|| repository.isMirror) {
 
 			// prohibit comments for anonymous users, local working copy repos,
@@ -742,39 +766,52 @@ public class TicketPage extends RepositoryPage {
 			add(new Label("newComment").setVisible(false));
 		} else {
 			// permit user to comment
-			Fragment newComment = new Fragment("newComment", "newCommentFragment", this);
-			AvatarImage img = new AvatarImage("newCommentAvatar", user.username, user.emailAddress,
-					"gravatar-round", avatarWidth, true);
+			final Fragment newComment = new Fragment("newComment", "newCommentFragment", this);
+			final AvatarImage img = new AvatarImage("newCommentAvatar", user.username,
+					user.emailAddress, "gravatar-round", this.avatarWidth, true);
 			newComment.add(img);
-			CommentPanel commentPanel = new CommentPanel("commentPanel", user, ticket, null, TicketsPage.class);
-			commentPanel.setRepository(repositoryName);
+			final CommentPanel commentPanel = new CommentPanel("commentPanel", user, this.ticket,
+					null, TicketsPage.class);
+			commentPanel.setRepository(this.repositoryName);
 			newComment.add(commentPanel);
 			add(newComment);
 		}
 
-
 		/*
-		 *  PATCHSET TAB
+		 * PATCHSET TAB
 		 */
 		if (currentPatchset == null) {
 			// no patchset available
-			RepositoryUrl repoUrl = getRepositoryUrl(user, repository);
-			boolean canPropose = repoUrl != null && repoUrl.hasPermission() && repoUrl.permission.atLeast(AccessPermission.CLONE) && !UserModel.ANONYMOUS.equals(user);
-			if (ticket.isOpen() && app().tickets().isAcceptingNewPatchsets(repository) && canPropose) {
+			final RepositoryUrl repoUrl = getRepositoryUrl(user, repository);
+			final boolean canPropose = (repoUrl != null) && repoUrl.hasPermission()
+					&& repoUrl.permission.atLeast(AccessPermission.CLONE)
+					&& !UserModel.ANONYMOUS.equals(user);
+			if (this.ticket.isOpen() && app().tickets().isAcceptingNewPatchsets(repository)
+					&& canPropose) {
 				// ticket & repo will accept a proposal patchset
 				// show the instructions for proposing a patchset
-				Fragment changeIdFrag = new Fragment("patchset", "proposeFragment", this);
-				changeIdFrag.add(new Label("proposeInstructions", MarkdownUtils.transformMarkdown(getString("gb.proposeInstructions"))).setEscapeModelStrings(false));
-				changeIdFrag.add(new Label("ptWorkflow", MessageFormat.format(getString("gb.proposeWith"), "Barnum")));
-				changeIdFrag.add(new Label("ptWorkflowSteps", getProposeWorkflow("propose_pt.md", repoUrl.url, ticket.number)).setEscapeModelStrings(false));
-				changeIdFrag.add(new Label("gitWorkflow", MessageFormat.format(getString("gb.proposeWith"), "Git")));
-				changeIdFrag.add(new Label("gitWorkflowSteps", getProposeWorkflow("propose_git.md", repoUrl.url, ticket.number)).setEscapeModelStrings(false));
+				final Fragment changeIdFrag = new Fragment("patchset", "proposeFragment", this);
+				changeIdFrag
+						.add(new Label("proposeInstructions",
+								MarkdownUtils
+										.transformMarkdown(getString("gb.proposeInstructions")))
+												.setEscapeModelStrings(false));
+				changeIdFrag.add(new Label("ptWorkflow",
+						MessageFormat.format(getString("gb.proposeWith"), "Barnum")));
+				changeIdFrag.add(new Label("ptWorkflowSteps",
+						getProposeWorkflow("propose_pt.md", repoUrl.url, this.ticket.number))
+								.setEscapeModelStrings(false));
+				changeIdFrag.add(new Label("gitWorkflow",
+						MessageFormat.format(getString("gb.proposeWith"), "Git")));
+				changeIdFrag.add(new Label("gitWorkflowSteps",
+						getProposeWorkflow("propose_git.md", repoUrl.url, this.ticket.number))
+								.setEscapeModelStrings(false));
 				add(changeIdFrag);
 			} else {
 				// explain why you can't propose a patchset
-				Fragment fragment = new Fragment("patchset", "canNotProposeFragment", this);
+				final Fragment fragment = new Fragment("patchset", "canNotProposeFragment", this);
 				String reason = "";
-				if (ticket.isClosed()) {
+				if (this.ticket.isClosed()) {
 					reason = getString("gb.ticketIsClosed");
 				} else if (repository.isMirror) {
 					reason = getString("gb.repositoryIsMirror");
@@ -796,16 +833,17 @@ public class TicketPage extends RepositoryPage {
 			}
 		} else {
 			// show current patchset
-			Fragment patchsetFrag = new Fragment("patchset", "patchsetFragment", this);
-			patchsetFrag.add(new Label("commitsInPatchset", MessageFormat.format(getString("gb.commitsInPatchsetN"), currentPatchset.number)));
+			final Fragment patchsetFrag = new Fragment("patchset", "patchsetFragment", this);
+			patchsetFrag.add(new Label("commitsInPatchset", MessageFormat
+					.format(getString("gb.commitsInPatchsetN"), currentPatchset.number)));
 
 			patchsetFrag.add(createMergePanel(user, repository));
 
-			if (ticket.isOpen()) {
+			if (this.ticket.isOpen()) {
 				// current revision
-				MarkupContainer panel = createPatchsetPanel("panel", repository, user);
+				final MarkupContainer panel = createPatchsetPanel("panel", repository, user);
 				patchsetFrag.add(panel);
-				addUserAttributions(patchsetFrag, currentRevision, avatarWidth);
+				addUserAttributions(patchsetFrag, currentRevision, this.avatarWidth);
 				addUserAttributions(panel, currentRevision, 0);
 				addDateAttributions(panel, currentRevision);
 			} else {
@@ -814,24 +852,32 @@ public class TicketPage extends RepositoryPage {
 			}
 
 			// commits
-			List<RevCommit> commits = JGitUtils.getRevLog(getRepository(), currentPatchset.base, currentPatchset.tip);
-			ListDataProvider<RevCommit> commitsDp = new ListDataProvider<RevCommit>(commits);
-			DataView<RevCommit> commitsView = new DataView<RevCommit>("commit", commitsDp) {
+			final List<RevCommit> commits = JGitUtils.getRevLog(getRepository(),
+					currentPatchset.base, currentPatchset.tip);
+			final ListDataProvider<RevCommit> commitsDp = new ListDataProvider<RevCommit>(commits);
+			final DataView<RevCommit> commitsView = new DataView<RevCommit>("commit", commitsDp) {
 				private static final long serialVersionUID = 1L;
 
 				@Override
 				public void populateItem(final Item<RevCommit> item) {
-					RevCommit commit = item.getModelObject();
-					PersonIdent author = commit.getAuthorIdent();
-					item.add(new AvatarImage("authorAvatar", author.getName(), author.getEmailAddress(), null, 16, false));
+					final RevCommit commit = item.getModelObject();
+					final PersonIdent author = commit.getAuthorIdent();
+					item.add(new AvatarImage("authorAvatar", author.getName(),
+							author.getEmailAddress(), null, 16, false));
 					item.add(new Label("author", commit.getAuthorIdent().getName()));
 					item.add(new LinkPanel("commitId", null, getShortObjectId(commit.getName()),
-							CommitPage.class, WicketUtils.newObjectParameter(repositoryName, commit.getName()), true));
-					item.add(new LinkPanel("diff", "link", getString("gb.diff"), CommitDiffPage.class,
-							WicketUtils.newObjectParameter(repositoryName, commit.getName()), true));
-					item.add(new Label("title", StringUtils.trimString(commit.getShortMessage(), Constants.LEN_SHORTLOG_REFS)));
-					item.add(WicketUtils.createDateLabel("commitDate", JGitUtils.getAuthorDate(commit), GitBlitWebSession
-							.get().getTimezone(), getTimeUtils(), false));
+							CommitPage.class, WicketUtils.newObjectParameter(
+									TicketPage.this.repositoryName, commit.getName()),
+							true));
+					item.add(new LinkPanel("diff", "link", getString("gb.diff"),
+							CommitDiffPage.class, WicketUtils.newObjectParameter(
+									TicketPage.this.repositoryName, commit.getName()),
+							true));
+					item.add(new Label("title", StringUtils.trimString(commit.getShortMessage(),
+							Constants.LEN_SHORTLOG_REFS)));
+					item.add(WicketUtils.createDateLabel("commitDate",
+							JGitUtils.getAuthorDate(commit), GitBlitWebSession.get().getTimezone(),
+							getTimeUtils(), false));
 					item.add(new DiffStatPanel("commitDiffStat", 0, 0, true));
 				}
 			};
@@ -839,48 +885,53 @@ public class TicketPage extends RepositoryPage {
 			add(patchsetFrag);
 		}
 
-
 		/*
 		 * ACTIVITY TAB
 		 */
-		Fragment revisionHistory = new Fragment("activity", "activityFragment", this);
-		List<Change> events = new ArrayList<Change>(ticket.changes);
+		final Fragment revisionHistory = new Fragment("activity", "activityFragment", this);
+		final List<Change> events = new ArrayList<Change>(this.ticket.changes);
 		Collections.sort(events);
 		Collections.reverse(events);
-		ListDataProvider<Change> eventsDp = new ListDataProvider<Change>(events);
-		DataView<Change> eventsView = new DataView<Change>("event", eventsDp) {
+		final ListDataProvider<Change> eventsDp = new ListDataProvider<Change>(events);
+		final DataView<Change> eventsView = new DataView<Change>("event", eventsDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<Change> item) {
-				Change event = item.getModelObject();
+				final Change event = item.getModelObject();
 
 				addUserAttributions(item, event, 16);
 
 				if (event.hasPatchset()) {
 					// patchset
-					Patchset patchset = event.patchset;
+					final Patchset patchset = event.patchset;
 					String what;
 					if (event.isStatusChange() && (Status.New == event.getStatus())) {
 						what = getString("gb.proposedThisChange");
 					} else if (patchset.rev == 1) {
-						what = MessageFormat.format(getString("gb.uploadedPatchsetN"), patchset.number);
+						what = MessageFormat.format(getString("gb.uploadedPatchsetN"),
+								patchset.number);
 					} else {
 						if (patchset.added == 1) {
 							what = getString("gb.addedOneCommit");
 						} else {
-							what = MessageFormat.format(getString("gb.addedNCommits"), patchset.added);
+							what = MessageFormat.format(getString("gb.addedNCommits"),
+									patchset.added);
 						}
 					}
 					item.add(new Label("what", what));
 
-					LinkPanel psr = new LinkPanel("patchsetRevision", null, patchset.number + "-" + patchset.rev,
-							ComparePage.class, WicketUtils.newRangeParameter(repositoryName, patchset.parent == null ? patchset.base : patchset.parent, patchset.tip), true);
+					final LinkPanel psr = new LinkPanel("patchsetRevision", null,
+							patchset.number + "-" + patchset.rev, ComparePage.class,
+							WicketUtils.newRangeParameter(TicketPage.this.repositoryName,
+									patchset.parent == null ? patchset.base : patchset.parent,
+									patchset.tip),
+							true);
 					WicketUtils.setHtmlTooltip(psr, patchset.toString());
 					WicketUtils.setCssClass(psr, "aui-lozenge aui-lozenge-subtle");
 					item.add(psr);
-					String typeCss = getPatchsetTypeCss(patchset.type);
-					Label typeLabel = new Label("patchsetType", patchset.type.toString());
+					final String typeCss = getPatchsetTypeCss(patchset.type);
+					final Label typeLabel = new Label("patchsetType", patchset.type.toString());
 					if (typeCss == null) {
 						typeLabel.setVisible(false);
 					} else {
@@ -888,8 +939,8 @@ public class TicketPage extends RepositoryPage {
 					}
 					item.add(typeLabel);
 
-					Link<Void> deleteLink = createDeletePatchsetLink(repository, patchset);
-					
+					final Link<Void> deleteLink = createDeletePatchsetLink(repository, patchset);
+
 					if (user.canDeleteRef(repository)) {
 						item.add(deleteLink.setVisible(patchset.canDelete));
 					} else {
@@ -897,7 +948,8 @@ public class TicketPage extends RepositoryPage {
 					}
 
 					// show commit diffstat
-					item.add(new DiffStatPanel("patchsetDiffStat", patchset.insertions, patchset.deletions, patchset.rev > 1));
+					item.add(new DiffStatPanel("patchsetDiffStat", patchset.insertions,
+							patchset.deletions, patchset.rev > 1));
 				} else if (event.hasComment()) {
 					// comment
 					item.add(new Label("what", getString("gb.commented")));
@@ -908,36 +960,48 @@ public class TicketPage extends RepositoryPage {
 				} else if (event.hasReference()) {
 					// reference
 					switch (event.reference.getSourceType()) {
-						case Commit: {
-							final int shaLen = app().settings().getInteger(Keys.web.shortCommitIdLength, 6);
-							
-							item.add(new Label("what", getString("gb.referencedByCommit")));
-							LinkPanel psr = new LinkPanel("patchsetRevision", null, event.reference.toString().substring(0, shaLen),
-									CommitPage.class, WicketUtils.newObjectParameter(repositoryName, event.reference.toString()), true);
-							WicketUtils.setHtmlTooltip(psr, event.reference.toString());
-							WicketUtils.setCssClass(psr, "ticketReference-commit shortsha1");
-							item.add(psr);
-							
-						} break;
-						
-						case Ticket: {
-							final String text = MessageFormat.format("ticket/{0}", event.reference.ticketId);
+					case Commit: {
+						final int shaLen = app().settings().getInteger(Keys.web.shortCommitIdLength,
+								6);
 
-							item.add(new Label("what", getString("gb.referencedByTicket")));
-							//NOTE: Ideally reference the exact comment using reference.toString,
-							//		however anchor hash is used and is escaped resulting in broken link
-							LinkPanel psr = new LinkPanel("patchsetRevision", null,  text,
-									TicketsPage.class, WicketUtils.newObjectParameter(repositoryName, event.reference.ticketId.toString()), true);
-							WicketUtils.setCssClass(psr, "ticketReference-comment");
-							item.add(psr);
-						} break;
-					
-						default: {
-							item.add(new Label("what").setVisible(false));
-							item.add(new Label("patchsetRevision").setVisible(false));
-						}
+						item.add(new Label("what", getString("gb.referencedByCommit")));
+						final LinkPanel psr = new LinkPanel("patchsetRevision", null,
+								event.reference.toString().substring(0, shaLen), CommitPage.class,
+								WicketUtils.newObjectParameter(TicketPage.this.repositoryName,
+										event.reference.toString()),
+								true);
+						WicketUtils.setHtmlTooltip(psr, event.reference.toString());
+						WicketUtils.setCssClass(psr, "ticketReference-commit shortsha1");
+						item.add(psr);
+
 					}
-					
+						break;
+
+					case Ticket: {
+						final String text = MessageFormat.format("ticket/{0}",
+								event.reference.ticketId);
+
+						item.add(new Label("what", getString("gb.referencedByTicket")));
+						// NOTE: Ideally reference the exact comment using
+						// reference.toString,
+						// however anchor hash is used and is escaped resulting
+						// in broken link
+						final LinkPanel psr = new LinkPanel("patchsetRevision", null, text,
+								TicketsPage.class,
+								WicketUtils.newObjectParameter(TicketPage.this.repositoryName,
+										event.reference.ticketId.toString()),
+								true);
+						WicketUtils.setCssClass(psr, "ticketReference-comment");
+						item.add(psr);
+					}
+						break;
+
+					default: {
+						item.add(new Label("what").setVisible(false));
+						item.add(new Label("patchsetRevision").setVisible(false));
+					}
+					}
+
 					item.add(new Label("patchsetType").setVisible(false));
 					item.add(new Label("deleteRevision").setVisible(false));
 					item.add(new Label("patchsetDiffStat").setVisible(false));
@@ -946,17 +1010,20 @@ public class TicketPage extends RepositoryPage {
 					String score;
 					switch (event.review.score) {
 					case approved:
-						score = "<span style='color:darkGreen'>" + getScoreDescription(event.review.score) + "</span>";
+						score = "<span style='color:darkGreen'>"
+								+ getScoreDescription(event.review.score) + "</span>";
 						break;
 					case vetoed:
-						score = "<span style='color:darkRed'>" + getScoreDescription(event.review.score) + "</span>";
+						score = "<span style='color:darkRed'>"
+								+ getScoreDescription(event.review.score) + "</span>";
 						break;
 					default:
 						score = getScoreDescription(event.review.score);
 					}
-					item.add(new Label("what", MessageFormat.format(getString("gb.reviewedPatchsetRev"),
-							event.review.patchset, event.review.rev, score))
-							.setEscapeModelStrings(false));
+					item.add(new Label("what",
+							MessageFormat.format(getString("gb.reviewedPatchsetRev"),
+									event.review.patchset, event.review.rev, score))
+											.setEscapeModelStrings(false));
 					item.add(new Label("patchsetRevision").setVisible(false));
 					item.add(new Label("patchsetType").setVisible(false));
 					item.add(new Label("deleteRevision").setVisible(false));
@@ -970,17 +1037,17 @@ public class TicketPage extends RepositoryPage {
 
 					String what = "";
 					if (event.isStatusChange()) {
-					switch (event.getStatus()) {
-					case New:
-						if (ticket.isProposal()) {
-							what = getString("gb.proposedThisChange");
-						} else {
-							what = getString("gb.createdThisTicket");
+						switch (event.getStatus()) {
+						case New:
+							if (TicketPage.this.ticket.isProposal()) {
+								what = getString("gb.proposedThisChange");
+							} else {
+								what = getString("gb.createdThisTicket");
+							}
+							break;
+						default:
+							break;
 						}
-						break;
-					default:
-						break;
-					}
 					}
 					item.add(new Label("what", what).setVisible(what.length() > 0));
 				}
@@ -988,38 +1055,43 @@ public class TicketPage extends RepositoryPage {
 				addDateAttributions(item, event);
 
 				if (event.hasFieldChanges()) {
-					StringBuilder sb = new StringBuilder();
+					final StringBuilder sb = new StringBuilder();
 					sb.append("<table class=\"summary\"><tbody>");
-					for (Map.Entry<Field, String> entry : event.fields.entrySet()) {
+					for (final Map.Entry<Field, String> entry : event.fields.entrySet()) {
 						String value;
 						switch (entry.getKey()) {
-							case body:
-								String body = entry.getValue();
-								if (event.isStatusChange() && Status.New == event.getStatus() && StringUtils.isEmpty(body)) {
-									// ignore initial empty description
-									continue;
-								}
-								// trim body changes
-								if (StringUtils.isEmpty(body)) {
-									value = "<i>" + ESC_NIL + "</i>";
-								} else {
-									value = StringUtils.trimString(body, Constants.LEN_SHORTLOG_REFS);
-								}
-								break;
-							case status:
-								// special handling for status
-								Status status = event.getStatus();
-								String css = TicketsUI.getLozengeClass(status, true);
-								value = String.format("<span class=\"%1$s\">%2$s</span>", css, status.toString());
-								break;
-							default:
-								value = StringUtils.isEmpty(entry.getValue()) ? ("<i>" + ESC_NIL + "</i>") : StringUtils.escapeForHtml(entry.getValue(), false);
-								break;
+						case body:
+							final String body = entry.getValue();
+							if (event.isStatusChange() && (Status.New == event.getStatus())
+									&& StringUtils.isEmpty(body)) {
+								// ignore initial empty description
+								continue;
+							}
+							// trim body changes
+							if (StringUtils.isEmpty(body)) {
+								value = "<i>" + ESC_NIL + "</i>";
+							} else {
+								value = StringUtils.trimString(body, Constants.LEN_SHORTLOG_REFS);
+							}
+							break;
+						case status:
+							// special handling for status
+							final Status status = event.getStatus();
+							final String css = TicketsUI.getLozengeClass(status, true);
+							value = String.format("<span class=\"%1$s\">%2$s</span>", css,
+									status.toString());
+							break;
+						default:
+							value = StringUtils.isEmpty(entry.getValue())
+									? ("<i>" + ESC_NIL + "</i>")
+									: StringUtils.escapeForHtml(entry.getValue(), false);
+							break;
 						}
 						sb.append("<tr><th style=\"width:70px;\">");
 						try {
 							sb.append(getString("gb." + entry.getKey().name()));
-						} catch (Exception e) {
+						}
+						catch (final Exception e) {
 							sb.append(entry.getKey().name());
 						}
 						sb.append("</th><td>");
@@ -1027,7 +1099,7 @@ public class TicketPage extends RepositoryPage {
 						sb.append("</td></tr>");
 					}
 					sb.append("</tbody></table>");
-					String safeHtml = app().xssFilter().relaxed(sb.toString());
+					final String safeHtml = app().xssFilter().relaxed(sb.toString());
 					item.add(new Label("fields", safeHtml).setEscapeModelStrings(false));
 				} else {
 					item.add(new Label("fields").setVisible(false));
@@ -1039,31 +1111,31 @@ public class TicketPage extends RepositoryPage {
 	}
 
 	protected void addUserAttributions(MarkupContainer container, Change entry, int avatarSize) {
-		UserModel commenter = app().users().getUserModel(entry.author);
+		final UserModel commenter = app().users().getUserModel(entry.author);
 		if (commenter == null) {
 			// unknown user
-			container.add(new AvatarImage("changeAvatar", entry.author,
-					entry.author, null, avatarSize, false).setVisible(avatarSize > 0));
+			container.add(new AvatarImage("changeAvatar", entry.author, entry.author, null,
+					avatarSize, false).setVisible(avatarSize > 0));
 			container.add(new Label("changeAuthor", entry.author.toLowerCase()));
 		} else {
 			// known user
 			container.add(new AvatarImage("changeAvatar", commenter.getDisplayName(),
-					commenter.emailAddress, avatarSize > 24 ? "gravatar-round" : null,
-							avatarSize, true).setVisible(avatarSize > 0));
+					commenter.emailAddress, avatarSize > 24 ? "gravatar-round" : null, avatarSize,
+					true).setVisible(avatarSize > 0));
 			container.add(new LinkPanel("changeAuthor", null, commenter.getDisplayName(),
 					UserPage.class, WicketUtils.newUsernameParameter(commenter.username)));
 		}
 	}
 
 	protected void addDateAttributions(MarkupContainer container, Change entry) {
-		container.add(WicketUtils.createDateLabel("changeDate", entry.date, GitBlitWebSession
-				.get().getTimezone(), getTimeUtils(), false));
+		container.add(WicketUtils.createDateLabel("changeDate", entry.date,
+				GitBlitWebSession.get().getTimezone(), getTimeUtils(), false));
 
 		// set the id attribute
 		if (entry.hasComment()) {
 			container.setOutputMarkupId(true);
 			container.add(new AttributeModifier("id", Model.of(entry.getId())));
-			ExternalLink link = new ExternalLink("changeLink", "#" + entry.getId());
+			final ExternalLink link = new ExternalLink("changeLink", "#" + entry.getId());
 			container.add(link);
 		} else {
 			container.add(new Label("changeLink").setVisible(false));
@@ -1073,81 +1145,94 @@ public class TicketPage extends RepositoryPage {
 	protected String getProposeWorkflow(String resource, String url, long ticketId) {
 		String md = readResource(resource);
 		md = md.replace("${url}", url);
-		md = md.replace("${repo}", StringUtils.getLastPathElement(StringUtils.stripDotGit(repositoryName)));
+		md = md.replace("${repo}",
+				StringUtils.getLastPathElement(StringUtils.stripDotGit(this.repositoryName)));
 		md = md.replace("${ticketId}", "" + ticketId);
 		md = md.replace("${patchset}", "" + 1);
-		md = md.replace("${reviewBranch}", Repository.shortenRefName(PatchsetCommand.getTicketBranch(ticketId)));
+		md = md.replace("${reviewBranch}",
+				Repository.shortenRefName(PatchsetCommand.getTicketBranch(ticketId)));
 		String integrationBranch = Repository.shortenRefName(getRepositoryModel().mergeTo);
-		if (!StringUtils.isEmpty(ticket.mergeTo)) {
-			integrationBranch = ticket.mergeTo;
+		if (!StringUtils.isEmpty(this.ticket.mergeTo)) {
+			integrationBranch = this.ticket.mergeTo;
 		}
 		md = md.replace("${integrationBranch}", integrationBranch);
 		return MarkdownUtils.transformMarkdown(md);
 	}
 
-	protected Fragment createPatchsetPanel(String wicketId, RepositoryModel repository, UserModel user) {
-		final Patchset currentPatchset = ticket.getCurrentPatchset();
-		List<Patchset> patchsets = new ArrayList<Patchset>(ticket.getPatchsetRevisions(currentPatchset.number));
+	protected Fragment createPatchsetPanel(String wicketId, RepositoryModel repository,
+			UserModel user) {
+		final Patchset currentPatchset = this.ticket.getCurrentPatchset();
+		final List<Patchset> patchsets = new ArrayList<Patchset>(
+				this.ticket.getPatchsetRevisions(currentPatchset.number));
 		patchsets.remove(currentPatchset);
 		Collections.reverse(patchsets);
 
-		Fragment panel = new Fragment(wicketId, "collapsiblePatchsetFragment", this);
+		final Fragment panel = new Fragment(wicketId, "collapsiblePatchsetFragment", this);
 
 		// patchset header
-		String ps = "<b>" + currentPatchset.number + "</b>";
+		final String ps = "<b>" + currentPatchset.number + "</b>";
 		if (currentPatchset.rev == 1) {
-			panel.add(new Label("uploadedWhat", MessageFormat.format(getString("gb.uploadedPatchsetN"), ps)).setEscapeModelStrings(false));
+			panel.add(new Label("uploadedWhat",
+					MessageFormat.format(getString("gb.uploadedPatchsetN"), ps))
+							.setEscapeModelStrings(false));
 		} else {
-			String rev = "<b>" + currentPatchset.rev + "</b>";
-			panel.add(new Label("uploadedWhat", MessageFormat.format(getString("gb.uploadedPatchsetNRevisionN"), ps, rev)).setEscapeModelStrings(false));
+			final String rev = "<b>" + currentPatchset.rev + "</b>";
+			panel.add(new Label("uploadedWhat",
+					MessageFormat.format(getString("gb.uploadedPatchsetNRevisionN"), ps, rev))
+							.setEscapeModelStrings(false));
 		}
-		panel.add(new LinkPanel("patchId", null, "rev " + currentPatchset.rev,
-				CommitPage.class, WicketUtils.newObjectParameter(repositoryName, currentPatchset.tip), true));
+		panel.add(new LinkPanel("patchId", null, "rev " + currentPatchset.rev, CommitPage.class,
+				WicketUtils.newObjectParameter(this.repositoryName, currentPatchset.tip), true));
 
 		// compare menu
 		panel.add(new LinkPanel("compareMergeBase", null, getString("gb.compareToMergeBase"),
-				ComparePage.class, WicketUtils.newRangeParameter(repositoryName, currentPatchset.base, currentPatchset.tip), true));
+				ComparePage.class, WicketUtils.newRangeParameter(this.repositoryName,
+						currentPatchset.base, currentPatchset.tip),
+				true));
 
-		ListDataProvider<Patchset> compareMenuDp = new ListDataProvider<Patchset>(patchsets);
-		DataView<Patchset> compareMenu = new DataView<Patchset>("comparePatch", compareMenuDp) {
+		final ListDataProvider<Patchset> compareMenuDp = new ListDataProvider<Patchset>(patchsets);
+		final DataView<Patchset> compareMenu = new DataView<Patchset>("comparePatch",
+				compareMenuDp) {
 			private static final long serialVersionUID = 1L;
+
 			@Override
 			public void populateItem(final Item<Patchset> item) {
-				Patchset patchset = item.getModelObject();
-				LinkPanel link = new LinkPanel("compareLink", null,
-						MessageFormat.format(getString("gb.compareToN"), patchset.number + "-" + patchset.rev),
+				final Patchset patchset = item.getModelObject();
+				final LinkPanel link = new LinkPanel("compareLink", null,
+						MessageFormat.format(getString("gb.compareToN"),
+								patchset.number + "-" + patchset.rev),
 						ComparePage.class, WicketUtils.newRangeParameter(getRepositoryModel().name,
-								patchset.tip, currentPatchset.tip), true);
+								patchset.tip, currentPatchset.tip),
+						true);
 				item.add(link);
 
 			}
 		};
 		panel.add(compareMenu);
 
-
 		// reviews
-		List<Change> reviews = ticket.getReviews(currentPatchset);
-		ListDataProvider<Change> reviewsDp = new ListDataProvider<Change>(reviews);
-		DataView<Change> reviewsView = new DataView<Change>("reviews", reviewsDp) {
+		final List<Change> reviews = this.ticket.getReviews(currentPatchset);
+		final ListDataProvider<Change> reviewsDp = new ListDataProvider<Change>(reviews);
+		final DataView<Change> reviewsView = new DataView<Change>("reviews", reviewsDp) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void populateItem(final Item<Change> item) {
-				Change change = item.getModelObject();
+				final Change change = item.getModelObject();
 				final String username = change.author;
-				UserModel user = app().users().getUserModel(username);
+				final UserModel user = app().users().getUserModel(username);
 				if (user == null) {
 					item.add(new Label("reviewer", username));
 				} else {
-					item.add(new LinkPanel("reviewer", null, user.getDisplayName(),
-							UserPage.class, WicketUtils.newUsernameParameter(username)));
+					item.add(new LinkPanel("reviewer", null, user.getDisplayName(), UserPage.class,
+							WicketUtils.newUsernameParameter(username)));
 				}
 
 				// indicate review score
-				Review review = change.review;
-				Label scoreLabel = new Label("score");
-				String scoreClass = getScoreClass(review.score);
-				String tooltip = getScoreDescription(review.score);
+				final Review review = change.review;
+				final Label scoreLabel = new Label("score");
+				final String scoreClass = getScoreClass(review.score);
+				final String tooltip = getScoreDescription(review.score);
 				WicketUtils.setCssClass(scoreLabel, scoreClass);
 				if (!StringUtils.isEmpty(tooltip)) {
 					WicketUtils.setHtmlTooltip(scoreLabel, tooltip);
@@ -1157,42 +1242,46 @@ public class TicketPage extends RepositoryPage {
 		};
 		panel.add(reviewsView);
 
-
-		if (ticket.isOpen() && user.canReviewPatchset(repository) && app().tickets().isAcceptingTicketUpdates(repository)) {
+		if (this.ticket.isOpen() && user.canReviewPatchset(repository)
+				&& app().tickets().isAcceptingTicketUpdates(repository)) {
 			// can only review open tickets
 			Review myReview = null;
-			for (Change change : ticket.getReviews(currentPatchset)) {
+			for (final Change change : this.ticket.getReviews(currentPatchset)) {
 				if (change.author.equals(user.username)) {
 					myReview = change.review;
 				}
 			}
 
 			// user can review, add review controls
-			Fragment reviewControls = new Fragment("reviewControls", "reviewControlsFragment", this);
+			final Fragment reviewControls = new Fragment("reviewControls", "reviewControlsFragment",
+					this);
 
 			// show "approve" button if no review OR not current score
-			if (user.canApprovePatchset(repository) && (myReview == null || Score.approved != myReview.score)) {
+			if (user.canApprovePatchset(repository)
+					&& ((myReview == null) || (Score.approved != myReview.score))) {
 				reviewControls.add(createReviewLink("approveLink", Score.approved));
 			} else {
 				reviewControls.add(new Label("approveLink").setVisible(false));
 			}
 
 			// show "looks good" button if no review OR not current score
-			if (myReview == null || Score.looks_good != myReview.score) {
+			if ((myReview == null) || (Score.looks_good != myReview.score)) {
 				reviewControls.add(createReviewLink("looksGoodLink", Score.looks_good));
 			} else {
 				reviewControls.add(new Label("looksGoodLink").setVisible(false));
 			}
 
 			// show "needs improvement" button if no review OR not current score
-			if (myReview == null || Score.needs_improvement != myReview.score) {
-				reviewControls.add(createReviewLink("needsImprovementLink", Score.needs_improvement));
+			if ((myReview == null) || (Score.needs_improvement != myReview.score)) {
+				reviewControls
+						.add(createReviewLink("needsImprovementLink", Score.needs_improvement));
 			} else {
 				reviewControls.add(new Label("needsImprovementLink").setVisible(false));
 			}
 
 			// show "veto" button if no review OR not current score
-			if (user.canVetoPatchset(repository) && (myReview == null || Score.vetoed != myReview.score)) {
+			if (user.canVetoPatchset(repository)
+					&& ((myReview == null) || (Score.vetoed != myReview.score))) {
 				reviewControls.add(createReviewLink("vetoLink", Score.vetoed));
 			} else {
 				reviewControls.add(new Label("vetoLink").setVisible(false));
@@ -1203,22 +1292,32 @@ public class TicketPage extends RepositoryPage {
 			panel.add(new Label("reviewControls").setVisible(false));
 		}
 
-		String insertions = MessageFormat.format("<span style=\"color:darkGreen;font-weight:bold;\">+{0}</span>", ticket.insertions);
-		String deletions = MessageFormat.format("<span style=\"color:darkRed;font-weight:bold;\">-{0}</span>", ticket.deletions);
-		panel.add(new Label("patchsetStat", MessageFormat.format(StringUtils.escapeForHtml(getString("gb.diffStat"), false),
-				insertions, deletions)).setEscapeModelStrings(false));
+		final String insertions = MessageFormat.format(
+				"<span style=\"color:darkGreen;font-weight:bold;\">+{0}</span>",
+				this.ticket.insertions);
+		final String deletions = MessageFormat.format(
+				"<span style=\"color:darkRed;font-weight:bold;\">-{0}</span>",
+				this.ticket.deletions);
+		panel.add(
+				new Label("patchsetStat",
+						MessageFormat.format(
+								StringUtils.escapeForHtml(getString("gb.diffStat"), false),
+								insertions, deletions)).setEscapeModelStrings(false));
 
 		// changed paths list
-		List<PathChangeModel> paths = JGitUtils.getFilesInRange(getRepository(), currentPatchset.base, currentPatchset.tip);
-		ListDataProvider<PathChangeModel> pathsDp = new ListDataProvider<PathChangeModel>(paths);
-		DataView<PathChangeModel> pathsView = new DataView<PathChangeModel>("changedPath", pathsDp) {
+		final List<PathChangeModel> paths = JGitUtils.getFilesInRange(getRepository(),
+				currentPatchset.base, currentPatchset.tip);
+		final ListDataProvider<PathChangeModel> pathsDp = new ListDataProvider<PathChangeModel>(
+				paths);
+		final DataView<PathChangeModel> pathsView = new DataView<PathChangeModel>("changedPath",
+				pathsDp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
 			@Override
 			public void populateItem(final Item<PathChangeModel> item) {
 				final PathChangeModel entry = item.getModelObject();
-				Label changeType = new Label("changeType", "");
+				final Label changeType = new Label("changeType", "");
 				WicketUtils.setChangeTypeCssClass(changeType, entry.changeType);
 				setChangeTypeTooltip(changeType, entry.changeType);
 				item.add(changeType);
@@ -1228,26 +1327,29 @@ public class TicketPage extends RepositoryPage {
 				if (entry.isTree()) {
 					// tree
 					item.add(new LinkPanel("pathName", null, entry.path, TreePage.class,
-							WicketUtils
-									.newPathParameter(repositoryName, currentPatchset.tip, entry.path), true));
+							WicketUtils.newPathParameter(TicketPage.this.repositoryName,
+									currentPatchset.tip, entry.path),
+							true));
 					item.add(new Label("diffStat").setVisible(false));
 				} else if (entry.isSubmodule()) {
 					// submodule
-					String submoduleId = entry.objectId;
-					SubmoduleModel submodule = getSubmodule(entry.path);
+					final String submoduleId = entry.objectId;
+					final SubmoduleModel submodule = getSubmodule(entry.path);
 					submodulePath = submodule.gitblitPath;
 					hasSubmodule = submodule.hasSubmodule;
 
-					item.add(new LinkPanel("pathName", "list", entry.path + " @ " +
-							getShortObjectId(submoduleId), TreePage.class,
-							WicketUtils.newPathParameter(submodulePath, submoduleId, ""), true).setEnabled(hasSubmodule));
+					item.add(new LinkPanel("pathName", "list",
+							entry.path + " @ " + getShortObjectId(submoduleId), TreePage.class,
+							WicketUtils.newPathParameter(submodulePath, submoduleId, ""), true)
+									.setEnabled(hasSubmodule));
 					item.add(new Label("diffStat").setVisible(false));
 				} else {
 					// blob
 					String displayPath = entry.path;
 					String path = entry.path;
 					if (entry.isSymlink()) {
-						RevCommit commit = JGitUtils.getCommit(getRepository(), PatchsetCommand.getTicketBranch(ticket.number));
+						final RevCommit commit = JGitUtils.getCommit(getRepository(),
+								PatchsetCommand.getTicketBranch(TicketPage.this.ticket.number));
 						path = JGitUtils.getStringContent(getRepository(), commit.getTree(), path);
 						displayPath = entry.path + " -> " + path;
 					}
@@ -1255,39 +1357,49 @@ public class TicketPage extends RepositoryPage {
 					if (entry.changeType.equals(ChangeType.ADD)) {
 						// add show view
 						item.add(new LinkPanel("pathName", "list", displayPath, BlobPage.class,
-								WicketUtils.newPathParameter(repositoryName, currentPatchset.tip, path), true));
+								WicketUtils.newPathParameter(TicketPage.this.repositoryName,
+										currentPatchset.tip, path),
+								true));
 					} else if (entry.changeType.equals(ChangeType.DELETE)) {
 						// delete, show label
 						item.add(new Label("pathName", displayPath));
 					} else {
 						// mod, show diff
 						item.add(new LinkPanel("pathName", "list", displayPath, BlobDiffPage.class,
-								WicketUtils.newPathParameter(repositoryName, currentPatchset.tip, path), true));
+								WicketUtils.newPathParameter(TicketPage.this.repositoryName,
+										currentPatchset.tip, path),
+								true));
 					}
-					item.add(new DiffStatPanel("diffStat", entry.insertions, entry.deletions, true));
+					item.add(
+							new DiffStatPanel("diffStat", entry.insertions, entry.deletions, true));
 				}
 
 				// quick links
 				if (entry.isSubmodule()) {
 					// submodule
-					item.add(setNewTarget(new BookmarkablePageLink<Void>("diff", BlobDiffPage.class, WicketUtils
-							.newPathParameter(repositoryName, entry.commitId, entry.path)))
-							.setEnabled(!entry.changeType.equals(ChangeType.ADD)));
-					item.add(new BookmarkablePageLink<Void>("view", CommitPage.class, WicketUtils
-							.newObjectParameter(submodulePath, entry.objectId)).setEnabled(hasSubmodule));
+					item.add(setNewTarget(new BookmarkablePageLink<Void>("diff", BlobDiffPage.class,
+							WicketUtils.newPathParameter(TicketPage.this.repositoryName,
+									entry.commitId, entry.path)))
+											.setEnabled(!entry.changeType.equals(ChangeType.ADD)));
+					item.add(new BookmarkablePageLink<Void>("view", CommitPage.class,
+							WicketUtils.newObjectParameter(submodulePath, entry.objectId))
+									.setEnabled(hasSubmodule));
 				} else {
 					// tree or blob
-					item.add(setNewTarget(new BookmarkablePageLink<Void>("diff", BlobDiffPage.class, WicketUtils
-							.newBlobDiffParameter(repositoryName, currentPatchset.base, currentPatchset.tip, entry.path)))
-							.setEnabled(!entry.changeType.equals(ChangeType.ADD)
-									&& !entry.changeType.equals(ChangeType.DELETE)));
-					item.add(setNewTarget(new BookmarkablePageLink<Void>("view", BlobPage.class, WicketUtils
-							.newPathParameter(repositoryName, currentPatchset.tip, entry.path)))
-							.setEnabled(!entry.changeType.equals(ChangeType.DELETE)));
+					item.add(setNewTarget(new BookmarkablePageLink<Void>("diff", BlobDiffPage.class,
+							WicketUtils.newBlobDiffParameter(TicketPage.this.repositoryName,
+									currentPatchset.base, currentPatchset.tip, entry.path)))
+											.setEnabled(!entry.changeType.equals(ChangeType.ADD)
+													&& !entry.changeType
+															.equals(ChangeType.DELETE)));
+					item.add(setNewTarget(new BookmarkablePageLink<Void>("view", BlobPage.class,
+							WicketUtils.newPathParameter(TicketPage.this.repositoryName,
+									currentPatchset.tip, entry.path))).setEnabled(
+											!entry.changeType.equals(ChangeType.DELETE)));
 				}
 
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		panel.add(pathsView);
@@ -1299,7 +1411,8 @@ public class TicketPage extends RepositoryPage {
 	}
 
 	protected IconAjaxLink<String> createReviewLink(String wicketId, final Score score) {
-		return new IconAjaxLink<String>(wicketId, getScoreClass(score), Model.of(getScoreDescription(score))) {
+		return new IconAjaxLink<String>(wicketId, getScoreClass(score),
+				Model.of(getScoreDescription(score))) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -1349,14 +1462,15 @@ public class TicketPage extends RepositoryPage {
 	}
 
 	protected void review(Score score) {
-		UserModel user = GitBlitWebSession.get().getUser();
-		Patchset ps = ticket.getCurrentPatchset();
-		Change change = new Change(user.username);
-		change.review(ps, score, !ticket.isReviewer(user.username));
-		if (!ticket.isWatching(user.username)) {
+		final UserModel user = GitBlitWebSession.get().getUser();
+		final Patchset ps = this.ticket.getCurrentPatchset();
+		final Change change = new Change(user.username);
+		change.review(ps, score, !this.ticket.isReviewer(user.username));
+		if (!this.ticket.isWatching(user.username)) {
 			change.watch(user.username);
 		}
-		TicketModel updatedTicket = app().tickets().updateTicket(getRepositoryModel(), ticket.number, change);
+		final TicketModel updatedTicket = app().tickets().updateTicket(getRepositoryModel(),
+				this.ticket.number, change);
 		app().tickets().createNotifier().sendMailing(updatedTicket);
 		redirectTo(TicketsPage.class, getPageParameters());
 	}
@@ -1366,14 +1480,18 @@ public class TicketPage extends RepositoryPage {
 		return x;
 	}
 
-	protected void addGitCheckoutInstructions(UserModel user, RepositoryModel repository, MarkupContainer panel) {
+	protected void addGitCheckoutInstructions(UserModel user, RepositoryModel repository,
+			MarkupContainer panel) {
 		panel.add(new Label("gitStep1", MessageFormat.format(getString("gb.stepN"), 1)));
 		panel.add(new Label("gitStep2", MessageFormat.format(getString("gb.stepN"), 2)));
 
-		String ticketBranch  = Repository.shortenRefName(PatchsetCommand.getTicketBranch(ticket.number));
+		final String ticketBranch = Repository
+				.shortenRefName(PatchsetCommand.getTicketBranch(this.ticket.number));
 
-		String step1 = "git fetch origin";
-		String step2 = MessageFormat.format("git checkout {0} && git pull --ff-only\nOR\ngit checkout {0} && git reset --hard origin/{0}", ticketBranch);
+		final String step1 = "git fetch origin";
+		final String step2 = MessageFormat.format(
+				"git checkout {0} && git pull --ff-only\nOR\ngit checkout {0} && git reset --hard origin/{0}",
+				ticketBranch);
 
 		panel.add(new Label("gitPreStep1", step1));
 		panel.add(new Label("gitPreStep2", step2));
@@ -1382,14 +1500,15 @@ public class TicketPage extends RepositoryPage {
 		panel.add(createCopyFragment("gitCopyStep2", step2.replace("\n", " && ")));
 	}
 
-	protected void addPtCheckoutInstructions(UserModel user, RepositoryModel repository, MarkupContainer panel) {
-		String step1 = MessageFormat.format("pt checkout {0,number,0}", ticket.number);
+	protected void addPtCheckoutInstructions(UserModel user, RepositoryModel repository,
+			MarkupContainer panel) {
+		final String step1 = MessageFormat.format("pt checkout {0,number,0}", this.ticket.number);
 		panel.add(new Label("ptPreStep", step1));
 		panel.add(createCopyFragment("ptCopyStep", step1));
 	}
 
 	/**
-	 * Adds a merge panel for the patchset to the markup container.  The panel
+	 * Adds a merge panel for the patchset to the markup container. The panel
 	 * may just a message if the patchset can not be merged.
 	 *
 	 * @param c
@@ -1397,7 +1516,7 @@ public class TicketPage extends RepositoryPage {
 	 * @param repository
 	 */
 	protected Component createMergePanel(UserModel user, RepositoryModel repository) {
-		Patchset patchset = ticket.getCurrentPatchset();
+		final Patchset patchset = this.ticket.getCurrentPatchset();
 		if (patchset == null) {
 			// no patchset to merge
 			return new Label("mergePanel");
@@ -1406,75 +1525,89 @@ public class TicketPage extends RepositoryPage {
 		boolean allowMerge;
 		if (repository.requireApproval) {
 			// repository requires approval
-			allowMerge = ticket.isOpen() && ticket.isApproved(patchset);
+			allowMerge = this.ticket.isOpen() && this.ticket.isApproved(patchset);
 		} else {
 			// vetoes are binding
-			allowMerge = ticket.isOpen() && !ticket.isVetoed(patchset);
+			allowMerge = this.ticket.isOpen() && !this.ticket.isVetoed(patchset);
 		}
 
-		MergeStatus mergeStatus = JGitUtils.canMerge(getRepository(), patchset.tip, ticket.mergeTo, repository.mergeType);
+		final MergeStatus mergeStatus = JGitUtils.canMerge(getRepository(), patchset.tip,
+				this.ticket.mergeTo, repository.mergeType);
 		if (allowMerge) {
 			if (MergeStatus.MERGEABLE == mergeStatus) {
-				// patchset can be cleanly merged to integration branch OR has already been merged
-				Fragment mergePanel = new Fragment("mergePanel", "mergeableFragment", this);
-				mergePanel.add(new Label("mergeTitle", MessageFormat.format(getString("gb.patchsetMergeable"), ticket.mergeTo)));
+				// patchset can be cleanly merged to integration branch OR has
+				// already been merged
+				final Fragment mergePanel = new Fragment("mergePanel", "mergeableFragment", this);
+				mergePanel.add(new Label("mergeTitle", MessageFormat
+						.format(getString("gb.patchsetMergeable"), this.ticket.mergeTo)));
 				if (user.canPush(repository)) {
 					// user can merge locally
-					SimpleAjaxLink<String> mergeButton = new SimpleAjaxLink<String>("mergeButton", Model.of(getString("gb.merge"))) {
+					final SimpleAjaxLink<String> mergeButton = new SimpleAjaxLink<String>(
+							"mergeButton", Model.of(getString("gb.merge"))) {
 
 						private static final long serialVersionUID = 1L;
 
 						@Override
 						public void onClick(AjaxRequestTarget target) {
 
-							// ensure the patchset is still current AND not vetoed
-							Patchset patchset = ticket.getCurrentPatchset();
-							final TicketModel refreshedTicket = app().tickets().getTicket(getRepositoryModel(), ticket.number);
+							// ensure the patchset is still current AND not
+							// vetoed
+							final Patchset patchset = TicketPage.this.ticket.getCurrentPatchset();
+							final TicketModel refreshedTicket = app().tickets()
+									.getTicket(getRepositoryModel(), TicketPage.this.ticket.number);
 							if (patchset.equals(refreshedTicket.getCurrentPatchset())) {
 								// patchset is current, check for recent veto
 								if (!refreshedTicket.isVetoed(patchset)) {
 									// patchset is not vetoed
 
-									// execute the merge using the ticket service
+									// execute the merge using the ticket
+									// service
 									app().tickets().exec(new Runnable() {
 										@Override
 										public void run() {
-											PatchsetReceivePack rp = new PatchsetReceivePack(
-													app().gitblit(),
-													getRepository(),
+											final PatchsetReceivePack rp = new PatchsetReceivePack(
+													app().gitblit(), getRepository(),
 													getRepositoryModel(),
 													GitBlitWebSession.get().getUser());
-											MergeStatus result = rp.merge(refreshedTicket);
+											final MergeStatus result = rp.merge(refreshedTicket);
 											if (MergeStatus.MERGED == result) {
-												// notify participants and watchers
+												// notify participants and
+												// watchers
 												rp.sendAll();
 											} else {
 												// merge failure
-												String msg = MessageFormat.format("Failed to merge ticket {0,number,0}: {1}", ticket.number, result.name());
-												logger.error(msg);
+												final String msg = MessageFormat.format(
+														"Failed to merge ticket {0,number,0}: {1}",
+														TicketPage.this.ticket.number,
+														result.name());
+												TicketPage.this.logger.error(msg);
 												GitBlitWebSession.get().cacheErrorMessage(msg);
 											}
 										}
 									});
 								} else {
 									// vetoed patchset
-									String msg = MessageFormat.format("Can not merge ticket {0,number,0}, patchset {1,number,0} has been vetoed!",
-											ticket.number, patchset.number);
+									final String msg = MessageFormat.format(
+											"Can not merge ticket {0,number,0}, patchset {1,number,0} has been vetoed!",
+											TicketPage.this.ticket.number, patchset.number);
 									GitBlitWebSession.get().cacheErrorMessage(msg);
-									logger.error(msg);
+									TicketPage.this.logger.error(msg);
 								}
 							} else {
 								// not current patchset
-								String msg = MessageFormat.format("Can not merge ticket {0,number,0}, the patchset has been updated!", ticket.number);
+								final String msg = MessageFormat.format(
+										"Can not merge ticket {0,number,0}, the patchset has been updated!",
+										TicketPage.this.ticket.number);
 								GitBlitWebSession.get().cacheErrorMessage(msg);
-								logger.error(msg);
+								TicketPage.this.logger.error(msg);
 							}
-							
+
 							redirectTo(TicketsPage.class, getPageParameters());
 						}
 					};
 					mergePanel.add(mergeButton);
-					Component instructions = getMergeInstructions(user, repository, "mergeMore", "gb.patchsetMergeableMore");
+					final Component instructions = getMergeInstructions(user, repository,
+							"mergeMore", "gb.patchsetMergeableMore");
 					mergePanel.add(instructions);
 				} else {
 					mergePanel.add(new Label("mergeButton").setVisible(false));
@@ -1483,22 +1616,30 @@ public class TicketPage extends RepositoryPage {
 				return mergePanel;
 			} else if (MergeStatus.ALREADY_MERGED == mergeStatus) {
 				// patchset already merged
-				Fragment mergePanel = new Fragment("mergePanel", "alreadyMergedFragment", this);
-				mergePanel.add(new Label("mergeTitle", MessageFormat.format(getString("gb.patchsetAlreadyMerged"), ticket.mergeTo)));
+				final Fragment mergePanel = new Fragment("mergePanel", "alreadyMergedFragment",
+						this);
+				mergePanel.add(new Label("mergeTitle", MessageFormat
+						.format(getString("gb.patchsetAlreadyMerged"), this.ticket.mergeTo)));
 				return mergePanel;
 			} else if (MergeStatus.MISSING_INTEGRATION_BRANCH == mergeStatus) {
 				// target/integration branch is missing
-				Fragment mergePanel = new Fragment("mergePanel", "notMergeableFragment", this);
-				mergePanel.add(new Label("mergeTitle", MessageFormat.format(getString("gb.patchsetNotMergeable"), ticket.mergeTo)));
-				mergePanel.add(new Label("mergeMore", MessageFormat.format(getString("gb.missingIntegrationBranchMore"), ticket.mergeTo)));
+				final Fragment mergePanel = new Fragment("mergePanel", "notMergeableFragment",
+						this);
+				mergePanel.add(new Label("mergeTitle", MessageFormat
+						.format(getString("gb.patchsetNotMergeable"), this.ticket.mergeTo)));
+				mergePanel.add(new Label("mergeMore", MessageFormat.format(
+						getString("gb.missingIntegrationBranchMore"), this.ticket.mergeTo)));
 				return mergePanel;
 			} else {
 				// patchset can not be cleanly merged
-				Fragment mergePanel = new Fragment("mergePanel", "notMergeableFragment", this);
-				mergePanel.add(new Label("mergeTitle", MessageFormat.format(getString("gb.patchsetNotMergeable"), ticket.mergeTo)));
+				final Fragment mergePanel = new Fragment("mergePanel", "notMergeableFragment",
+						this);
+				mergePanel.add(new Label("mergeTitle", MessageFormat
+						.format(getString("gb.patchsetNotMergeable"), this.ticket.mergeTo)));
 				if (user.canPush(repository)) {
 					// user can merge locally
-					Component instructions = getMergeInstructions(user, repository, "mergeMore", "gb.patchsetNotMergeableMore");
+					final Component instructions = getMergeInstructions(user, repository,
+							"mergeMore", "gb.patchsetNotMergeableMore");
 					mergePanel.add(instructions);
 				} else {
 					mergePanel.add(new Label("mergeMore").setVisible(false));
@@ -1509,19 +1650,24 @@ public class TicketPage extends RepositoryPage {
 			// merge not allowed
 			if (MergeStatus.ALREADY_MERGED == mergeStatus) {
 				// patchset already merged
-				Fragment mergePanel = new Fragment("mergePanel", "alreadyMergedFragment", this);
-				mergePanel.add(new Label("mergeTitle", MessageFormat.format(getString("gb.patchsetAlreadyMerged"), ticket.mergeTo)));
+				final Fragment mergePanel = new Fragment("mergePanel", "alreadyMergedFragment",
+						this);
+				mergePanel.add(new Label("mergeTitle", MessageFormat
+						.format(getString("gb.patchsetAlreadyMerged"), this.ticket.mergeTo)));
 				return mergePanel;
-			} else if (ticket.isVetoed(patchset)) {
+			} else if (this.ticket.isVetoed(patchset)) {
 				// patchset has been vetoed
-				Fragment mergePanel =  new Fragment("mergePanel", "vetoedFragment", this);
-				mergePanel.add(new Label("mergeTitle", MessageFormat.format(getString("gb.patchsetNotMergeable"), ticket.mergeTo)));
+				final Fragment mergePanel = new Fragment("mergePanel", "vetoedFragment", this);
+				mergePanel.add(new Label("mergeTitle", MessageFormat
+						.format(getString("gb.patchsetNotMergeable"), this.ticket.mergeTo)));
 				return mergePanel;
 			} else if (repository.requireApproval) {
 				// patchset has been not been approved for merge
-				Fragment mergePanel = new Fragment("mergePanel", "notApprovedFragment", this);
-				mergePanel.add(new Label("mergeTitle", MessageFormat.format(getString("gb.patchsetNotApproved"), ticket.mergeTo)));
-				mergePanel.add(new Label("mergeMore", MessageFormat.format(getString("gb.patchsetNotApprovedMore"), ticket.mergeTo)));
+				final Fragment mergePanel = new Fragment("mergePanel", "notApprovedFragment", this);
+				mergePanel.add(new Label("mergeTitle", MessageFormat
+						.format(getString("gb.patchsetNotApproved"), this.ticket.mergeTo)));
+				mergePanel.add(new Label("mergeMore", MessageFormat
+						.format(getString("gb.patchsetNotApprovedMore"), this.ticket.mergeTo)));
 				return mergePanel;
 			} else {
 				// other case
@@ -1530,21 +1676,27 @@ public class TicketPage extends RepositoryPage {
 		}
 	}
 
-	protected Component getMergeInstructions(UserModel user, RepositoryModel repository, String markupId, String infoKey) {
-		Fragment cmd = new Fragment(markupId, "commandlineMergeFragment", this);
-		cmd.add(new Label("instructions", MessageFormat.format(getString(infoKey), ticket.mergeTo)));
+	protected Component getMergeInstructions(UserModel user, RepositoryModel repository,
+			String markupId, String infoKey) {
+		final Fragment cmd = new Fragment(markupId, "commandlineMergeFragment", this);
+		cmd.add(new Label("instructions",
+				MessageFormat.format(getString(infoKey), this.ticket.mergeTo)));
 
 		// git instructions
 		cmd.add(new Label("mergeStep1", MessageFormat.format(getString("gb.stepN"), 1)));
 		cmd.add(new Label("mergeStep2", MessageFormat.format(getString("gb.stepN"), 2)));
 		cmd.add(new Label("mergeStep3", MessageFormat.format(getString("gb.stepN"), 3)));
 
-		String ticketBranch = Repository.shortenRefName(PatchsetCommand.getTicketBranch(ticket.number));
-		String reviewBranch = PatchsetCommand.getReviewBranch(ticket.number);
+		final String ticketBranch = Repository
+				.shortenRefName(PatchsetCommand.getTicketBranch(this.ticket.number));
+		final String reviewBranch = PatchsetCommand.getReviewBranch(this.ticket.number);
 
-		String step1 = MessageFormat.format("git checkout -b {0} {1}", reviewBranch, ticket.mergeTo);
-		String step2 = MessageFormat.format("git pull origin {0}", ticketBranch);
-		String step3 = MessageFormat.format("git checkout {0}\ngit merge {1}\ngit push origin {0}\ngit branch -d {1}", ticket.mergeTo, reviewBranch);
+		final String step1 = MessageFormat.format("git checkout -b {0} {1}", reviewBranch,
+				this.ticket.mergeTo);
+		final String step2 = MessageFormat.format("git pull origin {0}", ticketBranch);
+		final String step3 = MessageFormat.format(
+				"git checkout {0}\ngit merge {1}\ngit push origin {0}\ngit branch -d {1}",
+				this.ticket.mergeTo, reviewBranch);
 
 		cmd.add(new Label("mergePreStep1", step1));
 		cmd.add(new Label("mergePreStep2", step2));
@@ -1555,7 +1707,7 @@ public class TicketPage extends RepositoryPage {
 		cmd.add(createCopyFragment("mergeCopyStep3", step3.replace("\n", " && ")));
 
 		// pt instructions
-		String ptStep = MessageFormat.format("pt pull {0,number,0}", ticket.number);
+		final String ptStep = MessageFormat.format("pt pull {0,number,0}", this.ticket.number);
 		cmd.add(new Label("ptMergeStep", ptStep));
 		cmd.add(createCopyFragment("ptMergeCopyStep", step1.replace("\n", " && ")));
 		return cmd;
@@ -1569,12 +1721,12 @@ public class TicketPage extends RepositoryPage {
 	 * @return the primary repository url
 	 */
 	protected RepositoryUrl getRepositoryUrl(UserModel user, RepositoryModel repository) {
-		HttpServletRequest req = ((WebRequest) getRequest()).getHttpServletRequest();
-		List<RepositoryUrl> urls = app().services().getRepositoryUrls(req, user, repository);
+		final HttpServletRequest req = ((WebRequest) getRequest()).getHttpServletRequest();
+		final List<RepositoryUrl> urls = app().services().getRepositoryUrls(req, user, repository);
 		if (ArrayUtils.isEmpty(urls)) {
 			return null;
 		}
-		RepositoryUrl primary = urls.get(0);
+		final RepositoryUrl primary = urls.get(0);
 		return primary;
 	}
 
@@ -1586,15 +1738,17 @@ public class TicketPage extends RepositoryPage {
 	 */
 	protected TicketModel getTicket(RevCommit commit) {
 		try {
-			Map<String, Ref> refs = getRepository().getRefDatabase().getRefs(Constants.R_TICKETS_PATCHSETS);
-			for (Map.Entry<String, Ref> entry : refs.entrySet()) {
+			final Map<String, Ref> refs = getRepository().getRefDatabase()
+					.getRefs(Constants.R_TICKETS_PATCHSETS);
+			for (final Map.Entry<String, Ref> entry : refs.entrySet()) {
 				if (entry.getValue().getObjectId().equals(commit.getId())) {
-					long id = PatchsetCommand.getTicketNumber(entry.getKey());
-					TicketModel ticket = app().tickets().getTicket(getRepositoryModel(), id);
+					final long id = PatchsetCommand.getTicketNumber(entry.getKey());
+					final TicketModel ticket = app().tickets().getTicket(getRepositoryModel(), id);
 					return ticket;
 				}
 			}
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			logger().error("failed to determine ticket from ref", e);
 		}
 		return null;
@@ -1603,20 +1757,20 @@ public class TicketPage extends RepositoryPage {
 	protected String getPatchsetTypeCss(PatchsetType type) {
 		String typeCss;
 		switch (type) {
-			case Rebase:
-			case Rebase_Squash:
-				typeCss = TicketsUI.getLozengeClass(Status.Declined, false);
-				break;
-			case Squash:
-			case Amend:
-				typeCss = TicketsUI.getLozengeClass(Status.On_Hold, false);
-				break;
-			case Proposal:
-				typeCss = TicketsUI.getLozengeClass(Status.New, false);
-				break;
-			case FastForward:
-			default:
-				typeCss = null;
+		case Rebase:
+		case Rebase_Squash:
+			typeCss = TicketsUI.getLozengeClass(Status.Declined, false);
+			break;
+		case Squash:
+		case Amend:
+			typeCss = TicketsUI.getLozengeClass(Status.On_Hold, false);
+			break;
+		case Proposal:
+			typeCss = TicketsUI.getLozengeClass(Status.New, false);
+			break;
+		case FastForward:
+		default:
+			typeCss = null;
 			break;
 		}
 		return typeCss;
@@ -1634,64 +1788,68 @@ public class TicketPage extends RepositoryPage {
 
 	@Override
 	protected String getPageTitle(String repositoryName) {
-		return "#" + ticket.number + " - " + ticket.title;
+		return "#" + this.ticket.number + " - " + this.ticket.title;
 	}
 
 	protected Fragment createCopyFragment(String wicketId, String text) {
 		if (app().settings().getBoolean(Keys.web.allowFlashCopyToClipboard, true)) {
 			// clippy: flash-based copy & paste
-			Fragment copyFragment = new Fragment(wicketId, "clippyPanel", this);
-			String baseUrl = WicketUtils.getGitblitURL(getRequest());
-			ShockWaveComponent clippy = new ShockWaveComponent("clippy", baseUrl + "/clippy.swf");
+			final Fragment copyFragment = new Fragment(wicketId, "clippyPanel", this);
+			final String baseUrl = WicketUtils.getGitblitURL(getRequest());
+			final ShockWaveComponent clippy = new ShockWaveComponent("clippy",
+					baseUrl + "/clippy.swf");
 			clippy.setValue("flashVars", "text=" + StringUtils.encodeURL(text));
 			copyFragment.add(clippy);
 			return copyFragment;
 		} else {
 			// javascript: manual copy & paste with modal browser prompt dialog
-			Fragment copyFragment = new Fragment(wicketId, "jsPanel", this);
-			ContextImage img = WicketUtils.newImage("copyIcon", "clippy.png");
+			final Fragment copyFragment = new Fragment(wicketId, "jsPanel", this);
+			final ContextImage img = WicketUtils.newImage("copyIcon", "clippy.png");
 			img.add(new JavascriptTextPrompt("onclick", "Copy to Clipboard (Ctrl+C, Enter)", text));
 			copyFragment.add(img);
 			return copyFragment;
 		}
 	}
-	
-	private Link<Void> createDeletePatchsetLink(final RepositoryModel repositoryModel, final Patchset patchset)
-	{
-		Link<Void> deleteLink = new Link<Void>("deleteRevision") {
+
+	private Link<Void> createDeletePatchsetLink(final RepositoryModel repositoryModel,
+			final Patchset patchset) {
+		final Link<Void> deleteLink = new Link<Void>("deleteRevision") {
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onClick() {
-				Repository r = app().repositories().getRepository(repositoryModel.name);
-				UserModel user = GitBlitWebSession.get().getUser();
-				
+				final Repository r = app().repositories().getRepository(repositoryModel.name);
+				final UserModel user = GitBlitWebSession.get().getUser();
+
 				if (r == null) {
 					if (app().repositories().isCollectingGarbage(repositoryModel.name)) {
-						error(MessageFormat.format(getString("gb.busyCollectingGarbage"), repositoryModel.name));
+						error(MessageFormat.format(getString("gb.busyCollectingGarbage"),
+								repositoryModel.name));
 					} else {
-						error(MessageFormat.format("Failed to find repository {0}", repositoryModel.name));
+						error(MessageFormat.format("Failed to find repository {0}",
+								repositoryModel.name));
 					}
 					return;
 				}
-				
-				//Construct the ref name based on the patchset
-				String ticketShard = String.format("%02d", ticket.number);
+
+				// Construct the ref name based on the patchset
+				String ticketShard = String.format("%02d", TicketPage.this.ticket.number);
 				ticketShard = ticketShard.substring(ticketShard.length() - 2);
-				final String refName = String.format("%s%s/%d/%d", Constants.R_TICKETS_PATCHSETS, ticketShard, ticket.number, patchset.number);
+				final String refName = String.format("%s%s/%d/%d", Constants.R_TICKETS_PATCHSETS,
+						ticketShard, TicketPage.this.ticket.number, patchset.number);
 
 				Ref ref = null;
 				boolean success = true;
-				
+
 				try {
 					ref = r.getRef(refName);
-					
+
 					if (ref != null) {
 						success = JGitUtils.deleteBranchRef(r, ref.getName());
 					} else {
 						success = false;
 					}
-					
+
 					if (success) {
 						// clear commit cache
 						CommitCache.instance().clear(repositoryModel.name, refName);
@@ -1701,39 +1859,47 @@ public class TicketPage extends RepositoryPage {
 							RefLogUtils.deleteRef(user, r, ref);
 						}
 
-						TicketModel updatedTicket = app().tickets().deletePatchset(ticket, patchset, user.username);
-												
+						final TicketModel updatedTicket = app().tickets()
+								.deletePatchset(TicketPage.this.ticket, patchset, user.username);
+
 						if (updatedTicket == null) {
 							success = false;
 						}
 					}
-				} catch (IOException e) {
+				}
+				catch (final IOException e) {
 					logger().error("failed to determine ticket from ref", e);
 					success = false;
-				} finally {
+				}
+				finally {
 					r.close();
 				}
 
 				if (success) {
-					getSession().info(MessageFormat.format(getString("gb.deletePatchsetSuccess"), patchset.number));
-					logger().info(MessageFormat.format("{0} deleted patchset {1} from ticket {2}", 
-							user.username, patchset.number, ticket.number));
+					getSession().info(MessageFormat.format(getString("gb.deletePatchsetSuccess"),
+							patchset.number));
+					logger().info(MessageFormat.format("{0} deleted patchset {1} from ticket {2}",
+							user.username, patchset.number, TicketPage.this.ticket.number));
 				} else {
-					getSession().error(MessageFormat.format(getString("gb.deletePatchsetFailure"),patchset.number));
+					getSession().error(MessageFormat.format(getString("gb.deletePatchsetFailure"),
+							patchset.number));
 				}
-				
-				//Force reload of the page to rebuild ticket change cache
-				String relativeUrl = urlFor(TicketsPage.class, getPageParameters()).toString();
-				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+
+				// Force reload of the page to rebuild ticket change cache
+				final String relativeUrl = urlFor(TicketsPage.class, getPageParameters())
+						.toString();
+				final String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
 				setResponsePage(new RedirectPage(absoluteUrl));
 			}
 		};
 
-		WicketUtils.setHtmlTooltip(deleteLink, MessageFormat.format(getString("gb.deletePatchset"), patchset.number));
-		
-		deleteLink.add(new JavascriptEventConfirmation("onclick", MessageFormat.format(getString("gb.deletePatchset"), patchset.number)));
-		
+		WicketUtils.setHtmlTooltip(deleteLink,
+				MessageFormat.format(getString("gb.deletePatchset"), patchset.number));
+
+		deleteLink.add(new JavascriptEventConfirmation("onclick",
+				MessageFormat.format(getString("gb.deletePatchset"), patchset.number)));
+
 		return deleteLink;
 	}
-	
+
 }

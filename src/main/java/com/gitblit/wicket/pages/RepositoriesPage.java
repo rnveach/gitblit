@@ -63,40 +63,43 @@ public class RepositoriesPage extends RootPage {
 	private void setup(PageParameters params) {
 		setupPage("", "");
 		// check to see if we should display a login message
-		boolean authenticateView = app().settings().getBoolean(Keys.web.authenticateViewPages, true);
+		final boolean authenticateView = app().settings().getBoolean(
+				Keys.web.authenticateViewPages, true);
 		if (authenticateView && !GitBlitWebSession.get().isLoggedIn()) {
-			String messageSource = app().settings().getString(Keys.web.loginMessage, "gitblit");
-			String message = readMarkdown(messageSource, "login.mkd");
-			Component repositoriesMessage = new Label("repositoriesMessage", message);
+			final String messageSource = app().settings().getString(Keys.web.loginMessage,
+					"gitblit");
+			final String message = readMarkdown(messageSource, "login.mkd");
+			final Component repositoriesMessage = new Label("repositoriesMessage", message);
 			add(repositoriesMessage.setEscapeModelStrings(false));
 			add(new Label("repositoriesPanel"));
 			return;
 		}
 
 		// Load the markdown welcome message
-		String messageSource = app().settings().getString(Keys.web.repositoriesMessage, "gitblit");
-		String message = readMarkdown(messageSource, "welcome.mkd");
-		Component repositoriesMessage = new Label("repositoriesMessage", message)
+		final String messageSource = app().settings().getString(Keys.web.repositoriesMessage,
+				"gitblit");
+		final String message = readMarkdown(messageSource, "welcome.mkd");
+		final Component repositoriesMessage = new Label("repositoriesMessage", message)
 				.setEscapeModelStrings(false).setVisible(message.length() > 0);
 		add(repositoriesMessage);
 
 		// conditionally include personal repositories in this page
-		List<RepositoryModel> repositories = getRepositories(params);
+		final List<RepositoryModel> repositories = getRepositories(params);
 		if (!app().settings().getBoolean(Keys.web.includePersonalRepositories, true)) {
-			Iterator<RepositoryModel> itr = repositories.iterator();
+			final Iterator<RepositoryModel> itr = repositories.iterator();
 			while (itr.hasNext()) {
-				RepositoryModel rm = itr.next();
+				final RepositoryModel rm = itr.next();
 				if (rm.isPersonalRepository()) {
 					itr.remove();
 				}
 			}
 		}
 
-		RepositoriesPanel repositoriesPanel = new RepositoriesPanel("repositoriesPanel", showAdmin,
-				true, repositories, true, getAccessRestrictions());
+		final RepositoriesPanel repositoriesPanel = new RepositoriesPanel("repositoriesPanel",
+				this.showAdmin, true, repositories, true, getAccessRestrictions());
 		// push the panel down if we are hiding the admin controls and the
 		// welcome message
-		if (!showAdmin && !repositoriesMessage.isVisible()) {
+		if (!this.showAdmin && !repositoriesMessage.isVisible()) {
 			WicketUtils.setCssStyle(repositoriesPanel, "padding-top:5px;");
 		}
 		add(repositoriesPanel);
@@ -104,9 +107,9 @@ public class RepositoriesPage extends RootPage {
 
 	@Override
 	protected void addDropDownMenus(List<NavLink> navLinks) {
-		PageParameters params = getPageParameters();
+		final PageParameters params = getPageParameters();
 
-		DropDownPageMenuNavLink menu = new DropDownPageMenuNavLink("gb.filters",
+		final DropDownPageMenuNavLink menu = new DropDownPageMenuNavLink("gb.filters",
 				RepositoriesPage.class);
 		// preserve time filter option on repository choices
 		menu.menuItems.addAll(getRepositoryFilterItems(params));
@@ -130,15 +133,16 @@ public class RepositoriesPage extends RootPage {
 		} else {
 			// Read user-supplied message
 			if (!StringUtils.isEmpty(messageSource)) {
-				File file = app().runtime().getFileOrFolder(messageSource);
+				final File file = app().runtime().getFileOrFolder(messageSource);
 				if (file.exists()) {
 					try {
-						FileInputStream fis = new FileInputStream(file);
-						InputStreamReader reader = new InputStreamReader(fis,
+						final FileInputStream fis = new FileInputStream(file);
+						final InputStreamReader reader = new InputStreamReader(fis,
 								Constants.CHARACTER_ENCODING);
 						message = MarkdownUtils.transformMarkdown(reader);
 						reader.close();
-					} catch (Throwable t) {
+					}
+					catch (final Throwable t) {
 						message = getString("gb.failedToRead") + " " + file;
 						warn(message, t);
 					}
@@ -151,13 +155,13 @@ public class RepositoriesPage extends RootPage {
 	}
 
 	private String readDefaultMarkdown(String file) {
-		String base = file.substring(0, file.lastIndexOf('.'));
-		String ext = file.substring(file.lastIndexOf('.'));
-		String lc = getLanguageCode();
-		String cc = getCountryCode();
+		final String base = file.substring(0, file.lastIndexOf('.'));
+		final String ext = file.substring(file.lastIndexOf('.'));
+		final String lc = getLanguageCode();
+		final String cc = getCountryCode();
 
 		// try to read file_en-us.ext, file_en.ext, file.ext
-		List<String> files = new ArrayList<String>();
+		final List<String> files = new ArrayList<String>();
 		if (!StringUtils.isEmpty(lc)) {
 			if (!StringUtils.isEmpty(cc)) {
 				files.add(base + "_" + lc + "-" + cc + ext);
@@ -167,11 +171,11 @@ public class RepositoriesPage extends RootPage {
 		}
 		files.add(file);
 
-		for (String name : files) {
+		for (final String name : files) {
 			String message;
 			InputStreamReader reader = null;
 			try {
-				InputStream is = getClass().getResourceAsStream("/" + name);
+				final InputStream is = getClass().getResourceAsStream("/" + name);
 				if (is == null) {
 					continue;
 				}
@@ -179,15 +183,18 @@ public class RepositoriesPage extends RootPage {
 				message = MarkdownUtils.transformMarkdown(reader);
 				reader.close();
 				return message;
-			} catch (Throwable t) {
+			}
+			catch (final Throwable t) {
 				message = MessageFormat.format(getString("gb.failedToReadMessage"), file);
 				error(message, t, false);
 				return message;
-			} finally {
+			}
+			finally {
 				if (reader != null) {
 					try {
 						reader.close();
-					} catch (Exception e) {
+					}
+					catch (final Exception e) {
 					}
 				}
 			}

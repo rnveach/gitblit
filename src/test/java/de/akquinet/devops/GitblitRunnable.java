@@ -29,8 +29,8 @@ import com.gitblit.tests.GitBlitSuite;
  */
 public class GitblitRunnable implements Runnable {
 
-	private int httpPort, httpsPort, shutdownPort;
-	private String userPropertiesPath, gitblitPropertiesPath;
+	private final int httpPort, httpsPort, shutdownPort;
+	private final String userPropertiesPath, gitblitPropertiesPath;
 	private boolean startFailed = false;
 
 	/**
@@ -56,27 +56,28 @@ public class GitblitRunnable implements Runnable {
 	 * 
 	 * @see java.lang.Runnable#run()
 	 */
+	@Override
 	public void run() {
 		boolean portsFree = false;
 		long lastRun = -1;
 		while (!portsFree) {
-			long current = System.currentTimeMillis();
-			if (lastRun == -1 || lastRun + 100 < current) {
-				portsFree = areAllPortsFree(new int[] { httpPort, httpsPort,
-						shutdownPort }, "127.0.0.1");
+			final long current = System.currentTimeMillis();
+			if ((lastRun == -1) || ((lastRun + 100) < current)) {
+				portsFree = areAllPortsFree(new int[] { this.httpPort, this.httpsPort,
+						this.shutdownPort }, "127.0.0.1");
 			}
 			lastRun = current;
 
 		}
 		try {
-			GitBlitServer4UITests.main("--httpPort", "" + httpPort, "--httpsPort", ""
-					+ httpsPort, "--shutdownPort", "" + shutdownPort,
-					"--repositoriesFolder",
-					"\"" + GitBlitSuite.REPOSITORIES.getAbsolutePath() + "\"",
-					"--userService", userPropertiesPath, "--settings",
-					gitblitPropertiesPath);
+			GitBlitServer4UITests.main("--httpPort", "" + this.httpPort, "--httpsPort", ""
+					+ this.httpsPort, "--shutdownPort", "" + this.shutdownPort,
+					"--repositoriesFolder", "\"" + GitBlitSuite.REPOSITORIES.getAbsolutePath()
+							+ "\"", "--userService", this.userPropertiesPath, "--settings",
+					this.gitblitPropertiesPath);
 			setStartFailed(false);
-		} catch (Exception iex) {
+		}
+		catch (final Exception iex) {
 			System.out.println("Gitblit server start failed");
 			setStartFailed(true);
 		}
@@ -96,30 +97,27 @@ public class GitblitRunnable implements Runnable {
 	 * @return
 	 */
 	public static boolean areAllPortsFree(int[] ports, String inetAddress) {
-		System.out
-				.println("\n"
-						+ System.currentTimeMillis()
-						+ " ----------------------------------- testing if all ports are free ...");
+		System.out.println("\n" + System.currentTimeMillis()
+				+ " ----------------------------------- testing if all ports are free ...");
 		String blockedPorts = "";
 		for (int i = 0; i < ports.length; i++) {
 			ServerSocket s;
 			try {
-				s = new ServerSocket(ports[i], 1,
-						InetAddress.getByName(inetAddress));
+				s = new ServerSocket(ports[i], 1, InetAddress.getByName(inetAddress));
 				s.close();
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 				if (!blockedPorts.equals("")) {
 					blockedPorts += ", ";
 				}
 			}
 		}
 		if (blockedPorts.equals("")) {
-			System.out
-					.println(" ----------------------------------- ... verified");
+			System.out.println(" ----------------------------------- ... verified");
 			return true;
 		}
-		System.out.println(" ----------------------------------- ... "
-				+ blockedPorts + " are still blocked");
+		System.out.println(" ----------------------------------- ... " + blockedPorts
+				+ " are still blocked");
 		return false;
 	}
 
@@ -128,6 +126,6 @@ public class GitblitRunnable implements Runnable {
 	}
 
 	public boolean isStartFailed() {
-		return startFailed;
+		return this.startFailed;
 	}
 }

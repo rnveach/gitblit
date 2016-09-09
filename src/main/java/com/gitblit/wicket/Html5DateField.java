@@ -6,8 +6,8 @@ import java.util.Date;
 import java.util.Locale;
 
 import org.apache.wicket.Session;
-import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.AbstractTextComponent.ITextFormatProvider;
+import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.util.convert.IConverter;
 import org.apache.wicket.util.convert.converters.DateConverter;
@@ -23,33 +23,32 @@ public class Html5DateField extends TextField<Date> implements ITextFormatProvid
 	private IConverter converter = null;
 
 	/**
-	 * Creates a new Html5DateField, without a specified pattern. This is the same as calling
-	 * <code>new Html5DateField(id, Date.class)</code>
+	 * Creates a new Html5DateField, without a specified pattern. This is the
+	 * same as calling <code>new Html5DateField(id, Date.class)</code>
 	 * 
 	 * @param id
 	 *            The id of the date field
 	 */
-	public Html5DateField(String id)
-	{
+	public Html5DateField(String id) {
 		this(id, null, defaultDatePattern());
 	}
 
 	/**
-	 * Creates a new Html5DateField, without a specified pattern. This is the same as calling
-	 * <code>new Html5DateField(id, object, Date.class)</code>
+	 * Creates a new Html5DateField, without a specified pattern. This is the
+	 * same as calling <code>new Html5DateField(id, object, Date.class)</code>
 	 * 
 	 * @param id
 	 *            The id of the date field
 	 * @param model
 	 *            The model
 	 */
-	public Html5DateField(String id, IModel<Date> model)
-	{
+	public Html5DateField(String id, IModel<Date> model) {
 		this(id, model, defaultDatePattern());
 	}
 
 	/**
-	 * Creates a new Html5DateField bound with a specific <code>SimpleDateFormat</code> pattern.
+	 * Creates a new Html5DateField bound with a specific
+	 * <code>SimpleDateFormat</code> pattern.
 	 * 
 	 * @param id
 	 *            The id of the date field
@@ -57,13 +56,13 @@ public class Html5DateField extends TextField<Date> implements ITextFormatProvid
 	 *            A <code>SimpleDateFormat</code> pattern
 	 * 
 	 */
-	public Html5DateField(String id, String datePattern)
-	{
+	public Html5DateField(String id, String datePattern) {
 		this(id, null, datePattern);
 	}
 
 	/**
-	 * Creates a new DateTextField bound with a specific <code>SimpleDateFormat</code> pattern.
+	 * Creates a new DateTextField bound with a specific
+	 * <code>SimpleDateFormat</code> pattern.
 	 * 
 	 * @param id
 	 *            The id of the date field
@@ -72,22 +71,18 @@ public class Html5DateField extends TextField<Date> implements ITextFormatProvid
 	 * @param datePattern
 	 *            A <code>SimpleDateFormat</code> pattern
 	 */
-	public Html5DateField(String id, IModel<Date> model, String datePattern)
-	{
+	public Html5DateField(String id, IModel<Date> model, String datePattern) {
 		super(id, model, Date.class);
 		this.datePattern = datePattern;
-		converter = new DateConverter()
-		{
+		this.converter = new DateConverter() {
 			private static final long serialVersionUID = 1L;
 
 			/**
 			 * @see org.apache.wicket.util.convert.converters.DateConverter#getDateFormat(java.util.Locale)
 			 */
 			@Override
-			public DateFormat getDateFormat(Locale locale)
-			{
-				if (locale == null)
-				{
+			public DateFormat getDateFormat(Locale locale) {
+				if (locale == null) {
 					locale = Locale.getDefault();
 				}
 				return new SimpleDateFormat(Html5DateField.this.datePattern, locale);
@@ -96,8 +91,8 @@ public class Html5DateField extends TextField<Date> implements ITextFormatProvid
 	}
 
 	/**
-	 * Returns the default converter if created without pattern; otherwise it returns a
-	 * pattern-specific converter.
+	 * Returns the default converter if created without pattern; otherwise it
+	 * returns a pattern-specific converter.
 	 * 
 	 * @param type
 	 *            The type for which the converter should work
@@ -105,15 +100,11 @@ public class Html5DateField extends TextField<Date> implements ITextFormatProvid
 	 * @return A pattern-specific converter
 	 */
 	@Override
-	public IConverter getConverter(Class<?> type)
-	{
-		if (converter == null)
-		{
+	public IConverter getConverter(Class<?> type) {
+		if (this.converter == null) {
 			return super.getConverter(type);
-		}
-		else
-		{
-			return converter;
+		} else {
+			return this.converter;
 		}
 	}
 
@@ -122,35 +113,31 @@ public class Html5DateField extends TextField<Date> implements ITextFormatProvid
 	 * 
 	 * @see org.apache.wicket.markup.html.form.AbstractTextComponent.ITextFormatProvider#getTextFormat()
 	 */
-	public String getTextFormat()
-	{
-		return datePattern;
+	@Override
+	public String getTextFormat() {
+		return this.datePattern;
 	}
 
 	/**
-	 * Try to get datePattern from user session locale. If it is not possible, it will return
-	 * {@link #DEFAULT_PATTERN}
+	 * Try to get datePattern from user session locale. If it is not possible,
+	 * it will return {@link #DEFAULT_PATTERN}
 	 * 
 	 * @return date pattern
 	 */
-	private static String defaultDatePattern()
-	{
-		Locale locale = Session.get().getLocale();
-		if (locale != null)
-		{
-			DateFormat format = DateFormat.getDateInstance(DateFormat.SHORT, locale);
-			if (format instanceof SimpleDateFormat)
-			{
-				return ((SimpleDateFormat)format).toPattern();
+	private static String defaultDatePattern() {
+		final Locale locale = Session.get().getLocale();
+		if (locale != null) {
+			final DateFormat format = DateFormat.getDateInstance(DateFormat.SHORT, locale);
+			if (format instanceof SimpleDateFormat) {
+				return ((SimpleDateFormat) format).toPattern();
 			}
 		}
 		return DEFAULT_PATTERN;
 	}
-	
+
 	@Override
-	protected String getInputType()
-	{
+	protected String getInputType() {
 		return "date";
 	}
-	
+
 }

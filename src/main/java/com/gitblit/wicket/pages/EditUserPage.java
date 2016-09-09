@@ -55,7 +55,7 @@ public class EditUserPage extends RootSubPage {
 	public EditUserPage() {
 		// create constructor
 		super();
-		isCreate = true;
+		this.isCreate = true;
 		setupPage(new UserModel(""));
 		setStatelessHint(false);
 		setOutputMarkupId(true);
@@ -64,9 +64,9 @@ public class EditUserPage extends RootSubPage {
 	public EditUserPage(PageParameters params) {
 		// edit constructor
 		super(params);
-		isCreate = false;
-		String name = WicketUtils.getUsername(params);
-		UserModel model = app().users().getUserModel(name);
+		this.isCreate = false;
+		final String name = WicketUtils.getUsername(params);
+		final UserModel model = app().users().getUserModel(name);
 		setupPage(model);
 		setStatelessHint(false);
 		setOutputMarkupId(true);
@@ -83,7 +83,7 @@ public class EditUserPage extends RootSubPage {
 	}
 
 	protected void setupPage(final UserModel userModel) {
-		if (isCreate) {
+		if (this.isCreate) {
 			super.setupPage(getString("gb.newUser"), "");
 		} else {
 			super.setupPage(getString("gb.edit"), userModel.username);
@@ -91,30 +91,32 @@ public class EditUserPage extends RootSubPage {
 
 		final Model<String> confirmPassword = new Model<String>(
 				StringUtils.isEmpty(userModel.password) ? "" : userModel.password);
-		CompoundPropertyModel<UserModel> model = new CompoundPropertyModel<UserModel>(userModel);
+		final CompoundPropertyModel<UserModel> model = new CompoundPropertyModel<UserModel>(
+				userModel);
 
 		// build list of projects including all repositories wildcards
-		List<String> repos = getAccessRestrictedRepositoryList(true, userModel);
+		final List<String> repos = getAccessRestrictedRepositoryList(true, userModel);
 
-		List<String> userTeams = new ArrayList<String>();
-		for (TeamModel team : userModel.teams) {
+		final List<String> userTeams = new ArrayList<String>();
+		for (final TeamModel team : userModel.teams) {
 			userTeams.add(team.name);
 		}
 		Collections.sort(userTeams);
 
 		final String oldName = userModel.username;
-		final List<RegistrantAccessPermission> permissions = app().repositories().getUserAccessPermissions(userModel);
+		final List<RegistrantAccessPermission> permissions = app().repositories()
+				.getUserAccessPermissions(userModel);
 
 		final Palette<String> teams = new Palette<String>("teams", new ListModel<String>(
 				new ArrayList<String>(userTeams)), new CollectionModel<String>(app().users()
 				.getAllTeamNames()), new StringChoiceRenderer(), 10, false);
-		Form<UserModel> form = new Form<UserModel>("editForm", model) {
+		final Form<UserModel> form = new Form<UserModel>("editForm", model) {
 
 			private static final long serialVersionUID = 1L;
 
 			/*
 			 * (non-Javadoc)
-			 *
+			 * 
 			 * @see org.apache.wicket.markup.html.form.Form#onSubmit()
 			 */
 			@Override
@@ -125,33 +127,33 @@ public class EditUserPage extends RootSubPage {
 				}
 				// force username to lower-case
 				userModel.username = userModel.username.toLowerCase();
-				String username = userModel.username;
-				if (isCreate) {
-					UserModel model = app().users().getUserModel(username);
+				final String username = userModel.username;
+				if (EditUserPage.this.isCreate) {
+					final UserModel model = app().users().getUserModel(username);
 					if (model != null) {
 						error(MessageFormat.format(getString("gb.usernameUnavailable"), username));
 						return;
 					}
 				}
-				boolean rename = !StringUtils.isEmpty(oldName)
+				final boolean rename = !StringUtils.isEmpty(oldName)
 						&& !oldName.equalsIgnoreCase(username);
 				if (app().authentication().supportsCredentialChanges(userModel)) {
 					if (!userModel.password.equals(confirmPassword.getObject())) {
 						error(getString("gb.passwordsDoNotMatch"));
 						return;
 					}
-					String password = userModel.password;
+					final String password = userModel.password;
 					if (!password.toUpperCase().startsWith(StringUtils.MD5_TYPE)
 							&& !password.toUpperCase().startsWith(StringUtils.COMBINED_MD5_TYPE)) {
 						// This is a plain text password.
 						// Check length.
-						int minLength = app().settings().getInteger(Keys.realm.minPasswordLength, 5);
+						int minLength = app().settings()
+								.getInteger(Keys.realm.minPasswordLength, 5);
 						if (minLength < 4) {
 							minLength = 4;
 						}
 						if (password.trim().length() < minLength) {
-							error(MessageFormat.format(getString("gb.passwordTooShort"),
-									minLength));
+							error(MessageFormat.format(getString("gb.passwordTooShort"), minLength));
 							return;
 						}
 
@@ -159,7 +161,8 @@ public class EditUserPage extends RootSubPage {
 						userModel.cookie = StringUtils.getSHA1(userModel.username + password);
 
 						// Optionally store the password MD5 digest.
-						String type = app().settings().getString(Keys.realm.passwordStorage, "md5");
+						final String type = app().settings().getString(Keys.realm.passwordStorage,
+								"md5");
 						if (type.equalsIgnoreCase("md5")) {
 							// store MD5 digest of password
 							userModel.password = StringUtils.MD5_TYPE
@@ -177,16 +180,17 @@ public class EditUserPage extends RootSubPage {
 				}
 
 				// update user permissions
-				for (RegistrantAccessPermission repositoryPermission : permissions) {
+				for (final RegistrantAccessPermission repositoryPermission : permissions) {
 					if (repositoryPermission.mutable) {
-						userModel.setRepositoryPermission(repositoryPermission.registrant, repositoryPermission.permission);
+						userModel.setRepositoryPermission(repositoryPermission.registrant,
+								repositoryPermission.permission);
 					}
 				}
 
-				Iterator<String> selectedTeams = teams.getSelectedChoices();
+				final Iterator<String> selectedTeams = teams.getSelectedChoices();
 				userModel.teams.clear();
 				while (selectedTeams.hasNext()) {
-					TeamModel team = app().users().getTeamModel(selectedTeams.next());
+					final TeamModel team = app().users().getTeamModel(selectedTeams.next());
 					if (team == null) {
 						continue;
 					}
@@ -194,20 +198,20 @@ public class EditUserPage extends RootSubPage {
 				}
 
 				try {
-					if (isCreate) {
+					if (EditUserPage.this.isCreate) {
 						app().gitblit().addUser(userModel);
 					} else {
 						app().gitblit().reviseUser(oldName, userModel);
 					}
-				} catch (GitBlitException e) {
+				}
+				catch (final GitBlitException e) {
 					error(e.getMessage());
 					return;
 				}
 				setRedirect(false);
-				if (isCreate) {
+				if (EditUserPage.this.isCreate) {
 					// create another user
-					info(MessageFormat.format(getString("gb.userCreated"),
-							userModel.username));
+					info(MessageFormat.format(getString("gb.userCreated"), userModel.username));
 					setResponsePage(EditUserPage.class);
 				} else {
 					// back to users page
@@ -220,33 +224,39 @@ public class EditUserPage extends RootSubPage {
 		form.add(new SimpleAttributeModifier("autocomplete", "off"));
 
 		// not all user providers support manipulating username and password
-		boolean editCredentials = app().authentication().supportsCredentialChanges(userModel);
+		final boolean editCredentials = app().authentication().supportsCredentialChanges(userModel);
 
 		// not all user providers support manipulating display name
-		boolean editDisplayName = app().authentication().supportsDisplayNameChanges(userModel);
+		final boolean editDisplayName = app().authentication()
+				.supportsDisplayNameChanges(userModel);
 
 		// not all user providers support manipulating email address
-		boolean editEmailAddress = app().authentication().supportsEmailAddressChanges(userModel);
+		final boolean editEmailAddress = app().authentication().supportsEmailAddressChanges(
+				userModel);
 
 		// not all user providers support manipulating team memberships
-		boolean editTeams = app().authentication().supportsTeamMembershipChanges(userModel);
+		final boolean editTeams = app().authentication().supportsTeamMembershipChanges(userModel);
 
 		// not all user providers support manipulating the admin role
-		boolean changeAdminRole = app().authentication().supportsRoleChanges(userModel, Role.ADMIN);
+		final boolean changeAdminRole = app().authentication().supportsRoleChanges(userModel,
+				Role.ADMIN);
 
 		// not all user providers support manipulating the create role
-		boolean changeCreateRole = app().authentication().supportsRoleChanges(userModel, Role.CREATE);
+		final boolean changeCreateRole = app().authentication().supportsRoleChanges(userModel,
+				Role.CREATE);
 
 		// not all user providers support manipulating the fork role
-		boolean changeForkRole = app().authentication().supportsRoleChanges(userModel, Role.FORK);
+		final boolean changeForkRole = app().authentication().supportsRoleChanges(userModel,
+				Role.FORK);
 
 		// field names reflective match UserModel fields
 		form.add(new TextField<String>("username").setEnabled(editCredentials));
-		NonTrimmedPasswordTextField passwordField = new NonTrimmedPasswordTextField("password");
+		final NonTrimmedPasswordTextField passwordField = new NonTrimmedPasswordTextField(
+				"password");
 		passwordField.setResetPassword(false);
 		form.add(passwordField.setEnabled(editCredentials));
-		NonTrimmedPasswordTextField confirmPasswordField = new NonTrimmedPasswordTextField("confirmPassword",
-				confirmPassword);
+		final NonTrimmedPasswordTextField confirmPasswordField = new NonTrimmedPasswordTextField(
+				"confirmPassword", confirmPassword);
 		confirmPasswordField.setResetPassword(false);
 		form.add(confirmPasswordField.setEnabled(editCredentials));
 		form.add(new TextField<String>("displayName").setEnabled(editDisplayName));
@@ -280,7 +290,8 @@ public class EditUserPage extends RootSubPage {
 		form.add(new CheckBox("excludeFromFederation"));
 		form.add(new CheckBox("disabled"));
 
-		form.add(new RegistrantPermissionsPanel("repositories",	RegistrantType.REPOSITORY, repos, permissions, getAccessPermissions()));
+		form.add(new RegistrantPermissionsPanel("repositories", RegistrantType.REPOSITORY, repos,
+				permissions, getAccessPermissions()));
 		form.add(teams.setEnabled(editTeams));
 
 		form.add(new TextField<String>("organizationalUnit").setEnabled(editDisplayName));
@@ -289,7 +300,7 @@ public class EditUserPage extends RootSubPage {
 		form.add(new TextField<String>("stateProvince").setEnabled(editDisplayName));
 		form.add(new TextField<String>("countryCode").setEnabled(editDisplayName));
 		form.add(new Button("save"));
-		Button cancel = new Button("cancel") {
+		final Button cancel = new Button("cancel") {
 			private static final long serialVersionUID = 1L;
 
 			@Override

@@ -30,42 +30,43 @@ public class CompressedDownloadsPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
 
-	public CompressedDownloadsPanel(String id, final String baseUrl, final String repositoryName, final String objectId, final String path) {
+	public CompressedDownloadsPanel(String id, final String baseUrl, final String repositoryName,
+			final String objectId, final String path) {
 		super(id);
 
-		List<String> types = app().settings().getStrings(Keys.web.compressedDownloads);
+		final List<String> types = app().settings().getStrings(Keys.web.compressedDownloads);
 		if (types.isEmpty()) {
 			types.add(Format.zip.name());
 			types.add(Format.gz.name());
 		}
 
-		ListDataProvider<String> refsDp = new ListDataProvider<String>(types);
-		DataView<String> refsView = new DataView<String>("compressedLinks", refsDp) {
+		final ListDataProvider<String> refsDp = new ListDataProvider<String>(types);
+		final DataView<String> refsView = new DataView<String>("compressedLinks", refsDp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
 			public void populateItem(final Item<String> item) {
-				String compressionType = item.getModelObject();
-				Format format = Format.fromName(compressionType);
+				final String compressionType = item.getModelObject();
+				final Format format = Format.fromName(compressionType);
 
-				String href = DownloadZipServlet.asLink(baseUrl, repositoryName,
-						objectId, path, format);
-				LinkPanel c = new LinkPanel("compressedLink", null, format.name(), href);
+				final String href = DownloadZipServlet.asLink(baseUrl, repositoryName, objectId,
+						path, format);
+				final LinkPanel c = new LinkPanel("compressedLink", null, format.name(), href);
 				c.setNoFollow();
 				item.add(c);
-				Label lb = new Label("linkSep", "|");
-				lb.setVisible(counter > 0);
+				final Label lb = new Label("linkSep", "|");
+				lb.setVisible(this.counter > 0);
 				lb.setRenderBodyOnly(true);
 				item.add(lb.setEscapeModelStrings(false));
 				item.setRenderBodyOnly(true);
-				counter++;
+				this.counter++;
 			}
 		};
 		add(refsView);

@@ -20,7 +20,8 @@ import ro.fortsoft.pf4j.ExtensionPoint;
 import com.gitblit.models.RepositoryModel;
 
 /**
- * Extension point to allow plugins to listen to major repository lifecycle events.
+ * Extension point to allow plugins to listen to major repository lifecycle
+ * events.
  *
  * @author James Moger
  * @since 1.6.0

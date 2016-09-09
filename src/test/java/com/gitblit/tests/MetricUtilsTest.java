@@ -27,23 +27,23 @@ import com.gitblit.utils.MetricUtils;
 public class MetricUtilsTest extends GitblitUnitTest {
 
 	@Test
-	public void testMetrics() throws Exception {
+	public void testMetrics() {
 		testMetrics(GitBlitSuite.getHelloworldRepository());
 		testMetrics(GitBlitSuite.getJGitRepository());
 	}
 
-	private void testMetrics(Repository repository) throws Exception {
-		List<Metric> metrics = MetricUtils.getDateMetrics(repository, null, true, null,
+	private static void testMetrics(Repository repository) {
+		final List<Metric> metrics = MetricUtils.getDateMetrics(repository, null, true, null,
 				TimeZone.getDefault());
 		repository.close();
 		assertTrue("No date metrics found!", metrics.size() > 0);
 	}
 
 	@Test
-	public void testAuthorMetrics() throws Exception {
-		Repository repository = GitBlitSuite.getHelloworldRepository();
-		List<Metric> byEmail = MetricUtils.getAuthorMetrics(repository, null, true);
-		List<Metric> byName = MetricUtils.getAuthorMetrics(repository, null, false);
+	public void testAuthorMetrics() {
+		final Repository repository = GitBlitSuite.getHelloworldRepository();
+		final List<Metric> byEmail = MetricUtils.getAuthorMetrics(repository, null, true);
+		final List<Metric> byName = MetricUtils.getAuthorMetrics(repository, null, false);
 		repository.close();
 		assertEquals("No author metrics found!", 9, byEmail.size());
 		assertEquals("No author metrics found!", 8, byName.size());

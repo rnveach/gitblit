@@ -66,36 +66,33 @@ public class ActivityUtils {
 	 *            the timezone for aggregating commits
 	 * @return
 	 */
-	public static List<Activity> getRecentActivity(
-					IStoredSettings settings,
-					IRepositoryManager repositoryManager,
-					List<RepositoryModel> models,
-					int daysBack,
-					String objectId,
-					TimeZone timezone) {
+	public static List<Activity> getRecentActivity(IStoredSettings settings,
+			IRepositoryManager repositoryManager, List<RepositoryModel> models, int daysBack,
+			String objectId, TimeZone timezone) {
 
 		// Activity panel shows last daysBack of activity across all
 		// repositories.
-		Date thresholdDate = new Date(System.currentTimeMillis() - daysBack * TimeUtils.ONEDAY);
+		final Date thresholdDate = new Date(System.currentTimeMillis()
+				- (daysBack * TimeUtils.ONEDAY));
 
 		// Build a map of DailyActivity from the available repositories for the
 		// specified threshold date.
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		df.setTimeZone(timezone);
-		Calendar cal = Calendar.getInstance();
+		final Calendar cal = Calendar.getInstance();
 		cal.setTimeZone(timezone);
 
 		// aggregate author exclusions
-		Set<String> authorExclusions = new TreeSet<String>();
+		final Set<String> authorExclusions = new TreeSet<String>();
 		authorExclusions.addAll(settings.getStrings(Keys.web.metricAuthorExclusions));
-		for (RepositoryModel model : models) {
+		for (final RepositoryModel model : models) {
 			if (!ArrayUtils.isEmpty(model.metricAuthorExclusions)) {
 				authorExclusions.addAll(model.metricAuthorExclusions);
 			}
 		}
 
-		Map<String, Activity> activity = new HashMap<String, Activity>();
-		for (RepositoryModel model : models) {
+		final Map<String, Activity> activity = new HashMap<String, Activity>();
+		for (final RepositoryModel model : models) {
 			if (!model.isShowActivity()) {
 				// skip this repository
 				continue;
@@ -104,34 +101,35 @@ public class ActivityUtils {
 				if (model.isCollectingGarbage) {
 					continue;
 				}
-				Repository repository = repositoryManager.getRepository(model.name);
-				List<String> branches = new ArrayList<String>();
+				final Repository repository = repositoryManager.getRepository(model.name);
+				final List<String> branches = new ArrayList<String>();
 				if (StringUtils.isEmpty(objectId)) {
-					for (RefModel local : JGitUtils.getLocalBranches(
-							repository, true, -1)) {
-			        	if (!local.getDate().after(thresholdDate)) {
+					for (final RefModel local : JGitUtils.getLocalBranches(repository, true, -1)) {
+						if (!local.getDate().after(thresholdDate)) {
 							// branch not recently updated
-			        		continue;
-			        	}
+							continue;
+						}
 						branches.add(local.getName());
 					}
 				} else {
 					branches.add(objectId);
 				}
 
-				for (String branch : branches) {
+				for (final String branch : branches) {
 					String shortName = branch;
 					if (shortName.startsWith(Constants.R_HEADS)) {
 						shortName = shortName.substring(Constants.R_HEADS.length());
 					}
-					List<RepositoryCommit> commits = CommitCache.instance().getCommits(model.name, repository, branch, thresholdDate);
-					if (model.maxActivityCommits > 0 && commits.size() > model.maxActivityCommits) {
+					List<RepositoryCommit> commits = CommitCache.instance().getCommits(model.name,
+							repository, branch, thresholdDate);
+					if ((model.maxActivityCommits > 0)
+							&& (commits.size() > model.maxActivityCommits)) {
 						// trim commits to maximum count
-						commits = commits.subList(0,  model.maxActivityCommits);
+						commits = commits.subList(0, model.maxActivityCommits);
 					}
-					for (RepositoryCommit commit : commits) {
-						Date date = commit.getCommitDate();
-						String dateStr = df.format(date);
+					for (final RepositoryCommit commit : commits) {
+						final Date date = commit.getCommitDate();
+						final String dateStr = df.format(date);
 						if (!activity.containsKey(dateStr)) {
 							// Normalize the date to midnight
 							cal.setTime(date);
@@ -139,7 +137,7 @@ public class ActivityUtils {
 							cal.set(Calendar.MINUTE, 0);
 							cal.set(Calendar.SECOND, 0);
 							cal.set(Calendar.MILLISECOND, 0);
-							Activity a = new Activity(cal.getTime());
+							final Activity a = new Activity(cal.getTime());
 							a.excludeAuthors(authorExclusions);
 							activity.put(dateStr, a);
 						}
@@ -152,7 +150,7 @@ public class ActivityUtils {
 			}
 		}
 
-		List<Activity> recentActivity = new ArrayList<Activity>(activity.values());
+		final List<Activity> recentActivity = new ArrayList<Activity>(activity.values());
 		return recentActivity;
 	}
 
@@ -169,8 +167,8 @@ public class ActivityUtils {
 		if (width <= 0) {
 			width = 50;
 		}
-		String emailHash = StringUtils.getMD5(email.toLowerCase());
-		String url = MessageFormat.format(
+		final String emailHash = StringUtils.getMD5(email.toLowerCase());
+		final String url = MessageFormat.format(
 				"https://www.gravatar.com/avatar/{0}?s={1,number,0}&d=identicon", emailHash, width);
 		return url;
 	}
@@ -188,8 +186,8 @@ public class ActivityUtils {
 		if (width <= 0) {
 			width = 50;
 		}
-		String emailHash = StringUtils.getMD5(email.toLowerCase());
-		String url = MessageFormat.format(
+		final String emailHash = StringUtils.getMD5(email.toLowerCase());
+		final String url = MessageFormat.format(
 				"https://www.gravatar.com/avatar/{0}?s={1,number,0}&d=mm", emailHash, width);
 		return url;
 	}

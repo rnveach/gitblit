@@ -75,35 +75,35 @@ public class ComparePage extends RepositoryPage {
 
 	public ComparePage(PageParameters params) {
 		super(params);
-		Repository r = getRepository();
-		RepositoryModel repository = getRepositoryModel();
+		final Repository r = getRepository();
+		final RepositoryModel repository = getRepositoryModel();
 
-		if (StringUtils.isEmpty(objectId)) {
+		if (StringUtils.isEmpty(this.objectId)) {
 			// seleciton form
 			add(new Label("comparison").setVisible(false));
 		} else {
 			// active comparison
-			Fragment comparison = new Fragment("comparison", "comparisonFragment", this);
+			final Fragment comparison = new Fragment("comparison", "comparisonFragment", this);
 			add(comparison);
 
 			RevCommit fromCommit;
 			RevCommit toCommit;
 
-			String[] parts = objectId.split("\\.\\.");
+			final String[] parts = this.objectId.split("\\.\\.");
 			if (parts[0].startsWith("refs/") && parts[1].startsWith("refs/")) {
 				// set the ref models
-				fromRefId.setObject(parts[0]);
-				toRefId.setObject(parts[1]);
+				this.fromRefId.setObject(parts[0]);
+				this.toRefId.setObject(parts[1]);
 
-				fromCommit = getCommit(r, fromRefId.getObject());
-				toCommit = getCommit(r, toRefId.getObject());
+				fromCommit = getCommit(r, this.fromRefId.getObject());
+				toCommit = getCommit(r, this.toRefId.getObject());
 			} else {
 				// set the id models
-				fromCommitId.setObject(parts[0]);
-				toCommitId.setObject(parts[1]);
+				this.fromCommitId.setObject(parts[0]);
+				this.toCommitId.setObject(parts[1]);
 
-				fromCommit = getCommit(r, fromCommitId.getObject());
-				toCommit = getCommit(r, toCommitId.getObject());
+				fromCommit = getCommit(r, this.fromCommitId.getObject());
+				toCommit = getCommit(r, this.toCommitId.getObject());
 			}
 
 			// prepare submodules
@@ -113,46 +113,54 @@ public class ComparePage extends RepositoryPage {
 			final String endId = toCommit.getId().getName();
 
 			// commit ids
-			fromCommitId.setObject(startId);
-			toCommitId.setObject(endId);
+			this.fromCommitId.setObject(startId);
+			this.toCommitId.setObject(endId);
 
-			final List<String> imageExtensions = app().settings().getStrings(Keys.web.imageExtensions);
-			final ImageDiffHandler handler = new ImageDiffHandler(this, repositoryName,
+			final List<String> imageExtensions = app().settings().getStrings(
+					Keys.web.imageExtensions);
+			final ImageDiffHandler handler = new ImageDiffHandler(this, this.repositoryName,
 					fromCommit.getName(), toCommit.getName(), imageExtensions);
 			final DiffComparator diffComparator = WicketUtils.getDiffComparator(params);
 			final int tabLength = app().settings().getInteger(Keys.web.tabLength, 4);
-			final DiffOutput diff = DiffUtils.getDiff(r, fromCommit, toCommit, diffComparator, DiffOutputType.HTML, handler, tabLength);
+			final DiffOutput diff = DiffUtils.getDiff(r, fromCommit, toCommit, diffComparator,
+					DiffOutputType.HTML, handler, tabLength);
 			if (handler.getImgDiffCount() > 0) {
-				addBottomScript("scripts/imgdiff.js"); // Tiny support script for image diffs
+				addBottomScript("scripts/imgdiff.js"); // Tiny support script
+														// for image diffs
 			}
 
 			// add compare diffstat
 			int insertions = 0;
 			int deletions = 0;
-			for (PathChangeModel pcm : diff.stat.paths) {
+			for (final PathChangeModel pcm : diff.stat.paths) {
 				insertions += pcm.insertions;
 				deletions += pcm.deletions;
 			}
 			comparison.add(new DiffStatPanel("diffStat", insertions, deletions));
 
 			// compare page links
-//			comparison.add(new BookmarkablePageLink<Void>("patchLink", PatchPage.class,
-//					WicketUtils.newRangeParameter(repositoryName, fromCommitId.toString(), toCommitId.getObject())));
+			// comparison.add(new BookmarkablePageLink<Void>("patchLink",
+			// PatchPage.class,
+			// WicketUtils.newRangeParameter(repositoryName,
+			// fromCommitId.toString(), toCommitId.getObject())));
 
 			// display list of commits
-			comparison.add(new LogPanel("commitList", repositoryName, objectId, r, 0, 0, repository.showRemoteBranches));
+			comparison.add(new LogPanel("commitList", this.repositoryName, this.objectId, r, 0, 0,
+					repository.showRemoteBranches));
 
 			// changed paths list
 			comparison.add(new CommitLegendPanel("commitLegend", diff.stat.paths));
-			ListDataProvider<PathChangeModel> pathsDp = new ListDataProvider<PathChangeModel>(diff.stat.paths);
-			DataView<PathChangeModel> pathsView = new DataView<PathChangeModel>("changedPath", pathsDp) {
+			final ListDataProvider<PathChangeModel> pathsDp = new ListDataProvider<PathChangeModel>(
+					diff.stat.paths);
+			final DataView<PathChangeModel> pathsView = new DataView<PathChangeModel>(
+					"changedPath", pathsDp) {
 				private static final long serialVersionUID = 1L;
 				int counter;
 
 				@Override
 				public void populateItem(final Item<PathChangeModel> item) {
 					final PathChangeModel entry = item.getModelObject();
-					Label changeType = new Label("changeType", "");
+					final Label changeType = new Label("changeType", "");
 					WicketUtils.setChangeTypeCssClass(changeType, entry.changeType);
 					setChangeTypeTooltip(changeType, entry.changeType);
 					item.add(changeType);
@@ -163,54 +171,63 @@ public class ComparePage extends RepositoryPage {
 					if (entry.isTree()) {
 						// tree
 						item.add(new LinkPanel("pathName", null, entry.path, TreePage.class,
-								WicketUtils
-								.newPathParameter(repositoryName, endId, entry.path)));
+								WicketUtils.newPathParameter(ComparePage.this.repositoryName,
+										endId, entry.path)));
 					} else if (entry.isSubmodule()) {
 						// submodule
-						String submoduleId = entry.objectId;
-						SubmoduleModel submodule = getSubmodule(entry.path);
+						final String submoduleId = entry.objectId;
+						final SubmoduleModel submodule = getSubmodule(entry.path);
 						submodulePath = submodule.gitblitPath;
 						hasSubmodule = submodule.hasSubmodule;
 
 						// add relative link
-						item.add(new LinkPanel("pathName", "list", entry.path + " @ " + getShortObjectId(submoduleId), "#n" + entry.objectId));
+						item.add(new LinkPanel("pathName", "list", entry.path + " @ "
+								+ getShortObjectId(submoduleId), "#n" + entry.objectId));
 					} else {
 						// add relative link
-						item.add(new LinkPanel("pathName", "list", entry.path, "#n" + entry.objectId));
+						item.add(new LinkPanel("pathName", "list", entry.path, "#n"
+								+ entry.objectId));
 					}
 
 					// quick links
 					if (entry.isSubmodule()) {
 						// submodule
 						item.add(new ExternalLink("patch", "").setEnabled(false));
-						item.add(new BookmarkablePageLink<Void>("view", CommitPage.class, WicketUtils
-								.newObjectParameter(submodulePath, entry.objectId)).setEnabled(hasSubmodule));
+						item.add(new BookmarkablePageLink<Void>("view", CommitPage.class,
+								WicketUtils.newObjectParameter(submodulePath, entry.objectId))
+								.setEnabled(hasSubmodule));
 						item.add(new ExternalLink("raw", "").setEnabled(false));
 						item.add(new ExternalLink("blame", "").setEnabled(false));
-						item.add(new BookmarkablePageLink<Void>("history", HistoryPage.class, WicketUtils
-								.newPathParameter(repositoryName, endId, entry.path))
-								.setEnabled(!entry.changeType.equals(ChangeType.ADD)));
+						item.add(new BookmarkablePageLink<Void>("history", HistoryPage.class,
+								WicketUtils.newPathParameter(ComparePage.this.repositoryName,
+										endId, entry.path)).setEnabled(!entry.changeType
+								.equals(ChangeType.ADD)));
 					} else {
 						// tree or blob
-						item.add(new BookmarkablePageLink<Void>("patch", PatchPage.class, WicketUtils
-								.newBlobDiffParameter(repositoryName, startId, endId, entry.path))
-								.setEnabled(!entry.changeType.equals(ChangeType.DELETE)));
+						item.add(new BookmarkablePageLink<Void>("patch", PatchPage.class,
+								WicketUtils.newBlobDiffParameter(ComparePage.this.repositoryName,
+										startId, endId, entry.path)).setEnabled(!entry.changeType
+								.equals(ChangeType.DELETE)));
 						item.add(new BookmarkablePageLink<Void>("view", BlobPage.class, WicketUtils
-								.newPathParameter(repositoryName, endId, entry.path))
-								.setEnabled(!entry.changeType.equals(ChangeType.DELETE)));
-						String rawUrl = RawServlet.asLink(getContextUrl(), repositoryName, endId, entry.path);
-						item.add(new ExternalLink("raw", rawUrl)
-								.setEnabled(!entry.changeType.equals(ChangeType.DELETE)));
-						item.add(new BookmarkablePageLink<Void>("blame", BlamePage.class, WicketUtils
-								.newPathParameter(repositoryName, endId, entry.path))
-								.setEnabled(!entry.changeType.equals(ChangeType.ADD)
-										&& !entry.changeType.equals(ChangeType.DELETE)));
-						item.add(new BookmarkablePageLink<Void>("history", HistoryPage.class, WicketUtils
-								.newPathParameter(repositoryName, endId, entry.path))
-								.setEnabled(!entry.changeType.equals(ChangeType.ADD)));
+								.newPathParameter(ComparePage.this.repositoryName, endId,
+										entry.path)).setEnabled(!entry.changeType
+								.equals(ChangeType.DELETE)));
+						final String rawUrl = RawServlet.asLink(getContextUrl(),
+								ComparePage.this.repositoryName, endId, entry.path);
+						item.add(new ExternalLink("raw", rawUrl).setEnabled(!entry.changeType
+								.equals(ChangeType.DELETE)));
+						item.add(new BookmarkablePageLink<Void>("blame", BlamePage.class,
+								WicketUtils.newPathParameter(ComparePage.this.repositoryName,
+										endId, entry.path)).setEnabled(!entry.changeType
+								.equals(ChangeType.ADD)
+								&& !entry.changeType.equals(ChangeType.DELETE)));
+						item.add(new BookmarkablePageLink<Void>("history", HistoryPage.class,
+								WicketUtils.newPathParameter(ComparePage.this.repositoryName,
+										endId, entry.path)).setEnabled(!entry.changeType
+								.equals(ChangeType.ADD)));
 					}
-					WicketUtils.setAlternatingBackground(item, counter);
-					counter++;
+					WicketUtils.setAlternatingBackground(item, this.counter);
+					this.counter++;
 				}
 			};
 			comparison.add(pathsView);
@@ -218,83 +235,90 @@ public class ComparePage extends RepositoryPage {
 		}
 
 		// set the default DiffComparator
-		DiffComparator diffComparator = WicketUtils.getDiffComparator(params);
-		ignoreWhitespace.setObject(DiffComparator.IGNORE_WHITESPACE == diffComparator);
+		final DiffComparator diffComparator = WicketUtils.getDiffComparator(params);
+		this.ignoreWhitespace.setObject(DiffComparator.IGNORE_WHITESPACE == diffComparator);
 
 		//
 		// ref selection form
 		//
-		SessionlessForm<Void> refsForm = new SessionlessForm<Void>("compareRefsForm", getClass(), getPageParameters()) {
+		final SessionlessForm<Void> refsForm = new SessionlessForm<Void>("compareRefsForm",
+				getClass(), getPageParameters()) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onSubmit() {
-				String from = ComparePage.this.fromRefId.getObject();
-				String to = ComparePage.this.toRefId.getObject();
-				boolean ignoreWS = ignoreWhitespace.getObject();
+				final String from = ComparePage.this.fromRefId.getObject();
+				final String to = ComparePage.this.toRefId.getObject();
+				final boolean ignoreWS = ComparePage.this.ignoreWhitespace.getObject();
 
-				PageParameters params = WicketUtils.newRangeParameter(repositoryName, from, to);
+				final PageParameters params = WicketUtils.newRangeParameter(
+						ComparePage.this.repositoryName, from, to);
 				if (ignoreWS) {
 					params.put("w", 1);
 				}
 
-				String relativeUrl = urlFor(ComparePage.class, params).toString();
-				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+				final String relativeUrl = urlFor(ComparePage.class, params).toString();
+				final String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
 				getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
 			}
 		};
 
-		List<String> refs = new ArrayList<String>();
-		for (RefModel ref : JGitUtils.getLocalBranches(r, true, -1)) {
+		final List<String> refs = new ArrayList<String>();
+		for (final RefModel ref : JGitUtils.getLocalBranches(r, true, -1)) {
 			refs.add(ref.getName());
 		}
 		if (repository.showRemoteBranches) {
-			for (RefModel ref : JGitUtils.getRemoteBranches(r, true, -1)) {
+			for (final RefModel ref : JGitUtils.getRemoteBranches(r, true, -1)) {
 				refs.add(ref.getName());
 			}
 		}
-		for (RefModel ref : JGitUtils.getTags(r, true, -1)) {
+		for (final RefModel ref : JGitUtils.getTags(r, true, -1)) {
 			refs.add(ref.getName());
 		}
-		refsForm.add(new DropDownChoice<String>("fromRef", fromRefId, refs).setEnabled(refs.size() > 0));
-		refsForm.add(new DropDownChoice<String>("toRef", toRefId, refs).setEnabled(refs.size() > 0));
-		refsForm.add(new Label("ignoreWhitespaceLabel", getString(DiffComparator.IGNORE_WHITESPACE.getTranslationKey())));
-		refsForm.add(new CheckBox("ignoreWhitespaceCheckbox", ignoreWhitespace));
+		refsForm.add(new DropDownChoice<String>("fromRef", this.fromRefId, refs).setEnabled(refs
+				.size() > 0));
+		refsForm.add(new DropDownChoice<String>("toRef", this.toRefId, refs).setEnabled(refs.size() > 0));
+		refsForm.add(new Label("ignoreWhitespaceLabel", getString(DiffComparator.IGNORE_WHITESPACE
+				.getTranslationKey())));
+		refsForm.add(new CheckBox("ignoreWhitespaceCheckbox", this.ignoreWhitespace));
 		add(refsForm);
 
 		//
 		// manual ids form
 		//
-		SessionlessForm<Void> idsForm = new SessionlessForm<Void>("compareIdsForm", getClass(), getPageParameters()) {
+		final SessionlessForm<Void> idsForm = new SessionlessForm<Void>("compareIdsForm",
+				getClass(), getPageParameters()) {
 
 			private static final long serialVersionUID = 1L;
 
 			@Override
 			public void onSubmit() {
-				String from = ComparePage.this.fromCommitId.getObject();
-				String to = ComparePage.this.toCommitId.getObject();
-				boolean ignoreWS = ignoreWhitespace.getObject();
+				final String from = ComparePage.this.fromCommitId.getObject();
+				final String to = ComparePage.this.toCommitId.getObject();
+				final boolean ignoreWS = ComparePage.this.ignoreWhitespace.getObject();
 
-				PageParameters params = WicketUtils.newRangeParameter(repositoryName, from, to);
+				final PageParameters params = WicketUtils.newRangeParameter(
+						ComparePage.this.repositoryName, from, to);
 				if (ignoreWS) {
 					params.put("w", 1);
 				}
-				String relativeUrl = urlFor(ComparePage.class, params).toString();
-				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+				final String relativeUrl = urlFor(ComparePage.class, params).toString();
+				final String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
 				getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
 			}
 		};
 
-		TextField<String> fromIdField = new TextField<String>("fromId", fromCommitId);
+		final TextField<String> fromIdField = new TextField<String>("fromId", this.fromCommitId);
 		WicketUtils.setInputPlaceholder(fromIdField, getString("gb.from") + "...");
 		idsForm.add(fromIdField);
 
-		TextField<String> toIdField = new TextField<String>("toId", toCommitId);
+		final TextField<String> toIdField = new TextField<String>("toId", this.toCommitId);
 		WicketUtils.setInputPlaceholder(toIdField, getString("gb.to") + "...");
 		idsForm.add(toIdField);
-		idsForm.add(new Label("ignoreWhitespaceLabel", getString(DiffComparator.IGNORE_WHITESPACE.getTranslationKey())));
-		idsForm.add(new CheckBox("ignoreWhitespaceCheckbox", ignoreWhitespace));
+		idsForm.add(new Label("ignoreWhitespaceLabel", getString(DiffComparator.IGNORE_WHITESPACE
+				.getTranslationKey())));
+		idsForm.add(new CheckBox("ignoreWhitespaceCheckbox", this.ignoreWhitespace));
 		add(idsForm);
 
 		r.close();
@@ -310,11 +334,11 @@ public class ComparePage extends RepositoryPage {
 		return ComparePage.class;
 	}
 
-	private RevCommit getCommit(Repository r, String rev)
-	{
-		RevCommit otherCommit = JGitUtils.getCommit(r, rev);
+	private RevCommit getCommit(Repository r, String rev) {
+		final RevCommit otherCommit = JGitUtils.getCommit(r, rev);
 		if (otherCommit == null) {
-			error(MessageFormat.format(getString("gb.failedToFindCommit"), rev, repositoryName, getPageName()), true);
+			error(MessageFormat.format(getString("gb.failedToFindCommit"), rev,
+					this.repositoryName, getPageName()), true);
 		}
 		return otherCommit;
 	}

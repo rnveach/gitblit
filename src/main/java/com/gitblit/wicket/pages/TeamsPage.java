@@ -25,6 +25,6 @@ public class TeamsPage extends RootPage {
 		super();
 		setupPage("", "");
 
-		add(new TeamsPanel("teamsPanel", showAdmin).setVisible(showAdmin));
+		add(new TeamsPanel("teamsPanel", this.showAdmin).setVisible(this.showAdmin));
 	}
 }

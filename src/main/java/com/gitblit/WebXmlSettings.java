@@ -43,12 +43,12 @@ public class WebXmlSettings extends IStoredSettings {
 
 	public WebXmlSettings(ServletContext context) {
 		super(WebXmlSettings.class);
-		Enumeration<?> keys = context.getInitParameterNames();
+		final Enumeration<?> keys = context.getInitParameterNames();
 		while (keys.hasMoreElements()) {
-			String key = keys.nextElement().toString();
-			String value = context.getInitParameter(key);
-			properties.put(key, decodeValue(value));
-			logger.debug(key + "=" + properties.getProperty(key));
+			final String key = keys.nextElement().toString();
+			final String value = context.getInitParameter(key);
+			this.properties.put(key, decodeValue(value));
+			this.logger.debug(key + "=" + this.properties.getProperty(key));
 		}
 	}
 
@@ -58,53 +58,55 @@ public class WebXmlSettings extends IStoredSettings {
 		// apply any web-configured overrides
 		if (overrideFile.exists()) {
 			try {
-				InputStream is = new FileInputStream(overrideFile);
-				properties.load(is);
+				final InputStream is = new FileInputStream(overrideFile);
+				this.properties.load(is);
 				is.close();
-			} catch (Throwable t) {
-				logger.error(
+			}
+			catch (final Throwable t) {
+				this.logger.error(
 						MessageFormat.format("Failed to apply {0} setting overrides",
 								overrideFile.getAbsolutePath()), t);
 			}
 		}
 	}
 
-	private String decodeValue(String value) {
+	private static String decodeValue(String value) {
 		// decode escaped backslashes and HTML entities
 		return StringUtils.decodeFromHtml(value).replace("\\\\", "\\");
 	}
 
 	@Override
 	protected Properties read() {
-		return properties;
+		return this.properties;
 	}
 
 	@Override
 	public synchronized boolean saveSettings() {
 		try {
-			Properties props = new Properties();
+			final Properties props = new Properties();
 			// load pre-existing web-configuration
-			if (overrideFile.exists()) {
-				InputStream is = new FileInputStream(overrideFile);
+			if (this.overrideFile.exists()) {
+				final InputStream is = new FileInputStream(this.overrideFile);
 				props.load(is);
 				is.close();
 			}
 
 			// put all new settings and persist
-			for (String key : removals) {
+			for (final String key : this.removals) {
 				props.remove(key);
 			}
-			removals.clear();
-			OutputStream os = new FileOutputStream(overrideFile);
+			this.removals.clear();
+			final OutputStream os = new FileOutputStream(this.overrideFile);
 			props.store(os, null);
 			os.close();
 
 			// override current runtime settings
-			properties.clear();
-			properties.putAll(props);
+			this.properties.clear();
+			this.properties.putAll(props);
 			return true;
-		} catch (Throwable t) {
-			logger.error("Failed to save settings!", t);
+		}
+		catch (final Throwable t) {
+			this.logger.error("Failed to save settings!", t);
 		}
 		return false;
 	}
@@ -112,25 +114,26 @@ public class WebXmlSettings extends IStoredSettings {
 	@Override
 	public synchronized boolean saveSettings(Map<String, String> settings) {
 		try {
-			Properties props = new Properties();
+			final Properties props = new Properties();
 			// load pre-existing web-configuration
-			if (overrideFile.exists()) {
-				InputStream is = new FileInputStream(overrideFile);
+			if (this.overrideFile.exists()) {
+				final InputStream is = new FileInputStream(this.overrideFile);
 				props.load(is);
 				is.close();
 			}
 
 			// put all new settings and persist
 			props.putAll(settings);
-			OutputStream os = new FileOutputStream(overrideFile);
+			final OutputStream os = new FileOutputStream(this.overrideFile);
 			props.store(os, null);
 			os.close();
 
 			// override current runtime settings
-			properties.putAll(settings);
+			this.properties.putAll(settings);
 			return true;
-		} catch (Throwable t) {
-			logger.error("Failed to save settings!", t);
+		}
+		catch (final Throwable t) {
+			this.logger.error("Failed to save settings!", t);
 		}
 		return false;
 	}

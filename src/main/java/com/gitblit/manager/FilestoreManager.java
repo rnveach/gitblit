@@ -58,13 +58,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 /**
- * FilestoreManager handles files uploaded via:
- * 	+ git-lfs
- *  + ticket attachment (TBD)
+ * FilestoreManager handles files uploaded via: + git-lfs + ticket attachment
+ * (TBD)
  *
- * Files are stored using their SHA256 hash (as per git-lfs)
- * If the same file is uploaded through different repositories no additional space is used
- * Access is controlled through the current repository permissions.
+ * Files are stored using their SHA256 hash (as per git-lfs) If the same file is
+ * uploaded through different repositories no additional space is used Access is
+ * controlled through the current repository permissions.
  *
  * TODO: Identify what and how the actual BLOBs should work with federation
  *
@@ -77,7 +76,7 @@ public class FilestoreManager implements IFilestoreManager {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private final IRuntimeManager runtimeManager;
-	
+
 	private final IRepositoryManager repositoryManager;
 
 	private final IStoredSettings settings;
@@ -88,15 +87,13 @@ public class FilestoreManager implements IFilestoreManager {
 
 	private static final String METAFILE_TMP = "filestore.json.tmp";
 
-	protected static final Type METAFILE_TYPE = new TypeToken<Collection<FilestoreModel>>() {}.getType();
+	protected static final Type METAFILE_TYPE = new TypeToken<Collection<FilestoreModel>>() {
+	}.getType();
 
-	private Map<String, FilestoreModel > fileCache = new ConcurrentHashMap<String, FilestoreModel>();
-
+	private final Map<String, FilestoreModel> fileCache = new ConcurrentHashMap<String, FilestoreModel>();
 
 	@Inject
-	FilestoreManager(
-			IRuntimeManager runtimeManager,
-			IRepositoryManager repositoryManager) {
+	FilestoreManager(IRuntimeManager runtimeManager, IRepositoryManager repositoryManager) {
 		this.runtimeManager = runtimeManager;
 		this.repositoryManager = repositoryManager;
 		this.settings = runtimeManager.getSettings();
@@ -106,32 +103,31 @@ public class FilestoreManager implements IFilestoreManager {
 	public IManager start() {
 
 		// Try to load any existing metadata
-		File dir = getStorageFolder();
+		final File dir = getStorageFolder();
 		dir.mkdirs();
-		File metadata = new File(dir, METAFILE);
+		final File metadata = new File(dir, METAFILE);
 
 		if (metadata.exists()) {
 			Collection<FilestoreModel> items = null;
 
-			Gson gson = gson();
+			final Gson gson = gson();
 			try (FileReader file = new FileReader(metadata)) {
 				items = gson.fromJson(file, METAFILE_TYPE);
 				file.close();
 
-			} catch (IOException e) {
+			}
+			catch (final IOException e) {
 				e.printStackTrace();
 			}
 
-			for(Iterator<FilestoreModel> itr = items.iterator(); itr.hasNext(); ) {
-			    FilestoreModel model = itr.next();
-			    fileCache.put(model.oid, model);
+			for (final Iterator<FilestoreModel> itr = items.iterator(); itr.hasNext();) {
+				final FilestoreModel model = itr.next();
+				this.fileCache.put(model.oid, model);
 			}
 
-			logger.info("Loaded {} items from filestore metadata file", fileCache.size());
-		}
-		else
-		{
-			logger.info("No filestore metadata file found");
+			this.logger.info("Loaded {} items from filestore metadata file", this.fileCache.size());
+		} else {
+			this.logger.info("No filestore metadata file found");
 		}
 
 		return this;
@@ -142,17 +138,17 @@ public class FilestoreManager implements IFilestoreManager {
 		return this;
 	}
 
-
 	@Override
 	public boolean isValidOid(String oid) {
-		//NOTE: Assuming SHA256 support only as per git-lfs
+		// NOTE: Assuming SHA256 support only as per git-lfs
 		return Pattern.matches("[a-fA-F0-9]{64}", oid);
 	}
 
 	@Override
-	public FilestoreModel.Status addObject(String oid, long size, UserModel user, RepositoryModel repo) {
+	public FilestoreModel.Status addObject(String oid, long size, UserModel user,
+			RepositoryModel repo) {
 
-		//Handle access control
+		// Handle access control
 		if (!user.canPush(repo)) {
 			if (user == UserModel.ANONYMOUS) {
 				return Status.AuthenticationRequired;
@@ -161,11 +157,13 @@ public class FilestoreManager implements IFilestoreManager {
 			}
 		}
 
-		//Handle object details
-		if (!isValidOid(oid)) { return Status.Error_Invalid_Oid; }
+		// Handle object details
+		if (!isValidOid(oid)) {
+			return Status.Error_Invalid_Oid;
+		}
 
-		if (fileCache.containsKey(oid)) {
-			FilestoreModel item = fileCache.get(oid);
+		if (this.fileCache.containsKey(oid)) {
+			final FilestoreModel item = this.fileCache.get(oid);
 
 			if (!item.isInErrorState() && (size != UNDEFINED_SIZE) && (item.getSize() != size)) {
 				return Status.Error_Size_Mismatch;
@@ -178,34 +176,39 @@ public class FilestoreManager implements IFilestoreManager {
 			}
 		} else {
 
-			if (size  < 0) {return Status.Error_Invalid_Size; }
-			if ((getMaxUploadSize() != UNDEFINED_SIZE) && (size > getMaxUploadSize())) { return Status.Error_Exceeds_Size_Limit; }
+			if (size < 0) {
+				return Status.Error_Invalid_Size;
+			}
+			if ((getMaxUploadSize() != UNDEFINED_SIZE) && (size > getMaxUploadSize())) {
+				return Status.Error_Exceeds_Size_Limit;
+			}
 
-			FilestoreModel model = new FilestoreModel(oid, size, user, repo.name);
-			fileCache.put(oid, model);
+			final FilestoreModel model = new FilestoreModel(oid, size, user, repo.name);
+			this.fileCache.put(oid, model);
 			saveFilestoreModel(model);
 		}
 
-		return fileCache.get(oid).getStatus();
+		return this.fileCache.get(oid).getStatus();
 	}
 
 	@Override
-	public FilestoreModel.Status uploadBlob(String oid, long size, UserModel user, RepositoryModel repo, InputStream streamIn) {
+	public FilestoreModel.Status uploadBlob(String oid, long size, UserModel user,
+			RepositoryModel repo, InputStream streamIn) {
 
-		//Access control and object logic
-		Status state = addObject(oid, size, user, repo);
+		// Access control and object logic
+		final Status state = addObject(oid, size, user, repo);
 
 		if (state != Status.Upload_Pending) {
 			return state;
 		}
 
-		FilestoreModel model = fileCache.get(oid);
+		final FilestoreModel model = this.fileCache.get(oid);
 
 		if (!model.actionUpload(user)) {
 			return Status.Upload_In_Progress;
 		} else {
 			long actualSize = 0;
-			File file = getStoragePath(oid);
+			final File file = getStoragePath(oid);
 
 			try {
 				file.getParentFile().mkdirs();
@@ -221,8 +224,10 @@ public class FilestoreManager implements IFilestoreManager {
 					if (model.getSize() != actualSize) {
 						model.setStatus(Status.Error_Size_Mismatch, user);
 
-						logger.warn(MessageFormat.format("Failed to upload blob {0} due to size mismatch, expected {1} got {2}",
-								oid, model.getSize(), actualSize));
+						this.logger
+								.warn(MessageFormat
+										.format("Failed to upload blob {0} due to size mismatch, expected {1} got {2}",
+												oid, model.getSize(), actualSize));
 					} else {
 						String actualOid = "";
 
@@ -236,15 +241,19 @@ public class FilestoreManager implements IFilestoreManager {
 						} else {
 							model.setStatus(Status.Error_Hash_Mismatch, user);
 
-							logger.warn(MessageFormat.format("Failed to upload blob {0} due to hash mismatch, got {1}", oid, actualOid));
+							this.logger.warn(MessageFormat.format(
+									"Failed to upload blob {0} due to hash mismatch, got {1}", oid,
+									actualOid));
 						}
 					}
 				}
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 
 				model.setStatus(Status.Error_Unknown, user);
-				logger.warn(MessageFormat.format("Failed to upload blob {0}", oid), e);
-			} finally {
+				this.logger.warn(MessageFormat.format("Failed to upload blob {0}", oid), e);
+			}
+			finally {
 				saveFilestoreModel(model);
 			}
 
@@ -259,7 +268,7 @@ public class FilestoreManager implements IFilestoreManager {
 
 	private FilestoreModel.Status canGetObject(String oid, UserModel user, RepositoryModel repo) {
 
-		//Access Control
+		// Access Control
 		if (!user.canView(repo)) {
 			if (user == UserModel.ANONYMOUS) {
 				return Status.AuthenticationRequired;
@@ -268,16 +277,16 @@ public class FilestoreManager implements IFilestoreManager {
 			}
 		}
 
-		//Object Logic
+		// Object Logic
 		if (!isValidOid(oid)) {
 			return Status.Error_Invalid_Oid;
 		}
 
-		if (!fileCache.containsKey(oid)) {
+		if (!this.fileCache.containsKey(oid)) {
 			return Status.Unavailable;
 		}
 
-		FilestoreModel item = fileCache.get(oid);
+		final FilestoreModel item = this.fileCache.get(oid);
 
 		if (item.getStatus() == Status.Available) {
 			return Status.Available;
@@ -290,23 +299,24 @@ public class FilestoreManager implements IFilestoreManager {
 	public FilestoreModel getObject(String oid, UserModel user, RepositoryModel repo) {
 
 		if (canGetObject(oid, user, repo) == Status.Available) {
-			return fileCache.get(oid);
+			return this.fileCache.get(oid);
 		}
 
 		return null;
 	}
 
 	@Override
-	public FilestoreModel.Status downloadBlob(String oid, UserModel user, RepositoryModel repo, OutputStream streamOut) {
+	public FilestoreModel.Status downloadBlob(String oid, UserModel user, RepositoryModel repo,
+			OutputStream streamOut) {
 
-		//Access control and object logic
-		Status status = canGetObject(oid, user, repo);
+		// Access control and object logic
+		final Status status = canGetObject(oid, user, repo);
 
 		if (status != Status.Available) {
 			return status;
 		}
 
-		FilestoreModel item = fileCache.get(oid);
+		final FilestoreModel item = this.fileCache.get(oid);
 
 		if (streamOut != null) {
 			try (FileInputStream streamIn = new FileInputStream(getStoragePath(oid))) {
@@ -315,11 +325,14 @@ public class FilestoreManager implements IFilestoreManager {
 
 				streamOut.flush();
 				streamIn.close();
-			} catch (EOFException e) {
-				logger.error(MessageFormat.format("Client aborted connection for {0}", oid), e);
+			}
+			catch (final EOFException e) {
+				this.logger
+						.error(MessageFormat.format("Client aborted connection for {0}", oid), e);
 				return Status.Error_Unexpected_Stream_End;
-			} catch (Exception e) {
-				logger.error(MessageFormat.format("Failed to download blob {0}", oid), e);
+			}
+			catch (final Exception e) {
+				this.logger.error(MessageFormat.format("Failed to download blob {0}", oid), e);
 				return Status.Error_Unknown;
 			}
 		}
@@ -329,53 +342,58 @@ public class FilestoreManager implements IFilestoreManager {
 
 	@Override
 	public List<FilestoreModel> getAllObjects(UserModel user) {
-		
-		final List<RepositoryModel> viewableRepositories = repositoryManager.getRepositoryModels(user);
-		List<String> viewableRepositoryNames = new ArrayList<String>(viewableRepositories.size());
-		
-		for (RepositoryModel repository : viewableRepositories) {
+
+		final List<RepositoryModel> viewableRepositories = this.repositoryManager
+				.getRepositoryModels(user);
+		final List<String> viewableRepositoryNames = new ArrayList<String>(
+				viewableRepositories.size());
+
+		for (final RepositoryModel repository : viewableRepositories) {
 			viewableRepositoryNames.add(repository.name);
 		}
-		
+
 		if (viewableRepositoryNames.size() == 0) {
 			return null;
 		}
-		
-		final Collection<FilestoreModel> allFiles = fileCache.values();
-		List<FilestoreModel> userViewableFiles = new ArrayList<FilestoreModel>(allFiles.size());
-		
-		for (FilestoreModel file : allFiles) {
+
+		final Collection<FilestoreModel> allFiles = this.fileCache.values();
+		final List<FilestoreModel> userViewableFiles = new ArrayList<FilestoreModel>(
+				allFiles.size());
+
+		for (final FilestoreModel file : allFiles) {
 			if (file.isInRepositoryList(viewableRepositoryNames)) {
 				userViewableFiles.add(file);
 			}
 		}
-		
-		return userViewableFiles;				
+
+		return userViewableFiles;
 	}
 
 	@Override
 	public File getStorageFolder() {
-		return runtimeManager.getFileOrFolder(Keys.filestore.storageFolder, "${baseFolder}/lfs");
+		return this.runtimeManager.getFileOrFolder(Keys.filestore.storageFolder,
+				"${baseFolder}/lfs");
 	}
 
 	@Override
 	public File getStoragePath(String oid) {
-		 return new File(getStorageFolder(), oid.substring(0, 2).concat("/").concat(oid.substring(2)));
+		return new File(getStorageFolder(), oid.substring(0, 2).concat("/")
+				.concat(oid.substring(2)));
 	}
 
 	@Override
 	public long getMaxUploadSize() {
-		return settings.getLong(Keys.filestore.maxUploadSize, -1);
+		return this.settings.getLong(Keys.filestore.maxUploadSize, -1);
 	}
 
 	@Override
 	public long getFilestoreUsedByteCount() {
-		Iterator<FilestoreModel> iterator = fileCache.values().iterator();
+		final Iterator<FilestoreModel> iterator = this.fileCache.values().iterator();
 		long total = 0;
 
 		while (iterator.hasNext()) {
 
-			FilestoreModel item = iterator.next();
+			final FilestoreModel item = iterator.next();
 			if (item.getStatus() == Status.Available) {
 				total += item.getSize();
 			}
@@ -389,8 +407,10 @@ public class FilestoreManager implements IFilestoreManager {
 
 		try {
 			return Files.getFileStore(getStorageFolder().toPath()).getUsableSpace();
-		} catch (IOException e) {
-			logger.error(MessageFormat.format("Failed to retrive available space in Filestore {0}", e));
+		}
+		catch (final IOException e) {
+			this.logger.error(MessageFormat.format(
+					"Failed to retrive available space in Filestore {0}", e));
 		}
 
 		return UNDEFINED_SIZE;
@@ -398,8 +418,8 @@ public class FilestoreManager implements IFilestoreManager {
 
 	private synchronized void saveFilestoreModel(FilestoreModel model) {
 
-		File metaFile = new File(getStorageFolder(), METAFILE);
-		File metaFileTmp = new File(getStorageFolder(), METAFILE_TMP);
+		final File metaFile = new File(getStorageFolder(), METAFILE);
+		final File metaFileTmp = new File(getStorageFolder(), METAFILE_TMP);
 		boolean isNewFile = false;
 
 		try {
@@ -410,8 +430,9 @@ public class FilestoreManager implements IFilestoreManager {
 			}
 			FileUtils.copyFile(metaFile, metaFileTmp);
 
-		} catch (IOException e) {
-			logger.error("Writing filestore model to file {0}, {1}", METAFILE, e);
+		}
+		catch (final IOException e) {
+			this.logger.error("Writing filestore model to file {0}, {1}", METAFILE, e);
 		}
 
 		try (RandomAccessFile fs = new RandomAccessFile(metaFileTmp, "rw")) {
@@ -428,8 +449,9 @@ public class FilestoreManager implements IFilestoreManager {
 
 			fs.close();
 
-		} catch (IOException e) {
-			logger.error("Writing filestore model to file {0}, {1}", METAFILE_TMP, e);
+		}
+		catch (final IOException e) {
+			this.logger.error("Writing filestore model to file {0}, {1}", METAFILE_TMP, e);
 		}
 
 		try {
@@ -438,11 +460,11 @@ public class FilestoreManager implements IFilestoreManager {
 
 				metaFileTmp.delete();
 			} else {
-				logger.error("Writing filestore model to file {0}", METAFILE);
+				this.logger.error("Writing filestore model to file {0}", METAFILE);
 			}
 		}
-		catch (IOException e) {
-			logger.error("Writing filestore model to file {0}, {1}", METAFILE, e);
+		catch (final IOException e) {
+			this.logger.error("Writing filestore model to file {0}, {1}", METAFILE, e);
 		}
 	}
 
@@ -451,11 +473,11 @@ public class FilestoreManager implements IFilestoreManager {
 	 */
 	@Override
 	public void clearFilestoreCache() {
-		fileCache.clear();
+		this.fileCache.clear();
 	}
 
 	private static Gson gson(ExclusionStrategy... strategies) {
-		GsonBuilder builder = new GsonBuilder();
+		final GsonBuilder builder = new GsonBuilder();
 		builder.registerTypeAdapter(Date.class, new GmtDateTypeAdapter());
 		if (!ArrayUtils.isEmpty(strategies)) {
 			builder.setExclusionStrategies(strategies);

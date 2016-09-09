@@ -23,7 +23,8 @@ import com.gitblit.utils.XssFilter;
 
 public interface GitblitWicketApp {
 
-	public abstract void mount(String location, Class<? extends WebPage> clazz, String... parameters);
+	public abstract void mount(String location, Class<? extends WebPage> clazz,
+			String... parameters);
 
 	public abstract Class<? extends WebPage> getHomePage();
 
@@ -43,8 +44,8 @@ public interface GitblitWicketApp {
 	public abstract boolean isDebugMode();
 
 	/*
-	 * These methods look strange... and they are... but they are the first
-	 * step towards modularization across multiple commits.
+	 * These methods look strange... and they are... but they are the first step
+	 * towards modularization across multiple commits.
 	 */
 	public abstract Date getBootDate();
 
@@ -75,7 +76,7 @@ public interface GitblitWicketApp {
 	public abstract ITicketService tickets();
 
 	public abstract TimeZone getTimezone();
-	
+
 	public abstract IFilestoreManager filestore();
 
 }

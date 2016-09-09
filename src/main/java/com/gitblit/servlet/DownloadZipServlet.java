@@ -17,13 +17,8 @@ package com.gitblit.servlet;
 
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.text.ParseException;
 import java.util.Date;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletResponse;
 
@@ -41,6 +36,8 @@ import com.gitblit.utils.CompressionUtils;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.MarkdownUtils;
 import com.gitblit.utils.StringUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Streams out a zip file from the specified repository for any tree path at any
@@ -56,14 +53,18 @@ public class DownloadZipServlet extends HttpServlet {
 
 	private transient Logger logger = LoggerFactory.getLogger(DownloadZipServlet.class);
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private IRepositoryManager repositoryManager;
-	
-	private IFilestoreManager filestoreManager;
+	private final IRepositoryManager repositoryManager;
+
+	private final IFilestoreManager filestoreManager;
 
 	public static enum Format {
-		zip(".zip"), tar(".tar"), gz(".tar.gz"), xz(".tar.xz"), bzip2(".tar.bzip2");
+		zip(".zip"),
+		tar(".tar"),
+		gz(".tar.gz"),
+		xz(".tar.xz"),
+		bzip2(".tar.bzip2");
 
 		public final String extension;
 
@@ -72,7 +73,7 @@ public class DownloadZipServlet extends HttpServlet {
 		}
 
 		public static Format fromName(String name) {
-			for (Format format : values()) {
+			for (final Format format : values()) {
 				if (format.name().equalsIgnoreCase(name)) {
 					return format;
 				}
@@ -82,7 +83,8 @@ public class DownloadZipServlet extends HttpServlet {
 	}
 
 	@Inject
-	public DownloadZipServlet(IStoredSettings settings, IRepositoryManager repositoryManager, IFilestoreManager filestoreManager) {
+	public DownloadZipServlet(IStoredSettings settings, IRepositoryManager repositoryManager,
+			IFilestoreManager filestoreManager) {
 		this.settings = settings;
 		this.repositoryManager = repositoryManager;
 		this.filestoreManager = filestoreManager;
@@ -98,8 +100,9 @@ public class DownloadZipServlet extends HttpServlet {
 	 * @param format
 	 * @return an url
 	 */
-	public static String asLink(String baseURL, String repository, String objectId, String path, Format format) {
-		if (baseURL.length() > 0 && baseURL.charAt(baseURL.length() - 1) == '/') {
+	public static String asLink(String baseURL, String repository, String objectId, String path,
+			Format format) {
+		if ((baseURL.length() > 0) && (baseURL.charAt(baseURL.length() - 1) == '/')) {
 			baseURL = baseURL.substring(0, baseURL.length() - 1);
 		}
 		return baseURL + Constants.ZIP_PATH + "?r=" + repository
@@ -117,19 +120,18 @@ public class DownloadZipServlet extends HttpServlet {
 	 * @throws java.io.IOException
 	 */
 	private void processRequest(javax.servlet.http.HttpServletRequest request,
-			javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException,
-			java.io.IOException {
-		if (!settings.getBoolean(Keys.web.allowZipDownloads, true)) {
-			logger.warn("Zip downloads are disabled");
+			javax.servlet.http.HttpServletResponse response) throws java.io.IOException {
+		if (!this.settings.getBoolean(Keys.web.allowZipDownloads, true)) {
+			this.logger.warn("Zip downloads are disabled");
 			response.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
 		}
 
 		Format format = Format.zip;
-		String repository = request.getParameter("r");
-		String basePath = request.getParameter("p");
-		String objectId = request.getParameter("h");
-		String f = request.getParameter("format");
+		final String repository = request.getParameter("r");
+		final String basePath = request.getParameter("p");
+		final String objectId = request.getParameter("h");
+		final String f = request.getParameter("format");
 		if (!StringUtils.isEmpty(f)) {
 			format = Format.fromName(f);
 		}
@@ -148,74 +150,84 @@ public class DownloadZipServlet extends HttpServlet {
 				name += "-" + objectId;
 			}
 
-			Repository r = repositoryManager.getRepository(repository);
+			final Repository r = this.repositoryManager.getRepository(repository);
 			if (r == null) {
-				if (repositoryManager.isCollectingGarbage(repository)) {
-					error(response, MessageFormat.format("# Error\nGitblit is busy collecting garbage in {0}", repository));
+				if (this.repositoryManager.isCollectingGarbage(repository)) {
+					error(response, MessageFormat.format(
+							"# Error\nGitblit is busy collecting garbage in {0}", repository));
 					return;
 				} else {
-					error(response, MessageFormat.format("# Error\nFailed to find repository {0}", repository));
+					error(response, MessageFormat.format("# Error\nFailed to find repository {0}",
+							repository));
 					return;
 				}
 			}
-			RevCommit commit = JGitUtils.getCommit(r, objectId);
+			final RevCommit commit = JGitUtils.getCommit(r, objectId);
 			if (commit == null) {
-				error(response, MessageFormat.format("# Error\nFailed to find commit {0}", objectId));
+				error(response,
+						MessageFormat.format("# Error\nFailed to find commit {0}", objectId));
 				r.close();
 				return;
 			}
-			Date date = JGitUtils.getCommitDate(commit);
+			final Date date = JGitUtils.getCommitDate(commit);
 
-			String contentType = "application/octet-stream";
+			final String contentType = "application/octet-stream";
 			response.setContentType(contentType + "; charset=" + response.getCharacterEncoding());
-			response.setHeader("Content-Disposition", "attachment; filename=\"" + name + format.extension + "\"");
+			response.setHeader("Content-Disposition", "attachment; filename=\"" + name
+					+ format.extension + "\"");
 			response.setDateHeader("Last-Modified", date.getTime());
 			response.setHeader("Cache-Control", "no-cache");
 			response.setHeader("Pragma", "no-cache");
 			response.setDateHeader("Expires", 0);
 
-			
 			try {
 				switch (format) {
 				case zip:
-					CompressionUtils.zip(r, filestoreManager, basePath, objectId, response.getOutputStream());
+					CompressionUtils.zip(r, this.filestoreManager, basePath, objectId,
+							response.getOutputStream());
 					break;
 				case tar:
-					CompressionUtils.tar(r, filestoreManager, basePath, objectId, response.getOutputStream());
+					CompressionUtils.tar(r, this.filestoreManager, basePath, objectId,
+							response.getOutputStream());
 					break;
 				case gz:
-					CompressionUtils.gz(r, filestoreManager, basePath, objectId, response.getOutputStream());
+					CompressionUtils.gz(r, this.filestoreManager, basePath, objectId,
+							response.getOutputStream());
 					break;
 				case xz:
-					CompressionUtils.xz(r, filestoreManager, basePath, objectId, response.getOutputStream());
+					CompressionUtils.xz(r, this.filestoreManager, basePath, objectId,
+							response.getOutputStream());
 					break;
 				case bzip2:
-					CompressionUtils.bzip2(r, filestoreManager, basePath, objectId, response.getOutputStream());
+					CompressionUtils.bzip2(r, this.filestoreManager, basePath, objectId,
+							response.getOutputStream());
 					break;
 				}
 
 				response.flushBuffer();
-			} catch (IOException t) {
-				String message = t.getMessage() == null ? "" : t.getMessage().toLowerCase();
+			}
+			catch (final IOException t) {
+				final String message = t.getMessage() == null ? "" : t.getMessage().toLowerCase();
 				if (message.contains("reset") || message.contains("broken pipe")) {
-					logger.error("Client aborted zip download: " + message);
+					this.logger.error("Client aborted zip download: " + message);
 				} else {
-					logger.error("Failed to write attachment to client", t);
+					this.logger.error("Failed to write attachment to client", t);
 				}
-			} catch (Throwable t) {
-				logger.error("Failed to write attachment to client", t);
+			}
+			catch (final Throwable t) {
+				this.logger.error("Failed to write attachment to client", t);
 			}
 
 			// close the repository
 			r.close();
-		} catch (Throwable t) {
-			logger.error("Failed to write attachment to client", t);
+		}
+		catch (final Throwable t) {
+			this.logger.error("Failed to write attachment to client", t);
 		}
 	}
 
-	private void error(HttpServletResponse response, String mkd) throws ServletException,
-			IOException, ParseException {
-		String content = MarkdownUtils.transformMarkdown(mkd);
+	private static void error(HttpServletResponse response, String mkd) throws IOException {
+		final String content = MarkdownUtils.transformMarkdown(mkd);
 		response.setContentType("text/html; charset=" + Constants.ENCODING);
 		response.getWriter().write(content);
 	}

@@ -36,7 +36,11 @@ public class UsersTableModel extends AbstractTableModel {
 	List<UserModel> list;
 
 	enum Columns {
-		Name, Display_Name, Type, Teams, Repositories;
+		Name,
+		Display_Name,
+		Type,
+		Teams,
+		Repositories;
 
 		@Override
 		public String toString() {
@@ -55,7 +59,7 @@ public class UsersTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return list.size();
+		return this.list.size();
 	}
 
 	@Override
@@ -65,7 +69,7 @@ public class UsersTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Name:
 			return Translation.get("gb.name");
@@ -95,15 +99,15 @@ public class UsersTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		UserModel model = list.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final UserModel model = this.list.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Name:
 			return model.username;
 		case Display_Name:
 			return model.displayName;
 		case Type:
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder();
 			if (model.accountType != null) {
 				sb.append(model.accountType.name());
 			}
@@ -115,10 +119,10 @@ public class UsersTableModel extends AbstractTableModel {
 			}
 			return sb.toString();
 		case Teams:
-			return (model.teams == null || model.teams.size() == 0) ? "" : String
+			return ((model.teams == null) || (model.teams.size() == 0)) ? "" : String
 					.valueOf(model.teams.size());
 		case Repositories:
-			return (model.permissions == null || model.permissions.size() == 0) ? "" : String
+			return ((model.permissions == null) || (model.permissions.size() == 0)) ? "" : String
 					.valueOf(model.permissions.size());
 		}
 		return null;

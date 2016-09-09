@@ -29,11 +29,12 @@
  */
 package com.syntevo.bugtraq;
 
-import junit.framework.*;
+import java.util.List;
 
-import java.util.*;
+import junit.framework.TestCase;
 
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class BugtraqParserTest extends TestCase {
 
@@ -76,8 +77,10 @@ public class BugtraqParserTest extends TestCase {
 	}
 
 	public void testFilter3() throws BugtraqException {
-		final BugtraqParser parser = createParser("[Ii]ssues?:?((\\s*(,|and)?\\s*#\\d+)+)", null, "\\d+");
-		doTest("Issues #3, #4 and #5: Git Bugtraq Configuration options (see #12)", parser, id(8, 8, "3"), id(12, 12, "4"), id(19, 19, "5"));
+		final BugtraqParser parser = createParser("[Ii]ssues?:?((\\s*(,|and)?\\s*#\\d+)+)", null,
+				"\\d+");
+		doTest("Issues #3, #4 and #5: Git Bugtraq Configuration options (see #12)", parser,
+				id(8, 8, "3"), id(12, 12, "4"), id(19, 19, "5"));
 	}
 
 	public void testLink() throws BugtraqException {
@@ -92,29 +95,33 @@ public class BugtraqParserTest extends TestCase {
 	}
 
 	public void testFogBugz() throws BugtraqException {
-		final BugtraqParser parser = createParser("(?:Bug[zs]?\\s*IDs?\\s*|Cases?)[#:; ]+((\\d+[ ,:;#]*)+)", "[#]?\\d+", "\\d+");
+		final BugtraqParser parser = createParser(
+				"(?:Bug[zs]?\\s*IDs?\\s*|Cases?)[#:; ]+((\\d+[ ,:;#]*)+)", "[#]?\\d+", "\\d+");
 		doTest("Bug IDs: 3, #4, 5", parser, id(9, 9, "3"), id(12, 13, "4"), id(16, 16, "5"));
 	}
 
 	public void testFogBugzInvalid() throws BugtraqException {
-		final BugtraqParser parser = createParser("Bug[zs]?\\s*IDs?\\s*|Cases?[#:; ]+((\\d+[ ,:;#]*)+)", null, "\\d+");
+		final BugtraqParser parser = createParser(
+				"Bug[zs]?\\s*IDs?\\s*|Cases?[#:; ]+((\\d+[ ,:;#]*)+)", null, "\\d+");
 		doTest("Bug IDs: 3, 4, 5", parser);
 	}
 
 	// Utils ==================================================================
 
-	private BugtraqParser createParser(@Nullable String filterRegex, @Nullable String linkRegex, @NotNull String idRegex) throws BugtraqException {
+	private static BugtraqParser createParser(@Nullable String filterRegex,
+			@Nullable String linkRegex, @NotNull String idRegex) throws BugtraqException {
 		return BugtraqParser.createInstance(idRegex, linkRegex, filterRegex);
 	}
-	
-	private BugtraqParserIssueId id(int from, int to, String id) {
-		return new BugtraqParserIssueId(from, to, id);
-	} 
 
-	private void doTest(String message, BugtraqParser parser, BugtraqParserIssueId... expectedIds) {
+	private static BugtraqParserIssueId id(int from, int to, String id) {
+		return new BugtraqParserIssueId(from, to, id);
+	}
+
+	private static void doTest(String message, BugtraqParser parser,
+			BugtraqParserIssueId... expectedIds) {
 		final List<BugtraqParserIssueId> actualIds = parser.parse(message);
 		assertEquals(expectedIds.length, actualIds.size());
-		
+
 		for (int index = 0; index < expectedIds.length; index++) {
 			final BugtraqParserIssueId expectedId = expectedIds[index];
 			final BugtraqParserIssueId actualId = actualIds.get(index);

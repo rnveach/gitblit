@@ -56,45 +56,45 @@ public class SettingPanel extends JPanel {
 	}
 
 	private void initialize() {
-		descriptionArea = new JTextArea();
-		descriptionArea.setRows(6);
-		descriptionArea.setFont(new Font("monospaced", Font.PLAIN, 11));
-		descriptionArea.setEditable(false);
+		this.descriptionArea = new JTextArea();
+		this.descriptionArea.setRows(6);
+		this.descriptionArea.setFont(new Font("monospaced", Font.PLAIN, 11));
+		this.descriptionArea.setEditable(false);
 
-		settingName = new JLabel(" ");
-		settingName.setFont(settingName.getFont().deriveFont(Font.BOLD));
+		this.settingName = new JLabel(" ");
+		this.settingName.setFont(this.settingName.getFont().deriveFont(Font.BOLD));
 
-		settingDefault = new JLabel(" ");
+		this.settingDefault = new JLabel(" ");
 
-		sinceVersion = new JLabel(" ", SwingConstants.RIGHT);
-		sinceVersion.setForeground(new Color(0, 0x80, 0));
+		this.sinceVersion = new JLabel(" ", SwingConstants.RIGHT);
+		this.sinceVersion.setForeground(new Color(0, 0x80, 0));
 
-		directives = new JLabel(" ", SwingConstants.RIGHT);
-		directives.setFont(directives.getFont().deriveFont(Font.ITALIC));
+		this.directives = new JLabel(" ", SwingConstants.RIGHT);
+		this.directives.setFont(this.directives.getFont().deriveFont(Font.ITALIC));
 
-		JPanel settingParameters = new JPanel(new GridLayout(2, 2, 0, 0));
-		settingParameters.add(settingName);
-		settingParameters.add(sinceVersion);
-		settingParameters.add(settingDefault, BorderLayout.CENTER);
-		settingParameters.add(directives);
+		final JPanel settingParameters = new JPanel(new GridLayout(2, 2, 0, 0));
+		settingParameters.add(this.settingName);
+		settingParameters.add(this.sinceVersion);
+		settingParameters.add(this.settingDefault, BorderLayout.CENTER);
+		settingParameters.add(this.directives);
 
-		JPanel settingPanel = new JPanel(new BorderLayout(5, 5));
+		final JPanel settingPanel = new JPanel(new BorderLayout(5, 5));
 		settingPanel.add(settingParameters, BorderLayout.NORTH);
-		settingPanel.add(new JScrollPane(descriptionArea), BorderLayout.CENTER);
+		settingPanel.add(new JScrollPane(this.descriptionArea), BorderLayout.CENTER);
 		setLayout(new BorderLayout(0, 0));
 		add(settingPanel, BorderLayout.CENTER);
 	}
 
 	public void setSetting(SettingModel setting) {
-		settingName.setText(setting.name);
+		this.settingName.setText(setting.name);
 		if (setting.since == null) {
-			sinceVersion.setText("custom");
+			this.sinceVersion.setText("custom");
 		} else {
-			sinceVersion.setText("since " + setting.since);
+			this.sinceVersion.setText("since " + setting.since);
 		}
-		settingDefault.setText(Translation.get("gb.default") + ": " + setting.defaultValue);
+		this.settingDefault.setText(Translation.get("gb.default") + ": " + setting.defaultValue);
 
-		List<String> values = new ArrayList<String>();
+		final List<String> values = new ArrayList<String>();
 		if (setting.caseSensitive) {
 			values.add("CASE-SENSITIVE");
 		}
@@ -104,17 +104,17 @@ public class SettingPanel extends JPanel {
 		if (setting.restartRequired) {
 			values.add("RESTART REQUIRED");
 		}
-		directives.setText(StringUtils.flattenStrings(values, ", "));
+		this.directives.setText(StringUtils.flattenStrings(values, ", "));
 
-		descriptionArea.setText(setting.description);
-		descriptionArea.setCaretPosition(0);
+		this.descriptionArea.setText(setting.description);
+		this.descriptionArea.setCaretPosition(0);
 	}
 
 	public void clear() {
-		settingName.setText(" ");
-		settingDefault.setText(" ");
-		sinceVersion.setText(" ");
-		directives.setText(" ");
-		descriptionArea.setText("");
+		this.settingName.setText(" ");
+		this.settingDefault.setText(" ");
+		this.sinceVersion.setText(" ");
+		this.directives.setText(" ");
+		this.descriptionArea.setText("");
 	}
 }

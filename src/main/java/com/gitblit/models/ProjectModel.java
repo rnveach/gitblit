@@ -58,45 +58,45 @@ public class ProjectModel implements Serializable, Comparable<ProjectModel> {
 	}
 
 	public boolean isUserProject() {
-		return ModelUtils.isPersonalRepository(name);
+		return ModelUtils.isPersonalRepository(this.name);
 	}
 
 	public boolean hasRepository(String name) {
-		return repositories.contains(name.toLowerCase());
+		return this.repositories.contains(name.toLowerCase());
 	}
 
 	public void addRepository(String name) {
-		repositories.add(name.toLowerCase());
+		this.repositories.add(name.toLowerCase());
 	}
 
 	public void addRepository(RepositoryModel model) {
-		repositories.add(model.name.toLowerCase());
-		if (lastChange.before(model.lastChange)) {
-			lastChange = model.lastChange;
+		this.repositories.add(model.name.toLowerCase());
+		if (this.lastChange.before(model.lastChange)) {
+			this.lastChange = model.lastChange;
 		}
 	}
 
 	public void addRepositories(Collection<String> names) {
-		for (String name:names) {
-			repositories.add(name.toLowerCase());
+		for (final String name : names) {
+			this.repositories.add(name.toLowerCase());
 		}
 	}
 
 	public void removeRepository(String name) {
-		repositories.remove(name.toLowerCase());
+		this.repositories.remove(name.toLowerCase());
 	}
 
 	public String getDisplayName() {
-		return StringUtils.isEmpty(title) ? name : title;
+		return StringUtils.isEmpty(this.title) ? this.name : this.title;
 	}
 
 	@Override
 	public String toString() {
-		return name;
+		return this.name;
 	}
 
 	@Override
 	public int compareTo(ProjectModel o) {
-		return name.compareTo(o.name);
+		return this.name.compareTo(o.name);
 	}
 }

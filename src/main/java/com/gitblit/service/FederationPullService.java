@@ -89,31 +89,32 @@ public abstract class FederationPullService implements Runnable {
 	 */
 	@Override
 	public void run() {
-		for (FederationModel registration : registrations) {
-			FederationPullStatus was = registration.getLowestStatus();
+		for (final FederationModel registration : this.registrations) {
+			final FederationPullStatus was = registration.getLowestStatus();
 			try {
-				Date now = new Date(System.currentTimeMillis());
+				final Date now = new Date(System.currentTimeMillis());
 				pull(registration);
 				sendStatusAcknowledgment(registration);
 				registration.lastPull = now;
-				FederationPullStatus is = registration.getLowestStatus();
+				final FederationPullStatus is = registration.getLowestStatus();
 				if (is.ordinal() < was.ordinal()) {
 					// the status for this registration has downgraded
-					logger.warn("Federation pull status of {0} is now {1}", registration.name,
+					this.logger.warn("Federation pull status of {0} is now {1}", registration.name,
 							is.name());
 					if (registration.notifyOnError) {
-						String message = "Federation pull of " + registration.name + " @ "
+						final String message = "Federation pull of " + registration.name + " @ "
 								+ registration.url + " is now at " + is.name();
-						gitblit.sendMailToAdministrators(
-								"Pull Status of " + registration.name + " is " + is.name(),
-								message);
+						this.gitblit.sendMailToAdministrators("Pull Status of " + registration.name
+								+ " is " + is.name(), message);
 					}
 				}
-			} catch (Throwable t) {
-				logger.error(MessageFormat.format(
+			}
+			catch (final Throwable t) {
+				this.logger.error(MessageFormat.format(
 						"Failed to pull from federated gitblit ({0} @ {1})", registration.name,
 						registration.url), t);
-			} finally {
+			}
+			finally {
 				reschedule(registration);
 			}
 		}
@@ -127,27 +128,28 @@ public abstract class FederationPullService implements Runnable {
 	 * @throws Exception
 	 */
 	private void pull(FederationModel registration) throws Exception {
-		Map<String, RepositoryModel> repositories = FederationUtils.getRepositories(registration,
-				true);
-		String registrationFolder = registration.folder.toLowerCase().trim();
+		final Map<String, RepositoryModel> repositories = FederationUtils.getRepositories(
+				registration, true);
+		final String registrationFolder = registration.folder.toLowerCase().trim();
 		// confirm valid characters in server alias
-		Character c = StringUtils.findInvalidCharacter(registrationFolder);
+		final Character c = StringUtils.findInvalidCharacter(registrationFolder);
 		if (c != null) {
-			logger.error(MessageFormat
-					.format("Illegal character ''{0}'' in folder name ''{1}'' of federation registration {2}!",
-							c, registrationFolder, registration.name));
+			this.logger
+					.error(MessageFormat
+							.format("Illegal character ''{0}'' in folder name ''{1}'' of federation registration {2}!",
+									c, registrationFolder, registration.name));
 			return;
 		}
-		File repositoriesFolder = gitblit.getRepositoriesFolder();
-		File registrationFolderFile = new File(repositoriesFolder, registrationFolder);
+		final File repositoriesFolder = this.gitblit.getRepositoriesFolder();
+		final File registrationFolderFile = new File(repositoriesFolder, registrationFolder);
 		registrationFolderFile.mkdirs();
 
 		// Clone/Pull the repository
-		for (Map.Entry<String, RepositoryModel> entry : repositories.entrySet()) {
-			String cloneUrl = entry.getKey();
-			RepositoryModel repository = entry.getValue();
+		for (final Map.Entry<String, RepositoryModel> entry : repositories.entrySet()) {
+			final String cloneUrl = entry.getKey();
+			final RepositoryModel repository = entry.getValue();
 			if (!repository.hasCommits) {
-				logger.warn(MessageFormat.format(
+				this.logger.warn(MessageFormat.format(
 						"Skipping federated repository {0} from {1} @ {2}. Repository is EMPTY.",
 						repository.name, registration.name, registration.url));
 				registration.updateStatus(repository, FederationPullStatus.SKIPPED);
@@ -178,69 +180,76 @@ public abstract class FederationPullService implements Runnable {
 			// confirm that the origin of any pre-existing repository matches
 			// the clone url
 			String fetchHead = null;
-			Repository existingRepository = gitblit.getRepository(repositoryName);
+			final Repository existingRepository = this.gitblit.getRepository(repositoryName);
 
-			if (existingRepository == null && gitblit.isCollectingGarbage(repositoryName)) {
-				logger.warn(MessageFormat.format("Skipping local repository {0}, busy collecting garbage", repositoryName));
+			if ((existingRepository == null) && this.gitblit.isCollectingGarbage(repositoryName)) {
+				this.logger.warn(MessageFormat.format(
+						"Skipping local repository {0}, busy collecting garbage", repositoryName));
 				continue;
 			}
 
 			if (existingRepository != null) {
-				StoredConfig config = existingRepository.getConfig();
+				final StoredConfig config = existingRepository.getConfig();
 				config.load();
-				String origin = config.getString("remote", "origin", "url");
-				RevCommit commit = JGitUtils.getCommit(existingRepository,
+				final String origin = config.getString("remote", "origin", "url");
+				final RevCommit commit = JGitUtils.getCommit(existingRepository,
 						org.eclipse.jgit.lib.Constants.FETCH_HEAD);
 				if (commit != null) {
 					fetchHead = commit.getName();
 				}
 				existingRepository.close();
 				if (!origin.startsWith(registration.url)) {
-					logger.warn(MessageFormat
-							.format("Skipping federated repository {0} from {1} @ {2}. Origin does not match, consider EXCLUDING.",
-									repository.name, registration.name, registration.url));
+					this.logger
+							.warn(MessageFormat
+									.format("Skipping federated repository {0} from {1} @ {2}. Origin does not match, consider EXCLUDING.",
+											repository.name, registration.name, registration.url));
 					registration.updateStatus(repository, FederationPullStatus.SKIPPED);
 					continue;
 				}
 			}
 
 			// clone/pull this repository
-			CredentialsProvider credentials = new UsernamePasswordCredentialsProvider(
+			final CredentialsProvider credentials = new UsernamePasswordCredentialsProvider(
 					Constants.FEDERATION_USER, registration.token);
-			logger.info(MessageFormat.format("Pulling federated repository {0} from {1} @ {2}",
-					repository.name, registration.name, registration.url));
+			this.logger.info(MessageFormat.format(
+					"Pulling federated repository {0} from {1} @ {2}", repository.name,
+					registration.name, registration.url));
 
-			CloneResult result = JGitUtils.cloneRepository(registrationFolderFile, repository.name,
-					cloneUrl, registration.bare, credentials);
-			Repository r = gitblit.getRepository(repositoryName);
-			RepositoryModel rm = gitblit.getRepositoryModel(repositoryName);
+			final CloneResult result = JGitUtils.cloneRepository(registrationFolderFile,
+					repository.name, cloneUrl, registration.bare, credentials);
+			final Repository r = this.gitblit.getRepository(repositoryName);
+			final RepositoryModel rm = this.gitblit.getRepositoryModel(repositoryName);
 			repository.isFrozen = registration.mirror;
 			if (result.createdRepository) {
 				// default local settings
 				repository.federationStrategy = FederationStrategy.EXCLUDE;
 				repository.isFrozen = registration.mirror;
 				repository.showRemoteBranches = !registration.mirror;
-				logger.info(MessageFormat.format("     cloning {0}", repository.name));
+				this.logger.info(MessageFormat.format("     cloning {0}", repository.name));
 				registration.updateStatus(repository, FederationPullStatus.MIRRORED);
 			} else {
 				// fetch and update
 				boolean fetched = false;
-				RevCommit commit = JGitUtils.getCommit(r, org.eclipse.jgit.lib.Constants.FETCH_HEAD);
-				String newFetchHead = commit.getName();
-				fetched = fetchHead == null || !fetchHead.equals(newFetchHead);
+				final RevCommit commit = JGitUtils.getCommit(r,
+						org.eclipse.jgit.lib.Constants.FETCH_HEAD);
+				final String newFetchHead = commit.getName();
+				fetched = (fetchHead == null) || !fetchHead.equals(newFetchHead);
 
 				if (registration.mirror) {
 					// mirror
 					if (fetched) {
-						// update local branches to match the remote tracking branches
-						for (RefModel ref : JGitUtils.getRemoteBranches(r, false, -1)) {
+						// update local branches to match the remote tracking
+						// branches
+						for (final RefModel ref : JGitUtils.getRemoteBranches(r, false, -1)) {
 							if (ref.displayName.startsWith("origin/")) {
-								String branch = org.eclipse.jgit.lib.Constants.R_HEADS
-										+ ref.displayName.substring(ref.displayName.indexOf('/') + 1);
-								String hash = ref.getReferencedObjectId().getName();
+								final String branch = org.eclipse.jgit.lib.Constants.R_HEADS
+										+ ref.displayName
+												.substring(ref.displayName.indexOf('/') + 1);
+								final String hash = ref.getReferencedObjectId().getName();
 
 								JGitUtils.setBranchRef(r, branch, hash);
-								logger.info(MessageFormat.format("     resetting {0} of {1} to {2}", branch,
+								this.logger.info(MessageFormat.format(
+										"     resetting {0} of {1} to {2}", branch,
 										repository.name, hash));
 							}
 						}
@@ -252,7 +261,7 @@ public abstract class FederationPullService implements Runnable {
 							newHead = repository.HEAD;
 						}
 						JGitUtils.setHEADtoRef(r, newHead);
-						logger.info(MessageFormat.format("     resetting HEAD of {0} to {1}",
+						this.logger.info(MessageFormat.format("     resetting HEAD of {0} to {1}",
 								repository.name, newHead));
 						registration.updateStatus(repository, FederationPullStatus.MIRRORED);
 					} else {
@@ -275,7 +284,7 @@ public abstract class FederationPullService implements Runnable {
 				repository.federationStrategy = rm.federationStrategy;
 
 				// merge federation sets
-				Set<String> federationSets = new HashSet<String>();
+				final Set<String> federationSets = new HashSet<String>();
 				if (rm.federationSets != null) {
 					federationSets.addAll(rm.federationSets);
 				}
@@ -285,7 +294,7 @@ public abstract class FederationPullService implements Runnable {
 				repository.federationSets = new ArrayList<String>(federationSets);
 
 				// merge indexed branches
-				Set<String> indexedBranches = new HashSet<String>();
+				final Set<String> indexedBranches = new HashSet<String>();
 				if (rm.indexedBranches != null) {
 					indexedBranches.addAll(rm.indexedBranches);
 				}
@@ -301,7 +310,7 @@ public abstract class FederationPullService implements Runnable {
 			// "federated" repositories.
 			repository.isFederated = cloneUrl.startsWith(registration.url);
 
-			gitblit.updateConfiguration(r, repository);
+			this.gitblit.updateConfiguration(r, repository);
 			r.close();
 		}
 
@@ -312,12 +321,13 @@ public abstract class FederationPullService implements Runnable {
 			// TeamModels are automatically pulled because they are contained
 			// within the UserModel. The UserService creates unknown teams
 			// and updates existing teams.
-			Collection<UserModel> users = FederationUtils.getUsers(registration);
-			if (users != null && users.size() > 0) {
-				File realmFile = new File(registrationFolderFile, registration.name + "_users.conf");
+			final Collection<UserModel> users = FederationUtils.getUsers(registration);
+			if ((users != null) && (users.size() > 0)) {
+				final File realmFile = new File(registrationFolderFile, registration.name
+						+ "_users.conf");
 				realmFile.delete();
 				userService = new ConfigUserService(realmFile);
-				for (UserModel user : users) {
+				for (final UserModel user : users) {
 					userService.updateUserModel(user.username, user);
 
 					// merge the origin permissions and origin accounts into
@@ -328,80 +338,93 @@ public abstract class FederationPullService implements Runnable {
 						if (!StringUtils.isEmpty(registrationFolder)) {
 							if (user.permissions != null) {
 								// pulling from >= 1.2 version
-								Map<String, AccessPermission> copy = new HashMap<String, AccessPermission>(user.permissions);
+								final Map<String, AccessPermission> copy = new HashMap<String, AccessPermission>(
+										user.permissions);
 								user.permissions.clear();
-								for (Map.Entry<String, AccessPermission> entry : copy.entrySet()) {
-									user.setRepositoryPermission(registrationFolder + "/" + entry.getKey(), entry.getValue());
+								for (final Map.Entry<String, AccessPermission> entry : copy
+										.entrySet()) {
+									user.setRepositoryPermission(
+											registrationFolder + "/" + entry.getKey(),
+											entry.getValue());
 								}
 							} else {
 								// pulling from <= 1.1 version
-								List<String> permissions = new ArrayList<String>(user.repositories);
+								final List<String> permissions = new ArrayList<String>(
+										user.repositories);
 								user.repositories.clear();
-								for (String permission : permissions) {
-									user.addRepositoryPermission(registrationFolder + "/" + permission);
+								for (final String permission : permissions) {
+									user.addRepositoryPermission(registrationFolder + "/"
+											+ permission);
 								}
 							}
 						}
 
 						// insert new user or update local user
-						UserModel localUser = gitblit.getUserModel(user.username);
+						final UserModel localUser = this.gitblit.getUserModel(user.username);
 						if (localUser == null) {
 							// create new local user
-							gitblit.addUser(user);
+							this.gitblit.addUser(user);
 						} else {
 							// update repository permissions of local user
 							if (user.permissions != null) {
 								// pulling from >= 1.2 version
-								Map<String, AccessPermission> copy = new HashMap<String, AccessPermission>(user.permissions);
-								for (Map.Entry<String, AccessPermission> entry : copy.entrySet()) {
-									localUser.setRepositoryPermission(entry.getKey(), entry.getValue());
+								final Map<String, AccessPermission> copy = new HashMap<String, AccessPermission>(
+										user.permissions);
+								for (final Map.Entry<String, AccessPermission> entry : copy
+										.entrySet()) {
+									localUser.setRepositoryPermission(entry.getKey(),
+											entry.getValue());
 								}
 							} else {
 								// pulling from <= 1.1 version
-								for (String repository : user.repositories) {
+								for (final String repository : user.repositories) {
 									localUser.addRepositoryPermission(repository);
 								}
 							}
 							localUser.password = user.password;
 							localUser.canAdmin = user.canAdmin;
-							gitblit.reviseUser(localUser.username, localUser);
+							this.gitblit.reviseUser(localUser.username, localUser);
 						}
 
-						for (String teamname : gitblit.getAllTeamNames()) {
-							TeamModel team = gitblit.getTeamModel(teamname);
+						for (final String teamname : this.gitblit.getAllTeamNames()) {
+							final TeamModel team = this.gitblit.getTeamModel(teamname);
 							if (user.isTeamMember(teamname) && !team.hasUser(user.username)) {
 								// new team member
 								team.addUser(user.username);
-								gitblit.updateTeamModel(teamname, team);
+								this.gitblit.updateTeamModel(teamname, team);
 							} else if (!user.isTeamMember(teamname) && team.hasUser(user.username)) {
 								// remove team member
 								team.removeUser(user.username);
-								gitblit.updateTeamModel(teamname, team);
+								this.gitblit.updateTeamModel(teamname, team);
 							}
 
 							// update team repositories
-							TeamModel remoteTeam = user.getTeam(teamname);
+							final TeamModel remoteTeam = user.getTeam(teamname);
 							if (remoteTeam != null) {
 								if (remoteTeam.permissions != null) {
 									// pulling from >= 1.2
-									for (Map.Entry<String, AccessPermission> entry : remoteTeam.permissions.entrySet()){
-										team.setRepositoryPermission(entry.getKey(), entry.getValue());
+									for (final Map.Entry<String, AccessPermission> entry : remoteTeam.permissions
+											.entrySet()) {
+										team.setRepositoryPermission(entry.getKey(),
+												entry.getValue());
 									}
-									gitblit.updateTeamModel(teamname, team);
+									this.gitblit.updateTeamModel(teamname, team);
 								} else if (!ArrayUtils.isEmpty(remoteTeam.repositories)) {
 									// pulling from <= 1.1
 									team.addRepositoryPermissions(remoteTeam.repositories);
-									gitblit.updateTeamModel(teamname, team);
+									this.gitblit.updateTeamModel(teamname, team);
 								}
 							}
 						}
 					}
 				}
 			}
-		} catch (ForbiddenException e) {
+		}
+		catch (final ForbiddenException e) {
 			// ignore forbidden exceptions
-		} catch (IOException e) {
-			logger.warn(MessageFormat.format(
+		}
+		catch (final IOException e) {
+			this.logger.warn(MessageFormat.format(
 					"Failed to retrieve USERS from federated gitblit ({0} @ {1})",
 					registration.name, registration.url), e);
 		}
@@ -412,58 +435,64 @@ public abstract class FederationPullService implements Runnable {
 			// UserModels because it is possible to use teams to specify
 			// mailing lists or push scripts without specifying users.
 			if (userService != null) {
-				Collection<TeamModel> teams = FederationUtils.getTeams(registration);
-				if (teams != null && teams.size() > 0) {
-					for (TeamModel team : teams) {
+				final Collection<TeamModel> teams = FederationUtils.getTeams(registration);
+				if ((teams != null) && (teams.size() > 0)) {
+					for (final TeamModel team : teams) {
 						userService.updateTeamModel(team);
 					}
 				}
 			}
-		} catch (ForbiddenException e) {
+		}
+		catch (final ForbiddenException e) {
 			// ignore forbidden exceptions
-		} catch (IOException e) {
-			logger.warn(MessageFormat.format(
+		}
+		catch (final IOException e) {
+			this.logger.warn(MessageFormat.format(
 					"Failed to retrieve TEAMS from federated gitblit ({0} @ {1})",
 					registration.name, registration.url), e);
 		}
 
 		try {
 			// Pull SETTINGS
-			Map<String, String> settings = FederationUtils.getSettings(registration);
-			if (settings != null && settings.size() > 0) {
-				Properties properties = new Properties();
+			final Map<String, String> settings = FederationUtils.getSettings(registration);
+			if ((settings != null) && (settings.size() > 0)) {
+				final Properties properties = new Properties();
 				properties.putAll(settings);
-				FileOutputStream os = new FileOutputStream(new File(registrationFolderFile,
+				final FileOutputStream os = new FileOutputStream(new File(registrationFolderFile,
 						registration.name + "_" + Constants.PROPERTIES_FILE));
 				properties.store(os, null);
 				os.close();
 			}
-		} catch (ForbiddenException e) {
+		}
+		catch (final ForbiddenException e) {
 			// ignore forbidden exceptions
-		} catch (IOException e) {
-			logger.warn(MessageFormat.format(
+		}
+		catch (final IOException e) {
+			this.logger.warn(MessageFormat.format(
 					"Failed to retrieve SETTINGS from federated gitblit ({0} @ {1})",
 					registration.name, registration.url), e);
 		}
 
 		try {
 			// Pull SCRIPTS
-			Map<String, String> scripts = FederationUtils.getScripts(registration);
-			if (scripts != null && scripts.size() > 0) {
-				for (Map.Entry<String, String> script : scripts.entrySet()) {
+			final Map<String, String> scripts = FederationUtils.getScripts(registration);
+			if ((scripts != null) && (scripts.size() > 0)) {
+				for (final Map.Entry<String, String> script : scripts.entrySet()) {
 					String scriptName = script.getKey();
 					if (scriptName.endsWith(".groovy")) {
 						scriptName = scriptName.substring(0, scriptName.indexOf(".groovy"));
 					}
-					File file = new File(registrationFolderFile, registration.name + "_"
+					final File file = new File(registrationFolderFile, registration.name + "_"
 							+ scriptName + ".groovy");
 					FileUtils.writeContent(file, script.getValue());
 				}
 			}
-		} catch (ForbiddenException e) {
+		}
+		catch (final ForbiddenException e) {
 			// ignore forbidden exceptions
-		} catch (IOException e) {
-			logger.warn(MessageFormat.format(
+		}
+		catch (final IOException e) {
+			this.logger.warn(MessageFormat.format(
 					"Failed to retrieve SCRIPTS from federated gitblit ({0} @ {1})",
 					registration.name, registration.url), e);
 		}
@@ -481,12 +510,12 @@ public abstract class FederationPullService implements Runnable {
 			// skip status acknowledgment
 			return;
 		}
-		InetAddress addr = InetAddress.getLocalHost();
-		String federationName = gitblit.getSettings().getString(Keys.federation.name, null);
+		final InetAddress addr = InetAddress.getLocalHost();
+		String federationName = this.gitblit.getSettings().getString(Keys.federation.name, null);
 		if (StringUtils.isEmpty(federationName)) {
 			federationName = addr.getHostName();
 		}
 		FederationUtils.acknowledgeStatus(addr.getHostAddress(), registration);
-		logger.info(MessageFormat.format("Pull status sent to {0}", registration.url));
+		this.logger.info(MessageFormat.format("Pull status sent to {0}", registration.url));
 	}
 }

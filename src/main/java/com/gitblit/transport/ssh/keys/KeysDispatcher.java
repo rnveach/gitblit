@@ -59,31 +59,31 @@ public class KeysDispatcher extends DispatchCommand {
 	@UsageExample(syntax = "cat ~/.ssh/id_rsa.pub | ${ssh} ${cmd}", description = "Upload your SSH public key and add it to your account")
 	public static class AddKey extends BaseKeyCommand {
 
-		protected final Logger log = LoggerFactory.getLogger(getClass());
+		private final Logger log = LoggerFactory.getLogger(getClass());
 
 		@Argument(metaVar = "<STDIN>", usage = "the key to add")
-		private List<String> addKeys = new ArrayList<String>();
+		private final List<String> addKeys = new ArrayList<String>();
 
 		@Option(name = "--permission", aliases = { "-p" }, metaVar = "PERMISSION", usage = "set the key access permission")
 		private String permission;
 
 		@Override
 		protected String getUsageText() {
-			String permissions = Joiner.on(", ").join(AccessPermission.SSHPERMISSIONS);
-			StringBuilder sb = new StringBuilder();
+			final String permissions = Joiner.on(", ").join(AccessPermission.SSHPERMISSIONS);
+			final StringBuilder sb = new StringBuilder();
 			sb.append("Valid SSH public key permissions are:\n   ").append(permissions);
 			return sb.toString();
 		}
 
 		@Override
 		public void run() throws IOException, Failure {
-			String username = getContext().getClient().getUsername();
-			List<String> keys = readKeys(addKeys);
+			final String username = getContext().getClient().getUsername();
+			final List<String> keys = readKeys(this.addKeys);
 			if (keys.isEmpty()) {
 				throw new UnloggedFailure("No public keys were read from STDIN!");
 			}
-			for (String key : keys) {
-				SshKey sshKey = parseKey(key);
+			for (final String key : keys) {
+				final SshKey sshKey = parseKey(key);
 				try {
 					// this method parses the rawdata and produces a public key
 					// if it fails it will throw a Buffer.BufferException
@@ -91,21 +91,24 @@ public class KeysDispatcher extends DispatchCommand {
 					if (sshKey.getPublicKey() == null) {
 						throw new RuntimeException();
 					}
-				} catch (RuntimeException e) {
-					throw new UnloggedFailure("The data read from SDTIN can not be parsed as an SSH public key!");
 				}
-				if (!StringUtils.isEmpty(permission)) {
-					AccessPermission ap = AccessPermission.fromCode(permission);
+				catch (final RuntimeException e) {
+					throw new UnloggedFailure(
+							"The data read from SDTIN can not be parsed as an SSH public key!");
+				}
+				if (!StringUtils.isEmpty(this.permission)) {
+					final AccessPermission ap = AccessPermission.fromCode(this.permission);
 					if (ap.exceeds(AccessPermission.NONE)) {
 						try {
 							sshKey.setPermission(ap);
-						} catch (IllegalArgumentException e) {
+						}
+						catch (final IllegalArgumentException e) {
 							throw new Failure(1, e.getMessage());
 						}
 					}
 				}
 				getKeyManager().addKey(username, sshKey);
-				log.info("added SSH public key for {}", username);
+				this.log.info("added SSH public key for {}", username);
 			}
 		}
 	}
@@ -119,46 +122,54 @@ public class KeysDispatcher extends DispatchCommand {
 		private final String ALL = "ALL";
 
 		@Argument(metaVar = "<INDEX>|ALL", usage = "the key to remove", required = true)
-		private List<String> keyParameters = new ArrayList<String>();
+		private final List<String> keyParameters = new ArrayList<String>();
 
 		@Override
 		public void run() throws IOException, Failure {
-			String username = getContext().getClient().getUsername();
+			final String username = getContext().getClient().getUsername();
 			// remove a key that has been piped to the command
 			// or remove all keys
 
-			List<SshKey> registeredKeys = new ArrayList<SshKey>(getKeyManager().getKeys(username));
+			final List<SshKey> registeredKeys = new ArrayList<SshKey>(getKeyManager().getKeys(
+					username));
 			if (registeredKeys.isEmpty()) {
 				throw new UnloggedFailure(1, "There are no registered keys!");
 			}
 
-			if (keyParameters.contains(ALL)) {
+			if (this.keyParameters.contains(this.ALL)) {
 				if (getKeyManager().removeAllKeys(username)) {
-					stdout.println("Removed all keys.");
-					log.info("removed all SSH public keys from {}", username);
+					this.stdout.println("Removed all keys.");
+					this.log.info("removed all SSH public keys from {}", username);
 				} else {
-					log.warn("failed to remove all SSH public keys from {}", username);
+					this.log.warn("failed to remove all SSH public keys from {}", username);
 				}
 			} else {
-				for (String keyParameter : keyParameters) {
+				for (final String keyParameter : this.keyParameters) {
 					try {
 						// remove a key by it's index (1-based indexing)
-						int index = Integer.parseInt(keyParameter);
+						final int index = Integer.parseInt(keyParameter);
 						if (index > registeredKeys.size()) {
-							if (keyParameters.size() == 1) {
-								throw new Failure(1, "Invalid index specified. There is only 1 registered key.");
+							if (this.keyParameters.size() == 1) {
+								throw new Failure(1,
+										"Invalid index specified. There is only 1 registered key.");
 							}
-							throw new Failure(1, String.format("Invalid index specified. There are %d registered keys.", registeredKeys.size()));
+							throw new Failure(1, String.format(
+									"Invalid index specified. There are %d registered keys.",
+									registeredKeys.size()));
 						}
-						SshKey sshKey = registeredKeys.get(index - 1);
+						final SshKey sshKey = registeredKeys.get(index - 1);
 						if (getKeyManager().removeKey(username, sshKey)) {
-							stdout.println(String.format("Removed %s", sshKey.getFingerprint()));
+							this.stdout
+									.println(String.format("Removed %s", sshKey.getFingerprint()));
 						} else {
-							throw new Failure(1,  String.format("failed to remove #%s: %s", keyParameter, sshKey.getFingerprint()));
+							throw new Failure(1, String.format("failed to remove #%s: %s",
+									keyParameter, sshKey.getFingerprint()));
 						}
-					} catch (NumberFormatException e) {
-						log.warn("failed to remove SSH public key {} from {}", keyParameter, username);
-						throw new Failure(1,  String.format("failed to remove key %s", keyParameter));
+					}
+					catch (final NumberFormatException e) {
+						this.log.warn("failed to remove SSH public key {} from {}", keyParameter,
+								username);
+						throw new Failure(1, String.format("failed to remove key %s", keyParameter));
 					}
 				}
 			}
@@ -173,11 +184,11 @@ public class KeysDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() {
-			IPublicKeyManager keyManager = getContext().getGitblit().getPublicKeyManager();
-			String username = getContext().getClient().getUsername();
-			List<SshKey> keys = keyManager.getKeys(username);
+			final IPublicKeyManager keyManager = getContext().getGitblit().getPublicKeyManager();
+			final String username = getContext().getClient().getUsername();
+			final List<SshKey> keys = keyManager.getKeys(username);
 
-			if (showRaw) {
+			if (this.showRaw) {
 				asRaw(keys);
 			} else {
 				asTable(keys);
@@ -189,24 +200,24 @@ public class KeysDispatcher extends DispatchCommand {
 			if (keys == null) {
 				return;
 			}
-			for (SshKey key : keys) {
-				stdout.println(key.getRawData());
+			for (final SshKey key : keys) {
+				this.stdout.println(key.getRawData());
 			}
 		}
 
 		protected void asTable(List<SshKey> keys) {
-			String[] headers = { "#", "Fingerprint", "Comment", "Permission", "Type" };
-			int len = keys == null ? 0 : keys.size();
-			Object[][] data = new Object[len][];
+			final String[] headers = { "#", "Fingerprint", "Comment", "Permission", "Type" };
+			final int len = keys == null ? 0 : keys.size();
+			final Object[][] data = new Object[len][];
 			for (int i = 0; i < len; i++) {
 				// show 1-based index numbers with the fingerprint
 				// this is useful for comparing with "ssh-add -l"
-				SshKey k = keys.get(i);
+				final SshKey k = keys.get(i);
 				data[i] = new Object[] { (i + 1), k.getFingerprint(), k.getComment(),
 						k.getPermission(), k.getAlgorithm() };
 			}
 
-			stdout.println(FlipTable.of(headers, data, Borders.BODY_HCOLS));
+			this.stdout.println(FlipTable.of(headers, data, Borders.BODY_HCOLS));
 		}
 	}
 
@@ -218,16 +229,17 @@ public class KeysDispatcher extends DispatchCommand {
 
 		@Override
 		public void run() throws UnloggedFailure {
-			SshKey key = getContext().getClient().getKey();
+			final SshKey key = getContext().getClient().getKey();
 			if (key == null) {
-				throw new UnloggedFailure(1,  "You have not authenticated with an SSH public key.");
+				throw new UnloggedFailure(1, "You have not authenticated with an SSH public key.");
 			}
 
-			if (showRaw) {
-				stdout.println(key.getRawData());
+			if (this.showRaw) {
+				this.stdout.println(key.getRawData());
 			} else {
 				final String username = getContext().getClient().getUsername();
-				List<SshKey> keys = getContext().getGitblit().getPublicKeyManager().getKeys(username);
+				final List<SshKey> keys = getContext().getGitblit().getPublicKeyManager()
+						.getKeys(username);
 				int index = 0;
 				for (int i = 0; i < keys.size(); i++) {
 					if (key.equals(keys.get(i))) {
@@ -240,11 +252,12 @@ public class KeysDispatcher extends DispatchCommand {
 		}
 
 		protected void asTable(int index, SshKey key) {
-			String[] headers = { "#", "Fingerprint", "Comment", "Permission", "Type" };
-			Object[][] data = new Object[1][];
-			data[0] = new Object[] { index, key.getFingerprint(), key.getComment(), key.getPermission(), key.getAlgorithm() };
+			final String[] headers = { "#", "Fingerprint", "Comment", "Permission", "Type" };
+			final Object[][] data = new Object[1][];
+			data[0] = new Object[] { index, key.getFingerprint(), key.getComment(),
+					key.getPermission(), key.getAlgorithm() };
 
-			stdout.println(FlipTable.of(headers, data, Borders.BODY_HCOLS));
+			this.stdout.println(FlipTable.of(headers, data, Borders.BODY_HCOLS));
 		}
 	}
 
@@ -256,24 +269,25 @@ public class KeysDispatcher extends DispatchCommand {
 		private int index;
 
 		@Argument(index = 1, metaVar = "COMMENT", usage = "the new comment", required = true)
-		private List<String> values = new ArrayList<String>();
+		private final List<String> values = new ArrayList<String>();
 
 		@Override
 		public void run() throws Failure {
 			final String username = getContext().getClient().getUsername();
-			IPublicKeyManager keyManager = getContext().getGitblit().getPublicKeyManager();
-			List<SshKey> keys = keyManager.getKeys(username);
-			if (index > keys.size()) {
-				throw new UnloggedFailure(1,  "Invalid key index!");
+			final IPublicKeyManager keyManager = getContext().getGitblit().getPublicKeyManager();
+			final List<SshKey> keys = keyManager.getKeys(username);
+			if (this.index > keys.size()) {
+				throw new UnloggedFailure(1, "Invalid key index!");
 			}
 
-			String comment = Joiner.on(" ").join(values);
-			SshKey key = keys.get(index - 1);
+			final String comment = Joiner.on(" ").join(this.values);
+			final SshKey key = keys.get(this.index - 1);
 			key.setComment(comment);
 			if (keyManager.addKey(username, key)) {
-				stdout.println(String.format("Updated the comment for key #%d.", index));
+				this.stdout.println(String.format("Updated the comment for key #%d.", this.index));
 			} else {
-				throw new Failure(1, String.format("Failed to update the comment for key #%d!", index));
+				throw new Failure(1, String.format("Failed to update the comment for key #%d!",
+						this.index));
 			}
 		}
 
@@ -292,25 +306,28 @@ public class KeysDispatcher extends DispatchCommand {
 		@Override
 		public void run() throws Failure {
 			final String username = getContext().getClient().getUsername();
-			IPublicKeyManager keyManager = getContext().getGitblit().getPublicKeyManager();
-			List<SshKey> keys = keyManager.getKeys(username);
-			if (index > keys.size()) {
-				throw new UnloggedFailure(1,  "Invalid key index!");
+			final IPublicKeyManager keyManager = getContext().getGitblit().getPublicKeyManager();
+			final List<SshKey> keys = keyManager.getKeys(username);
+			if (this.index > keys.size()) {
+				throw new UnloggedFailure(1, "Invalid key index!");
 			}
 
-			SshKey key = keys.get(index - 1);
-			AccessPermission permission = AccessPermission.fromCode(value);
+			final SshKey key = keys.get(this.index - 1);
+			final AccessPermission permission = AccessPermission.fromCode(this.value);
 			if (permission.exceeds(AccessPermission.NONE)) {
 				try {
 					key.setPermission(permission);
-				} catch (IllegalArgumentException e) {
+				}
+				catch (final IllegalArgumentException e) {
 					throw new Failure(1, e.getMessage());
 				}
 			}
 			if (keyManager.addKey(username, key)) {
-				stdout.println(String.format("Updated the permission for key #%d.", index));
+				this.stdout.println(String
+						.format("Updated the permission for key #%d.", this.index));
 			} else {
-				throw new Failure(1, String.format("Failed to update the comment for key #%d!", index));
+				throw new Failure(1, String.format("Failed to update the comment for key #%d!",
+						this.index));
 			}
 		}
 

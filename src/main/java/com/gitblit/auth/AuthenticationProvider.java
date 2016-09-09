@@ -24,8 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.gitblit.Constants.AccountType;
-import com.gitblit.Constants.Role;
 import com.gitblit.Constants.AuthenticationType;
+import com.gitblit.Constants.Role;
 import com.gitblit.IStoredSettings;
 import com.gitblit.manager.IRuntimeManager;
 import com.gitblit.manager.IUserManager;
@@ -39,15 +39,15 @@ public abstract class AuthenticationProvider {
 
 	public static NullProvider NULL_PROVIDER = new NullProvider();
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+	protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected final String serviceName;
+	private final String serviceName;
 
 	protected File baseFolder;
 
 	protected IStoredSettings settings;
 
-	protected IRuntimeManager runtimeManager;
+	private IRuntimeManager runtimeManager;
 
 	protected IUserManager userManager;
 
@@ -61,7 +61,7 @@ public abstract class AuthenticationProvider {
 	 * @return the file
 	 */
 	public File getFileOrFolder(String key, String defaultFileOrFolder) {
-		return runtimeManager.getFileOrFolder(key, defaultFileOrFolder);
+		return this.runtimeManager.getFileOrFolder(key, defaultFileOrFolder);
 	}
 
 	public final void setup(IRuntimeManager runtimeManager, IUserManager userManager) {
@@ -73,12 +73,12 @@ public abstract class AuthenticationProvider {
 	}
 
 	public String getServiceName() {
-		return serviceName;
+		return this.serviceName;
 	}
 
 	public abstract AuthenticationType getAuthenticationType();
 
-	protected void setCookie(UserModel user, char [] password) {
+	protected static void setCookie(UserModel user, char[] password) {
 		// create a user cookie
 		if (StringUtils.isEmpty(user.cookie) && !ArrayUtils.isEmpty(password)) {
 			user.cookie = StringUtils.getSHA1(user.username + new String(password));
@@ -86,7 +86,7 @@ public abstract class AuthenticationProvider {
 	}
 
 	protected void updateUser(UserModel userModel) {
-		final UserModel userLocalDB = userManager.getUserModel(userModel.getName());
+		final UserModel userLocalDB = this.userManager.getUserModel(userModel.getName());
 
 		// Establish the checksum of the current version of the user
 		final BigInteger userCurrentCheck = DeepCopier.checksum(userModel);
@@ -97,12 +97,12 @@ public abstract class AuthenticationProvider {
 		// Compare the checksums
 		if (!userCurrentCheck.equals(userLocalDBcheck)) {
 			// If mismatch, save the new instance.
-			userManager.updateUserModel(userModel);
+			this.userManager.updateUserModel(userModel);
 		}
 	}
 
 	protected void updateTeam(TeamModel teamModel) {
-		final TeamModel teamLocalDB = userManager.getTeamModel(teamModel.name);
+		final TeamModel teamLocalDB = this.userManager.getTeamModel(teamModel.name);
 
 		// Establish the checksum of the current version of the team
 		final BigInteger teamCurrentCheck = DeepCopier.checksum(teamModel);
@@ -113,7 +113,7 @@ public abstract class AuthenticationProvider {
 		// Compare the checksums
 		if (!teamCurrentCheck.equals(teamLocalDBcheck)) {
 			// If mismatch, save the new instance.
-			userManager.updateTeamModel(teamModel);
+			this.userManager.updateTeamModel(teamModel);
 		}
 	}
 
@@ -132,8 +132,8 @@ public abstract class AuthenticationProvider {
 	public abstract UserModel authenticate(HttpServletRequest httpRequest);
 
 	/**
-	 * Used to authentication user/password credentials, both for login form
-	 * and HTTP Basic authentication processing.
+	 * Used to authentication user/password credentials, both for login form and
+	 * HTTP Basic authentication processing.
 	 *
 	 * @param username
 	 * @param password
@@ -163,7 +163,8 @@ public abstract class AuthenticationProvider {
 	 * Returns true if the user's email address can be changed.
 	 *
 	 * @param user
-	 * @return true if the authentication provider supports email address changes
+	 * @return true if the authentication provider supports email address
+	 *         changes
 	 */
 	public abstract boolean supportsEmailAddressChanges();
 
@@ -171,7 +172,8 @@ public abstract class AuthenticationProvider {
 	 * Returns true if the user's team memberships can be changed.
 	 *
 	 * @param user
-	 * @return true if the authentication provider supports team membership changes
+	 * @return true if the authentication provider supports team membership
+	 *         changes
 	 */
 	public abstract boolean supportsTeamMembershipChanges();
 
@@ -193,15 +195,16 @@ public abstract class AuthenticationProvider {
 	 */
 	public abstract boolean supportsRoleChanges(TeamModel team, Role role);
 
-    @Override
-    public String toString() {
-    	return getServiceName() + " (" + getClass().getName() + ")";
-    }
+	@Override
+	public String toString() {
+		return getServiceName() + " (" + getClass().getName() + ")";
+	}
 
-    public abstract static class UsernamePasswordAuthenticationProvider extends AuthenticationProvider {
-    	protected UsernamePasswordAuthenticationProvider(String serviceName) {
-    		super(serviceName);
-    	}
+	public abstract static class UsernamePasswordAuthenticationProvider extends
+			AuthenticationProvider {
+		protected UsernamePasswordAuthenticationProvider(String serviceName) {
+			super(serviceName);
+		}
 
 		@Override
 		public UserModel authenticate(HttpServletRequest httpRequest) {
@@ -213,15 +216,15 @@ public abstract class AuthenticationProvider {
 			return AuthenticationType.CREDENTIALS;
 		}
 
-    	@Override
+		@Override
 		public void stop() {
 
 		}
-    }
+	}
 
-    public static class NullProvider extends AuthenticationProvider {
+	public static class NullProvider extends AuthenticationProvider {
 
-		protected NullProvider() {
+		private NullProvider() {
 			super("NULL");
 		}
 
@@ -285,5 +288,5 @@ public abstract class AuthenticationProvider {
 			return true;
 		}
 
-    }
+	}
 }

@@ -52,7 +52,7 @@ public class TagsPanel extends BasePanel {
 		super(wicketId);
 
 		// header
-		List<RefModel> tags = JGitUtils.getTags(r, false, maxCount);
+		final List<RefModel> tags = JGitUtils.getTags(r, false, maxCount);
 		if (maxCount > 0) {
 			// summary page
 			// show tags page link
@@ -63,16 +63,17 @@ public class TagsPanel extends BasePanel {
 			add(new Label("header", new StringResourceModel("gb.tags", this, null)));
 		}
 
-		ListDataProvider<RefModel> tagsDp = new ListDataProvider<RefModel>(tags);
-		DataView<RefModel> tagView = new DataView<RefModel>("tag", tagsDp) {
+		final ListDataProvider<RefModel> tagsDp = new ListDataProvider<RefModel>(tags);
+		final DataView<RefModel> tagView = new DataView<RefModel>("tag", tagsDp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
 			@Override
 			public void populateItem(final Item<RefModel> item) {
-				RefModel entry = item.getModelObject();
+				final RefModel entry = item.getModelObject();
 
-				item.add(WicketUtils.createDateLabel("tagDate", entry.getDate(), getTimeZone(), getTimeUtils()));
+				item.add(WicketUtils.createDateLabel("tagDate", entry.getDate(), getTimeZone(),
+						getTimeUtils()));
 
 				Class<? extends WebPage> linkClass;
 				switch (entry.getReferencedObjectType()) {
@@ -92,21 +93,21 @@ public class TagsPanel extends BasePanel {
 								.getReferencedObjectId().getName())));
 
 				// workaround for RevTag returning a lengthy shortlog. :(
-				String message = StringUtils.trimString(entry.getShortMessage(),
+				final String message = StringUtils.trimString(entry.getShortMessage(),
 						com.gitblit.Constants.LEN_SHORTLOG);
 
 				if (linkClass.equals(BlobPage.class)) {
 					// Blob Tag Object
 					item.add(WicketUtils.newImage("tagIcon", "file_16x16.png"));
-					LinkPanel messageLink = new LinkPanel("tagDescription", "list", message, TagPage.class,
-							WicketUtils.newObjectParameter(repositoryName, entry.getObjectId()
-									.getName()));
+					final LinkPanel messageLink = new LinkPanel("tagDescription", "list", message,
+							TagPage.class, WicketUtils.newObjectParameter(repositoryName, entry
+									.getObjectId().getName()));
 					if (!entry.getShortMessage().equals(message)) {
 						messageLink.setTooltip(entry.getShortMessage());
 					}
 					item.add(messageLink);
 
-					Fragment fragment = new Fragment("tagLinks", "blobLinks", this);
+					final Fragment fragment = new Fragment("tagLinks", "blobLinks", this);
 					fragment.add(new BookmarkablePageLink<Void>("tag", TagPage.class, WicketUtils
 							.newObjectParameter(repositoryName, entry.getObjectId().getName()))
 							.setEnabled(entry.isAnnotatedTag()));
@@ -115,9 +116,10 @@ public class TagsPanel extends BasePanel {
 							.newObjectParameter(repositoryName, entry.getReferencedObjectId()
 									.getName())));
 
-					String contextUrl = RequestCycle.get().getRequest().getRelativePathPrefixToContextRoot();
-					String rawUrl = RawServlet.asLink(contextUrl, repositoryName, entry.displayName,
-							entry.getReferencedObjectId().getName());
+					final String contextUrl = RequestCycle.get().getRequest()
+							.getRelativePathPrefixToContextRoot();
+					final String rawUrl = RawServlet.asLink(contextUrl, repositoryName,
+							entry.displayName, entry.getReferencedObjectId().getName());
 					fragment.add(new ExternalLink("raw", rawUrl));
 					item.add(fragment);
 				} else {
@@ -125,15 +127,15 @@ public class TagsPanel extends BasePanel {
 					// Standard Tag Object
 					if (entry.isAnnotatedTag()) {
 						item.add(WicketUtils.newImage("tagIcon", "tag_16x16.png"));
-						LinkPanel messageLink = new LinkPanel("tagDescription", "list", message, TagPage.class,
-								WicketUtils.newObjectParameter(repositoryName, entry.getObjectId()
-										.getName()));
+						final LinkPanel messageLink = new LinkPanel("tagDescription", "list",
+								message, TagPage.class, WicketUtils.newObjectParameter(
+										repositoryName, entry.getObjectId().getName()));
 						if (!message.equals(entry.getShortMessage())) {
 							messageLink.setTooltip(entry.getShortMessage());
 						}
 						item.add(messageLink);
 
-						Fragment fragment = new Fragment("tagLinks", "annotatedLinks", this);
+						final Fragment fragment = new Fragment("tagLinks", "annotatedLinks", this);
 						fragment.add(new BookmarkablePageLink<Void>("tag", TagPage.class,
 								WicketUtils.newObjectParameter(repositoryName, entry.getObjectId()
 										.getName())).setEnabled(entry.isAnnotatedTag()));
@@ -150,7 +152,7 @@ public class TagsPanel extends BasePanel {
 						item.add(new LinkPanel("tagDescription", "list", message, CommitPage.class,
 								WicketUtils.newObjectParameter(repositoryName, entry.getObjectId()
 										.getName())));
-						Fragment fragment = new Fragment("tagLinks", "lightweightLinks", this);
+						final Fragment fragment = new Fragment("tagLinks", "lightweightLinks", this);
 						fragment.add(new BookmarkablePageLink<Void>("commit", CommitPage.class,
 								WicketUtils.newObjectParameter(repositoryName, entry
 										.getReferencedObjectId().getName())));
@@ -160,23 +162,23 @@ public class TagsPanel extends BasePanel {
 					}
 				}
 
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(tagView);
-		if (tags.size() < maxCount || maxCount <= 0) {
+		if ((tags.size() < maxCount) || (maxCount <= 0)) {
 			add(new Label("allTags", "").setVisible(false));
 		} else {
 			add(new LinkPanel("allTags", "link", new StringResourceModel("gb.allTags", this, null),
 					TagsPage.class, WicketUtils.newRepositoryParameter(repositoryName)));
 		}
 
-		hasTags = tags.size() > 0;
+		this.hasTags = tags.size() > 0;
 	}
 
 	public TagsPanel hideIfEmpty() {
-		setVisible(hasTags);
+		setVisible(this.hasTags);
 		return this;
 	}
 }

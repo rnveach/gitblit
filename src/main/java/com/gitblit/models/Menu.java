@@ -27,7 +27,7 @@ public class Menu {
 
 		@Override
 		public int hashCode() {
-			return displayText.hashCode();
+			return this.displayText.hashCode();
 		}
 
 		@Override
@@ -40,7 +40,7 @@ public class Menu {
 
 		@Override
 		public String toString() {
-			return displayText;
+			return this.displayText;
 		}
 	}
 
@@ -57,7 +57,6 @@ public class Menu {
 			super("");
 		}
 	}
-
 
 	/**
 	 * A MenuItem for setting a parameter of the current url.
@@ -103,18 +102,18 @@ public class Menu {
 
 			if (params == null) {
 				// no parameters specified
-				parameters = new PageParameters();
+				this.parameters = new PageParameters();
 				setParameter(parameter, value);
-				isSelected = false;
+				this.isSelected = false;
 			} else {
-				parameters = new PageParameters(params);
-				if (parameters.containsKey(parameter)) {
-					isSelected = params.getString(parameter).equals(value);
+				this.parameters = new PageParameters(params);
+				if (this.parameters.containsKey(parameter)) {
+					this.isSelected = params.getString(parameter).equals(value);
 					// set the new selection value
 					setParameter(parameter, value);
 				} else {
 					// not currently selected
-					isSelected = false;
+					this.isSelected = false;
 					setParameter(parameter, value);
 				}
 			}
@@ -131,26 +130,26 @@ public class Menu {
 		}
 
 		public String formatParameter() {
-			if (StringUtils.isEmpty(parameter) || StringUtils.isEmpty(value)) {
+			if (StringUtils.isEmpty(this.parameter) || StringUtils.isEmpty(this.value)) {
 				return "";
 			}
-			return parameter + "=" + value;
+			return this.parameter + "=" + this.value;
 		}
 
 		public PageParameters getPageParameters() {
-			return parameters;
+			return this.parameters;
 		}
 
 		public boolean isSelected() {
-			return isSelected;
+			return this.isSelected;
 		}
 
 		@Override
 		public int hashCode() {
-			if (StringUtils.isEmpty(displayText)) {
-				return value.hashCode() + parameter.hashCode();
+			if (StringUtils.isEmpty(this.displayText)) {
+				return this.value.hashCode() + this.parameter.hashCode();
 			}
-			return displayText.hashCode();
+			return this.displayText.hashCode();
 		}
 
 		@Override
@@ -163,10 +162,10 @@ public class Menu {
 
 		@Override
 		public String toString() {
-			if (StringUtils.isEmpty(displayText)) {
+			if (StringUtils.isEmpty(this.displayText)) {
 				return formatParameter();
 			}
-			return displayText;
+			return this.displayText;
 		}
 	}
 
@@ -186,9 +185,9 @@ public class Menu {
 		public ToggleMenuItem(String displayText, String parameter, String value,
 				PageParameters params) {
 			super(displayText, parameter, value, params);
-			if (isSelected) {
+			if (this.isSelected) {
 				// already selected, so remove this enables toggling
-				parameters.remove(parameter);
+				this.parameters.remove(parameter);
 			}
 		}
 	}
@@ -225,7 +224,8 @@ public class Menu {
 		 * @param params
 		 * @since 1.6.0
 		 */
-		public PageLinkMenuItem(String displayText, Class<? extends WebPage> pageClass, PageParameters params) {
+		public PageLinkMenuItem(String displayText, Class<? extends WebPage> pageClass,
+				PageParameters params) {
 			super(displayText);
 			this.pageClass = pageClass;
 			this.params = params;
@@ -236,7 +236,7 @@ public class Menu {
 		 * @since 1.6.0
 		 */
 		public Class<? extends WebPage> getPageClass() {
-			return pageClass;
+			return this.pageClass;
 		}
 
 		/**
@@ -244,7 +244,7 @@ public class Menu {
 		 * @since 1.6.0
 		 */
 		public PageParameters getPageParameters() {
-			return params;
+			return this.params;
 		}
 	}
 
@@ -289,14 +289,14 @@ public class Menu {
 		 * @since 1.6.0
 		 */
 		public String getHref() {
-			return href;
+			return this.href;
 		}
 
 		/**
 		 * @since 1.6.0
 		 */
 		public boolean openInNewWindow() {
-			return newWindow;
+			return this.newWindow;
 		}
 	}
 }

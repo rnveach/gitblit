@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -31,6 +29,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.gitblit.Keys;
 import com.gitblit.manager.IRuntimeManager;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Handles requests for logo.png
@@ -45,7 +45,7 @@ public class LogoServlet extends HttpServlet {
 
 	private static final long lastModified = System.currentTimeMillis();
 
-	private IRuntimeManager runtimeManager;
+	private final IRuntimeManager runtimeManager;
 
 	@Inject
 	public LogoServlet(IRuntimeManager runtimeManager) {
@@ -54,7 +54,8 @@ public class LogoServlet extends HttpServlet {
 
 	@Override
 	protected long getLastModified(HttpServletRequest req) {
-		File file = runtimeManager.getFileOrFolder(Keys.web.headerLogo, "${baseFolder}/logo.png");
+		final File file = this.runtimeManager.getFileOrFolder(Keys.web.headerLogo,
+				"${baseFolder}/logo.png");
 		if (file.exists()) {
 			return Math.max(lastModified, file.lastModified());
 		} else {
@@ -68,10 +69,11 @@ public class LogoServlet extends HttpServlet {
 		InputStream is = null;
 		try {
 			String contentType = null;
-			File file = runtimeManager.getFileOrFolder(Keys.web.headerLogo, "${baseFolder}/logo.png");
+			final File file = this.runtimeManager.getFileOrFolder(Keys.web.headerLogo,
+					"${baseFolder}/logo.png");
 			if (file.exists()) {
 				// custom logo
-				ServletContext context = request.getSession().getServletContext();
+				final ServletContext context = request.getSession().getServletContext();
 				contentType = context.getMimeType(file.getName());
 				response.setContentLength((int) file.length());
 				response.setDateHeader("Last-Modified", Math.max(lastModified, file.lastModified()));
@@ -86,17 +88,19 @@ public class LogoServlet extends HttpServlet {
 			}
 			response.setContentType(contentType);
 			response.setHeader("Cache-Control", "public, max-age=3600, must-revalidate");
-			OutputStream os = response.getOutputStream();
-			byte[] buf = new byte[4096];
+			final OutputStream os = response.getOutputStream();
+			final byte[] buf = new byte[4096];
 			int bytesRead = is.read(buf);
 			while (bytesRead != -1) {
 				os.write(buf, 0, bytesRead);
 				bytesRead = is.read(buf);
 			}
 			os.flush();
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			e.printStackTrace();
-		} finally {
+		}
+		finally {
 			if (is != null) {
 				is.close();
 			}

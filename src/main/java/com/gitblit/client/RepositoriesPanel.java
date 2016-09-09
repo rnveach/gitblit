@@ -97,13 +97,14 @@ public abstract class RepositoriesPanel extends JPanel {
 		browseRepository.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				RepositoryModel model = getSelectedRepositories().get(0);
-				String url = gitblit.getURL("summary", model.name, null);
+				final RepositoryModel model = getSelectedRepositories().get(0);
+				final String url = RepositoriesPanel.this.gitblit.getURL("summary", model.name,
+						null);
 				Utils.browse(url);
 			}
 		});
 
-		JButton refreshRepositories = new JButton(Translation.get("gb.refresh"));
+		final JButton refreshRepositories = new JButton(Translation.get("gb.refresh"));
 		refreshRepositories.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -111,34 +112,34 @@ public abstract class RepositoriesPanel extends JPanel {
 			}
 		});
 
-		clearCache = new JButton(Translation.get("gb.clearCache"));
-		clearCache.addActionListener(new ActionListener() {
+		this.clearCache = new JButton(Translation.get("gb.clearCache"));
+		this.clearCache.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				clearCache();
 			}
 		});
 
-		createRepository = new JButton(Translation.get("gb.create"));
-		createRepository.addActionListener(new ActionListener() {
+		this.createRepository = new JButton(Translation.get("gb.create"));
+		this.createRepository.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				createRepository();
 			}
 		});
 
-		editRepository = new JButton(Translation.get("gb.edit"));
-		editRepository.setEnabled(false);
-		editRepository.addActionListener(new ActionListener() {
+		this.editRepository = new JButton(Translation.get("gb.edit"));
+		this.editRepository.setEnabled(false);
+		this.editRepository.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				editRepository(getSelectedRepositories().get(0));
 			}
 		});
 
-		delRepository = new JButton(Translation.get("gb.delete"));
-		delRepository.setEnabled(false);
-		delRepository.addActionListener(new ActionListener() {
+		this.delRepository = new JButton(Translation.get("gb.delete"));
+		this.delRepository.setEnabled(false);
+		this.delRepository.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				deleteRepositories(getSelectedRepositories());
@@ -150,7 +151,8 @@ public abstract class RepositoriesPanel extends JPanel {
 		subscribeRepository.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				List<FeedModel> feeds = gitblit.getAvailableFeeds(getSelectedRepositories().get(0));
+				final List<FeedModel> feeds = RepositoriesPanel.this.gitblit
+						.getAvailableFeeds(getSelectedRepositories().get(0));
 				subscribeFeeds(feeds);
 			}
 		});
@@ -160,7 +162,7 @@ public abstract class RepositoriesPanel extends JPanel {
 		logRepository.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				RepositoryModel model = getSelectedRepositories().get(0);
+				final RepositoryModel model = getSelectedRepositories().get(0);
 				showSearchDialog(false, model);
 			}
 		});
@@ -170,43 +172,44 @@ public abstract class RepositoriesPanel extends JPanel {
 		searchRepository.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				RepositoryModel model = getSelectedRepositories().get(0);
+				final RepositoryModel model = getSelectedRepositories().get(0);
 				showSearchDialog(true, model);
 			}
 		});
 
-		SubscribedRepositoryRenderer nameRenderer = new SubscribedRepositoryRenderer(gitblit);
-		IndicatorsRenderer typeRenderer = new IndicatorsRenderer();
+		final SubscribedRepositoryRenderer nameRenderer = new SubscribedRepositoryRenderer(
+				this.gitblit);
+		final IndicatorsRenderer typeRenderer = new IndicatorsRenderer();
 
-		DefaultTableCellRenderer sizeRenderer = new DefaultTableCellRenderer();
+		final DefaultTableCellRenderer sizeRenderer = new DefaultTableCellRenderer();
 		sizeRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
 		sizeRenderer.setForeground(new Color(0, 0x80, 0));
 
-		DefaultTableCellRenderer ownerRenderer = new DefaultTableCellRenderer();
+		final DefaultTableCellRenderer ownerRenderer = new DefaultTableCellRenderer();
 		ownerRenderer.setForeground(Color.gray);
 		ownerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
-		tableModel = new RepositoriesTableModel();
-		defaultSorter = new TableRowSorter<RepositoriesTableModel>(tableModel);
-		table = Utils.newTable(tableModel, Utils.DATE_FORMAT);
-		table.setRowSorter(defaultSorter);
-		table.getRowSorter().toggleSortOrder(RepositoriesTableModel.Columns.Name.ordinal());
+		this.tableModel = new RepositoriesTableModel();
+		this.defaultSorter = new TableRowSorter<RepositoriesTableModel>(this.tableModel);
+		this.table = Utils.newTable(this.tableModel, Utils.DATE_FORMAT);
+		this.table.setRowSorter(this.defaultSorter);
+		this.table.getRowSorter().toggleSortOrder(RepositoriesTableModel.Columns.Name.ordinal());
 
 		setRepositoryRenderer(RepositoriesTableModel.Columns.Name, nameRenderer, -1);
 		setRepositoryRenderer(RepositoriesTableModel.Columns.Indicators, typeRenderer, 100);
 		setRepositoryRenderer(RepositoriesTableModel.Columns.Owner, ownerRenderer, -1);
 		setRepositoryRenderer(RepositoriesTableModel.Columns.Size, sizeRenderer, 60);
 
-		table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+		this.table.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (e.getValueIsAdjusting()) {
 					return;
 				}
-				boolean singleSelection = table.getSelectedRowCount() == 1;
-				boolean selected = table.getSelectedRow() > -1;
+				final boolean singleSelection = RepositoriesPanel.this.table.getSelectedRowCount() == 1;
+				final boolean selected = RepositoriesPanel.this.table.getSelectedRow() > -1;
 				if (singleSelection) {
-					RepositoryModel repository = getSelectedRepositories().get(0);
+					final RepositoryModel repository = getSelectedRepositories().get(0);
 					browseRepository.setEnabled(repository.hasCommits);
 					logRepository.setEnabled(repository.hasCommits);
 					searchRepository.setEnabled(repository.hasCommits);
@@ -217,72 +220,76 @@ public abstract class RepositoriesPanel extends JPanel {
 					searchRepository.setEnabled(false);
 					subscribeRepository.setEnabled(false);
 				}
-				delRepository.setEnabled(selected);
+				RepositoriesPanel.this.delRepository.setEnabled(selected);
 				if (selected) {
-					int viewRow = table.getSelectedRow();
-					int modelRow = table.convertRowIndexToModel(viewRow);
-					RepositoryModel model = ((RepositoriesTableModel) table.getModel()).list
-							.get(modelRow);
-					editRepository.setEnabled(singleSelection
-							&& (gitblit.allowManagement() || gitblit.isOwner(model)));
+					final int viewRow = RepositoriesPanel.this.table.getSelectedRow();
+					final int modelRow = RepositoriesPanel.this.table
+							.convertRowIndexToModel(viewRow);
+					final RepositoryModel model = ((RepositoriesTableModel) RepositoriesPanel.this.table
+							.getModel()).list.get(modelRow);
+					RepositoriesPanel.this.editRepository.setEnabled(singleSelection
+							&& (RepositoriesPanel.this.gitblit.allowManagement() || RepositoriesPanel.this.gitblit
+									.isOwner(model)));
 				} else {
-					editRepository.setEnabled(false);
+					RepositoriesPanel.this.editRepository.setEnabled(false);
 				}
 			}
 		});
 
-		table.addMouseListener(new MouseAdapter() {
+		this.table.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2 && gitblit.allowManagement()) {
+				if ((e.getClickCount() == 2) && RepositoriesPanel.this.gitblit.allowManagement()) {
 					editRepository(getSelectedRepositories().get(0));
 				}
 			}
 		});
 
-		filterTextfield = new JTextField();
-		filterTextfield.addActionListener(new ActionListener() {
+		this.filterTextfield = new JTextField();
+		this.filterTextfield.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				filterRepositories(filterTextfield.getText());
+				filterRepositories(RepositoriesPanel.this.filterTextfield.getText());
 			}
 		});
-		filterTextfield.addKeyListener(new KeyAdapter() {
+		this.filterTextfield.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				filterRepositories(filterTextfield.getText());
+				filterRepositories(RepositoriesPanel.this.filterTextfield.getText());
 			}
 		});
 
-		JPanel repositoryFilterPanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
+		final JPanel repositoryFilterPanel = new JPanel(
+				new BorderLayout(Utils.MARGIN, Utils.MARGIN));
 		repositoryFilterPanel.add(new JLabel(Translation.get("gb.filter")), BorderLayout.WEST);
-		repositoryFilterPanel.add(filterTextfield, BorderLayout.CENTER);
+		repositoryFilterPanel.add(this.filterTextfield, BorderLayout.CENTER);
 
-		JPanel repositoryTablePanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
+		final JPanel repositoryTablePanel = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
 		repositoryTablePanel.add(repositoryFilterPanel, BorderLayout.NORTH);
-		repositoryTablePanel.add(new JScrollPane(table), BorderLayout.CENTER);
+		repositoryTablePanel.add(new JScrollPane(this.table), BorderLayout.CENTER);
 
-		JPanel repositoryControls = new JPanel(new FlowLayout(FlowLayout.CENTER, Utils.MARGIN, 0));
-		repositoryControls.add(clearCache);
+		final JPanel repositoryControls = new JPanel(new FlowLayout(FlowLayout.CENTER,
+				Utils.MARGIN, 0));
+		repositoryControls.add(this.clearCache);
 		repositoryControls.add(refreshRepositories);
 		repositoryControls.add(browseRepository);
-		repositoryControls.add(createRepository);
-		repositoryControls.add(editRepository);
-		repositoryControls.add(delRepository);
+		repositoryControls.add(this.createRepository);
+		repositoryControls.add(this.editRepository);
+		repositoryControls.add(this.delRepository);
 		repositoryControls.add(subscribeRepository);
 		repositoryControls.add(logRepository);
 		repositoryControls.add(searchRepository);
 
 		setLayout(new BorderLayout(Utils.MARGIN, Utils.MARGIN));
-		header = new HeaderPanel(Translation.get("gb.repositories"), "git-orange-16x16.png");
-		add(header, BorderLayout.NORTH);
+		this.header = new HeaderPanel(Translation.get("gb.repositories"), "git-orange-16x16.png");
+		add(this.header, BorderLayout.NORTH);
 		add(repositoryTablePanel, BorderLayout.CENTER);
 		add(repositoryControls, BorderLayout.SOUTH);
 	}
 
 	@Override
 	public void requestFocus() {
-		filterTextfield.requestFocus();
+		this.filterTextfield.requestFocus();
 	}
 
 	@Override
@@ -292,11 +299,11 @@ public abstract class RepositoriesPanel extends JPanel {
 
 	private void setRepositoryRenderer(RepositoriesTableModel.Columns col,
 			TableCellRenderer renderer, int maxWidth) {
-		String name = table.getColumnName(col.ordinal());
-		table.getColumn(name).setCellRenderer(renderer);
+		final String name = this.table.getColumnName(col.ordinal());
+		this.table.getColumn(name).setCellRenderer(renderer);
 		if (maxWidth > 0) {
-			table.getColumn(name).setMinWidth(maxWidth);
-			table.getColumn(name).setMaxWidth(maxWidth);
+			this.table.getColumn(name).setMinWidth(maxWidth);
+			this.table.getColumn(name).setMaxWidth(maxWidth);
 		}
 	}
 
@@ -307,29 +314,29 @@ public abstract class RepositoriesPanel extends JPanel {
 	protected abstract void updateTeamsTable();
 
 	protected void disableManagement() {
-		clearCache.setVisible(false);
-		createRepository.setVisible(false);
-		editRepository.setVisible(false);
-		delRepository.setVisible(false);
+		this.clearCache.setVisible(false);
+		this.createRepository.setVisible(false);
+		this.editRepository.setVisible(false);
+		this.delRepository.setVisible(false);
 	}
 
 	protected void updateTable(boolean pack) {
-		tableModel.list.clear();
-		tableModel.list.addAll(gitblit.getRepositories());
-		tableModel.fireTableDataChanged();
-		header.setText(Translation.get("gb.repositories") + " (" + gitblit.getRepositories().size()
-				+ ")");
+		this.tableModel.list.clear();
+		this.tableModel.list.addAll(this.gitblit.getRepositories());
+		this.tableModel.fireTableDataChanged();
+		this.header.setText(Translation.get("gb.repositories") + " ("
+				+ this.gitblit.getRepositories().size() + ")");
 		if (pack) {
-			Utils.packColumns(table, Utils.MARGIN);
+			Utils.packColumns(this.table, Utils.MARGIN);
 		}
 	}
 
 	private void filterRepositories(final String fragment) {
 		if (StringUtils.isEmpty(fragment)) {
-			table.setRowSorter(defaultSorter);
+			this.table.setRowSorter(this.defaultSorter);
 			return;
 		}
-		RowFilter<RepositoriesTableModel, Object> containsFilter = new RowFilter<RepositoriesTableModel, Object>() {
+		final RowFilter<RepositoriesTableModel, Object> containsFilter = new RowFilter<RepositoriesTableModel, Object>() {
 			@Override
 			public boolean include(Entry<? extends RepositoriesTableModel, ? extends Object> entry) {
 				for (int i = entry.getValueCount() - 1; i >= 0; i--) {
@@ -340,28 +347,28 @@ public abstract class RepositoriesPanel extends JPanel {
 				return false;
 			}
 		};
-		TableRowSorter<RepositoriesTableModel> sorter = new TableRowSorter<RepositoriesTableModel>(
-				tableModel);
+		final TableRowSorter<RepositoriesTableModel> sorter = new TableRowSorter<RepositoriesTableModel>(
+				this.tableModel);
 		sorter.setRowFilter(containsFilter);
-		table.setRowSorter(sorter);
+		this.table.setRowSorter(sorter);
 	}
 
 	private List<RepositoryModel> getSelectedRepositories() {
-		List<RepositoryModel> repositories = new ArrayList<RepositoryModel>();
-		for (int viewRow : table.getSelectedRows()) {
-			int modelRow = table.convertRowIndexToModel(viewRow);
-			RepositoryModel model = tableModel.list.get(modelRow);
+		final List<RepositoryModel> repositories = new ArrayList<RepositoryModel>();
+		for (final int viewRow : this.table.getSelectedRows()) {
+			final int modelRow = this.table.convertRowIndexToModel(viewRow);
+			final RepositoryModel model = this.tableModel.list.get(modelRow);
 			repositories.add(model);
 		}
 		return repositories;
 	}
 
 	protected void refreshRepositories() {
-		GitblitWorker worker = new GitblitWorker(RepositoriesPanel.this,
+		final GitblitWorker worker = new GitblitWorker(RepositoriesPanel.this,
 				RpcRequest.LIST_REPOSITORIES) {
 			@Override
 			protected Boolean doRequest() throws IOException {
-				gitblit.refreshRepositories();
+				RepositoriesPanel.this.gitblit.refreshRepositories();
 				return true;
 			}
 
@@ -374,12 +381,12 @@ public abstract class RepositoriesPanel extends JPanel {
 	}
 
 	protected void clearCache() {
-		GitblitWorker worker = new GitblitWorker(RepositoriesPanel.this,
+		final GitblitWorker worker = new GitblitWorker(RepositoriesPanel.this,
 				RpcRequest.CLEAR_REPOSITORY_CACHE) {
 			@Override
 			protected Boolean doRequest() throws IOException {
-				if (gitblit.clearRepositoryCache()) {
-					gitblit.refreshRepositories();
+				if (RepositoriesPanel.this.gitblit.clearRepositoryCache()) {
+					RepositoriesPanel.this.gitblit.refreshRepositories();
 					return true;
 				}
 				return false;
@@ -399,19 +406,21 @@ public abstract class RepositoriesPanel extends JPanel {
 	 *
 	 */
 	protected void createRepository() {
-		EditRepositoryDialog dialog = new EditRepositoryDialog(gitblit.getProtocolVersion());
+		final EditRepositoryDialog dialog = new EditRepositoryDialog(
+				this.gitblit.getProtocolVersion());
 		dialog.setLocationRelativeTo(RepositoriesPanel.this);
-		dialog.setAccessRestriction(gitblit.getDefaultAccessRestriction());
-		dialog.setAuthorizationControl(gitblit.getDefaultAuthorizationControl());
-		dialog.setUsers(null, gitblit.getUsernames(), null);
-		dialog.setTeams(gitblit.getTeamnames(), null);
-		dialog.setRepositories(gitblit.getRepositories());
-		dialog.setFederationSets(gitblit.getFederationSets(), null);
-		dialog.setIndexedBranches(new ArrayList<String>(Arrays.asList(Constants.DEFAULT_BRANCH)), null);
-		dialog.setPreReceiveScripts(gitblit.getPreReceiveScriptsUnused(null),
-				gitblit.getPreReceiveScriptsInherited(null), null);
-		dialog.setPostReceiveScripts(gitblit.getPostReceiveScriptsUnused(null),
-				gitblit.getPostReceiveScriptsInherited(null), null);
+		dialog.setAccessRestriction(this.gitblit.getDefaultAccessRestriction());
+		dialog.setAuthorizationControl(this.gitblit.getDefaultAuthorizationControl());
+		dialog.setUsers(null, this.gitblit.getUsernames(), null);
+		dialog.setTeams(this.gitblit.getTeamnames(), null);
+		dialog.setRepositories(this.gitblit.getRepositories());
+		dialog.setFederationSets(this.gitblit.getFederationSets(), null);
+		dialog.setIndexedBranches(new ArrayList<String>(Arrays.asList(Constants.DEFAULT_BRANCH)),
+				null);
+		dialog.setPreReceiveScripts(this.gitblit.getPreReceiveScriptsUnused(null),
+				this.gitblit.getPreReceiveScriptsInherited(null), null);
+		dialog.setPostReceiveScripts(this.gitblit.getPostReceiveScriptsUnused(null),
+				this.gitblit.getPostReceiveScriptsInherited(null), null);
 		dialog.setVisible(true);
 		final RepositoryModel newRepository = dialog.getRepository();
 		final List<RegistrantAccessPermission> permittedUsers = dialog.getUserAccessPermissions();
@@ -420,19 +429,19 @@ public abstract class RepositoriesPanel extends JPanel {
 			return;
 		}
 
-		GitblitWorker worker = new GitblitWorker(this, RpcRequest.CREATE_REPOSITORY) {
+		final GitblitWorker worker = new GitblitWorker(this, RpcRequest.CREATE_REPOSITORY) {
 
 			@Override
 			protected Boolean doRequest() throws IOException {
-				boolean success = gitblit.createRepository(newRepository, permittedUsers,
-						permittedTeams);
+				final boolean success = RepositoriesPanel.this.gitblit.createRepository(
+						newRepository, permittedUsers, permittedTeams);
 				if (success) {
-					gitblit.refreshRepositories();
+					RepositoriesPanel.this.gitblit.refreshRepositories();
 					if (permittedUsers.size() > 0) {
-						gitblit.refreshUsers();
+						RepositoriesPanel.this.gitblit.refreshUsers();
 					}
 					if (permittedTeams.size() > 0) {
-						gitblit.refreshTeams();
+						RepositoriesPanel.this.gitblit.refreshTeams();
 					}
 				}
 				return success;
@@ -461,25 +470,30 @@ public abstract class RepositoriesPanel extends JPanel {
 	 * @param repository
 	 */
 	protected void editRepository(final RepositoryModel repository) {
-		EditRepositoryDialog dialog = new EditRepositoryDialog(gitblit.getProtocolVersion(),
-				repository);
+		final EditRepositoryDialog dialog = new EditRepositoryDialog(
+				this.gitblit.getProtocolVersion(), repository);
 		dialog.setLocationRelativeTo(RepositoriesPanel.this);
-		List<String> usernames = gitblit.getUsernames();
-		List<RegistrantAccessPermission> members = gitblit.getUserAccessPermissions(repository);
+		final List<String> usernames = this.gitblit.getUsernames();
+		final List<RegistrantAccessPermission> members = this.gitblit
+				.getUserAccessPermissions(repository);
 		dialog.setUsers(new ArrayList<String>(repository.owners), usernames, members);
-		dialog.setTeams(gitblit.getTeamnames(), gitblit.getTeamAccessPermissions(repository));
-		dialog.setRepositories(gitblit.getRepositories());
-		dialog.setFederationSets(gitblit.getFederationSets(), repository.federationSets);
-		List<String> allLocalBranches = new ArrayList<String>();
+		dialog.setTeams(this.gitblit.getTeamnames(),
+				this.gitblit.getTeamAccessPermissions(repository));
+		dialog.setRepositories(this.gitblit.getRepositories());
+		dialog.setFederationSets(this.gitblit.getFederationSets(), repository.federationSets);
+		final List<String> allLocalBranches = new ArrayList<String>();
 		allLocalBranches.add(Constants.DEFAULT_BRANCH);
 		allLocalBranches.addAll(repository.getLocalBranches());
 		dialog.setIndexedBranches(allLocalBranches, repository.indexedBranches);
-		dialog.setPreReceiveScripts(gitblit.getPreReceiveScriptsUnused(repository),
-				gitblit.getPreReceiveScriptsInherited(repository), repository.preReceiveScripts);
-		dialog.setPostReceiveScripts(gitblit.getPostReceiveScriptsUnused(repository),
-				gitblit.getPostReceiveScriptsInherited(repository), repository.postReceiveScripts);
-		if (gitblit.getSettings().hasKey(Keys.groovy.customFields)) {
-			Map<String, String> map = gitblit.getSettings().get(Keys.groovy.customFields).getMap();
+		dialog.setPreReceiveScripts(this.gitblit.getPreReceiveScriptsUnused(repository),
+				this.gitblit.getPreReceiveScriptsInherited(repository),
+				repository.preReceiveScripts);
+		dialog.setPostReceiveScripts(this.gitblit.getPostReceiveScriptsUnused(repository),
+				this.gitblit.getPostReceiveScriptsInherited(repository),
+				repository.postReceiveScripts);
+		if (this.gitblit.getSettings().hasKey(Keys.groovy.customFields)) {
+			final Map<String, String> map = this.gitblit.getSettings()
+					.get(Keys.groovy.customFields).getMap();
 			dialog.setCustomFields(repository, map);
 		}
 		dialog.setVisible(true);
@@ -490,16 +504,16 @@ public abstract class RepositoriesPanel extends JPanel {
 			return;
 		}
 
-		GitblitWorker worker = new GitblitWorker(this, RpcRequest.EDIT_REPOSITORY) {
+		final GitblitWorker worker = new GitblitWorker(this, RpcRequest.EDIT_REPOSITORY) {
 
 			@Override
 			protected Boolean doRequest() throws IOException {
-				boolean success = gitblit.updateRepository(repository.name, revisedRepository,
-						permittedUsers, permittedTeams);
+				final boolean success = RepositoriesPanel.this.gitblit.updateRepository(
+						repository.name, revisedRepository, permittedUsers, permittedTeams);
 				if (success) {
-					gitblit.refreshRepositories();
-					gitblit.refreshUsers();
-					gitblit.refreshTeams();
+					RepositoriesPanel.this.gitblit.refreshRepositories();
+					RepositoriesPanel.this.gitblit.refreshUsers();
+					RepositoriesPanel.this.gitblit.refreshTeams();
 				}
 				return success;
 			}
@@ -521,27 +535,27 @@ public abstract class RepositoriesPanel extends JPanel {
 	}
 
 	protected void deleteRepositories(final List<RepositoryModel> repositories) {
-		if (repositories == null || repositories.size() == 0) {
+		if ((repositories == null) || (repositories.size() == 0)) {
 			return;
 		}
-		StringBuilder message = new StringBuilder("Delete the following repositories?\n\n");
-		for (RepositoryModel repository : repositories) {
+		final StringBuilder message = new StringBuilder("Delete the following repositories?\n\n");
+		for (final RepositoryModel repository : repositories) {
 			message.append(repository.name).append("\n");
 		}
-		int result = JOptionPane.showConfirmDialog(RepositoriesPanel.this, message.toString(),
-				"Delete Repositories?", JOptionPane.YES_NO_OPTION);
+		final int result = JOptionPane.showConfirmDialog(RepositoriesPanel.this,
+				message.toString(), "Delete Repositories?", JOptionPane.YES_NO_OPTION);
 		if (result == JOptionPane.YES_OPTION) {
-			GitblitWorker worker = new GitblitWorker(this, RpcRequest.DELETE_REPOSITORY) {
+			final GitblitWorker worker = new GitblitWorker(this, RpcRequest.DELETE_REPOSITORY) {
 				@Override
 				protected Boolean doRequest() throws IOException {
 					boolean success = true;
-					for (RepositoryModel repository : repositories) {
-						success &= gitblit.deleteRepository(repository);
+					for (final RepositoryModel repository : repositories) {
+						success &= RepositoriesPanel.this.gitblit.deleteRepository(repository);
 					}
 					if (success) {
-						gitblit.refreshRepositories();
-						gitblit.refreshUsers();
-						gitblit.refreshTeams();
+						RepositoriesPanel.this.gitblit.refreshRepositories();
+						RepositoriesPanel.this.gitblit.refreshUsers();
+						RepositoriesPanel.this.gitblit.refreshTeams();
 					}
 					return success;
 				}
@@ -563,7 +577,7 @@ public abstract class RepositoriesPanel extends JPanel {
 	}
 
 	private void showSearchDialog(boolean isSearch, final RepositoryModel repository) {
-		final SearchDialog dialog = new SearchDialog(gitblit, isSearch);
+		final SearchDialog dialog = new SearchDialog(this.gitblit, isSearch);
 		if (repository != null) {
 			dialog.selectRepository(repository);
 		}

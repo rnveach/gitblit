@@ -21,7 +21,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -78,9 +77,7 @@ public class RawServlet extends HttpServlet {
 	private final IRepositoryManager repositoryManager;
 
 	@Inject
-	public RawServlet(
-			IRuntimeManager runtimeManager,
-			IRepositoryManager repositoryManager) {
+	public RawServlet(IRuntimeManager runtimeManager, IRepositoryManager repositoryManager) {
 
 		this.runtimeManager = runtimeManager;
 		this.repositoryManager = repositoryManager;
@@ -96,12 +93,13 @@ public class RawServlet extends HttpServlet {
 	 * @return an url
 	 */
 	public static String asLink(String baseURL, String repository, String branch, String path) {
-		if (baseURL.length() > 0 && baseURL.charAt(baseURL.length() - 1) == '/') {
+		if ((baseURL.length() > 0) && (baseURL.charAt(baseURL.length() - 1) == '/')) {
 			baseURL = baseURL.substring(0, baseURL.length() - 1);
 		}
 
 		char fsc = '!';
-		char c = GitblitContext.getManager(IRuntimeManager.class).getSettings().getChar(Keys.web.forwardSlashCharacter, '/');
+		final char c = GitblitContext.getManager(IRuntimeManager.class).getSettings()
+				.getChar(Keys.web.forwardSlashCharacter, '/');
 		if (c != '/') {
 			fsc = c;
 		}
@@ -109,24 +107,26 @@ public class RawServlet extends HttpServlet {
 			branch = Repository.shortenRefName(branch).replace('/', fsc);
 		}
 
-		String encodedPath = path == null ? "" : path.replace('/', fsc);
-		return baseURL + Constants.RAW_PATH + repository + "/" + (branch == null ? "" : (branch + "/" + encodedPath));
+		final String encodedPath = path == null ? "" : path.replace('/', fsc);
+		return baseURL + Constants.RAW_PATH + repository + "/"
+				+ (branch == null ? "" : (branch + "/" + encodedPath));
 	}
 
 	protected String getBranch(String repository, HttpServletRequest request) {
-		String pi = request.getPathInfo();
+		final String pi = request.getPathInfo();
 		String branch = pi.substring(pi.indexOf(repository) + repository.length() + 1);
-		int fs = branch.indexOf('/');
+		final int fs = branch.indexOf('/');
 		if (fs > -1) {
 			branch = branch.substring(0, fs);
 		}
-		char c = runtimeManager.getSettings().getChar(Keys.web.forwardSlashCharacter, '/');
+		final char c = this.runtimeManager.getSettings().getChar(Keys.web.forwardSlashCharacter,
+				'/');
 		return branch.replace('!', '/').replace(c, '/');
 	}
 
 	protected String getPath(String repository, String branch, HttpServletRequest request) {
-		String base = repository + "/" + branch;
-		String pi = request.getPathInfo().substring(1);
+		final String base = repository + "/" + branch;
+		final String pi = request.getPathInfo().substring(1);
 		if (pi.equals(base)) {
 			return "";
 		}
@@ -134,7 +134,8 @@ public class RawServlet extends HttpServlet {
 		if (path.endsWith("/")) {
 			path = path.substring(0, path.length() - 1);
 		}
-		char c = runtimeManager.getSettings().getChar(Keys.web.forwardSlashCharacter, '/');
+		final char c = this.runtimeManager.getSettings().getChar(Keys.web.forwardSlashCharacter,
+				'/');
 		return path.replace('!', '/').replace(c, '/');
 	}
 
@@ -152,7 +153,7 @@ public class RawServlet extends HttpServlet {
 	 * @throws java.io.IOException
 	 */
 	private void processRequest(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
+			throws IOException {
 		String path = request.getPathInfo();
 		if (path.toLowerCase().endsWith(".git")) {
 			// forward to url with trailing /
@@ -171,16 +172,16 @@ public class RawServlet extends HttpServlet {
 		int terminator = repository.length();
 		do {
 			repository = repository.substring(0, terminator);
-			r = repositoryManager.getRepository(repository, false);
+			r = this.repositoryManager.getRepository(repository, false);
 			terminator = repository.lastIndexOf('/');
-		} while (r == null && terminator > -1 );
+		} while ((r == null) && (terminator > -1));
 
-		ServletContext context = request.getSession().getServletContext();
+		final ServletContext context = request.getSession().getServletContext();
 
 		try {
 			if (r == null) {
 				// repository not found!
-				String mkd = MessageFormat.format(
+				final String mkd = MessageFormat.format(
 						"# Error\nSorry, no valid **repository** specified in this url: {0}!",
 						path);
 				error(response, mkd);
@@ -192,15 +193,15 @@ public class RawServlet extends HttpServlet {
 			if (StringUtils.isEmpty(branch)) {
 				branch = r.getBranch();
 				if (branch == null) {
-					// no branches found!  empty?
-					String mkd = MessageFormat.format(
+					// no branches found! empty?
+					final String mkd = MessageFormat.format(
 							"# Error\nSorry, no valid **branch** specified in this url: {0}!",
 							path);
 					error(response, mkd);
 				} else {
 					// redirect to default branch
-					String base = request.getRequestURI();
-					String url = base + branch + "/";
+					final String base = request.getRequestURI();
+					final String url = base + branch + "/";
 					response.sendRedirect(url);
 				}
 				return;
@@ -210,46 +211,55 @@ public class RawServlet extends HttpServlet {
 			String requestedPath = getPath(repository, branch, request);
 
 			// identify the commit
-			RevCommit commit = JGitUtils.getCommit(r, branch);
+			final RevCommit commit = JGitUtils.getCommit(r, branch);
 			if (commit == null) {
 				// branch not found!
-				String mkd = MessageFormat.format(
+				final String mkd = MessageFormat.format(
 						"# Error\nSorry, the repository {0} does not have a **{1}** branch!",
 						repository, branch);
 				error(response, mkd);
 				return;
 			}
 
-			Map<String, String> quickContentTypes = new HashMap<>();
+			final Map<String, String> quickContentTypes = new HashMap<>();
 			quickContentTypes.put("html", "text/html");
 			quickContentTypes.put("htm", "text/html");
 			quickContentTypes.put("xml", "application/xml");
 			quickContentTypes.put("json", "application/json");
 
-			List<PathModel> pathEntries = JGitUtils.getFilesInPath(r, requestedPath, commit);
+			final List<PathModel> pathEntries = JGitUtils.getFilesInPath(r, requestedPath, commit);
 			if (pathEntries.isEmpty()) {
 				// requested a specific resource
-				String file = StringUtils.getLastPathElement(requestedPath);
+				final String file = StringUtils.getLastPathElement(requestedPath);
 				try {
 
-					String ext = StringUtils.getFileExtension(file).toLowerCase();
-					// We can't parse out an extension for classic "dotfiles", so make a general assumption that
-					// they're text files to allow presenting them in browser instead of only for download.
+					final String ext = StringUtils.getFileExtension(file).toLowerCase();
+					// We can't parse out an extension for classic "dotfiles",
+					// so make a general assumption that
+					// they're text files to allow presenting them in browser
+					// instead of only for download.
 					//
-					// However, that only holds for files with no other extension included, for files that happen
-					// to start with a dot but also include an extension, process the extension normally.
-					// This logic covers .gitattributes, .gitignore, .zshrc, etc., but does not cover .mongorc.js, .zshrc.bak
-					boolean isExtensionlessDotfile = file.charAt(0) == '.' && (file.length() == 1 || file.indexOf('.',  1) < 0);
-					String contentType = isExtensionlessDotfile ? "text/plain" : quickContentTypes.get(ext);
+					// However, that only holds for files with no other
+					// extension included, for files that happen
+					// to start with a dot but also include an extension,
+					// process the extension normally.
+					// This logic covers .gitattributes, .gitignore, .zshrc,
+					// etc., but does not cover .mongorc.js, .zshrc.bak
+					final boolean isExtensionlessDotfile = (file.charAt(0) == '.')
+							&& ((file.length() == 1) || (file.indexOf('.', 1) < 0));
+					String contentType = isExtensionlessDotfile ? "text/plain"
+							: quickContentTypes.get(ext);
 
 					if (contentType == null) {
-						List<String> exts = runtimeManager.getSettings().getStrings(Keys.web.prettyPrintExtensions);
+						final List<String> exts = this.runtimeManager.getSettings()
+								.getStrings(Keys.web.prettyPrintExtensions);
 						if (exts.contains(ext)) {
-							// extension is a registered text type for pretty printing
+							// extension is a registered text type for pretty
+							// printing
 							contentType = "text/plain";
 						} else {
 							// query Tika for the content type
-							Tika tika = new Tika();
+							final Tika tika = new Tika();
 							contentType = tika.detect(file);
 						}
 					}
@@ -267,30 +277,35 @@ public class RawServlet extends HttpServlet {
 					if (isTextType(contentType) || isTextDataType(contentType)) {
 
 						// load, interpret, and serve text content as UTF-8
-						String [] encodings = runtimeManager.getSettings().getStrings(Keys.web.blobEncodings).toArray(new String[0]);
-						String content = JGitUtils.getStringContent(r, commit.getTree(), requestedPath, encodings);
+						final String[] encodings = this.runtimeManager.getSettings()
+								.getStrings(Keys.web.blobEncodings).toArray(new String[0]);
+						final String content = JGitUtils.getStringContent(r, commit.getTree(),
+								requestedPath, encodings);
 						if (content == null) {
-							logger.error("RawServlet Failed to load {} {} {}", repository, commit.getName(), path);
+							this.logger.error("RawServlet Failed to load {} {} {}", repository,
+									commit.getName(), path);
 							notFound(response, requestedPath, branch);
 							return;
 						}
 
-						byte [] bytes = content.getBytes(Constants.ENCODING);
+						final byte[] bytes = content.getBytes(Constants.ENCODING);
 						setContentType(response, contentType);
 						response.setContentLength(bytes.length);
-						ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+						final ByteArrayInputStream is = new ByteArrayInputStream(bytes);
 						sendContent(response, JGitUtils.getCommitDate(commit), is);
 
 					} else {
 						// stream binary content directly from the repository
 						if (!streamFromRepo(request, response, r, commit, requestedPath)) {
-							logger.error("RawServlet Failed to load {} {} {}", repository, commit.getName(), path);
+							this.logger.error("RawServlet Failed to load {} {} {}", repository,
+									commit.getName(), path);
 							notFound(response, requestedPath, branch);
 						}
 					}
 					return;
-				} catch (Exception e) {
-					logger.error(null, e);
+				}
+				catch (final Exception e) {
+					this.logger.error(null, e);
 				}
 			} else {
 				// path request
@@ -302,28 +317,30 @@ public class RawServlet extends HttpServlet {
 
 				if (renderIndex()) {
 					// locate and render an index file
-					Map<String, String> names = new TreeMap<String, String>();
-					for (PathModel entry : pathEntries) {
+					final Map<String, String> names = new TreeMap<String, String>();
+					for (final PathModel entry : pathEntries) {
 						names.put(entry.name.toLowerCase(), entry.name);
 					}
 
-					List<String> extensions = new ArrayList<String>();
+					final List<String> extensions = new ArrayList<String>();
 					extensions.add("html");
 					extensions.add("htm");
 
 					String content = null;
-					for (String ext : extensions) {
-						String key = "index." + ext;
+					for (final String ext : extensions) {
+						final String key = "index." + ext;
 
 						if (names.containsKey(key)) {
-							String fileName = names.get(key);
+							final String fileName = names.get(key);
 							String fullPath = fileName;
 							if (!requestedPath.isEmpty()) {
 								fullPath = requestedPath + "/" + fileName;
 							}
 
-							String [] encodings = runtimeManager.getSettings().getStrings(Keys.web.blobEncodings).toArray(new String[0]);
-							String stringContent = JGitUtils.getStringContent(r, commit.getTree(), fullPath, encodings);
+							final String[] encodings = this.runtimeManager.getSettings()
+									.getStrings(Keys.web.blobEncodings).toArray(new String[0]);
+							final String stringContent = JGitUtils.getStringContent(r,
+									commit.getTree(), fullPath, encodings);
 							if (stringContent == null) {
 								continue;
 							}
@@ -334,10 +351,10 @@ public class RawServlet extends HttpServlet {
 					}
 
 					response.setContentType("text/html; charset=" + Constants.ENCODING);
-					byte [] bytes = content.getBytes(Constants.ENCODING);
+					final byte[] bytes = content.getBytes(Constants.ENCODING);
 					response.setContentLength(bytes.length);
 
-					ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+					final ByteArrayInputStream is = new ByteArrayInputStream(bytes);
 					sendContent(response, JGitUtils.getCommitDate(commit), is);
 					return;
 				}
@@ -353,18 +370,21 @@ public class RawServlet extends HttpServlet {
 				// directory list
 				//
 				response.setContentType("text/html");
-				response.getWriter().append("<style>table th, table td { min-width: 150px; text-align: left; }</style>");
+				response.getWriter().append(
+						"<style>table th, table td { min-width: 150px; text-align: left; }</style>");
 				response.getWriter().append("<table>");
-				response.getWriter().append("<thead><tr><th>path</th><th>mode</th><th>size</th></tr>");
+				response.getWriter()
+						.append("<thead><tr><th>path</th><th>mode</th><th>size</th></tr>");
 				response.getWriter().append("</thead>");
 				response.getWriter().append("<tbody>");
-				String pattern = "<tr><td><a href=\"{0}/{1}\">{1}</a></td><td>{2}</td><td>{3}</td></tr>";
+				final String pattern = "<tr><td><a href=\"{0}/{1}\">{1}</a></td><td>{2}</td><td>{3}</td></tr>";
 				final ByteFormat byteFormat = new ByteFormat();
 				if (!pathEntries.isEmpty()) {
 					if (pathEntries.get(0).path.indexOf('/') > -1) {
 						// we are in a subdirectory, add parent directory link
-						String pp = URLEncoder.encode(requestedPath, Constants.ENCODING);
-						pathEntries.add(0, new PathModel("..", pp + "/..", null, 0, FileMode.TREE.getBits(), null, null));
+						final String pp = URLEncoder.encode(requestedPath, Constants.ENCODING);
+						pathEntries.add(0, new PathModel("..", pp + "/..", null, 0,
+								FileMode.TREE.getBits(), null, null));
 					}
 				}
 
@@ -373,25 +393,27 @@ public class RawServlet extends HttpServlet {
 					// strip trailing slash
 					basePath = basePath.substring(0, basePath.length() - 1);
 				}
-				for (PathModel entry : pathEntries) {
-					String pp = URLEncoder.encode(entry.name, Constants.ENCODING);
-					response.getWriter().append(MessageFormat.format(pattern, basePath, pp,
-							JGitUtils.getPermissionsFromMode(entry.mode),
-							entry.isFile() ? byteFormat.format(entry.size) : ""));
+				for (final PathModel entry : pathEntries) {
+					final String pp = URLEncoder.encode(entry.name, Constants.ENCODING);
+					response.getWriter()
+							.append(MessageFormat.format(pattern, basePath, pp,
+									JGitUtils.getPermissionsFromMode(entry.mode),
+									entry.isFile() ? byteFormat.format(entry.size) : ""));
 				}
 				response.getWriter().append("</tbody>");
 				response.getWriter().append("</table>");
 			}
-		} catch (Throwable t) {
-			logger.error("Failed to write page to client", t);
-		} finally {
+		}
+		catch (final Throwable t) {
+			this.logger.error("Failed to write page to client", t);
+		}
+		finally {
 			r.close();
 		}
 	}
 
 	protected boolean isTextType(String contentType) {
-		if (contentType.startsWith("text/")
-				|| "application/json".equals(contentType)
+		if (contentType.startsWith("text/") || "application/json".equals(contentType)
 				|| "application/xml".equals(contentType)) {
 			return true;
 		}
@@ -419,87 +441,92 @@ public class RawServlet extends HttpServlet {
 		}
 	}
 
-	protected boolean streamFromRepo(HttpServletRequest request, HttpServletResponse response, Repository repository,
-			RevCommit commit, String requestedPath) throws IOException {
+	protected boolean streamFromRepo(HttpServletRequest request, HttpServletResponse response,
+			Repository repository, RevCommit commit, String requestedPath) throws IOException {
 
 		boolean served = false;
-		RevWalk rw = new RevWalk(repository);
-		TreeWalk tw = new TreeWalk(repository);
+		final RevWalk rw = new RevWalk(repository);
+		final TreeWalk tw = new TreeWalk(repository);
 		try {
 			tw.reset();
 			tw.addTree(commit.getTree());
-			PathFilter f = PathFilter.create(requestedPath);
+			final PathFilter f = PathFilter.create(requestedPath);
 			tw.setFilter(f);
 			tw.setRecursive(true);
-			MutableObjectId id = new MutableObjectId();
-			ObjectReader reader = tw.getObjectReader();
+			final MutableObjectId id = new MutableObjectId();
+			final ObjectReader reader = tw.getObjectReader();
 			while (tw.next()) {
-				FileMode mode = tw.getFileMode(0);
-				if (mode == FileMode.GITLINK || mode == FileMode.TREE) {
+				final FileMode mode = tw.getFileMode(0);
+				if ((mode == FileMode.GITLINK) || (mode == FileMode.TREE)) {
 					continue;
 				}
 				tw.getObjectId(id, 0);
 
-				String filename = StringUtils.getLastPathElement(requestedPath);
+				final String filename = StringUtils.getLastPathElement(requestedPath);
 				try {
-			    	String userAgent = request.getHeader("User-Agent");
-					if (userAgent != null && userAgent.indexOf("MSIE 5.5") > -1) {
-					      response.setHeader("Content-Disposition", "filename=\""
-					    		  +  URLEncoder.encode(filename, Constants.ENCODING) + "\"");
-					} else if (userAgent != null && userAgent.indexOf("MSIE") > -1) {
-					      response.setHeader("Content-Disposition", "attachment; filename=\""
-					    		  +  URLEncoder.encode(filename, Constants.ENCODING) + "\"");
+					final String userAgent = request.getHeader("User-Agent");
+					if ((userAgent != null) && (userAgent.indexOf("MSIE 5.5") > -1)) {
+						response.setHeader("Content-Disposition", "filename=\""
+								+ URLEncoder.encode(filename, Constants.ENCODING) + "\"");
+					} else if ((userAgent != null) && (userAgent.indexOf("MSIE") > -1)) {
+						response.setHeader("Content-Disposition", "attachment; filename=\""
+								+ URLEncoder.encode(filename, Constants.ENCODING) + "\"");
 					} else {
-							response.setHeader("Content-Disposition", "attachment; filename=\""
-							      + new String(filename.getBytes(Constants.ENCODING), "latin1") + "\"");
+						response.setHeader("Content-Disposition", "attachment; filename=\""
+								+ new String(filename.getBytes(Constants.ENCODING), "latin1")
+								+ "\"");
 					}
 				}
-				catch (UnsupportedEncodingException e) {
-					response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+				catch (final UnsupportedEncodingException e) {
+					response.setHeader("Content-Disposition",
+							"attachment; filename=\"" + filename + "\"");
 				}
 
-				long len = reader.getObjectSize(id, org.eclipse.jgit.lib.Constants.OBJ_BLOB);
+				final long len = reader.getObjectSize(id, org.eclipse.jgit.lib.Constants.OBJ_BLOB);
 				setContentType(response, "application/octet-stream");
 				response.setIntHeader("Content-Length", (int) len);
-				ObjectLoader ldr = repository.open(id);
+				final ObjectLoader ldr = repository.open(id);
 				ldr.copyTo(response.getOutputStream());
 				served = true;
 			}
-		} finally {
-			tw.close();
+		}
+		finally {
 			rw.dispose();
+			tw.close();
+			rw.close();
 		}
 
 		response.flushBuffer();
 		return served;
 	}
 
-	protected void sendContent(HttpServletResponse response, Date date, InputStream is) throws ServletException, IOException {
+	protected void sendContent(HttpServletResponse response, Date date, InputStream is)
+			throws Exception {
 
 		try {
-			byte[] tmp = new byte[8192];
+			final byte[] tmp = new byte[8192];
 			int len = 0;
 			while ((len = is.read(tmp)) > -1) {
 				response.getOutputStream().write(tmp, 0, len);
 			}
-		} finally {
+		}
+		finally {
 			is.close();
 		}
 		response.flushBuffer();
 	}
 
 	protected void notFound(HttpServletResponse response, String requestedPath, String branch)
-			throws ParseException, ServletException, IOException {
-		String str = MessageFormat.format(
+			throws IOException {
+		final String str = MessageFormat.format(
 				"# Error\nSorry, the requested resource **{0}** was not found in **{1}**.",
 				requestedPath, branch);
 		response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 		error(response, str);
 	}
 
-	private void error(HttpServletResponse response, String mkd) throws ServletException,
-			IOException, ParseException {
-		String content = MarkdownUtils.transformMarkdown(mkd);
+	private static void error(HttpServletResponse response, String mkd) throws IOException {
+		final String content = MarkdownUtils.transformMarkdown(mkd);
 		response.setContentType("text/html; charset=" + Constants.ENCODING);
 		response.getWriter().write(content);
 	}

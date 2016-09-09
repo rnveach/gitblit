@@ -39,8 +39,8 @@ public class FederationProposalsPanel extends BasePanel {
 		super(wicketId);
 
 		final List<FederationProposal> list = app().federation().getPendingFederationProposals();
-		hasProposals = list.size() > 0;
-		DataView<FederationProposal> dataView = new DataView<FederationProposal>("row",
+		this.hasProposals = list.size() > 0;
+		final DataView<FederationProposal> dataView = new DataView<FederationProposal>("row",
 				new ListDataProvider<FederationProposal>(list)) {
 			private static final long serialVersionUID = 1L;
 			private int counter;
@@ -48,7 +48,7 @@ public class FederationProposalsPanel extends BasePanel {
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
@@ -56,12 +56,13 @@ public class FederationProposalsPanel extends BasePanel {
 				final FederationProposal entry = item.getModelObject();
 				item.add(new LinkPanel("url", "list", entry.url, ReviewProposalPage.class,
 						WicketUtils.newTokenParameter(entry.token)));
-				item.add(WicketUtils.createDateLabel("received", entry.received, getTimeZone(), getTimeUtils()));
+				item.add(WicketUtils.createDateLabel("received", entry.received, getTimeZone(),
+						getTimeUtils()));
 				item.add(new Label("tokenType", entry.tokenType.name()));
 				item.add(new LinkPanel("token", "list", entry.token, ReviewProposalPage.class,
 						WicketUtils.newTokenParameter(entry.token)));
 
-				Link<Void> deleteLink = new Link<Void>("deleteProposal") {
+				final Link<Void> deleteLink = new Link<Void>("deleteProposal") {
 
 					private static final long serialVersionUID = 1L;
 
@@ -79,14 +80,14 @@ public class FederationProposalsPanel extends BasePanel {
 				deleteLink.add(new JavascriptEventConfirmation("onclick", MessageFormat.format(
 						"Delete proposal \"{0}\"?", entry.name)));
 				item.add(deleteLink);
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(dataView);
 	}
 
 	public Component hideIfEmpty() {
-		return super.setVisible(hasProposals);
+		return super.setVisible(this.hasProposals);
 	}
 }

@@ -37,8 +37,8 @@ import com.gitblit.wicket.freemarker.FreemarkerPanel;
 import com.gitblit.wicket.ng.NgController;
 
 /**
- * A client-side filterable rich project list which uses Freemarker, Wicket,
- * and AngularJS.
+ * A client-side filterable rich project list which uses Freemarker, Wicket, and
+ * AngularJS.
  *
  * @author James Moger
  *
@@ -67,48 +67,51 @@ public class FilterableProjectList extends BasePanel {
 	protected void onInitialize() {
 		super.onInitialize();
 
-		String id = getId();
-		String ngCtrl = id + "Ctrl";
-		String ngList = id + "List";
+		final String id = getId();
+		final String ngCtrl = id + "Ctrl";
+		final String ngList = id + "List";
 
-		Map<String, Object> values = new HashMap<String, Object>();
-		values.put("ngCtrl",  ngCtrl);
-		values.put("ngList",  ngList);
+		final Map<String, Object> values = new HashMap<String, Object>();
+		values.put("ngCtrl", ngCtrl);
+		values.put("ngList", ngList);
 
 		// use Freemarker to setup an AngularJS/Wicket html snippet
-		FreemarkerPanel panel = new FreemarkerPanel("listComponent", "FilterableProjectList.fm", values);
+		final FreemarkerPanel panel = new FreemarkerPanel("listComponent",
+				"FilterableProjectList.fm", values);
 		panel.setParseGeneratedMarkup(true);
 		panel.setRenderBodyOnly(true);
 		add(panel);
 
 		// add the Wicket controls that are referenced in the snippet
-		String listTitle = StringUtils.isEmpty(title) ? getString("gb.projects") : title;
-		panel.add(new Label(ngList + "Title", MessageFormat.format("{0} ({1})", listTitle, projects.size())));
-		if (StringUtils.isEmpty(iconClass)) {
+		final String listTitle = StringUtils.isEmpty(this.title) ? getString("gb.projects")
+				: this.title;
+		panel.add(new Label(ngList + "Title", MessageFormat.format("{0} ({1})", listTitle,
+				this.projects.size())));
+		if (StringUtils.isEmpty(this.iconClass)) {
 			panel.add(new Label(ngList + "Icon").setVisible(false));
 		} else {
-			Label icon = new Label(ngList + "Icon");
-			WicketUtils.setCssClass(icon, iconClass);
+			final Label icon = new Label(ngList + "Icon");
+			WicketUtils.setCssClass(icon, this.iconClass);
 			panel.add(icon);
 		}
 
-		String format = app().settings().getString(Keys.web.datestampShortFormat, "MM/dd/yy");
+		final String format = app().settings().getString(Keys.web.datestampShortFormat, "MM/dd/yy");
 		final DateFormat df = new SimpleDateFormat(format);
 		df.setTimeZone(getTimeZone());
-		Collections.sort(projects, new Comparator<ProjectModel>() {
+		Collections.sort(this.projects, new Comparator<ProjectModel>() {
 			@Override
 			public int compare(ProjectModel o1, ProjectModel o2) {
 				return o2.lastChange.compareTo(o1.lastChange);
 			}
 		});
 
-		List<ProjectListItem> list = new ArrayList<ProjectListItem>();
-		for (ProjectModel proj : projects) {
+		final List<ProjectListItem> list = new ArrayList<ProjectListItem>();
+		for (final ProjectModel proj : this.projects) {
 			if (proj.isUserProject() || proj.repositories.isEmpty()) {
 				// exclude user projects from list
 				continue;
 			}
-			ProjectListItem item = new ProjectListItem();
+			final ProjectListItem item = new ProjectListItem();
 			item.p = proj.name;
 			item.n = StringUtils.isEmpty(proj.title) ? proj.name : proj.title;
 			item.i = proj.description;
@@ -119,7 +122,7 @@ public class FilterableProjectList extends BasePanel {
 		}
 
 		// inject an AngularJS controller with static data
-		NgController ctrl = new NgController(ngCtrl);
+		final NgController ctrl = new NgController(ngCtrl);
 		ctrl.addVariable(ngList, list);
 		add(new HeaderContributor(ctrl));
 	}
@@ -133,6 +136,6 @@ public class FilterableProjectList extends BasePanel {
 		String t; // time ago
 		String d; // last updated
 		String i; // information/description
-		long c;   // repository count
+		long c; // repository count
 	}
 }

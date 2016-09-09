@@ -51,13 +51,14 @@ public class FileKeyManager extends IPublicKeyManager {
 
 	@Override
 	public String toString() {
-		File dir = runtimeManager.getFileOrFolder(Keys.git.sshKeysFolder, "${baseFolder}/ssh");
+		final File dir = this.runtimeManager.getFileOrFolder(Keys.git.sshKeysFolder,
+				"${baseFolder}/ssh");
 		return MessageFormat.format("{0} ({1})", getClass().getSimpleName(), dir);
 	}
 
 	@Override
 	public FileKeyManager start() {
-		log.info(toString());
+		this.log.info(toString());
 		return this;
 	}
 
@@ -73,15 +74,15 @@ public class FileKeyManager extends IPublicKeyManager {
 
 	@Override
 	protected boolean isStale(String username) {
-		File keystore = getKeystore(username);
+		final File keystore = getKeystore(username);
 		if (!keystore.exists()) {
 			// keystore may have been deleted
 			return true;
 		}
 
-		if (lastModifieds.containsKey(keystore)) {
+		if (this.lastModifieds.containsKey(keystore)) {
 			// compare modification times
-			long lastModified = lastModifieds.get(keystore);
+			final long lastModified = this.lastModifieds.get(keystore);
 			return lastModified != keystore.lastModified();
 		}
 
@@ -92,14 +93,14 @@ public class FileKeyManager extends IPublicKeyManager {
 	@Override
 	protected List<SshKey> getKeysImpl(String username) {
 		try {
-			log.info("loading ssh keystore for {}", username);
-			File keystore = getKeystore(username);
+			this.log.info("loading ssh keystore for {}", username);
+			final File keystore = getKeystore(username);
 			if (!keystore.exists()) {
 				return null;
 			}
 			if (keystore.exists()) {
-				List<SshKey> list = new ArrayList<SshKey>();
-				for (String entry : Files.readLines(keystore, Charsets.ISO_8859_1)) {
+				final List<SshKey> list = new ArrayList<SshKey>();
+				for (final String entry : Files.readLines(keystore, Charsets.ISO_8859_1)) {
 					if (entry.trim().length() == 0) {
 						// skip blanks
 						continue;
@@ -108,15 +109,15 @@ public class FileKeyManager extends IPublicKeyManager {
 						// skip comments
 						continue;
 					}
-					String [] parts = entry.split(" ", 2);
-					AccessPermission perm = AccessPermission.fromCode(parts[0]);
+					final String[] parts = entry.split(" ", 2);
+					final AccessPermission perm = AccessPermission.fromCode(parts[0]);
 					if (perm.equals(AccessPermission.NONE)) {
 						// ssh-rsa DATA COMMENT
-						SshKey key = new SshKey(entry);
+						final SshKey key = new SshKey(entry);
 						list.add(key);
 					} else if (perm.exceeds(AccessPermission.NONE)) {
 						// PERMISSION ssh-rsa DATA COMMENT
-						SshKey key = new SshKey(parts[1]);
+						final SshKey key = new SshKey(parts[1]);
 						key.setPermission(perm);
 						list.add(key);
 					}
@@ -126,28 +127,29 @@ public class FileKeyManager extends IPublicKeyManager {
 					return null;
 				}
 
-				lastModifieds.put(keystore, keystore.lastModified());
+				this.lastModifieds.put(keystore, keystore.lastModified());
 				return list;
 			}
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			throw new RuntimeException("Cannot read ssh keys", e);
 		}
 		return null;
 	}
 
 	/**
-	 * Adds a unique key to the keystore.  This function determines uniqueness
-	 * by disregarding the comment/description field during key comparisons.
+	 * Adds a unique key to the keystore. This function determines uniqueness by
+	 * disregarding the comment/description field during key comparisons.
 	 */
 	@Override
 	public boolean addKey(String username, SshKey key) {
 		try {
 			boolean replaced = false;
-			List<String> lines = new ArrayList<String>();
-			File keystore = getKeystore(username);
+			final List<String> lines = new ArrayList<String>();
+			final File keystore = getKeystore(username);
 			if (keystore.exists()) {
-				for (String entry : Files.readLines(keystore, Charsets.ISO_8859_1)) {
-					String line = entry.trim();
+				for (final String entry : Files.readLines(keystore, Charsets.ISO_8859_1)) {
+					final String line = entry.trim();
 					if (line.length() == 0) {
 						// keep blanks
 						lines.add(entry);
@@ -159,7 +161,7 @@ public class FileKeyManager extends IPublicKeyManager {
 						continue;
 					}
 
-					SshKey oldKey = parseKey(line);
+					final SshKey oldKey = parseKey(line);
 					if (key.equals(oldKey)) {
 						// replace key
 						lines.add(key.getPermission() + " " + key.getRawData());
@@ -177,13 +179,14 @@ public class FileKeyManager extends IPublicKeyManager {
 			}
 
 			// write keystore
-			String content = Joiner.on("\n").join(lines).trim().concat("\n");
+			final String content = Joiner.on("\n").join(lines).trim().concat("\n");
 			Files.write(content, keystore, Charsets.ISO_8859_1);
 
-			lastModifieds.remove(keystore);
-			keyCache.invalidate(username);
+			this.lastModifieds.remove(keystore);
+			this.keyCache.invalidate(username);
 			return true;
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			throw new RuntimeException("Cannot add ssh key", e);
 		}
 	}
@@ -194,11 +197,11 @@ public class FileKeyManager extends IPublicKeyManager {
 	@Override
 	public boolean removeKey(String username, SshKey key) {
 		try {
-			File keystore = getKeystore(username);
+			final File keystore = getKeystore(username);
 			if (keystore.exists()) {
-				List<String> lines = new ArrayList<String>();
-				for (String entry : Files.readLines(keystore, Charsets.ISO_8859_1)) {
-					String line = entry.trim();
+				final List<String> lines = new ArrayList<String>();
+				for (final String entry : Files.readLines(keystore, Charsets.ISO_8859_1)) {
+					final String line = entry.trim();
 					if (line.length() == 0) {
 						// keep blanks
 						lines.add(entry);
@@ -211,7 +214,7 @@ public class FileKeyManager extends IPublicKeyManager {
 					}
 
 					// only include keys that are NOT rmKey
-					SshKey oldKey = parseKey(line);
+					final SshKey oldKey = parseKey(line);
 					if (!key.equals(oldKey)) {
 						lines.add(entry);
 					}
@@ -220,15 +223,16 @@ public class FileKeyManager extends IPublicKeyManager {
 					keystore.delete();
 				} else {
 					// write keystore
-					String content = Joiner.on("\n").join(lines).trim().concat("\n");
+					final String content = Joiner.on("\n").join(lines).trim().concat("\n");
 					Files.write(content, keystore, Charsets.ISO_8859_1);
 				}
 
-				lastModifieds.remove(keystore);
-				keyCache.invalidate(username);
+				this.lastModifieds.remove(keystore);
+				this.keyCache.invalidate(username);
 				return true;
 			}
-		} catch (IOException e) {
+		}
+		catch (final IOException e) {
 			throw new RuntimeException("Cannot remove ssh key", e);
 		}
 		return false;
@@ -236,32 +240,33 @@ public class FileKeyManager extends IPublicKeyManager {
 
 	@Override
 	public boolean removeAllKeys(String username) {
-		File keystore = getKeystore(username);
+		final File keystore = getKeystore(username);
 		if (keystore.delete()) {
-			lastModifieds.remove(keystore);
-			keyCache.invalidate(username);
+			this.lastModifieds.remove(keystore);
+			this.keyCache.invalidate(username);
 			return true;
 		}
 		return false;
 	}
 
 	protected File getKeystore(String username) {
-		File dir = runtimeManager.getFileOrFolder(Keys.git.sshKeysFolder, "${baseFolder}/ssh");
+		final File dir = this.runtimeManager.getFileOrFolder(Keys.git.sshKeysFolder,
+				"${baseFolder}/ssh");
 		dir.mkdirs();
-		File keys = new File(dir, username + ".keys");
+		final File keys = new File(dir, username + ".keys");
 		return keys;
 	}
 
 	protected SshKey parseKey(String line) {
-		String [] parts = line.split(" ", 2);
-		AccessPermission perm = AccessPermission.fromCode(parts[0]);
+		final String[] parts = line.split(" ", 2);
+		final AccessPermission perm = AccessPermission.fromCode(parts[0]);
 		if (perm.equals(AccessPermission.NONE)) {
 			// ssh-rsa DATA COMMENT
-			SshKey key = new SshKey(line);
+			final SshKey key = new SshKey(line);
 			return key;
 		} else {
 			// PERMISSION ssh-rsa DATA COMMENT
-			SshKey key = new SshKey(parts[1]);
+			final SshKey key = new SshKey(parts[1]);
 			key.setPermission(perm);
 			return key;
 		}

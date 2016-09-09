@@ -34,20 +34,20 @@ public class Flotr2Charts extends Charts {
 	public void renderHead(IHeaderResponse response) {
 
 		// add Google Chart JS API reference
-		ServletContext servletContext = WebApplication.get().getServletContext();
-		String contextPath = servletContext.getContextPath();
+		final ServletContext servletContext = WebApplication.get().getServletContext();
+		final String contextPath = servletContext.getContextPath();
 
 		response.renderJavascriptReference(contextPath + "/bootstrap/js/jquery.js");
 		response.renderJavascriptReference(contextPath + "/flotr2/flotr2.min.js");
 		response.renderCSSReference(contextPath + "/flotr2/flotr2.custom.css");
 
 		// prepare draw chart function
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 
 		line(sb, "$( document ).ready(function() {");
 		line(sb, "try {");
 		// add charts to header
-		for (Chart chart : charts) {
+		for (final Chart chart : this.charts) {
 			chart.appendChart(sb);
 		}
 		line(sb, "} catch (exception) {");
@@ -62,20 +62,17 @@ public class Flotr2Charts extends Charts {
 	}
 
 	@Override
-	public Chart createPieChart(String tagId, String title, String keyName,
-			String valueName) {
+	public Chart createPieChart(String tagId, String title, String keyName, String valueName) {
 		return new Flotr2PieChart(tagId, title, keyName, valueName);
 	}
 
 	@Override
-	public Chart createLineChart(String tagId, String title, String keyName,
-			String valueName) {
+	public Chart createLineChart(String tagId, String title, String keyName, String valueName) {
 		return new Flotr2LineChart(tagId, title, keyName, valueName);
 	}
 
 	@Override
-	public Chart createBarChart(String tagId, String title, String keyName,
-			String valueName) {
+	public Chart createBarChart(String tagId, String title, String keyName, String valueName) {
 		return new Flotr2BarChart(tagId, title, keyName, valueName);
 	}
 

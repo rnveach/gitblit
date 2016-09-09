@@ -92,11 +92,11 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	public Integer deletions;
 
 	public Priority priority;
-	
+
 	public Severity severity;
-	
+
 	/**
-	 * Builds an effective ticket from the collection of changes.  A change may
+	 * Builds an effective ticket from the collection of changes. A change may
 	 * Add or Subtract information from a ticket, but the collection of changes
 	 * is only additive.
 	 *
@@ -105,41 +105,41 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 */
 	public static TicketModel buildTicket(Collection<Change> changes) {
 		TicketModel ticket;
-		List<Change> effectiveChanges = new ArrayList<Change>();
-		Map<String, Change> comments = new HashMap<String, Change>();
-		Map<String, Change> references = new HashMap<String, Change>();
-		Map<Integer, Integer> latestRevisions = new HashMap<Integer, Integer>();
-		
+		final List<Change> effectiveChanges = new ArrayList<Change>();
+		final Map<String, Change> comments = new HashMap<String, Change>();
+		final Map<String, Change> references = new HashMap<String, Change>();
+		final Map<Integer, Integer> latestRevisions = new HashMap<Integer, Integer>();
+
 		int latestPatchsetNumber = -1;
-		
-		List<Integer> deletedPatchsets = new ArrayList<Integer>();
-		
-		for (Change change : changes) {
+
+		final List<Integer> deletedPatchsets = new ArrayList<Integer>();
+
+		for (final Change change : changes) {
 			if (change.patchset != null) {
 				if (change.patchset.isDeleted()) {
 					deletedPatchsets.add(change.patchset.number);
 				} else {
-					Integer latestRev = latestRevisions.get(change.patchset.number);
-					
-					if (latestRev == null || change.patchset.rev > latestRev) {
+					final Integer latestRev = latestRevisions.get(change.patchset.number);
+
+					if ((latestRev == null) || (change.patchset.rev > latestRev)) {
 						latestRevisions.put(change.patchset.number, change.patchset.rev);
 					}
-					
+
 					if (change.patchset.number > latestPatchsetNumber) {
 						latestPatchsetNumber = change.patchset.number;
-					}	
+					}
 				}
 			}
 		}
-		
-		for (Change change : changes) {
+
+		for (final Change change : changes) {
 			if (change.comment != null) {
 				if (comments.containsKey(change.comment.id)) {
-					Change original = comments.get(change.comment.id);
-					Change clone = copy(original);
+					final Change original = comments.get(change.comment.id);
+					final Change clone = copy(original);
 					clone.comment.text = change.comment.text;
 					clone.comment.deleted = change.comment.deleted;
-					int idx = effectiveChanges.indexOf(original);
+					final int idx = effectiveChanges.indexOf(original);
 					effectiveChanges.remove(original);
 					effectiveChanges.add(idx, clone);
 					comments.put(clone.comment.id, clone);
@@ -148,24 +148,24 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 					comments.put(change.comment.id, change);
 				}
 			} else if (change.patchset != null) {
-				//All revisions of a deleted patchset are not displayed
+				// All revisions of a deleted patchset are not displayed
 				if (!deletedPatchsets.contains(change.patchset.number)) {
-					
-					Integer latestRev = latestRevisions.get(change.patchset.number);
-					
-					if (    (change.patchset.number < latestPatchsetNumber) 
-						 && (change.patchset.rev == latestRev)) {
+
+					final Integer latestRev = latestRevisions.get(change.patchset.number);
+
+					if ((change.patchset.number < latestPatchsetNumber)
+							&& (change.patchset.rev == latestRev)) {
 						change.patchset.canDelete = true;
 					}
-					
+
 					effectiveChanges.add(change);
 				}
-			} else if (change.reference != null){
+			} else if (change.reference != null) {
 				if (references.containsKey(change.reference.toString())) {
-					Change original = references.get(change.reference.toString());
-					Change clone = copy(original);
+					final Change original = references.get(change.reference.toString());
+					final Change clone = copy(original);
 					clone.reference.deleted = change.reference.deleted;
-					int idx = effectiveChanges.indexOf(original);
+					final int idx = effectiveChanges.indexOf(original);
 					effectiveChanges.remove(original);
 					effectiveChanges.add(idx, clone);
 				} else {
@@ -179,8 +179,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 		// effective ticket
 		ticket = new TicketModel();
-		for (Change change : effectiveChanges) {
-			//Ensure deleted items are not included
+		for (final Change change : effectiveChanges) {
+			// Ensure deleted items are not included
 			if (!change.hasComment()) {
 				change.comment = null;
 			}
@@ -197,36 +197,36 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 	public TicketModel() {
 		// the first applied change set the date appropriately
-		created = new Date(0);
-		changes = new ArrayList<Change>();
-		status = Status.New;
-		type = Type.defaultType;
-		priority = Priority.defaultPriority;
-		severity = Severity.defaultSeverity;
+		this.created = new Date(0);
+		this.changes = new ArrayList<Change>();
+		this.status = Status.New;
+		this.type = Type.defaultType;
+		this.priority = Priority.defaultPriority;
+		this.severity = Severity.defaultSeverity;
 	}
 
 	public boolean isOpen() {
-		return !status.isClosed();
+		return !this.status.isClosed();
 	}
 
 	public boolean isClosed() {
-		return status.isClosed();
+		return this.status.isClosed();
 	}
 
 	public boolean isMerged() {
-		return isClosed() && !isEmpty(mergeSha);
+		return isClosed() && !isEmpty(this.mergeSha);
 	}
 
 	public boolean isProposal() {
-		return Type.Proposal == type;
+		return Type.Proposal == this.type;
 	}
 
 	public boolean isBug() {
-		return Type.Bug == type;
+		return Type.Bug == this.type;
 	}
 
 	public Date getLastUpdated() {
-		return updated == null ? created : updated;
+		return this.updated == null ? this.created : this.updated;
 	}
 
 	public boolean hasPatchsets() {
@@ -234,15 +234,15 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	/**
-	 * Returns true if multiple participants are involved in discussing a ticket.
-	 * The ticket creator is excluded from this determination because a
+	 * Returns true if multiple participants are involved in discussing a
+	 * ticket. The ticket creator is excluded from this determination because a
 	 * discussion requires more than one participant.
 	 *
 	 * @return true if this ticket has a discussion
 	 */
 	public boolean hasDiscussion() {
-		for (Change change : getComments()) {
-			if (!change.author.equals(createdBy)) {
+		for (final Change change : getComments()) {
+			if (!change.author.equals(this.createdBy)) {
 				return true;
 			}
 		}
@@ -255,8 +255,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 * @return
 	 */
 	public List<Change> getComments() {
-		List<Change> list = new ArrayList<Change>();
-		for (Change change : changes) {
+		final List<Change> list = new ArrayList<Change>();
+		for (final Change change : this.changes) {
 			if (change.hasComment()) {
 				list.add(change);
 			}
@@ -270,14 +270,14 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 * @return the list of participants
 	 */
 	public List<String> getParticipants() {
-		Set<String> set = new LinkedHashSet<String>();
-		for (Change change : changes) {
+		final Set<String> set = new LinkedHashSet<String>();
+		for (final Change change : this.changes) {
 			if (change.isParticipantChange()) {
 				set.add(change.author);
 			}
 		}
-		if (responsible != null && responsible.length() > 0) {
-			set.add(responsible);
+		if ((this.responsible != null) && (this.responsible.length() > 0)) {
+			set.add(this.responsible);
 		}
 		return new ArrayList<String>(set);
 	}
@@ -291,11 +291,11 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public boolean isResponsible(String username) {
-		return username.equals(responsible);
+		return username.equals(this.responsible);
 	}
 
 	public boolean isAuthor(String username) {
-		return username.equals(createdBy);
+		return username.equals(this.createdBy);
 	}
 
 	public boolean isReviewer(String username) {
@@ -327,11 +327,11 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	protected List<String> getList(Field field) {
-		Set<String> set = new TreeSet<String>();
-		for (Change change : changes) {
+		final Set<String> set = new TreeSet<String>();
+		for (final Change change : this.changes) {
 			if (change.hasField(field)) {
-				String values = change.getString(field);
-				for (String value : values.split(",")) {
+				final String values = change.getString(field);
+				for (final String value : values.split(",")) {
 					switch (value.charAt(0)) {
 					case '+':
 						set.add(value.substring(1));
@@ -353,9 +353,9 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 	public Attachment getAttachment(String name) {
 		Attachment attachment = null;
-		for (Change change : changes) {
+		for (final Change change : this.changes) {
 			if (change.hasAttachments()) {
-				Attachment a = change.getAttachment(name);
+				final Attachment a = change.getAttachment(name);
 				if (a != null) {
 					attachment = a;
 				}
@@ -365,7 +365,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public boolean hasAttachments() {
-		for (Change change : changes) {
+		for (final Change change : this.changes) {
 			if (change.hasAttachments()) {
 				return true;
 			}
@@ -374,17 +374,17 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public boolean hasReferences() {
-		for (Change change : changes) {
+		for (final Change change : this.changes) {
 			if (change.hasReference()) {
 				return true;
 			}
 		}
 		return false;
 	}
-	
+
 	public List<Attachment> getAttachments() {
-		List<Attachment> list = new ArrayList<Attachment>();
-		for (Change change : changes) {
+		final List<Attachment> list = new ArrayList<Attachment>();
+		for (final Change change : this.changes) {
 			if (change.hasAttachments()) {
 				list.addAll(change.attachments);
 			}
@@ -393,18 +393,18 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public List<Reference> getReferences() {
-		List<Reference> list = new ArrayList<Reference>();
-		for (Change change : changes) {
+		final List<Reference> list = new ArrayList<Reference>();
+		for (final Change change : this.changes) {
 			if (change.hasReference()) {
 				list.add(change.reference);
 			}
 		}
 		return list;
 	}
-	
+
 	public List<Patchset> getPatchsets() {
-		List<Patchset> list = new ArrayList<Patchset>();
-		for (Change change : changes) {
+		final List<Patchset> list = new ArrayList<Patchset>();
+		for (final Change change : this.changes) {
 			if (change.patchset != null) {
 				list.add(change.patchset);
 			}
@@ -413,8 +413,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public List<Patchset> getPatchsetRevisions(int number) {
-		List<Patchset> list = new ArrayList<Patchset>();
-		for (Change change : changes) {
+		final List<Patchset> list = new ArrayList<Patchset>();
+		for (final Change change : this.changes) {
 			if (change.patchset != null) {
 				if (number == change.patchset.number) {
 					list.add(change.patchset);
@@ -425,7 +425,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public Patchset getPatchset(String sha) {
-		for (Change change : changes) {
+		for (final Change change : this.changes) {
 			if (change.patchset != null) {
 				if (sha.equals(change.patchset.tip)) {
 					return change.patchset;
@@ -436,9 +436,9 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public Patchset getPatchset(int number, int rev) {
-		for (Change change : changes) {
+		for (final Change change : this.changes) {
 			if (change.patchset != null) {
-				if (number == change.patchset.number && rev == change.patchset.rev) {
+				if ((number == change.patchset.number) && (rev == change.patchset.rev)) {
 					return change.patchset;
 				}
 			}
@@ -448,7 +448,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 	public Patchset getCurrentPatchset() {
 		Patchset patchset = null;
-		for (Change change : changes) {
+		for (final Change change : this.changes) {
 			if (change.patchset != null) {
 				if (patchset == null) {
 					patchset = change.patchset;
@@ -464,7 +464,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		if (patchset == null) {
 			return false;
 		}
-		Patchset curr = getCurrentPatchset();
+		final Patchset curr = getCurrentPatchset();
 		if (curr == null) {
 			return false;
 		}
@@ -478,8 +478,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		// collect the patchset reviews by author
 		// the last review by the author is the
 		// official review
-		Map<String, Change> reviews = new LinkedHashMap<String, TicketModel.Change>();
-		for (Change change : changes) {
+		final Map<String, Change> reviews = new LinkedHashMap<String, TicketModel.Change>();
+		for (final Change change : this.changes) {
 			if (change.hasReview()) {
 				if (change.review.isReviewOf(patchset)) {
 					reviews.put(change.author, change);
@@ -489,14 +489,13 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		return new ArrayList<Change>(reviews.values());
 	}
 
-
 	public boolean isApproved(Patchset patchset) {
 		if (patchset == null) {
 			return false;
 		}
 		boolean approved = false;
 		boolean vetoed = false;
-		for (Change change : getReviews(patchset)) {
+		for (final Change change : getReviews(patchset)) {
 			if (change.hasReview()) {
 				if (change.review.isReviewOf(patchset)) {
 					if (Score.approved == change.review.score) {
@@ -514,7 +513,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		if (patchset == null) {
 			return false;
 		}
-		for (Change change : getReviews(patchset)) {
+		for (final Change change : getReviews(patchset)) {
 			if (change.hasReview()) {
 				if (change.review.isReviewOf(patchset)) {
 					if (Score.vetoed == change.review.score) {
@@ -527,7 +526,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public Review getReviewBy(String username) {
-		for (Change change : getReviews(getCurrentPatchset())) {
+		for (final Change change : getReviews(getCurrentPatchset())) {
 			if (change.author.equals(username)) {
 				return change.review;
 			}
@@ -536,7 +535,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public boolean isPatchsetAuthor(String username) {
-		for (Change change : changes) {
+		for (final Change change : this.changes) {
 			if (change.hasPatchset()) {
 				if (change.author.equals(username)) {
 					return true;
@@ -547,62 +546,62 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public void applyChange(Change change) {
-		if (changes.size() == 0) {
+		if (this.changes.size() == 0) {
 			// first change created the ticket
-			created = change.date;
-			createdBy = change.author;
-			status = Status.New;
-		} else if (created == null || change.date.after(created)) {
+			this.created = change.date;
+			this.createdBy = change.author;
+			this.status = Status.New;
+		} else if ((this.created == null) || change.date.after(this.created)) {
 			// track last ticket update
-			updated = change.date;
-			updatedBy = change.author;
+			this.updated = change.date;
+			this.updatedBy = change.author;
 		}
 
 		if (change.isMerge()) {
 			// identify merge patchsets
-			if (isEmpty(responsible)) {
-				responsible = change.author;
+			if (isEmpty(this.responsible)) {
+				this.responsible = change.author;
 			}
-			status = Status.Merged;
+			this.status = Status.Merged;
 		}
 
 		if (change.hasFieldChanges()) {
-			for (Map.Entry<Field, String> entry : change.fields.entrySet()) {
-				Field field = entry.getKey();
-				Object value = entry.getValue();
+			for (final Map.Entry<Field, String> entry : change.fields.entrySet()) {
+				final Field field = entry.getKey();
+				final Object value = entry.getValue();
 				switch (field) {
 				case type:
-					type = TicketModel.Type.fromObject(value, type);
+					this.type = TicketModel.Type.fromObject(value, this.type);
 					break;
 				case status:
-					status = TicketModel.Status.fromObject(value, status);
+					this.status = TicketModel.Status.fromObject(value, this.status);
 					break;
 				case title:
-					title = toString(value);
+					this.title = toString(value);
 					break;
 				case body:
-					body = toString(value);
+					this.body = toString(value);
 					break;
 				case topic:
-					topic = toString(value);
+					this.topic = toString(value);
 					break;
 				case responsible:
-					responsible = toString(value);
+					this.responsible = toString(value);
 					break;
 				case milestone:
-					milestone = toString(value);
+					this.milestone = toString(value);
 					break;
 				case mergeTo:
-					mergeTo = toString(value);
+					this.mergeTo = toString(value);
 					break;
 				case mergeSha:
-					mergeSha = toString(value);
+					this.mergeSha = toString(value);
 					break;
 				case priority:
-					priority = TicketModel.Priority.fromObject(value, priority);
+					this.priority = TicketModel.Priority.fromObject(value, this.priority);
 					break;
 				case severity:
-					severity = TicketModel.Severity.fromObject(value, severity);
+					this.severity = TicketModel.Severity.fromObject(value, this.severity);
 					break;
 				default:
 					// unknown
@@ -613,13 +612,13 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 		// add real changes to the ticket and ensure deleted changes are removed
 		if (change.isEmptyChange()) {
-			changes.remove(change);
+			this.changes.remove(change);
 		} else {
-			changes.add(change);
+			this.changes.add(change);
 		}
 	}
 
-	protected String toString(Object value) {
+	protected static String toString(Object value) {
 		if (value == null) {
 			return null;
 		}
@@ -627,14 +626,14 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public String toIndexableString() {
-		StringBuilder sb = new StringBuilder();
-		if (!isEmpty(title)) {
-			sb.append(title).append('\n');
+		final StringBuilder sb = new StringBuilder();
+		if (!isEmpty(this.title)) {
+			sb.append(this.title).append('\n');
 		}
-		if (!isEmpty(body)) {
-			sb.append(body).append('\n');
+		if (!isEmpty(this.body)) {
+			sb.append(this.body).append('\n');
 		}
-		for (Change change : changes) {
+		for (final Change change : this.changes) {
 			if (change.hasComment()) {
 				sb.append(change.comment.text);
 				sb.append('\n');
@@ -645,11 +644,11 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append("#");
-		sb.append(number);
-		sb.append(": " + title + "\n");
-		for (Change change : changes) {
+		sb.append(this.number);
+		sb.append(": " + this.title + "\n");
+		for (final Change change : this.changes) {
 			sb.append(change);
 			sb.append('\n');
 		}
@@ -658,20 +657,20 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 	@Override
 	public int compareTo(TicketModel o) {
-		return o.created.compareTo(created);
+		return o.created.compareTo(this.created);
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof TicketModel) {
-			return number == ((TicketModel) o).number;
+			return this.number == ((TicketModel) o).number;
 		}
 		return super.equals(o);
 	}
 
 	@Override
 	public int hashCode() {
-		return (repository + number).hashCode();
+		return (this.repository + this.number).hashCode();
 	}
 
 	/**
@@ -699,8 +698,9 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 		private transient String id;
 
-		//Once links have been made they become a reference on the target ticket
-		//The ticket service handles promoting links to references
+		// Once links have been made they become a reference on the target
+		// ticket
+		// The ticket service handles promoting links to references
 		public transient List<TicketLink> pendingLinks;
 
 		public Change(String author) {
@@ -717,7 +717,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public Status getStatus() {
-			Status state = Status.fromObject(getField(Field.status), null);
+			final Status state = Status.fromObject(getField(Field.status), null);
 			return state;
 		}
 
@@ -726,98 +726,101 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public boolean hasPatchset() {
-			return patchset != null && !patchset.isDeleted();
+			return (this.patchset != null) && !this.patchset.isDeleted();
 		}
 
 		public boolean hasReview() {
-			return review != null;
+			return this.review != null;
 		}
 
 		public boolean hasComment() {
-			return comment != null && !comment.isDeleted() && comment.text != null;
+			return (this.comment != null) && !this.comment.isDeleted()
+					&& (this.comment.text != null);
 		}
-		
+
 		public boolean hasReference() {
-			return reference != null && !reference.isDeleted();
+			return (this.reference != null) && !this.reference.isDeleted();
 		}
 
 		public boolean hasPendingLinks() {
-			return pendingLinks != null && pendingLinks.size() > 0;
+			return (this.pendingLinks != null) && (this.pendingLinks.size() > 0);
 		}
 
 		public Comment comment(String text) {
-			comment = new Comment(text);
-			comment.id = TicketModel.getSHA1(date.toString() + author + text);
+			this.comment = new Comment(text);
+			this.comment.id = TicketModel.getSHA1(this.date.toString() + this.author + text);
 
 			// parse comment looking for ref #n
-			//TODO: Ideally set via settings
-			String x = "(?:ref|task|issue|bug)?[\\s-]*#(\\d+)";
+			// TODO: Ideally set via settings
+			final String x = "(?:ref|task|issue|bug)?[\\s-]*#(\\d+)";
 
 			try {
-				Pattern p = Pattern.compile(x, Pattern.CASE_INSENSITIVE);
-				Matcher m = p.matcher(text);
+				final Pattern p = Pattern.compile(x, Pattern.CASE_INSENSITIVE);
+				final Matcher m = p.matcher(text);
 				while (m.find()) {
-					String val = m.group(1);
-					long targetTicketId = Long.parseLong(val);
-					
+					final String val = m.group(1);
+					final long targetTicketId = Long.parseLong(val);
+
 					if (targetTicketId > 0) {
-						if (pendingLinks == null) {
-							pendingLinks = new ArrayList<TicketLink>();
+						if (this.pendingLinks == null) {
+							this.pendingLinks = new ArrayList<TicketLink>();
 						}
-						
-						pendingLinks.add(new TicketLink(targetTicketId, TicketAction.Comment));
+
+						this.pendingLinks.add(new TicketLink(targetTicketId, TicketAction.Comment));
 					}
 				}
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 				// ignore
 			}
-			
+
 			try {
-				Pattern mentions = Pattern.compile("\\s@([A-Za-z0-9-_]+)");
-				Matcher m = mentions.matcher(text);
+				final Pattern mentions = Pattern.compile("\\s@([A-Za-z0-9-_]+)");
+				final Matcher m = mentions.matcher(text);
 				while (m.find()) {
-					String username = m.group(1);
+					final String username = m.group(1);
 					plusList(Field.mentions, username);
 				}
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 				// ignore
 			}
-			return comment;
+			return this.comment;
 		}
 
 		public Reference referenceCommit(String commitHash) {
-			reference = new Reference(commitHash);
-			return reference;
+			this.reference = new Reference(commitHash);
+			return this.reference;
 		}
 
 		public Reference referenceTicket(long ticketId, String changeHash) {
-			reference = new Reference(ticketId, changeHash);
-			return reference;
+			this.reference = new Reference(ticketId, changeHash);
+			return this.reference;
 		}
-		
+
 		public Review review(Patchset patchset, Score score, boolean addReviewer) {
 			if (addReviewer) {
-				plusList(Field.reviewers, author);
+				plusList(Field.reviewers, this.author);
 			}
-			review = new Review(patchset.number, patchset.rev);
-			review.score = score;
-			return review;
+			this.review = new Review(patchset.number, patchset.rev);
+			this.review.score = score;
+			return this.review;
 		}
 
 		public boolean hasAttachments() {
-			return !TicketModel.isEmpty(attachments);
+			return !TicketModel.isEmpty(this.attachments);
 		}
 
 		public void addAttachment(Attachment attachment) {
-			if (attachments == null) {
-				attachments = new LinkedHashSet<Attachment>();
+			if (this.attachments == null) {
+				this.attachments = new LinkedHashSet<Attachment>();
 			}
-			attachments.add(attachment);
+			this.attachments.add(attachment);
 		}
 
 		public Attachment getAttachment(String name) {
-			if (attachments != null) {
-				for (Attachment attachment : attachments) {
+			if (this.attachments != null) {
+				for (final Attachment attachment : this.attachments) {
 					if (attachment.name.equalsIgnoreCase(name)) {
 						return attachment;
 					}
@@ -827,19 +830,16 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public boolean isParticipantChange() {
-			if (hasComment()
-					|| hasReview()
-					|| hasPatchset()
-					|| hasAttachments()) {
+			if (hasComment() || hasReview() || hasPatchset() || hasAttachments()) {
 				return true;
 			}
 
-			if (TicketModel.isEmpty(fields)) {
+			if (TicketModel.isEmpty(this.fields)) {
 				return false;
 			}
 
 			// identify real ticket field changes
-			Map<Field, String> map = new HashMap<Field, String>(fields);
+			final Map<Field, String> map = new HashMap<Field, String>(this.fields);
 			map.remove(Field.watchers);
 			map.remove(Field.voters);
 			return !map.isEmpty();
@@ -850,37 +850,37 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public boolean hasFieldChanges() {
-			return !TicketModel.isEmpty(fields);
+			return !TicketModel.isEmpty(this.fields);
 		}
 
 		public String getField(Field field) {
-			if (fields != null) {
-				return fields.get(field);
+			if (this.fields != null) {
+				return this.fields.get(field);
 			}
 			return null;
 		}
 
 		public void setField(Field field, Object value) {
-			if (fields == null) {
-				fields = new LinkedHashMap<Field, String>();
+			if (this.fields == null) {
+				this.fields = new LinkedHashMap<Field, String>();
 			}
 			if (value == null) {
-				fields.put(field, null);
+				this.fields.put(field, null);
 			} else if (Enum.class.isAssignableFrom(value.getClass())) {
-				fields.put(field, ((Enum<?>) value).name());
+				this.fields.put(field, ((Enum<?>) value).name());
 			} else {
-				fields.put(field, value.toString());
+				this.fields.put(field, value.toString());
 			}
 		}
 
 		public void remove(Field field) {
-			if (fields != null) {
-				fields.remove(field);
+			if (this.fields != null) {
+				this.fields.remove(field);
 			}
 		}
 
 		public String getString(Field field) {
-			String value = getField(field);
+			final String value = getField(field);
 			if (value == null) {
 				return null;
 			}
@@ -920,18 +920,18 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		private void modList(Field field, String prefix, String... items) {
-			List<String> list = new ArrayList<String>();
-			for (String item : items) {
+			final List<String> list = new ArrayList<String>();
+			for (final String item : items) {
 				list.add(prefix + item);
 			}
 			if (hasField(field)) {
-				String flat = getString(field);
+				final String flat = getString(field);
 				if (isEmpty(flat)) {
 					// field is empty, use this list
 					setField(field, join(list, ","));
 				} else {
 					// merge this list into the existing field list
-					Set<String> set = new TreeSet<String>(Arrays.asList(flat.split(",")));
+					final Set<String> set = new TreeSet<String>(Arrays.asList(flat.split(",")));
 					set.addAll(list);
 					setField(field, join(set, ","));
 				}
@@ -942,15 +942,15 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public String getId() {
-			if (id == null) {
-				id = getSHA1(Long.toHexString(date.getTime()) + author);
+			if (this.id == null) {
+				this.id = getSHA1(Long.toHexString(this.date.getTime()) + this.author);
 			}
-			return id;
+			return this.id;
 		}
 
 		@Override
 		public int compareTo(Change c) {
-			return date.compareTo(c.date);
+			return this.date.compareTo(c.date);
 		}
 
 		@Override
@@ -965,41 +965,42 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 			}
 			return false;
 		}
-		
+
 		/*
-		 * Identify if this is an empty change. i.e. only an author and date is defined.
-		 * This can occur when items have been deleted
+		 * Identify if this is an empty change. i.e. only an author and date is
+		 * defined. This can occur when items have been deleted
+		 * 
 		 * @returns true if the change is empty
 		 */
 		private boolean isEmptyChange() {
-			return ((comment == null) && (reference == null) && 
-					(fields == null) && (attachments == null) && 
-					(patchset == null) && (review == null));
+			return ((this.comment == null) && (this.reference == null) && (this.fields == null)
+					&& (this.attachments == null) && (this.patchset == null)
+					&& (this.review == null));
 		}
 
 		@Override
 		public String toString() {
-			StringBuilder sb = new StringBuilder();
-			sb.append(RelativeDateFormatter.format(date));
+			final StringBuilder sb = new StringBuilder();
+			sb.append(RelativeDateFormatter.format(this.date));
 			if (hasComment()) {
 				sb.append(" commented on by ");
 			} else if (hasPatchset()) {
-				sb.append(MessageFormat.format(" {0} uploaded by ", patchset));
+				sb.append(MessageFormat.format(" {0} uploaded by ", this.patchset));
 			} else if (hasReference()) {
-				sb.append(MessageFormat.format(" referenced in {0} by ", reference));
+				sb.append(MessageFormat.format(" referenced in {0} by ", this.reference));
 			} else {
 				sb.append(" changed by ");
 			}
-			sb.append(author).append(" - ");
+			sb.append(this.author).append(" - ");
 			if (hasComment()) {
-				if (comment.isDeleted()) {
+				if (this.comment.isDeleted()) {
 					sb.append("(deleted) ");
 				}
-				sb.append(comment.text).append(" ");
+				sb.append(this.comment.text).append(" ");
 			}
 
 			if (hasFieldChanges()) {
-				for (Map.Entry<Field, String> entry : fields.entrySet()) {
+				for (final Map.Entry<Field, String> entry : this.fields.entrySet()) {
 					sb.append("\n  ");
 					sb.append(entry.getKey().name());
 					sb.append(':');
@@ -1017,7 +1018,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 * @return true if string is null or empty
 	 */
 	static boolean isEmpty(String value) {
-		return value == null || value.trim().length() == 0;
+		return (value == null) || (value.trim().length() == 0);
 	}
 
 	/**
@@ -1027,7 +1028,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 * @return
 	 */
 	static boolean isEmpty(Collection<?> collection) {
-		return collection == null || collection.size() == 0;
+		return (collection == null) || (collection.size() == 0);
 	}
 
 	/**
@@ -1037,7 +1038,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 * @return
 	 */
 	static boolean isEmpty(Map<?, ?> map) {
-		return map == null || map.size() == 0;
+		return (map == null) || (map.size() == 0);
 	}
 
 	/**
@@ -1048,9 +1049,10 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 */
 	static String getSHA1(String text) {
 		try {
-			byte[] bytes = text.getBytes("iso-8859-1");
+			final byte[] bytes = text.getBytes("iso-8859-1");
 			return getSHA1(bytes);
-		} catch (UnsupportedEncodingException u) {
+		}
+		catch (final UnsupportedEncodingException u) {
 			throw new RuntimeException(u);
 		}
 	}
@@ -1063,11 +1065,12 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 */
 	static String getSHA1(byte[] bytes) {
 		try {
-			MessageDigest md = MessageDigest.getInstance("SHA-1");
+			final MessageDigest md = MessageDigest.getInstance("SHA-1");
 			md.update(bytes, 0, bytes.length);
-			byte[] digest = md.digest();
+			final byte[] digest = md.digest();
 			return toHex(digest);
-		} catch (NoSuchAlgorithmException t) {
+		}
+		catch (final NoSuchAlgorithmException t) {
 			throw new RuntimeException(t);
 		}
 	}
@@ -1079,7 +1082,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 * @return byte array as hex string
 	 */
 	static String toHex(byte[] bytes) {
-		StringBuilder sb = new StringBuilder(bytes.length * 2);
+		final StringBuilder sb = new StringBuilder(bytes.length * 2);
 		for (int i = 0; i < bytes.length; i++) {
 			if ((bytes[i] & 0xff) < 0x10) {
 				sb.append('0');
@@ -1107,7 +1110,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 * @param separator
 	 * @return joined list
 	 */
-	static String join(String[]  values, String separator) {
+	static String join(String[] values, String separator) {
 		return join(Arrays.asList(values), separator);
 	}
 
@@ -1120,8 +1123,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	 * @return joined list
 	 */
 	static String join(Collection<String> values, String separator) {
-		StringBuilder sb = new StringBuilder();
-		for (String value : values) {
+		final StringBuilder sb = new StringBuilder();
+		for (final String value : values) {
 			sb.append(value).append(separator);
 		}
 		if (sb.length() > 0) {
@@ -1131,7 +1134,6 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		return sb.toString().trim();
 	}
 
-
 	/**
 	 * Produce a deep copy of the given object. Serializes the entire object to
 	 * a byte array in memory. Recommended for relatively small objects.
@@ -1140,17 +1142,19 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	static <T> T copy(T original) {
 		T o = null;
 		try {
-			ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream(byteOut);
+			final ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+			final ObjectOutputStream oos = new ObjectOutputStream(byteOut);
 			oos.writeObject(original);
-			ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
-			ObjectInputStream ois = new ObjectInputStream(byteIn);
+			final ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
+			final ObjectInputStream ois = new ObjectInputStream(byteIn);
 			try {
 				o = (T) ois.readObject();
-			} catch (ClassNotFoundException cex) {
+			}
+			catch (final ClassNotFoundException cex) {
 				// actually can not happen in this instance
 			}
-		} catch (IOException iox) {
+		}
+		catch (final IOException iox) {
 			// doesn't seem likely to happen as these streams are in memory
 			throw new RuntimeException(iox);
 		}
@@ -1175,11 +1179,11 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		public transient boolean canDelete = false;
 
 		public boolean isFF() {
-			return PatchsetType.FastForward == type;
+			return PatchsetType.FastForward == this.type;
 		}
 
 		public boolean isDeleted() {
-			return PatchsetType.Delete == type;
+			return PatchsetType.Delete == this.type;
 		}
 
 		@Override
@@ -1197,15 +1201,15 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 		@Override
 		public int compareTo(Patchset p) {
-			if (number > p.number) {
+			if (this.number > p.number) {
 				return -1;
-			} else if (p.number > number) {
+			} else if (p.number > this.number) {
 				return 1;
 			} else {
 				// same patchset, different revision
-				if (rev > p.rev) {
+				if (this.rev > p.rev) {
 					return -1;
-				} else if (p.rev > rev) {
+				} else if (p.rev > this.rev) {
 					return 1;
 				} else {
 					// same patchset & revision
@@ -1216,7 +1220,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 
 		@Override
 		public String toString() {
-			return "patchset " + number + " revision " + rev;
+			return "patchset " + this.number + " revision " + this.rev;
 		}
 	}
 
@@ -1239,60 +1243,64 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public boolean isDeleted() {
-			return deleted != null && deleted;
+			return (this.deleted != null) && this.deleted;
 		}
 
 		@Override
 		public String toString() {
-			return text;
+			return this.text;
 		}
 	}
-	
-	
+
 	public static enum TicketAction {
-		Commit, Comment, Patchset, Close
+		Commit,
+		Comment,
+		Patchset,
+		Close
 	}
-	
-	//Intentionally not serialized, links are persisted as "references"
+
+	// Intentionally not serialized, links are persisted as "references"
 	public static class TicketLink {
 		public long targetTicketId;
 		public String hash;
 		public TicketAction action;
 		public boolean success;
 		public boolean isDelete;
-		
+
 		public TicketLink(long targetTicketId, TicketAction action) {
 			this.targetTicketId = targetTicketId;
 			this.action = action;
-			success = false;
-			isDelete = false;
+			this.success = false;
+			this.isDelete = false;
 		}
-		
+
 		public TicketLink(long targetTicketId, TicketAction action, String hash) {
 			this.targetTicketId = targetTicketId;
 			this.action = action;
 			this.hash = hash;
-			success = false;
-			isDelete = false;
+			this.success = false;
+			this.isDelete = false;
 		}
 	}
-	
+
 	public static enum ReferenceType {
-		Undefined, Commit, Ticket;
-	
+		Undefined,
+		Commit,
+		Ticket;
+
 		@Override
 		public String toString() {
 			return name().toLowerCase().replace('_', ' ');
 		}
-		
+
 		public static ReferenceType fromObject(Object o, ReferenceType defaultType) {
 			if (o instanceof ReferenceType) {
 				// cast and return
 				return (ReferenceType) o;
 			} else if (o instanceof String) {
 				// find by name
-				for (ReferenceType type : values()) {
-					String str = o.toString();
+				for (final ReferenceType type : values()) {
+					final String str = o.toString();
 					if (type.name().equalsIgnoreCase(str)
 							|| type.toString().equalsIgnoreCase(str)) {
 						return type;
@@ -1300,8 +1308,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				}
 			} else if (o instanceof Number) {
 				// by ordinal
-				int id = ((Number) o).intValue();
-				if (id >= 0 && id < values().length) {
+				final int id = ((Number) o).intValue();
+				if ((id >= 0) && (id < values().length)) {
 					return values()[id];
 				}
 			}
@@ -1309,49 +1317,53 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 			return defaultType;
 		}
 	}
-	
+
 	public static class Reference implements Serializable {
-	
+
 		private static final long serialVersionUID = 1L;
-		
+
 		public String hash;
 		public Long ticketId;
-		
+
 		public Boolean deleted;
-		
+
 		Reference(String commitHash) {
 			this.hash = commitHash;
 		}
-		
+
 		Reference(long ticketId, String changeHash) {
 			this.ticketId = ticketId;
 			this.hash = changeHash;
 		}
-		
-		public ReferenceType getSourceType(){
-			if (hash != null) {
-				if (ticketId != null) {
+
+		public ReferenceType getSourceType() {
+			if (this.hash != null) {
+				if (this.ticketId != null) {
 					return ReferenceType.Ticket;
 				} else {
 					return ReferenceType.Commit;
 				}
 			}
-			
+
 			return ReferenceType.Undefined;
 		}
-		
+
 		public boolean isDeleted() {
-			return deleted != null && deleted;
+			return (this.deleted != null) && this.deleted;
 		}
-		
+
 		@Override
 		public String toString() {
 			switch (getSourceType()) {
-				case Commit: return hash;
-				case Ticket: return ticketId.toString() + "#" + hash;
-				default: {} break;
+			case Commit:
+				return this.hash;
+			case Ticket:
+				return this.ticketId.toString() + "#" + this.hash;
+			default: {
 			}
-			
+				break;
+			}
+
 			return String.format("Unknown Reference Type");
 		}
 	}
@@ -1370,25 +1382,25 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public boolean isDeleted() {
-			return deleted != null && deleted;
+			return (this.deleted != null) && this.deleted;
 		}
 
 		@Override
 		public int hashCode() {
-			return name.hashCode();
+			return this.name.hashCode();
 		}
 
 		@Override
 		public boolean equals(Object o) {
 			if (o instanceof Attachment) {
-				return name.equalsIgnoreCase(((Attachment) o).name);
+				return this.name.equalsIgnoreCase(((Attachment) o).name);
 			}
 			return false;
 		}
 
 		@Override
 		public String toString() {
-			return name;
+			return this.name;
 		}
 	}
 
@@ -1408,18 +1420,21 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public boolean isReviewOf(Patchset p) {
-			return patchset == p.number && rev == p.rev;
+			return (this.patchset == p.number) && (this.rev == p.rev);
 		}
 
 		@Override
 		public String toString() {
-			return "review of patchset " + patchset + " rev " + rev + ":" + score;
+			return "review of patchset " + this.patchset + " rev " + this.rev + ":" + this.score;
 		}
 	}
 
 	public static enum Score {
-		approved(2), looks_good(1), not_reviewed(0), needs_improvement(-1), vetoed(
-				-2);
+		approved(2),
+		looks_good(1),
+		not_reviewed(0),
+		needs_improvement(-1),
+		vetoed(-2);
 
 		final int value;
 
@@ -1428,7 +1443,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public int getValue() {
-			return value;
+			return this.value;
 		}
 
 		@Override
@@ -1437,7 +1452,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public static Score fromScore(int score) {
-			for (Score s : values()) {
+			for (final Score s : values()) {
 				if (s.getValue() == score) {
 					return s;
 				}
@@ -1447,17 +1462,36 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public static enum Field {
-		title, body, responsible, type, status, milestone, mergeSha, mergeTo,
-		topic, labels, watchers, reviewers, voters, mentions, priority, severity;
+		title,
+		body,
+		responsible,
+		type,
+		status,
+		milestone,
+		mergeSha,
+		mergeTo,
+		topic,
+		labels,
+		watchers,
+		reviewers,
+		voters,
+		mentions,
+		priority,
+		severity;
 	}
 
 	public static enum Type {
-		Enhancement, Task, Bug, Proposal, Question, Maintenance;
+		Enhancement,
+		Task,
+		Bug,
+		Proposal,
+		Question,
+		Maintenance;
 
 		public static Type defaultType = Task;
 
-		public static Type [] choices() {
-			return new Type [] { Enhancement, Task, Bug, Question, Maintenance };
+		public static Type[] choices() {
+			return new Type[] { Enhancement, Task, Bug, Question, Maintenance };
 		}
 
 		@Override
@@ -1471,8 +1505,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				return (Type) o;
 			} else if (o instanceof String) {
 				// find by name
-				for (Type type : values()) {
-					String str = o.toString();
+				for (final Type type : values()) {
+					final String str = o.toString();
 					if (type.name().equalsIgnoreCase(str)
 							|| type.toString().equalsIgnoreCase(str)) {
 						return type;
@@ -1480,8 +1514,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				}
 			} else if (o instanceof Number) {
 				// by ordinal
-				int id = ((Number) o).intValue();
-				if (id >= 0 && id < values().length) {
+				final int id = ((Number) o).intValue();
+				if ((id >= 0) && (id < values().length)) {
 					return values()[id];
 				}
 			}
@@ -1491,15 +1525,30 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public static enum Status {
-		New, Open, Closed, Resolved, Fixed, Merged, Wontfix, Declined, Duplicate, Invalid, Abandoned, On_Hold, No_Change_Required;
+		New,
+		Open,
+		Closed,
+		Resolved,
+		Fixed,
+		Merged,
+		Wontfix,
+		Declined,
+		Duplicate,
+		Invalid,
+		Abandoned,
+		On_Hold,
+		No_Change_Required;
 
-		public static Status [] requestWorkflow = { Open, Resolved, Declined, Duplicate, Invalid, Abandoned, On_Hold, No_Change_Required };
+		public static Status[] requestWorkflow = { Open, Resolved, Declined, Duplicate, Invalid,
+				Abandoned, On_Hold, No_Change_Required };
 
-		public static Status [] bugWorkflow = { Open, Fixed, Wontfix, Duplicate, Invalid, Abandoned, On_Hold, No_Change_Required };
+		public static Status[] bugWorkflow = { Open, Fixed, Wontfix, Duplicate, Invalid, Abandoned,
+				On_Hold, No_Change_Required };
 
-		public static Status [] proposalWorkflow = { Open, Resolved, Declined, Abandoned, On_Hold, No_Change_Required };
+		public static Status[] proposalWorkflow = { Open, Resolved, Declined, Abandoned, On_Hold,
+				No_Change_Required };
 
-		public static Status [] milestoneWorkflow = { Open, Closed, Abandoned, On_Hold };
+		public static Status[] milestoneWorkflow = { Open, Closed, Abandoned, On_Hold };
 
 		@Override
 		public String toString() {
@@ -1512,8 +1561,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				return (Status) o;
 			} else if (o instanceof String) {
 				// find by name
-				String name = o.toString();
-				for (Status state : values()) {
+				final String name = o.toString();
+				for (final Status state : values()) {
 					if (state.name().equalsIgnoreCase(name)
 							|| state.toString().equalsIgnoreCase(name)) {
 						return state;
@@ -1521,8 +1570,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				}
 			} else if (o instanceof Number) {
 				// by ordinal
-				int id = ((Number) o).intValue();
-				if (id >= 0 && id < values().length) {
+				final int id = ((Number) o).intValue();
+				if ((id >= 0) && (id < values().length)) {
 					return values()[id];
 				}
 			}
@@ -1536,11 +1585,18 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public static enum CommentSource {
-		Comment, Email
+		Comment,
+		Email
 	}
 
 	public static enum PatchsetType {
-		Proposal, FastForward, Rebase, Squash, Rebase_Squash, Amend, Delete;
+		Proposal,
+		FastForward,
+		Rebase,
+		Squash,
+		Rebase_Squash,
+		Amend,
+		Delete;
 
 		public boolean isRewrite() {
 			return (this != FastForward) && (this != Proposal);
@@ -1557,8 +1613,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				return (PatchsetType) o;
 			} else if (o instanceof String) {
 				// find by name
-				String name = o.toString();
-				for (PatchsetType type : values()) {
+				final String name = o.toString();
+				for (final PatchsetType type : values()) {
 					if (type.name().equalsIgnoreCase(name)
 							|| type.toString().equalsIgnoreCase(name)) {
 						return type;
@@ -1566,8 +1622,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				}
 			} else if (o instanceof Number) {
 				// by ordinal
-				int id = ((Number) o).intValue();
-				if (id >= 0 && id < values().length) {
+				final int id = ((Number) o).intValue();
+				if ((id >= 0) && (id < values().length)) {
 					return values()[id];
 				}
 			}
@@ -1577,7 +1633,10 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 	}
 
 	public static enum Priority {
-		Low(-1), Normal(0), High(1), Urgent(2);
+		Low(-1),
+		Normal(0),
+		High(1),
+		Urgent(2);
 
 		public static Priority defaultPriority = Normal;
 
@@ -1588,11 +1647,11 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		}
 
 		public int getValue() {
-			return value;
+			return this.value;
 		}
-		
-		public static Priority [] choices() {
-			return new Priority [] { Urgent, High, Normal, Low };
+
+		public static Priority[] choices() {
+			return new Priority[] { Urgent, High, Normal, Low };
 		}
 
 		@Override
@@ -1606,8 +1665,8 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				return (Priority) o;
 			} else if (o instanceof String) {
 				// find by name
-				for (Priority priority : values()) {
-					String str = o.toString();
+				for (final Priority priority : values()) {
+					final String str = o.toString();
 					if (priority.name().equalsIgnoreCase(str)
 							|| priority.toString().equalsIgnoreCase(str)) {
 						return priority;
@@ -1616,65 +1675,82 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 			} else if (o instanceof Number) {
 
 				switch (((Number) o).intValue()) {
-					case -1: return Priority.Low;
-					case 0:  return Priority.Normal;
-					case 1:  return Priority.High;
-					case 2:  return Priority.Urgent;
-					default: return Priority.Normal;
+				case -1:
+					return Priority.Low;
+				case 0:
+					return Priority.Normal;
+				case 1:
+					return Priority.High;
+				case 2:
+					return Priority.Urgent;
+				default:
+					return Priority.Normal;
 				}
 			}
 
 			return defaultPriority;
 		}
 	}
-	
+
 	public static enum Severity {
-		Unrated(-1), Negligible(1), Minor(2), Serious(3), Critical(4), Catastrophic(5);
+		Unrated(-1),
+		Negligible(1),
+		Minor(2),
+		Serious(3),
+		Critical(4),
+		Catastrophic(5);
 
 		public static Severity defaultSeverity = Unrated;
-		
+
 		final int value;
-		
+
 		Severity(int value) {
 			this.value = value;
 		}
 
 		public int getValue() {
-			return value;
+			return this.value;
 		}
-		
-		public static Severity [] choices() {
-			return new Severity [] { Unrated, Negligible, Minor, Serious, Critical, Catastrophic };
+
+		public static Severity[] choices() {
+			return new Severity[] { Unrated, Negligible, Minor, Serious, Critical, Catastrophic };
 		}
 
 		@Override
 		public String toString() {
 			return name().toLowerCase().replace('_', ' ');
 		}
-		
+
 		public static Severity fromObject(Object o, Severity defaultSeverity) {
 			if (o instanceof Severity) {
 				// cast and return
 				return (Severity) o;
 			} else if (o instanceof String) {
 				// find by name
-				for (Severity severity : values()) {
-					String str = o.toString();
+				for (final Severity severity : values()) {
+					final String str = o.toString();
 					if (severity.name().equalsIgnoreCase(str)
 							|| severity.toString().equalsIgnoreCase(str)) {
 						return severity;
 					}
 				}
 			} else if (o instanceof Number) {
-				
+
 				switch (((Number) o).intValue()) {
-					case -1: return Severity.Unrated;
-					case 1:  return Severity.Negligible;
-					case 2:  return Severity.Minor;
-					case 3:  return Severity.Serious;
-					case 4:  return Severity.Critical;
-					case 5:  return Severity.Catastrophic;
-					default: return Severity.Unrated;
+				case -1:
+					return Severity.Unrated;
+				case 1:
+					return Severity.Negligible;
+				case 2:
+					return Severity.Minor;
+				case 3:
+					return Severity.Serious;
+				case 4:
+					return Severity.Critical;
+				case 5:
+					return Severity.Catastrophic;
+				default:
+					return Severity.Unrated;
 				}
 			}
 

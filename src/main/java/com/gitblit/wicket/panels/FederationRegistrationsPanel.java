@@ -42,8 +42,8 @@ public class FederationRegistrationsPanel extends BasePanel {
 				.getFederationRegistrations());
 		list.addAll(app().federation().getFederationResultRegistrations());
 		Collections.sort(list);
-		hasRegistrations = list.size() > 0;
-		DataView<FederationModel> dataView = new DataView<FederationModel>("row",
+		this.hasRegistrations = list.size() > 0;
+		final DataView<FederationModel> dataView = new DataView<FederationModel>("row",
 				new ListDataProvider<FederationModel>(list)) {
 			private static final long serialVersionUID = 1L;
 			private int counter;
@@ -51,7 +51,7 @@ public class FederationRegistrationsPanel extends BasePanel {
 			@Override
 			protected void onBeforeRender() {
 				super.onBeforeRender();
-				counter = 0;
+				this.counter = 0;
 			}
 
 			@Override
@@ -66,18 +66,19 @@ public class FederationRegistrationsPanel extends BasePanel {
 
 				item.add(WicketUtils.getRegistrationImage("typeIcon", entry, this));
 
-				item.add(WicketUtils.createDateLabel("lastPull", entry.lastPull, getTimeZone(), getTimeUtils()));
-				item.add(WicketUtils
-						.createTimestampLabel("nextPull", entry.nextPull, getTimeZone(), getTimeUtils()));
+				item.add(WicketUtils.createDateLabel("lastPull", entry.lastPull, getTimeZone(),
+						getTimeUtils()));
+				item.add(WicketUtils.createTimestampLabel("nextPull", entry.nextPull,
+						getTimeZone(), getTimeUtils()));
 				item.add(new Label("frequency", entry.frequency));
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(dataView);
 	}
 
 	public Component hideIfEmpty() {
-		return super.setVisible(hasRegistrations);
+		return super.setVisible(this.hasRegistrations);
 	}
 }

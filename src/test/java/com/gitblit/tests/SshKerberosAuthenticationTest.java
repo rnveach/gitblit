@@ -19,6 +19,7 @@ import org.apache.sshd.server.auth.gss.GSSAuthenticator;
 import org.apache.sshd.server.session.ServerSession;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -39,38 +40,38 @@ public class SshKerberosAuthenticationTest extends GitblitUnitTest {
 
 	@Test
 	public void testUserManager() {
-		IRuntimeManager rm = Mockito.mock(IRuntimeManager.class);
+		final IRuntimeManager rm = Mockito.mock(IRuntimeManager.class);
 
-		//Build an UserManager that can build a UserModel
-		IUserManager im = Mockito.mock(IUserManager.class);
+		// Build an UserManager that can build a UserModel
+		final IUserManager im = Mockito.mock(IUserManager.class);
 		Mockito.doAnswer(new Answer<Object>() {
 			@Override
 			public Object answer(InvocationOnMock invocation) {
-				Object[] args = invocation.getArguments();
-				String user = (String) args[0];
+				final Object[] args = invocation.getArguments();
+				final String user = (String) args[0];
 				return new UserModel(user);
 			}
-		}).when(im).getUserModel(Mockito.anyString());
+		}).when(im).getUserModel(Matchers.anyString());
 
-		AuthenticationManager am = new AuthenticationManager(rm, im);
+		final AuthenticationManager am = new AuthenticationManager(rm, im);
 
-		GSSAuthenticator gssAuthenticator = new SshKrbAuthenticator(new MemorySettings(), am);
+		final GSSAuthenticator gssAuthenticator = new SshKrbAuthenticator(new MemorySettings(), am);
 
-		ServerSession session = Mockito.mock(ServerSession.class);
+		final ServerSession session = Mockito.mock(ServerSession.class);
 
-		//Build an SshDaemonClient that can set and get the UserModel
+		// Build an SshDaemonClient that can set and get the UserModel
 		final UserModelWrapper umw = new UserModelWrapper();
-		SshDaemonClient client = Mockito.mock(SshDaemonClient.class);
+		final SshDaemonClient client = Mockito.mock(SshDaemonClient.class);
 		Mockito.when(client.getUser()).thenReturn(umw.um);
 		Mockito.doAnswer(new Answer<Object>() {
 			@Override
 			public Object answer(InvocationOnMock invocation) {
-				Object[] args = invocation.getArguments();
-				UserModel um = (UserModel) args[0];
+				final Object[] args = invocation.getArguments();
+				final UserModel um = (UserModel) args[0];
 				umw.um = um;
 				return null;
 			}
-		}).when(client).setUser(Mockito.any(UserModel.class));
+		}).when(client).setUser(Matchers.any(UserModel.class));
 
 		Mockito.when(session.getAttribute(SshDaemonClient.KEY)).thenReturn(client);
 		Assert.assertTrue(gssAuthenticator.validateIdentity(session, "jhappy"));

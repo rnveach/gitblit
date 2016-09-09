@@ -38,7 +38,8 @@ public class PropertiesTableModel extends AbstractTableModel {
 	Map<String, String> map;
 
 	enum Columns {
-		Name, Value;
+		Name,
+		Value;
 
 		@Override
 		public String toString() {
@@ -56,13 +57,13 @@ public class PropertiesTableModel extends AbstractTableModel {
 
 	public void setProperties(Map<String, String> map) {
 		this.map = map;
-		keys = new ArrayList<String>(map.keySet());
+		this.keys = new ArrayList<String>(map.keySet());
 		Collections.sort(this.keys);
 	}
 
 	@Override
 	public int getRowCount() {
-		return keys.size();
+		return this.keys.size();
 	}
 
 	@Override
@@ -72,10 +73,12 @@ public class PropertiesTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Name:
 			return Translation.get("gb.name");
+		case Value:
+			break;
 		}
 		return "";
 	}
@@ -94,13 +97,13 @@ public class PropertiesTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		String key = keys.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final String key = this.keys.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Name:
 			return key;
 		case Value:
-			return map.get(key);
+			return this.map.get(key);
 		}
 		return null;
 	}

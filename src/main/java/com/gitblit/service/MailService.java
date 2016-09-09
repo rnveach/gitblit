@@ -72,10 +72,11 @@ public class MailService implements Runnable {
 		final String mailPassword = settings.getString(Keys.mail.password, null);
 		final boolean smtps = settings.getBoolean(Keys.mail.smtps, false);
 		final boolean starttls = settings.getBoolean(Keys.mail.starttls, false);
-		boolean authenticate = !StringUtils.isEmpty(mailUser) && !StringUtils.isEmpty(mailPassword);
-		String server = settings.getString(Keys.mail.server, "");
+		final boolean authenticate = !StringUtils.isEmpty(mailUser)
+				&& !StringUtils.isEmpty(mailPassword);
+		final String server = settings.getString(Keys.mail.server, "");
 		if (StringUtils.isEmpty(server)) {
-			session = null;
+			this.session = null;
 			return;
 		}
 		int port = settings.getInteger(Keys.mail.port, 25);
@@ -85,7 +86,7 @@ public class MailService implements Runnable {
 			isGMail = true;
 		}
 
-		Properties props = new Properties();
+		final Properties props = new Properties();
 		props.setProperty("mail.smtp.host", server);
 		props.setProperty("mail.smtp.port", String.valueOf(port));
 		props.setProperty("mail.smtp.auth", String.valueOf(authenticate));
@@ -101,17 +102,17 @@ public class MailService implements Runnable {
 
 		if (!StringUtils.isEmpty(mailUser) && !StringUtils.isEmpty(mailPassword)) {
 			// SMTP requires authentication
-			session = Session.getInstance(props, new Authenticator() {
+			this.session = Session.getInstance(props, new Authenticator() {
 				@Override
 				protected PasswordAuthentication getPasswordAuthentication() {
-					PasswordAuthentication passwordAuthentication = new PasswordAuthentication(
+					final PasswordAuthentication passwordAuthentication = new PasswordAuthentication(
 							mailUser, mailPassword);
 					return passwordAuthentication;
 				}
 			});
 		} else {
 			// SMTP does not require authentication
-			session = Session.getInstance(props);
+			this.session = Session.getInstance(props);
 		}
 	}
 
@@ -121,7 +122,7 @@ public class MailService implements Runnable {
 	 * @return true if the mail executor is ready to send emails
 	 */
 	public boolean isReady() {
-		return session != null;
+		return this.session != null;
 	}
 
 	/**
@@ -139,47 +140,50 @@ public class MailService implements Runnable {
 			mailing.content = "";
 		}
 
-		Message message = new MailMessageImpl(session, mailing.id);
+		final Message message = new MailMessageImpl(this.session, mailing.id);
 		try {
-			String fromAddress = settings.getString(Keys.mail.fromAddress, null);
+			String fromAddress = this.settings.getString(Keys.mail.fromAddress, null);
 			if (StringUtils.isEmpty(fromAddress)) {
 				fromAddress = "gitblit@gitblit.com";
 			}
-			InternetAddress from = new InternetAddress(fromAddress, mailing.from == null ? "Gitblit" : mailing.from);
+			final InternetAddress from = new InternetAddress(fromAddress,
+					mailing.from == null ? "Gitblit" : mailing.from);
 			message.setFrom(from);
 
-			Pattern validEmail = Pattern
-					.compile("^([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)$");
+			final Pattern validEmail = Pattern.compile(
+					"^([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)$");
 
 			// validate & add TO recipients
-			List<InternetAddress> to = new ArrayList<InternetAddress>();
-			for (String address : mailing.toAddresses) {
+			final List<InternetAddress> to = new ArrayList<InternetAddress>();
+			for (final String address : mailing.toAddresses) {
 				if (StringUtils.isEmpty(address)) {
 					continue;
 				}
 				if (validEmail.matcher(address).find()) {
 					try {
 						to.add(new InternetAddress(address));
-					} catch (Throwable t) {
+					}
+					catch (final Throwable t) {
 					}
 				}
 			}
 
 			// validate & add CC recipients
-			List<InternetAddress> cc = new ArrayList<InternetAddress>();
-			for (String address : mailing.ccAddresses) {
+			final List<InternetAddress> cc = new ArrayList<InternetAddress>();
+			for (final String address : mailing.ccAddresses) {
 				if (StringUtils.isEmpty(address)) {
 					continue;
 				}
 				if (validEmail.matcher(address).find()) {
 					try {
 						cc.add(new InternetAddress(address));
-					} catch (Throwable t) {
+					}
+					catch (final Throwable t) {
 					}
 				}
 			}
 
-			if (settings.getBoolean(Keys.web.showEmailAddresses, true)) {
+			if (this.settings.getBoolean(Keys.web.showEmailAddresses, true)) {
 				// full disclosure of recipients
 				if (to.size() > 0) {
 					message.setRecipients(Message.RecipientType.TO,
@@ -191,7 +195,7 @@ public class MailService implements Runnable {
 				}
 			} else {
 				// everyone is bcc'd
-				List<InternetAddress> bcc = new ArrayList<InternetAddress>();
+				final List<InternetAddress> bcc = new ArrayList<InternetAddress>();
 				bcc.addAll(to);
 				bcc.addAll(cc);
 				message.setRecipients(Message.RecipientType.BCC,
@@ -202,9 +206,10 @@ public class MailService implements Runnable {
 			// UTF-8 encode
 			message.setSubject(MimeUtility.encodeText(mailing.subject, "utf-8", "B"));
 
-			MimeBodyPart messagePart = new MimeBodyPart();
+			final MimeBodyPart messagePart = new MimeBodyPart();
 			messagePart.setText(mailing.content, "utf-8");
-			//messagePart.setHeader("Content-Transfer-Encoding", "quoted-printable");
+			// messagePart.setHeader("Content-Transfer-Encoding",
+			// "quoted-printable");
 
 			if (Mailing.Type.html == mailing.type) {
 				messagePart.setHeader("Content-Type", "text/html; charset=\"utf-8\"");
@@ -212,15 +217,15 @@ public class MailService implements Runnable {
 				messagePart.setHeader("Content-Type", "text/plain; charset=\"utf-8\"");
 			}
 
-			MimeMultipart multiPart = new MimeMultipart();
+			final MimeMultipart multiPart = new MimeMultipart();
 			multiPart.addBodyPart(messagePart);
 
 			// handle attachments
 			if (mailing.hasAttachments()) {
-				for (File file : mailing.attachments) {
+				for (final File file : mailing.attachments) {
 					if (file.exists()) {
-						MimeBodyPart filePart = new MimeBodyPart();
-						FileDataSource fds = new FileDataSource(file);
+						final MimeBodyPart filePart = new MimeBodyPart();
+						final FileDataSource fds = new FileDataSource(file);
 						filePart.setDataHandler(new DataHandler(fds));
 						filePart.setFileName(fds.getName());
 						multiPart.addBodyPart(filePart);
@@ -230,8 +235,9 @@ public class MailService implements Runnable {
 
 			message.setContent(multiPart);
 
-		} catch (Exception e) {
-			logger.error("Failed to properly create message", e);
+		}
+		catch (final Exception e) {
+			this.logger.error("Failed to properly create message", e);
 		}
 		return message;
 	}
@@ -242,7 +248,7 @@ public class MailService implements Runnable {
 	 * @return true, if the queue is empty
 	 */
 	public boolean hasEmptyQueue() {
-		return queue.isEmpty();
+		return this.queue.isEmpty();
 	}
 
 	/**
@@ -257,47 +263,57 @@ public class MailService implements Runnable {
 		}
 		try {
 			message.saveChanges();
-		} catch (Throwable t) {
-			logger.error("Failed to save changes to message!", t);
 		}
-		queue.add(message);
+		catch (final Throwable t) {
+			this.logger.error("Failed to save changes to message!", t);
+		}
+		this.queue.add(message);
 		return true;
 	}
 
 	@Override
 	public void run() {
-		if (!queue.isEmpty()) {
-			if (session != null) {
+		if (!this.queue.isEmpty()) {
+			if (this.session != null) {
 				// send message via mail server
-				List<Message> failures = new ArrayList<Message>();
+				final List<Message> failures = new ArrayList<Message>();
 				Message message = null;
-				while ((message = queue.poll()) != null) {
+				while ((message = this.queue.poll()) != null) {
 					try {
-						if (settings.getBoolean(Keys.mail.debug, false)) {
-							logger.info("send: '" + StringUtils.trimString(message.getSubject(), 60)
-									    + "' to:" + StringUtils.trimString(Arrays.toString(message.getAllRecipients()), 300));
+						if (this.settings.getBoolean(Keys.mail.debug, false)) {
+							this.logger.info(
+									"send: '" + StringUtils.trimString(message.getSubject(), 60)
+											+ "' to:"
+											+ StringUtils.trimString(
+													Arrays.toString(message.getAllRecipients()),
+													300));
 						}
 						Transport.send(message);
-					} catch (SendFailedException sfe) {
-						if (settings.getBoolean(Keys.mail.debug, false)) {
-							logger.error("Failed to send message: {}", sfe.getMessage());
-							logger.info("   Invalid addresses: {}", Arrays.toString(sfe.getInvalidAddresses()));
-							logger.info("   Valid sent addresses: {}", Arrays.toString(sfe.getValidSentAddresses()));
-							logger.info("   Valid unset addresses: {}", Arrays.toString(sfe.getValidUnsentAddresses()));
-							logger.info("", sfe);
-						}
-						else {
-							logger.error("Failed to send message: {}", sfe.getMessage(), sfe.getNextException());
+					}
+					catch (final SendFailedException sfe) {
+						if (this.settings.getBoolean(Keys.mail.debug, false)) {
+							this.logger.error("Failed to send message: {}", sfe.getMessage());
+							this.logger.info("   Invalid addresses: {}",
+									Arrays.toString(sfe.getInvalidAddresses()));
+							this.logger.info("   Valid sent addresses: {}",
+									Arrays.toString(sfe.getValidSentAddresses()));
+							this.logger.info("   Valid unset addresses: {}",
+									Arrays.toString(sfe.getValidUnsentAddresses()));
+							this.logger.info("", sfe);
+						} else {
+							this.logger.error("Failed to send message: {}", sfe.getMessage(),
+									sfe.getNextException());
 						}
 						failures.add(message);
-					} catch (Throwable e) {
-						logger.error("Failed to send message", e);
+					}
+					catch (final Throwable e) {
+						this.logger.error("Failed to send message", e);
 						failures.add(message);
 					}
 				}
 
 				// push the failures back onto the queue for the next cycle
-				queue.addAll(failures);
+				this.queue.addAll(failures);
 			}
 		}
 	}
@@ -317,10 +333,10 @@ public class MailService implements Runnable {
 
 		@Override
 		protected void updateMessageID() throws MessagingException {
-			if (!StringUtils.isEmpty(id)) {
-				String hostname = "gitblit.com";
-				String refid = "<" + id + "@" + hostname + ">";
-				String mid = "<" + UUID.randomUUID().toString() + "@" + hostname + ">";
+			if (!StringUtils.isEmpty(this.id)) {
+				final String hostname = "gitblit.com";
+				final String refid = "<" + this.id + "@" + hostname + ">";
+				final String mid = "<" + UUID.randomUUID().toString() + "@" + hostname + ">";
 				setHeader("References", refid);
 				setHeader("In-Reply-To", refid);
 				setHeader("Message-Id", mid);

@@ -49,23 +49,23 @@ public class Launcher {
 	public static void main(String[] args) {
 		if (DEBUG) {
 			System.out.println("jcp=" + System.getProperty("java.class.path"));
-			ProtectionDomain protectionDomain = Launcher.class.getProtectionDomain();
+			final ProtectionDomain protectionDomain = Launcher.class.getProtectionDomain();
 			System.out.println("launcher="
 					+ protectionDomain.getCodeSource().getLocation().toExternalForm());
 		}
 
 		// Load the JARs in the lib and ext folder
-		String[] folders = new String[] { "lib", "ext" };
-		List<File> jars = new ArrayList<File>();
-		for (String folder : folders) {
+		final String[] folders = new String[] { "lib", "ext" };
+		final List<File> jars = new ArrayList<File>();
+		for (final String folder : folders) {
 			if (folder == null) {
 				continue;
 			}
-			File libFolder = new File(folder);
+			final File libFolder = new File(folder);
 			if (!libFolder.exists()) {
 				continue;
 			}
-			List<File> found = findJars(libFolder.getAbsoluteFile());
+			final List<File> found = findJars(libFolder.getAbsoluteFile());
 			jars.addAll(found);
 		}
 		// sort the jars by name and then reverse the order so the newer version
@@ -74,19 +74,20 @@ public class Launcher {
 		Collections.reverse(jars);
 
 		if (jars.size() == 0) {
-			for (String folder : folders) {
-				File libFolder = new File(folder);
+			for (final String folder : folders) {
+				final File libFolder = new File(folder);
 				// this is a test of adding a comment
 				// more really interesting things
 				System.err.println("Failed to find any JARs in " + libFolder.getPath());
 			}
 			System.exit(-1);
 		} else {
-			for (File jar : jars) {
+			for (final File jar : jars) {
 				try {
 					jar.canRead();
 					addJarFile(jar);
-				} catch (Throwable t) {
+				}
+				catch (final Throwable t) {
 					t.printStackTrace();
 				}
 			}
@@ -97,18 +98,18 @@ public class Launcher {
 	}
 
 	public static List<File> findJars(File folder) {
-		List<File> jars = new ArrayList<File>();
+		final List<File> jars = new ArrayList<File>();
 		if (folder.exists()) {
-			File[] libs = folder.listFiles(new FileFilter() {
+			final File[] libs = folder.listFiles(new FileFilter() {
 				@Override
 				public boolean accept(File file) {
 					return !file.isDirectory() && file.getName().toLowerCase().endsWith(".jar");
 				}
 			});
-			if (libs != null && libs.length > 0) {
+			if ((libs != null) && (libs.length > 0)) {
 				jars.addAll(Arrays.asList(libs));
 				if (DEBUG) {
-					for (File jar : jars) {
+					for (final File jar : jars) {
 						System.out.println("found " + jar);
 					}
 				}
@@ -126,21 +127,22 @@ public class Launcher {
 	 * @throws IOException
 	 */
 	public static void addJarFile(File f) throws IOException {
-		if (f.getName().indexOf("-sources") > -1 || f.getName().indexOf("-javadoc") > -1) {
+		if ((f.getName().indexOf("-sources") > -1) || (f.getName().indexOf("-javadoc") > -1)) {
 			// don't add source or javadoc jars to runtime classpath
 			return;
 		}
-		URL u = f.toURI().toURL();
+		final URL u = f.toURI().toURL();
 		if (DEBUG) {
 			System.out.println("load=" + u.toExternalForm());
 		}
-		URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-		Class<?> sysclass = URLClassLoader.class;
+		final URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+		final Class<?> sysclass = URLClassLoader.class;
 		try {
-			Method method = sysclass.getDeclaredMethod("addURL", PARAMETERS);
+			final Method method = sysclass.getDeclaredMethod("addURL", PARAMETERS);
 			method.setAccessible(true);
 			method.invoke(sysloader, new Object[] { u });
-		} catch (Throwable t) {
+		}
+		catch (final Throwable t) {
 			throw new IOException(MessageFormat.format(
 					"Error, could not add {0} to system classloader", f.getPath()), t);
 		}

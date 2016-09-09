@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import javax.servlet.http.HttpServletResponse;
 
 import com.gitblit.Constants.FederationRequest;
@@ -44,6 +42,8 @@ import com.gitblit.utils.FileUtils;
 import com.gitblit.utils.HttpUtils;
 import com.gitblit.utils.StringUtils;
 import com.gitblit.utils.TimeUtils;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 /**
  * Handles federation requests.
@@ -56,20 +56,17 @@ public class FederationServlet extends JsonServlet {
 
 	private static final long serialVersionUID = 1L;
 
-	private IStoredSettings settings;
+	private final IStoredSettings settings;
 
-	private IUserManager userManager;
+	private final IUserManager userManager;
 
-	private IRepositoryManager repositoryManager;
+	private final IRepositoryManager repositoryManager;
 
-	private IFederationManager federationManager;
+	private final IFederationManager federationManager;
 
 	@Inject
-	public FederationServlet(
-			IStoredSettings settings,
-			IUserManager userManager,
-			IRepositoryManager repositoryManager,
-			IFederationManager federationManager) {
+	public FederationServlet(IStoredSettings settings, IUserManager userManager,
+			IRepositoryManager repositoryManager, IFederationManager federationManager) {
 
 		this.settings = settings;
 		this.userManager = userManager;
@@ -91,25 +88,26 @@ public class FederationServlet extends JsonServlet {
 			javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException,
 			java.io.IOException {
 
-		FederationRequest reqType = FederationRequest.fromName(request.getParameter("req"));
-		logger.info(MessageFormat.format("Federation {0} request from {1}", reqType,
+		final FederationRequest reqType = FederationRequest.fromName(request.getParameter("req"));
+		this.logger.info(MessageFormat.format("Federation {0} request from {1}", reqType,
 				request.getRemoteAddr()));
 
 		if (FederationRequest.POKE.equals(reqType)) {
 			// Gitblit always responds to POKE requests to verify a connection
-			logger.info("Received federation POKE from " + request.getRemoteAddr());
+			this.logger.info("Received federation POKE from " + request.getRemoteAddr());
 			return;
 		}
 
-		if (!settings.getBoolean(Keys.git.enableGitServlet, true)) {
-			logger.warn(Keys.git.enableGitServlet + " must be set TRUE for federation requests.");
+		if (!this.settings.getBoolean(Keys.git.enableGitServlet, true)) {
+			this.logger.warn(Keys.git.enableGitServlet
+					+ " must be set TRUE for federation requests.");
 			response.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
 		}
 
-		String uuid = settings.getString(Keys.federation.passphrase, "");
+		final String uuid = this.settings.getString(Keys.federation.passphrase, "");
 		if (StringUtils.isEmpty(uuid)) {
-			logger.warn(Keys.federation.passphrase
+			this.logger.warn(Keys.federation.passphrase
 					+ " is not properly set!  Federation request denied.");
 			response.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
@@ -117,14 +115,15 @@ public class FederationServlet extends JsonServlet {
 
 		if (FederationRequest.PROPOSAL.equals(reqType)) {
 			// Receive a gitblit federation proposal
-			FederationProposal proposal = deserialize(request, response, FederationProposal.class);
+			final FederationProposal proposal = deserialize(request, response,
+					FederationProposal.class);
 			if (proposal == null) {
 				return;
 			}
 
 			// reject proposal, if not receipt prohibited
-			if (!settings.getBoolean(Keys.federation.allowProposals, false)) {
-				logger.error(MessageFormat.format("Rejected {0} federation proposal from {1}",
+			if (!this.settings.getBoolean(Keys.federation.allowProposals, false)) {
+				this.logger.error(MessageFormat.format("Rejected {0} federation proposal from {1}",
 						proposal.tokenType.name(), proposal.url));
 				response.setStatus(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
 				return;
@@ -134,22 +133,23 @@ public class FederationServlet extends JsonServlet {
 			boolean poked = false;
 			try {
 				poked = FederationUtils.poke(proposal.url);
-			} catch (Exception e) {
-				logger.error("Failed to poke origin", e);
+			}
+			catch (final Exception e) {
+				this.logger.error("Failed to poke origin", e);
 			}
 			if (!poked) {
-				logger.error(MessageFormat.format("Failed to send federation poke to {0}",
+				this.logger.error(MessageFormat.format("Failed to send federation poke to {0}",
 						proposal.url));
 				response.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
 				return;
 			}
 
-			String gitblitUrl = settings.getString(Keys.web.canonicalUrl, null);
+			String gitblitUrl = this.settings.getString(Keys.web.canonicalUrl, null);
 			if (StringUtils.isEmpty(gitblitUrl)) {
 				gitblitUrl = HttpUtils.getGitblitURL(request);
 			}
-			federationManager.submitFederationProposal(proposal, gitblitUrl);
-			logger.info(MessageFormat.format(
+			this.federationManager.submitFederationProposal(proposal, gitblitUrl);
+			this.logger.info(MessageFormat.format(
 					"Submitted {0} federation proposal to pull {1} repositories from {2}",
 					proposal.tokenType.name(), proposal.repositories.size(), proposal.url));
 			response.setStatus(HttpServletResponse.SC_OK);
@@ -158,24 +158,24 @@ public class FederationServlet extends JsonServlet {
 
 		if (FederationRequest.STATUS.equals(reqType)) {
 			// Receive a gitblit federation status acknowledgment
-			String remoteId = StringUtils.decodeFromHtml(request.getParameter("url"));
-			String identification = MessageFormat.format("{0} ({1})", remoteId,
+			final String remoteId = StringUtils.decodeFromHtml(request.getParameter("url"));
+			final String identification = MessageFormat.format("{0} ({1})", remoteId,
 					request.getRemoteAddr());
 
 			// deserialize the status data
-			FederationModel results = deserialize(request, response, FederationModel.class);
+			final FederationModel results = deserialize(request, response, FederationModel.class);
 			if (results == null) {
 				return;
 			}
 
 			// setup the last and netx pull dates
 			results.lastPull = new Date();
-			int mins = TimeUtils.convertFrequencyToMinutes(results.frequency, 5);
+			final int mins = TimeUtils.convertFrequencyToMinutes(results.frequency, 5);
 			results.nextPull = new Date(System.currentTimeMillis() + (mins * 60 * 1000L));
 
 			// acknowledge the receipt of status
-			federationManager.acknowledgeFederationStatus(identification, results);
-			logger.info(MessageFormat.format(
+			this.federationManager.acknowledgeFederationStatus(identification, results);
+			this.logger.info(MessageFormat.format(
 					"Received status of {0} federated repositories from {1}", results
 							.getStatusList().size(), identification));
 			response.setStatus(HttpServletResponse.SC_OK);
@@ -183,10 +183,10 @@ public class FederationServlet extends JsonServlet {
 		}
 
 		// Determine the federation tokens for this gitblit instance
-		String token = request.getParameter("token");
-		List<String> tokens = federationManager.getFederationTokens();
+		final String token = request.getParameter("token");
+		final List<String> tokens = this.federationManager.getFederationTokens();
 		if (!tokens.contains(token)) {
-			logger.warn(MessageFormat.format(
+			this.logger.warn(MessageFormat.format(
 					"Received Federation token ''{0}'' does not match the server tokens", token));
 			response.sendError(HttpServletResponse.SC_FORBIDDEN);
 			return;
@@ -194,42 +194,42 @@ public class FederationServlet extends JsonServlet {
 
 		Object result = null;
 		if (FederationRequest.PULL_REPOSITORIES.equals(reqType)) {
-			String gitblitUrl = settings.getString(Keys.web.canonicalUrl, null);
+			String gitblitUrl = this.settings.getString(Keys.web.canonicalUrl, null);
 			if (StringUtils.isEmpty(gitblitUrl)) {
 				gitblitUrl = HttpUtils.getGitblitURL(request);
 			}
-			result = federationManager.getRepositories(gitblitUrl, token);
+			result = this.federationManager.getRepositories(gitblitUrl, token);
 		} else {
 			if (FederationRequest.PULL_SETTINGS.equals(reqType)) {
 				// pull settings
-				if (!federationManager.validateFederationRequest(reqType, token)) {
+				if (!this.federationManager.validateFederationRequest(reqType, token)) {
 					// invalid token to pull users or settings
-					logger.warn(MessageFormat.format(
+					this.logger.warn(MessageFormat.format(
 							"Federation token from {0} not authorized to pull SETTINGS",
 							request.getRemoteAddr()));
 					response.sendError(HttpServletResponse.SC_FORBIDDEN);
 					return;
 				}
-				Map<String, String> map = new HashMap<String, String>();
-				List<String> keys = settings.getAllKeys(null);
-				for (String key : keys) {
-					map.put(key, settings.getString(key, ""));
+				final Map<String, String> map = new HashMap<String, String>();
+				final List<String> keys = this.settings.getAllKeys(null);
+				for (final String key : keys) {
+					map.put(key, this.settings.getString(key, ""));
 				}
 				result = map;
 			} else if (FederationRequest.PULL_USERS.equals(reqType)) {
 				// pull users
-				if (!federationManager.validateFederationRequest(reqType, token)) {
+				if (!this.federationManager.validateFederationRequest(reqType, token)) {
 					// invalid token to pull users or settings
-					logger.warn(MessageFormat.format(
+					this.logger.warn(MessageFormat.format(
 							"Federation token from {0} not authorized to pull USERS",
 							request.getRemoteAddr()));
 					response.sendError(HttpServletResponse.SC_FORBIDDEN);
 					return;
 				}
-				List<String> usernames = userManager.getAllUsernames();
-				List<UserModel> users = new ArrayList<UserModel>();
-				for (String username : usernames) {
-					UserModel user = userManager.getUserModel(username);
+				final List<String> usernames = this.userManager.getAllUsernames();
+				final List<UserModel> users = new ArrayList<UserModel>();
+				for (final String username : usernames) {
+					final UserModel user = this.userManager.getUserModel(username);
 					if (!user.excludeFromFederation) {
 						users.add(user);
 					}
@@ -237,53 +237,54 @@ public class FederationServlet extends JsonServlet {
 				result = users;
 			} else if (FederationRequest.PULL_TEAMS.equals(reqType)) {
 				// pull teams
-				if (!federationManager.validateFederationRequest(reqType, token)) {
+				if (!this.federationManager.validateFederationRequest(reqType, token)) {
 					// invalid token to pull teams
-					logger.warn(MessageFormat.format(
+					this.logger.warn(MessageFormat.format(
 							"Federation token from {0} not authorized to pull TEAMS",
 							request.getRemoteAddr()));
 					response.sendError(HttpServletResponse.SC_FORBIDDEN);
 					return;
 				}
-				List<String> teamnames = userManager.getAllTeamNames();
-				List<TeamModel> teams = new ArrayList<TeamModel>();
-				for (String teamname : teamnames) {
-					TeamModel user = userManager.getTeamModel(teamname);
+				final List<String> teamnames = this.userManager.getAllTeamNames();
+				final List<TeamModel> teams = new ArrayList<TeamModel>();
+				for (final String teamname : teamnames) {
+					final TeamModel user = this.userManager.getTeamModel(teamname);
 					teams.add(user);
 				}
 				result = teams;
 			} else if (FederationRequest.PULL_SCRIPTS.equals(reqType)) {
 				// pull scripts
-				if (!federationManager.validateFederationRequest(reqType, token)) {
+				if (!this.federationManager.validateFederationRequest(reqType, token)) {
 					// invalid token to pull script
-					logger.warn(MessageFormat.format(
+					this.logger.warn(MessageFormat.format(
 							"Federation token from {0} not authorized to pull SCRIPTS",
 							request.getRemoteAddr()));
 					response.sendError(HttpServletResponse.SC_FORBIDDEN);
 					return;
 				}
-				Map<String, String> scripts = new HashMap<String, String>();
+				final Map<String, String> scripts = new HashMap<String, String>();
 
-				Set<String> names = new HashSet<String>();
-				names.addAll(settings.getStrings(Keys.groovy.preReceiveScripts));
-				names.addAll(settings.getStrings(Keys.groovy.postReceiveScripts));
-				for (TeamModel team :  userManager.getAllTeams()) {
+				final Set<String> names = new HashSet<String>();
+				names.addAll(this.settings.getStrings(Keys.groovy.preReceiveScripts));
+				names.addAll(this.settings.getStrings(Keys.groovy.postReceiveScripts));
+				for (final TeamModel team : this.userManager.getAllTeams()) {
 					names.addAll(team.preReceiveScripts);
 					names.addAll(team.postReceiveScripts);
 				}
-				File scriptsFolder = repositoryManager.getHooksFolder();
-				for (String name : names) {
+				final File scriptsFolder = this.repositoryManager.getHooksFolder();
+				for (final String name : names) {
 					File file = new File(scriptsFolder, name);
 					if (!file.exists() && !file.getName().endsWith(".groovy")) {
 						file = new File(scriptsFolder, name + ".groovy");
 					}
 					if (file.exists()) {
 						// read the script
-						String content = FileUtils.readContent(file, "\n");
+						final String content = FileUtils.readContent(file, "\n");
 						scripts.put(name, content);
 					} else {
 						// missing script?!
-						logger.warn(MessageFormat.format("Failed to find push script \"{0}\"", name));
+						this.logger.warn(MessageFormat.format("Failed to find push script \"{0}\"",
+								name));
 					}
 				}
 				result = scripts;

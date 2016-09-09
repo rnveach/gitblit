@@ -34,31 +34,31 @@ import com.gitblit.wicket.panels.RepositoriesPanel;
 @RequiresAdminRole
 public class ReviewProposalPage extends RootSubPage {
 
-	private final String PROPS_PATTERN = "{0} = {1}\n";
+	private static final String PROPS_PATTERN = "{0} = {1}\n";
 
 	public ReviewProposalPage(PageParameters params) {
 		super(params);
 
 		final String token = WicketUtils.getToken(params);
 
-		FederationProposal proposal = app().federation().getPendingFederationProposal(token);
+		final FederationProposal proposal = app().federation().getPendingFederationProposal(token);
 		if (proposal == null) {
 			error(getString("gb.couldNotFindFederationProposal"), true);
 		}
 
 		setupPage(getString("gb.proposals"), proposal.url);
 
-
 		add(new Label("url", proposal.url));
 		add(new Label("message", proposal.message));
-		add(WicketUtils.createTimestampLabel("received", proposal.received, getTimeZone(), getTimeUtils()));
+		add(WicketUtils.createTimestampLabel("received", proposal.received, getTimeZone(),
+				getTimeUtils()));
 		add(new Label("token", proposal.token));
 		add(new Label("tokenType", proposal.tokenType.name()));
 
-		String p = PROPS_PATTERN;
+		final String p = PROPS_PATTERN;
 
 		// build proposed definition
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(asParam(p, proposal.name, "url", proposal.url));
 		sb.append(asParam(p, proposal.name, "token", proposal.token));
 
@@ -80,14 +80,14 @@ public class ReviewProposalPage extends RootSubPage {
 		add(new Label("definition", StringUtils.breakLinesForHtml(StringUtils.escapeForHtml(sb
 				.toString().trim(), true, tabLength))).setEscapeModelStrings(false));
 
-		List<RepositoryModel> repositories = new ArrayList<RepositoryModel>(
+		final List<RepositoryModel> repositories = new ArrayList<RepositoryModel>(
 				proposal.repositories.values());
-		RepositoriesPanel repositoriesPanel = new RepositoriesPanel("repositoriesPanel", false,
-				false, repositories, false, getAccessRestrictions());
+		final RepositoriesPanel repositoriesPanel = new RepositoriesPanel("repositoriesPanel",
+				false, false, repositories, false, getAccessRestrictions());
 		add(repositoriesPanel);
 	}
 
-	private String asParam(String pattern, String name, String key, String value) {
+	private static String asParam(String pattern, String name, String key, String value) {
 		return MessageFormat.format(pattern, Keys.federation._ROOT + "." + name + "." + key, value);
 	}
 }

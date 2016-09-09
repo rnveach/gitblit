@@ -29,6 +29,6 @@ class SshServerSession extends ServerSessionImpl {
 	}
 
 	void addCloseSessionListener(SshFutureListener<CloseFuture> l) {
-		closeFuture.addListener(l);
+		this.closeFuture.addListener(l);
 	}
 }

@@ -37,7 +37,7 @@ public abstract class TicketHook implements ExtensionPoint {
 	public abstract void onNewTicket(TicketModel ticket);
 
 	/**
-	 * Called when an existing ticket is updated.  Tickets can be updated for
+	 * Called when an existing ticket is updated. Tickets can be updated for
 	 * many, many reasons like state changes votes, watches, etc.
 	 *
 	 * @param ticket

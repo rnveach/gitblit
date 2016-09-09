@@ -23,10 +23,10 @@ public class Base64Test extends GitblitUnitTest {
 
 	@Test
 	public void testBase64() {
-		String source = "this is a test";
-		String base64 = Base64.encodeBytes(source.getBytes());
+		final String source = "this is a test";
+		final String base64 = Base64.encodeBytes(source.getBytes());
 		assertEquals("dGhpcyBpcyBhIHRlc3Q=", base64);
-		String decoded = new String(Base64.decode(base64));
+		final String decoded = new String(Base64.decode(base64));
 		assertEquals(source, decoded);
 	}
 }

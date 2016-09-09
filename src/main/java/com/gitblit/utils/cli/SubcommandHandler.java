@@ -23,21 +23,19 @@ import org.kohsuke.args4j.spi.Setter;
 
 public class SubcommandHandler extends OptionHandler<String> {
 
-  public SubcommandHandler(CmdLineParser parser,
-      OptionDef option, Setter<String> setter) {
-    super(parser, option, setter);
-  }
+	public SubcommandHandler(CmdLineParser parser, OptionDef option, Setter<String> setter) {
+		super(parser, option, setter);
+	}
 
-  @Override
-  public final int parseArguments(final Parameters params)
-      throws CmdLineException {
-    setter.addValue(params.getParameter(0));
-    owner.stopOptionParsing();
-    return 1;
-  }
+	@Override
+	public final int parseArguments(final Parameters params) throws CmdLineException {
+		this.setter.addValue(params.getParameter(0));
+		this.owner.stopOptionParsing();
+		return 1;
+	}
 
-  @Override
-  public final String getDefaultMetaVariable() {
-    return "COMMAND";
-  }
+	@Override
+	public final String getDefaultMetaVariable() {
+		return "COMMAND";
+	}
 }

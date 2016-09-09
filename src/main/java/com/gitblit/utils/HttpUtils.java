@@ -48,50 +48,51 @@ public class HttpUtils {
 		int port = request.getServerPort();
 
 		// try to use reverse-proxy server's port
-        String forwardedPort = request.getHeader("X-Forwarded-Port");
-        if (StringUtils.isEmpty(forwardedPort)) {
-        	forwardedPort = request.getHeader("X_Forwarded_Port");
-        }
-        if (!StringUtils.isEmpty(forwardedPort)) {
-        	// reverse-proxy server has supplied the original port
-        	try {
-        		port = Integer.parseInt(forwardedPort);
-        	} catch (Throwable t) {
-        	}
-        }
+		String forwardedPort = request.getHeader("X-Forwarded-Port");
+		if (StringUtils.isEmpty(forwardedPort)) {
+			forwardedPort = request.getHeader("X_Forwarded_Port");
+		}
+		if (!StringUtils.isEmpty(forwardedPort)) {
+			// reverse-proxy server has supplied the original port
+			try {
+				port = Integer.parseInt(forwardedPort);
+			}
+			catch (final Throwable t) {
+			}
+		}
 
 		// try to use reverse-proxy server's scheme
-        String forwardedScheme = request.getHeader("X-Forwarded-Proto");
-        if (StringUtils.isEmpty(forwardedScheme)) {
-        	forwardedScheme = request.getHeader("X_Forwarded_Proto");
-        }
-        if (!StringUtils.isEmpty(forwardedScheme)) {
-        	// reverse-proxy server has supplied the original scheme
-        	scheme = forwardedScheme;
+		String forwardedScheme = request.getHeader("X-Forwarded-Proto");
+		if (StringUtils.isEmpty(forwardedScheme)) {
+			forwardedScheme = request.getHeader("X_Forwarded_Proto");
+		}
+		if (!StringUtils.isEmpty(forwardedScheme)) {
+			// reverse-proxy server has supplied the original scheme
+			scheme = forwardedScheme;
 
-        	if ("https".equals(scheme) && port == 80) {
-        		// proxy server is https, inside server is 80
-        		// this is likely because the proxy server has not supplied
-        		// x-forwarded-port. since 80 is almost definitely wrong,
-        		// make an educated guess that 443 is correct.
-        		port = 443;
-        	}
-        }
+			if ("https".equals(scheme) && (port == 80)) {
+				// proxy server is https, inside server is 80
+				// this is likely because the proxy server has not supplied
+				// x-forwarded-port. since 80 is almost definitely wrong,
+				// make an educated guess that 443 is correct.
+				port = 443;
+			}
+		}
 
 		// try to use reverse-proxy's context
-        String context = request.getContextPath();
-        String forwardedContext = request.getHeader("X-Forwarded-Context");
-        if (StringUtils.isEmpty(forwardedContext)) {
-        	forwardedContext = request.getHeader("X_Forwarded_Context");
-        }
-        if (!StringUtils.isEmpty(forwardedContext)) {
-        	context = forwardedContext;
-        }
+		String context = request.getContextPath();
+		String forwardedContext = request.getHeader("X-Forwarded-Context");
+		if (StringUtils.isEmpty(forwardedContext)) {
+			forwardedContext = request.getHeader("X_Forwarded_Context");
+		}
+		if (!StringUtils.isEmpty(forwardedContext)) {
+			context = forwardedContext;
+		}
 
-        // trim any trailing slash
-        if (context.length() > 0 && context.charAt(context.length() - 1) == '/') {
-        	context = context.substring(1);
-        }
+		// trim any trailing slash
+		if ((context.length() > 0) && (context.charAt(context.length() - 1) == '/')) {
+			context = context.substring(1);
+		}
 
 		// try to use reverse-proxy's hostname
 		String host = request.getServerName();
@@ -104,12 +105,11 @@ public class HttpUtils {
 		}
 
 		// build result
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append(scheme);
 		sb.append("://");
 		sb.append(host);
-		if (("http".equals(scheme) && port != 80)
-				|| ("https".equals(scheme) && port != 443)) {
+		if (("http".equals(scheme) && (port != 80)) || ("https".equals(scheme) && (port != 443))) {
 			sb.append(":").append(port);
 		}
 		sb.append(context);
@@ -121,25 +121,35 @@ public class HttpUtils {
 	 * This model is not retrieved from the user service.
 	 *
 	 * @param httpRequest
-	 * @param checkValidity ensure certificate can be used now
-	 * @param usernameOIDs if unspecified, CN is used as the username
-	 * @return a UserModel, if a valid certificate is in the request, null otherwise
+	 * @param checkValidity
+	 *            ensure certificate can be used now
+	 * @param usernameOIDs
+	 *            if unspecified, CN is used as the username
+	 * @return a UserModel, if a valid certificate is in the request, null
+	 *         otherwise
 	 */
-	public static UserModel getUserModelFromCertificate(HttpServletRequest httpRequest, boolean checkValidity, String... usernameOIDs) {
+	public static UserModel getUserModelFromCertificate(HttpServletRequest httpRequest,
+			boolean checkValidity, String... usernameOIDs) {
 		if (httpRequest.getAttribute("javax.servlet.request.X509Certificate") != null) {
-			X509Certificate[] certChain = (X509Certificate[]) httpRequest
+			final X509Certificate[] certChain = (X509Certificate[]) httpRequest
 					.getAttribute("javax.servlet.request.X509Certificate");
 			if (certChain != null) {
-				X509Certificate cert = certChain[0];
+				final X509Certificate cert = certChain[0];
 				// ensure certificate is valid
 				if (checkValidity) {
 					try {
 						cert.checkValidity(new Date());
-					} catch (CertificateNotYetValidException e) {
-						LoggerFactory.getLogger(HttpUtils.class).info(MessageFormat.format("X509 certificate {0} is not yet valid", cert.getSubjectDN().getName()));
+					}
+					catch (final CertificateNotYetValidException e) {
+						LoggerFactory.getLogger(HttpUtils.class).info(
+								MessageFormat.format("X509 certificate {0} is not yet valid", cert
+										.getSubjectDN().getName()));
 						return null;
-					} catch (CertificateExpiredException e) {
-						LoggerFactory.getLogger(HttpUtils.class).info(MessageFormat.format("X509 certificate {0} has expired", cert.getSubjectDN().getName()));
+					}
+					catch (final CertificateExpiredException e) {
+						LoggerFactory.getLogger(HttpUtils.class).info(
+								MessageFormat.format("X509 certificate {0} has expired", cert
+										.getSubjectDN().getName()));
 						return null;
 					}
 				}
@@ -151,26 +161,29 @@ public class HttpUtils {
 
 	/**
 	 * Creates a UserModel from a certificate
+	 * 
 	 * @param cert
-	 * @param usernameOids if unspecified CN is used as the username
+	 * @param usernameOids
+	 *            if unspecified CN is used as the username
 	 * @return
 	 */
-	public static UserModel getUserModelFromCertificate(X509Certificate cert, String... usernameOIDs) {
-		X509Metadata metadata = X509Utils.getMetadata(cert);
+	public static UserModel getUserModelFromCertificate(X509Certificate cert,
+			String... usernameOIDs) {
+		final X509Metadata metadata = X509Utils.getMetadata(cert);
 
-		UserModel user = new UserModel(metadata.commonName);
+		final UserModel user = new UserModel(metadata.commonName);
 		user.emailAddress = metadata.emailAddress;
 		user.isAuthenticated = false;
 
-		if (usernameOIDs == null || usernameOIDs.length == 0) {
+		if ((usernameOIDs == null) || (usernameOIDs.length == 0)) {
 			// use default usename<->CN mapping
-			usernameOIDs = new String [] { "CN" };
+			usernameOIDs = new String[] { "CN" };
 		}
 
 		// determine username from OID fingerprint
-		StringBuilder an = new StringBuilder();
-		for (String oid : usernameOIDs) {
-			String val = metadata.getOID(oid.toUpperCase(), null);
+		final StringBuilder an = new StringBuilder();
+		for (final String oid : usernameOIDs) {
+			final String val = metadata.getOID(oid.toUpperCase(), null);
 			if (val != null) {
 				an.append(val).append(' ');
 			}
@@ -181,10 +194,10 @@ public class HttpUtils {
 
 	public static X509Metadata getCertificateMetadata(HttpServletRequest httpRequest) {
 		if (httpRequest.getAttribute("javax.servlet.request.X509Certificate") != null) {
-			X509Certificate[] certChain = (X509Certificate[]) httpRequest
+			final X509Certificate[] certChain = (X509Certificate[]) httpRequest
 					.getAttribute("javax.servlet.request.X509Certificate");
 			if (certChain != null) {
-				X509Certificate cert = certChain[0];
+				final X509Certificate cert = certChain[0];
 				return X509Utils.getMetadata(cert);
 			}
 		}
@@ -195,16 +208,17 @@ public class HttpUtils {
 		if (StringUtils.isEmpty(address)) {
 			return false;
 		}
-		String [] fields = address.split("\\.");
+		final String[] fields = address.split("\\.");
 		if (fields.length == 4) {
 			// IPV4
-			for (String field : fields) {
+			for (final String field : fields) {
 				try {
-					int value = Integer.parseInt(field);
-					if (value < 0 || value > 255) {
+					final int value = Integer.parseInt(field);
+					if ((value < 0) || (value > 255)) {
 						return false;
 					}
-				} catch (Exception e) {
+				}
+				catch (final Exception e) {
 					return false;
 				}
 			}

@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-
 /**
  * Utility class for arrays and collections.
  *
@@ -29,28 +28,28 @@ import java.util.List;
  */
 public class ArrayUtils {
 
-	public static boolean isEmpty(byte [] array) {
-		return array == null || array.length == 0;
+	public static boolean isEmpty(byte[] array) {
+		return (array == null) || (array.length == 0);
 	}
 
-	public static boolean isEmpty(char [] array) {
-		return array == null || array.length == 0;
+	public static boolean isEmpty(char[] array) {
+		return (array == null) || (array.length == 0);
 	}
 
-	public static boolean isEmpty(Object [] array) {
-		return array == null || array.length == 0;
+	public static boolean isEmpty(Object[] array) {
+		return (array == null) || (array.length == 0);
 	}
 
 	public static boolean isEmpty(Collection<?> collection) {
-		return collection == null || collection.isEmpty();
+		return (collection == null) || collection.isEmpty();
 	}
 
 	public static String toString(Collection<?> collection) {
 		if (isEmpty(collection)) {
 			return "";
 		}
-		StringBuilder sb = new StringBuilder();
-		for (Object o : collection) {
+		final StringBuilder sb = new StringBuilder();
+		for (final Object o : collection) {
 			sb.append(o.toString()).append(", ");
 		}
 		// trim trailing comma-space
@@ -62,10 +61,10 @@ public class ArrayUtils {
 		if (StringUtils.isEmpty(value)) {
 			value = "";
 		}
-		List<String> list = new ArrayList<String>();
-		String [] values = value.split(",|;");
-		for (String v : values) {
-			String string = v.trim();
+		final List<String> list = new ArrayList<String>();
+		final String[] values = value.split(",|;");
+		for (final String v : values) {
+			final String string = v.trim();
 			if (!StringUtils.isEmpty(string)) {
 				list.add(string);
 			}
@@ -73,17 +72,19 @@ public class ArrayUtils {
 		return list;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <X> List<X> join(List<X>... elements) {
-		List<X> list = new ArrayList<X>();
-		for (List<X> element : elements) {
+		final List<X> list = new ArrayList<X>();
+		for (final List<X> element : elements) {
 			list.addAll(element);
 		}
 		return list;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <X> List<X> join(X[]... elements) {
-		List<X> list = new ArrayList<X>();
-		for (X[] element : elements) {
+		final List<X> list = new ArrayList<X>();
+		for (final X[] element : elements) {
 			list.addAll(Arrays.asList(element));
 		}
 		return list;

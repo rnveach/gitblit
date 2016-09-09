@@ -75,13 +75,13 @@ public class RpcTests extends GitblitUnitTest {
 
 	@Test
 	public void testGetProtocolVersion() throws IOException {
-		int protocol = RpcUtils.getProtocolVersion(url, null, null);
+		final int protocol = RpcUtils.getProtocolVersion(this.url, null, null);
 		assertEquals(RpcServlet.PROTOCOL_VERSION, protocol);
 	}
 
 	@Test
 	public void testListRepositories() throws IOException {
-		Map<String, RepositoryModel> map = RpcUtils.getRepositories(url, null, null);
+		final Map<String, RepositoryModel> map = RpcUtils.getRepositories(this.url, null, null);
 		assertNotNull("Repository list is null!", map);
 		assertTrue("Repository list is empty!", map.size() > 0);
 	}
@@ -90,12 +90,13 @@ public class RpcTests extends GitblitUnitTest {
 	public void testListUsers() throws IOException {
 		List<UserModel> list = null;
 		try {
-			list = RpcUtils.getUsers(url, null, null);
-		} catch (UnauthorizedException e) {
+			list = RpcUtils.getUsers(this.url, null, null);
+		}
+		catch (final UnauthorizedException e) {
 		}
 		assertNull("Server allows anyone to admin!", list);
 
-		list = RpcUtils.getUsers(url, "admin", "admin".toCharArray());
+		list = RpcUtils.getUsers(this.url, "admin", "admin".toCharArray());
 		assertTrue("User list is empty!", list.size() > 0);
 	}
 
@@ -103,12 +104,13 @@ public class RpcTests extends GitblitUnitTest {
 	public void testGetUser() throws IOException {
 		UserModel user = null;
 		try {
-			user = RpcUtils.getUser("admin", url, null, null);
-		} catch (ForbiddenException e) {
+			user = RpcUtils.getUser("admin", this.url, null, null);
+		}
+		catch (final ForbiddenException e) {
 		}
 		assertNull("Server allows anyone to get user!", user);
 
-		user = RpcUtils.getUser("admin", url, "admin", "admin".toCharArray());
+		user = RpcUtils.getUser("admin", this.url, "admin", "admin".toCharArray());
 		assertEquals("User is not the admin!", "admin", user.username);
 		assertTrue("User is not an administrator!", user.canAdmin());
 	}
@@ -117,53 +119,59 @@ public class RpcTests extends GitblitUnitTest {
 	public void testListTeams() throws IOException {
 		List<TeamModel> list = null;
 		try {
-			list = RpcUtils.getTeams(url, null, null);
-		} catch (UnauthorizedException e) {
+			list = RpcUtils.getTeams(this.url, null, null);
+		}
+		catch (final UnauthorizedException e) {
 		}
 		assertNull("Server allows anyone to admin!", list);
 
-		list = RpcUtils.getTeams(url, "admin", "admin".toCharArray());
+		list = RpcUtils.getTeams(this.url, "admin", "admin".toCharArray());
 		assertTrue("Team list is empty!", list.size() > 0);
 		assertEquals("admins", list.get(0).name);
 	}
 
 	@Test
 	public void testUserAdministration() throws IOException {
-		UserModel user = new UserModel("garbage");
+		final UserModel user = new UserModel("garbage");
 		user.canAdmin = true;
 		user.password = "whocares";
 
 		// create
 		assertTrue("Failed to create user!",
-				RpcUtils.createUser(user, url, account, password.toCharArray()));
+				RpcUtils.createUser(user, this.url, this.account, this.password.toCharArray()));
 
 		UserModel retrievedUser = findUser(user.username);
 		assertNotNull("Failed to find " + user.username, retrievedUser);
 		assertTrue("Retrieved user can not administer Gitblit", retrievedUser.canAdmin);
 
 		// rename and toggle admin permission
-		String originalName = user.username;
+		final String originalName = user.username;
 		user.username = "garbage2";
 		user.canAdmin = false;
-		assertTrue("Failed to update user!",
-				RpcUtils.updateUser(originalName, user, url, account, password.toCharArray()));
+		assertTrue(
+				"Failed to update user!",
+				RpcUtils.updateUser(originalName, user, this.url, this.account,
+						this.password.toCharArray()));
 
 		retrievedUser = findUser(user.username);
 		assertNotNull("Failed to find " + user.username, retrievedUser);
 		assertTrue("Retrieved user did not update", !retrievedUser.canAdmin);
 
 		// delete
-		assertTrue("Failed to delete " + user.username,
-				RpcUtils.deleteUser(retrievedUser, url, account, password.toCharArray()));
+		assertTrue(
+				"Failed to delete " + user.username,
+				RpcUtils.deleteUser(retrievedUser, this.url, this.account,
+						this.password.toCharArray()));
 
 		retrievedUser = findUser(user.username);
 		assertNull("Failed to delete " + user.username, retrievedUser);
 	}
 
 	private UserModel findUser(String name) throws IOException {
-		List<UserModel> users = RpcUtils.getUsers(url, account, password.toCharArray());
+		final List<UserModel> users = RpcUtils.getUsers(this.url, this.account,
+				this.password.toCharArray());
 		UserModel retrievedUser = null;
-		for (UserModel model : users) {
+		for (final UserModel model : users) {
 			if (model.username.equalsIgnoreCase(name)) {
 				retrievedUser = model;
 				break;
@@ -174,7 +182,7 @@ public class RpcTests extends GitblitUnitTest {
 
 	@Test
 	public void testRepositoryAdministration() throws IOException {
-		RepositoryModel model = new RepositoryModel();
+		final RepositoryModel model = new RepositoryModel();
 		model.name = "garbagerepo.git";
 		model.description = "created by RpcUtils";
 		model.addOwner("garbage");
@@ -182,9 +190,11 @@ public class RpcTests extends GitblitUnitTest {
 		model.authorizationControl = AuthorizationControl.AUTHENTICATED;
 
 		// create
-		RpcUtils.deleteRepository(model, url, account, password.toCharArray());
-		assertTrue("Failed to create repository!",
-				RpcUtils.createRepository(model, url, account, password.toCharArray()));
+		RpcUtils.deleteRepository(model, this.url, this.account, this.password.toCharArray());
+		assertTrue(
+				"Failed to create repository!",
+				RpcUtils.createRepository(model, this.url, this.account,
+						this.password.toCharArray()));
 
 		RepositoryModel retrievedRepository = findRepository(model.name);
 		assertNotNull("Failed to find " + model.name, retrievedRepository);
@@ -192,13 +202,13 @@ public class RpcTests extends GitblitUnitTest {
 		assertEquals(AuthorizationControl.AUTHENTICATED, retrievedRepository.authorizationControl);
 
 		// rename and change access restriciton
-		String originalName = model.name;
+		final String originalName = model.name;
 		model.name = "garbagerepo2.git";
 		model.accessRestriction = AccessRestrictionType.CLONE;
 		model.authorizationControl = AuthorizationControl.NAMED;
-		RpcUtils.deleteRepository(model, url, account, password.toCharArray());
+		RpcUtils.deleteRepository(model, this.url, this.account, this.password.toCharArray());
 		assertTrue("Failed to update repository!", RpcUtils.updateRepository(originalName, model,
-				url, account, password.toCharArray()));
+				this.url, this.account, this.password.toCharArray()));
 
 		retrievedRepository = findRepository(model.name);
 		assertNotNull("Failed to find " + model.name, retrievedRepository);
@@ -207,26 +217,28 @@ public class RpcTests extends GitblitUnitTest {
 
 		// restore VIEW restriction
 		retrievedRepository.accessRestriction = AccessRestrictionType.VIEW;
-		assertTrue("Failed to update repository!", RpcUtils.updateRepository(retrievedRepository.name, retrievedRepository,
-				url, account, password.toCharArray()));
+		assertTrue("Failed to update repository!", RpcUtils.updateRepository(
+				retrievedRepository.name, retrievedRepository, this.url, this.account,
+				this.password.toCharArray()));
 		retrievedRepository = findRepository(retrievedRepository.name);
 
 		// memberships
-		UserModel testMember = new UserModel("justadded");
-		assertTrue(RpcUtils.createUser(testMember, url, account, password.toCharArray()));
+		final UserModel testMember = new UserModel("justadded");
+		assertTrue(RpcUtils.createUser(testMember, this.url, this.account,
+				this.password.toCharArray()));
 
-		List<RegistrantAccessPermission> permissions = RpcUtils.getRepositoryMemberPermissions(retrievedRepository, url, account,
-				password.toCharArray());
+		List<RegistrantAccessPermission> permissions = RpcUtils.getRepositoryMemberPermissions(
+				retrievedRepository, this.url, this.account, this.password.toCharArray());
 		assertEquals("Unexpected permissions! " + permissions.toString(), 1, permissions.size());
-		permissions.add(new RegistrantAccessPermission(testMember.username, AccessPermission.VIEW, PermissionType.EXPLICIT, RegistrantType.USER, null, true));
-		assertTrue(
-				"Failed to set member permissions!",
-				RpcUtils.setRepositoryMemberPermissions(retrievedRepository, permissions, url, account,
-						password.toCharArray()));
-		permissions = RpcUtils.getRepositoryMemberPermissions(retrievedRepository, url, account,
-				password.toCharArray());
+		permissions.add(new RegistrantAccessPermission(testMember.username, AccessPermission.VIEW,
+				PermissionType.EXPLICIT, RegistrantType.USER, null, true));
+		assertTrue("Failed to set member permissions!", RpcUtils.setRepositoryMemberPermissions(
+				retrievedRepository, permissions, this.url, this.account,
+				this.password.toCharArray()));
+		permissions = RpcUtils.getRepositoryMemberPermissions(retrievedRepository, this.url,
+				this.account, this.password.toCharArray());
 		boolean foundMember = false;
-		for (RegistrantAccessPermission permission : permissions) {
+		for (final RegistrantAccessPermission permission : permissions) {
 			if (permission.registrant.equalsIgnoreCase(testMember.username)) {
 				foundMember = true;
 				assertEquals(AccessPermission.VIEW, permission.permission);
@@ -237,24 +249,26 @@ public class RpcTests extends GitblitUnitTest {
 
 		// delete
 		assertTrue("Failed to delete " + model.name, RpcUtils.deleteRepository(retrievedRepository,
-				url, account, password.toCharArray()));
+				this.url, this.account, this.password.toCharArray()));
 
 		retrievedRepository = findRepository(model.name);
 		assertNull("Failed to delete " + model.name, retrievedRepository);
 
-		for (UserModel u : RpcUtils.getUsers(url, account, password.toCharArray())) {
+		for (final UserModel u : RpcUtils.getUsers(this.url, this.account,
+				this.password.toCharArray())) {
 			if (u.username.equals(testMember.username)) {
-				assertTrue(RpcUtils.deleteUser(u, url, account, password.toCharArray()));
+				assertTrue(RpcUtils.deleteUser(u, this.url, this.account,
+						this.password.toCharArray()));
 				break;
 			}
 		}
 	}
 
 	private RepositoryModel findRepository(String name) throws IOException {
-		Map<String, RepositoryModel> repositories = RpcUtils.getRepositories(url, account,
-				password.toCharArray());
+		final Map<String, RepositoryModel> repositories = RpcUtils.getRepositories(this.url,
+				this.account, this.password.toCharArray());
 		RepositoryModel retrievedRepository = null;
-		for (RepositoryModel model : repositories.values()) {
+		for (final RepositoryModel model : repositories.values()) {
 			if (model.name.equalsIgnoreCase(name)) {
 				retrievedRepository = model;
 				break;
@@ -265,19 +279,20 @@ public class RpcTests extends GitblitUnitTest {
 
 	@Test
 	public void testTeamAdministration() throws IOException {
-		List<TeamModel> teams = RpcUtils.getTeams(url, account, password.toCharArray());
+		List<TeamModel> teams = RpcUtils.getTeams(this.url, this.account,
+				this.password.toCharArray());
 		assertEquals(1, teams.size());
 
 		// Create the A-Team
 		TeamModel aTeam = new TeamModel("A-Team");
 		aTeam.users.add("admin");
 		aTeam.addRepositoryPermission("helloworld.git");
-		assertTrue(RpcUtils.createTeam(aTeam, url, account, password.toCharArray()));
+		assertTrue(RpcUtils.createTeam(aTeam, this.url, this.account, this.password.toCharArray()));
 
 		aTeam = null;
-		teams = RpcUtils.getTeams(url, account, password.toCharArray());
+		teams = RpcUtils.getTeams(this.url, this.account, this.password.toCharArray());
 		assertEquals(2, teams.size());
-		for (TeamModel team : teams) {
+		for (final TeamModel team : teams) {
 			if (team.name.equals("A-Team")) {
 				aTeam = team;
 				break;
@@ -288,9 +303,9 @@ public class RpcTests extends GitblitUnitTest {
 		assertTrue(aTeam.hasRepositoryPermission("helloworld.git"));
 
 		RepositoryModel helloworld = null;
-		Map<String, RepositoryModel> repositories = RpcUtils.getRepositories(url, account,
-				password.toCharArray());
-		for (RepositoryModel repository : repositories.values()) {
+		final Map<String, RepositoryModel> repositories = RpcUtils.getRepositories(this.url,
+				this.account, this.password.toCharArray());
+		for (final RepositoryModel repository : repositories.values()) {
 			if (repository.name.equals("helloworld.git")) {
 				helloworld = repository;
 				break;
@@ -299,101 +314,108 @@ public class RpcTests extends GitblitUnitTest {
 		assertNotNull(helloworld);
 
 		// Confirm that we have added the team
-		List<String> helloworldTeams = RpcUtils.getRepositoryTeams(helloworld, url, account,
-				password.toCharArray());
+		List<String> helloworldTeams = RpcUtils.getRepositoryTeams(helloworld, this.url,
+				this.account, this.password.toCharArray());
 		assertEquals(1, helloworldTeams.size());
 		assertTrue(helloworldTeams.contains(aTeam.name));
 
 		// set no teams
-		List<RegistrantAccessPermission> permissions = new ArrayList<RegistrantAccessPermission>();
-		for (String team : helloworldTeams) {
-			permissions.add(new RegistrantAccessPermission(team, AccessPermission.NONE, PermissionType.EXPLICIT, RegistrantType.TEAM, null, true));
+		final List<RegistrantAccessPermission> permissions = new ArrayList<RegistrantAccessPermission>();
+		for (final String team : helloworldTeams) {
+			permissions.add(new RegistrantAccessPermission(team, AccessPermission.NONE,
+					PermissionType.EXPLICIT, RegistrantType.TEAM, null, true));
 		}
-		assertTrue(RpcUtils.setRepositoryTeamPermissions(helloworld, permissions, url, account,
-				password.toCharArray()));
-		helloworldTeams = RpcUtils.getRepositoryTeams(helloworld, url, account,
-				password.toCharArray());
+		assertTrue(RpcUtils.setRepositoryTeamPermissions(helloworld, permissions, this.url,
+				this.account, this.password.toCharArray()));
+		helloworldTeams = RpcUtils.getRepositoryTeams(helloworld, this.url, this.account,
+				this.password.toCharArray());
 		assertEquals(0, helloworldTeams.size());
 
 		// delete the A-Team
-		assertTrue(RpcUtils.deleteTeam(aTeam, url, account, password.toCharArray()));
+		assertTrue(RpcUtils.deleteTeam(aTeam, this.url, this.account, this.password.toCharArray()));
 
-		teams = RpcUtils.getTeams(url, account, password.toCharArray());
+		teams = RpcUtils.getTeams(this.url, this.account, this.password.toCharArray());
 		assertEquals(1, teams.size());
 	}
 
 	@Test
 	public void testFederationRegistrations() throws Exception {
-		List<FederationModel> registrations = RpcUtils.getFederationRegistrations(url, account,
-				password.toCharArray());
+		final List<FederationModel> registrations = RpcUtils.getFederationRegistrations(this.url,
+				this.account, this.password.toCharArray());
 		assertTrue("No federation registrations were retrieved!", registrations.size() >= 0);
 	}
 
 	@Test
 	public void testFederationResultRegistrations() throws Exception {
-		List<FederationModel> registrations = RpcUtils.getFederationResultRegistrations(url,
-				account, password.toCharArray());
+		final List<FederationModel> registrations = RpcUtils.getFederationResultRegistrations(
+				this.url, this.account, this.password.toCharArray());
 		assertTrue("No federation result registrations were retrieved!", registrations.size() >= 0);
 	}
 
 	@Test
 	public void testFederationProposals() throws Exception {
-		List<FederationProposal> proposals = RpcUtils.getFederationProposals(url, account,
-				password.toCharArray());
+		final List<FederationProposal> proposals = RpcUtils.getFederationProposals(this.url,
+				this.account, this.password.toCharArray());
 		assertTrue("No federation proposals were retrieved!", proposals.size() >= 0);
 	}
 
 	@Test
 	public void testFederationSets() throws Exception {
-		List<FederationSet> sets = RpcUtils.getFederationSets(url, account, password.toCharArray());
+		final List<FederationSet> sets = RpcUtils.getFederationSets(this.url, this.account,
+				this.password.toCharArray());
 		assertTrue("No federation sets were retrieved!", sets.size() >= 0);
 	}
 
 	@Test
 	public void testSettings() throws Exception {
-		ServerSettings settings = RpcUtils.getSettings(url, account, password.toCharArray());
+		final ServerSettings settings = RpcUtils.getSettings(this.url, this.account,
+				this.password.toCharArray());
 		assertNotNull("No settings were retrieved!", settings);
 	}
 
 	@Test
 	public void testServerStatus() throws Exception {
-		ServerStatus status = RpcUtils.getStatus(url, account, password.toCharArray());
+		final ServerStatus status = RpcUtils.getStatus(this.url, this.account,
+				this.password.toCharArray());
 		assertNotNull("No status was retrieved!", status);
 	}
 
 	@Test
 	public void testUpdateSettings() throws Exception {
-		Map<String, String> updated = new HashMap<String, String>();
+		final Map<String, String> updated = new HashMap<String, String>();
 
 		// grab current setting
-		ServerSettings settings = RpcUtils.getSettings(url, account, password.toCharArray());
+		ServerSettings settings = RpcUtils.getSettings(this.url, this.account,
+				this.password.toCharArray());
 		boolean showSizes = settings.get(Keys.web.showRepositorySizes).getBoolean(true);
 		showSizes = !showSizes;
 
 		// update setting
 		updated.put(Keys.web.showRepositorySizes, String.valueOf(showSizes));
-		boolean success = RpcUtils.updateSettings(updated, url, account, password.toCharArray());
+		boolean success = RpcUtils.updateSettings(updated, this.url, this.account,
+				this.password.toCharArray());
 		assertTrue("Failed to update server settings", success);
 
 		// confirm setting change
-		settings = RpcUtils.getSettings(url, account, password.toCharArray());
+		settings = RpcUtils.getSettings(this.url, this.account, this.password.toCharArray());
 		boolean newValue = settings.get(Keys.web.showRepositorySizes).getBoolean(false);
 		assertEquals(newValue, showSizes);
 
 		// restore setting
 		newValue = !newValue;
 		updated.put(Keys.web.showRepositorySizes, String.valueOf(newValue));
-		success = RpcUtils.updateSettings(updated, url, account, password.toCharArray());
+		success = RpcUtils.updateSettings(updated, this.url, this.account,
+				this.password.toCharArray());
 		assertTrue("Failed to update server settings", success);
-		settings = RpcUtils.getSettings(url, account, password.toCharArray());
+		settings = RpcUtils.getSettings(this.url, this.account, this.password.toCharArray());
 		showSizes = settings.get(Keys.web.showRepositorySizes).getBoolean(true);
 		assertEquals(newValue, showSizes);
 	}
 
 	@Test
 	public void testBranches() throws Exception {
-		Map<String, Collection<String>> branches = RpcUtils.getBranches(url, account,
-				password.toCharArray());
+		final Map<String, Collection<String>> branches = RpcUtils.getBranches(this.url,
+				this.account, this.password.toCharArray());
 		assertNotNull(branches);
 		assertTrue(branches.size() > 0);
 	}
@@ -402,62 +424,68 @@ public class RpcTests extends GitblitUnitTest {
 	public void testFork() throws Exception {
 		// test forking by an administrator
 		// admins are all-powerful and can fork the unforakable :)
-		testFork(account, password, true, true);
-		testFork(account, password, false, true);
+		testFork(this.account, this.password, true, true);
+		testFork(this.account, this.password, false, true);
 
 		// test forking by a permitted normal user
-		UserModel forkUser = new UserModel("forkuser");
+		final UserModel forkUser = new UserModel("forkuser");
 		forkUser.password = forkUser.username;
 		forkUser.canFork = true;
-		RpcUtils.deleteUser(forkUser, url, account, password.toCharArray());
-		RpcUtils.createUser(forkUser, url, account, password.toCharArray());
+		RpcUtils.deleteUser(forkUser, this.url, this.account, this.password.toCharArray());
+		RpcUtils.createUser(forkUser, this.url, this.account, this.password.toCharArray());
 		testFork(forkUser.username, forkUser.password, true, true);
 		testFork(forkUser.username, forkUser.password, false, false);
-		RpcUtils.deleteUser(forkUser, url, account, password.toCharArray());
+		RpcUtils.deleteUser(forkUser, this.url, this.account, this.password.toCharArray());
 
 		// test forking by a non-permitted normal user
-		UserModel noForkUser = new UserModel("noforkuser");
+		final UserModel noForkUser = new UserModel("noforkuser");
 		noForkUser.password = noForkUser.username;
 		noForkUser.canFork = false;
-		RpcUtils.deleteUser(noForkUser, url, account, password.toCharArray());
-		RpcUtils.createUser(noForkUser, url, account, password.toCharArray());
+		RpcUtils.deleteUser(noForkUser, this.url, this.account, this.password.toCharArray());
+		RpcUtils.createUser(noForkUser, this.url, this.account, this.password.toCharArray());
 		testFork(forkUser.username, forkUser.password, true, false);
 		testFork(forkUser.username, forkUser.password, false, false);
-		RpcUtils.deleteUser(noForkUser, url, account, password.toCharArray());
+		RpcUtils.deleteUser(noForkUser, this.url, this.account, this.password.toCharArray());
 	}
 
-	private void testFork(String forkAcct, String forkAcctPassword, boolean allowForks, boolean expectSuccess) throws Exception {
+	private void testFork(String forkAcct, String forkAcctPassword, boolean allowForks,
+			boolean expectSuccess) throws Exception {
 		// test does not exist
-		RepositoryModel dne = new RepositoryModel();
+		final RepositoryModel dne = new RepositoryModel();
 		dne.name = "doesNotExist.git";
-        assertFalse(String.format("Successfully forked %s!", dne.name),
-                RpcUtils.forkRepository(dne, url, forkAcct, forkAcctPassword.toCharArray()));
+		assertFalse(String.format("Successfully forked %s!", dne.name),
+				RpcUtils.forkRepository(dne, this.url, forkAcct, forkAcctPassword.toCharArray()));
 
 		// delete any previous fork
-		RepositoryModel fork = findRepository(String.format("~%s/helloworld.git", forkAcct));
+		final RepositoryModel fork = findRepository(String.format("~%s/helloworld.git", forkAcct));
 		if (fork != null) {
-			RpcUtils.deleteRepository(fork, url, account, password.toCharArray());
+			RpcUtils.deleteRepository(fork, this.url, this.account, this.password.toCharArray());
 		}
 
 		// update the origin to allow forks or not
-		RepositoryModel origin = findRepository("helloworld.git");
+		final RepositoryModel origin = findRepository("helloworld.git");
 		origin.allowForks = allowForks;
-		RpcUtils.updateRepository(origin.name, origin, url, account, password.toCharArray());
+		RpcUtils.updateRepository(origin.name, origin, this.url, this.account,
+				this.password.toCharArray());
 
 		// fork the repository
 		if (expectSuccess) {
-			assertTrue(String.format("Failed to fork %s!", origin.name),
-                RpcUtils.forkRepository(origin, url, forkAcct, forkAcctPassword.toCharArray()));
+			assertTrue(
+					String.format("Failed to fork %s!", origin.name),
+					RpcUtils.forkRepository(origin, this.url, forkAcct,
+							forkAcctPassword.toCharArray()));
 		} else {
-			assertFalse(String.format("Successfully forked %s!", origin.name),
-	                RpcUtils.forkRepository(origin, url, forkAcct, forkAcctPassword.toCharArray()));
+			assertFalse(
+					String.format("Successfully forked %s!", origin.name),
+					RpcUtils.forkRepository(origin, this.url, forkAcct,
+							forkAcctPassword.toCharArray()));
 		}
 
-        // attempt another fork
-        assertFalse(String.format("Successfully forked %s!", origin.name),
-                RpcUtils.forkRepository(origin, url, forkAcct, forkAcctPassword.toCharArray()));
+		// attempt another fork
+		assertFalse(String.format("Successfully forked %s!", origin.name),
+				RpcUtils.forkRepository(origin, this.url, forkAcct, forkAcctPassword.toCharArray()));
 
-        // delete the fork repository
-        RpcUtils.deleteRepository(fork, url, account, password.toCharArray());
+		// delete the fork repository
+		RpcUtils.deleteRepository(fork, this.url, this.account, this.password.toCharArray());
 	}
 }

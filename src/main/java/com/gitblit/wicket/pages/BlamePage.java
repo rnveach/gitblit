@@ -70,13 +70,12 @@ public class BlamePage extends RepositoryPage {
 		}
 
 		public static BlameType get(String name) {
-			for (BlameType blameType : BlameType.values()) {
+			for (final BlameType blameType : BlameType.values()) {
 				if (blameType.name().equalsIgnoreCase(name)) {
 					return blameType;
 				}
 			}
-			throw new IllegalArgumentException("Unknown Blame Type [" + name
-					+ "]");
+			throw new IllegalArgumentException("Unknown Blame Type [" + name + "]");
 		}
 
 		@Override
@@ -93,56 +92,58 @@ public class BlamePage extends RepositoryPage {
 		final String blameTypeParam = params.getString("blametype", BlameType.COMMIT.toString());
 		final BlameType activeBlameType = BlameType.get(blameTypeParam);
 
-		RevCommit commit = getCommit();
-		
+		final RevCommit commit = getCommit();
+
 		PathModel pathModel = null;
-		
-		List<PathModel> paths = JGitUtils.getFilesInPath(getRepository(), StringUtils.getRootPath(blobPath), commit);
-		for (PathModel path : paths) {
+
+		final List<PathModel> paths = JGitUtils.getFilesInPath(getRepository(),
+				StringUtils.getRootPath(blobPath), commit);
+		for (final PathModel path : paths) {
 			if (path.path.equals(blobPath)) {
 				pathModel = path;
 				break;
 			}
 		}
-		
+
 		if (pathModel == null) {
-			final String notFound = MessageFormat.format("Blame page failed to find {0} in {1} @ {2}",
-					blobPath, repositoryName, objectId);
-			logger.error(notFound);
+			final String notFound = MessageFormat.format(
+					"Blame page failed to find {0} in {1} @ {2}", blobPath, this.repositoryName,
+					this.objectId);
+			this.logger.error(notFound);
 			add(new Label("annotation").setVisible(false));
-			add(new Label("missingBlob", missingBlob(blobPath, commit)).setEscapeModelStrings(false));
+			add(new Label("missingBlob", missingBlob(blobPath, commit))
+					.setEscapeModelStrings(false));
 			return;
 		}
-		
+
 		if (pathModel.isFilestoreItem()) {
-			String rawUrl = JGitUtils.getLfsRepositoryUrl(getContextUrl(), repositoryName, pathModel.getFilestoreOid());
+			final String rawUrl = JGitUtils.getLfsRepositoryUrl(getContextUrl(),
+					this.repositoryName, pathModel.getFilestoreOid());
 			add(new ExternalLink("blobLink", rawUrl));
 		} else {
 			add(new BookmarkablePageLink<Void>("blobLink", BlobPage.class,
-					WicketUtils.newPathParameter(repositoryName, objectId, blobPath)));	
+					WicketUtils.newPathParameter(this.repositoryName, this.objectId, blobPath)));
 		}
-		
+
 		add(new BookmarkablePageLink<Void>("commitLink", CommitPage.class,
-				WicketUtils.newObjectParameter(repositoryName, objectId)));
+				WicketUtils.newObjectParameter(this.repositoryName, this.objectId)));
 		add(new BookmarkablePageLink<Void>("commitDiffLink", CommitDiffPage.class,
-				WicketUtils.newObjectParameter(repositoryName, objectId)));
+				WicketUtils.newObjectParameter(this.repositoryName, this.objectId)));
 
 		// blame page links
 		add(new BookmarkablePageLink<Void>("historyLink", HistoryPage.class,
-				WicketUtils.newPathParameter(repositoryName, objectId, blobPath)));
+				WicketUtils.newPathParameter(this.repositoryName, this.objectId, blobPath)));
 
 		// "Blame by" links
-		for (BlameType type : BlameType.values()) {
-			String typeString = type.toString();
-			PageParameters blameTypePageParam =
-					WicketUtils.newBlameTypeParameter(repositoryName, commit.getName(),
-							WicketUtils.getPath(params), typeString);
+		for (final BlameType type : BlameType.values()) {
+			final String typeString = type.toString();
+			final PageParameters blameTypePageParam = WicketUtils.newBlameTypeParameter(
+					this.repositoryName, commit.getName(), WicketUtils.getPath(params), typeString);
 
-			String blameByLinkText = "blameBy"
-					+ Character.toUpperCase(typeString.charAt(0)) + typeString.substring(1)
-					+ "Link";
-			BookmarkablePageLink<Void> blameByPageLink =
-					new BookmarkablePageLink<Void>(blameByLinkText, BlamePage.class, blameTypePageParam);
+			final String blameByLinkText = "blameBy" + Character.toUpperCase(typeString.charAt(0))
+					+ typeString.substring(1) + "Link";
+			final BookmarkablePageLink<Void> blameByPageLink = new BookmarkablePageLink<Void>(
+					blameByLinkText, BlamePage.class, blameTypePageParam);
 
 			if (activeBlameType == type) {
 				blameByPageLink.add(new SimpleAttributeModifier("style", "font-weight:bold;"));
@@ -151,56 +152,54 @@ public class BlamePage extends RepositoryPage {
 			add(blameByPageLink);
 		}
 
-		add(new CommitHeaderPanel("commitHeader", repositoryName, commit));
+		add(new CommitHeaderPanel("commitHeader", this.repositoryName, commit));
 
-		add(new PathBreadcrumbsPanel("breadcrumbs", repositoryName, blobPath, objectId));
+		add(new PathBreadcrumbsPanel("breadcrumbs", this.repositoryName, blobPath, this.objectId));
 
-		String format = app().settings().getString(Keys.web.datetimestampLongFormat,
+		final String format = app().settings().getString(Keys.web.datetimestampLongFormat,
 				"EEEE, MMMM d, yyyy HH:mm Z");
 		final DateFormat df = new SimpleDateFormat(format);
 		df.setTimeZone(getTimeZone());
 
-		
-
-		
-
 		add(new Label("missingBlob").setVisible(false));
 
 		final int tabLength = app().settings().getInteger(Keys.web.tabLength, 4);
-		List<AnnotatedLine> lines = DiffUtils.blame(getRepository(), blobPath, objectId);
+		final List<AnnotatedLine> lines = DiffUtils.blame(getRepository(), blobPath, this.objectId);
 		final Map<?, String> colorMap = initializeColors(activeBlameType, lines);
-		ListDataProvider<AnnotatedLine> blameDp = new ListDataProvider<AnnotatedLine>(lines);
-		DataView<AnnotatedLine> blameView = new DataView<AnnotatedLine>("annotation", blameDp) {
+		final ListDataProvider<AnnotatedLine> blameDp = new ListDataProvider<AnnotatedLine>(lines);
+		final DataView<AnnotatedLine> blameView = new DataView<AnnotatedLine>("annotation", blameDp) {
 			private static final long serialVersionUID = 1L;
 			private String lastCommitId = "";
 			private boolean showInitials = true;
-			private String zeroId = ObjectId.zeroId().getName();
+			private final String zeroId = ObjectId.zeroId().getName();
 
 			@Override
 			public void populateItem(final Item<AnnotatedLine> item) {
 				final AnnotatedLine entry = item.getModelObject();
 
 				// commit id and author
-				if (!lastCommitId.equals(entry.commitId)) {
-					lastCommitId = entry.commitId;
-					if (zeroId.equals(entry.commitId)) {
+				if (!this.lastCommitId.equals(entry.commitId)) {
+					this.lastCommitId = entry.commitId;
+					if (this.zeroId.equals(entry.commitId)) {
 						// unknown commit
 						item.add(new Label("commit", "<?>"));
-						showInitials = false;
+						this.showInitials = false;
 					} else {
 						// show the link for first line
-						LinkPanel commitLink = new LinkPanel("commit", null,
+						final LinkPanel commitLink = new LinkPanel("commit", null,
 								getShortObjectId(entry.commitId), CommitPage.class,
 								newCommitParameter(entry.commitId));
-						WicketUtils.setHtmlTooltip(commitLink,
-								MessageFormat.format("{0}, {1}", entry.author, df.format(entry.when)));
+						WicketUtils.setHtmlTooltip(
+								commitLink,
+								MessageFormat.format("{0}, {1}", entry.author,
+										df.format(entry.when)));
 						item.add(commitLink);
 						WicketUtils.setCssStyle(item, "border-top: 1px solid #ddd;");
-						showInitials = true;
+						this.showInitials = true;
 					}
 				} else {
-					if (showInitials) {
-						showInitials = false;
+					if (this.showInitials) {
+						this.showInitials = false;
 						// show author initials
 						item.add(new Label("commit", getInitials(entry.author)));
 					} else {
@@ -225,7 +224,8 @@ public class BlamePage extends RepositoryPage {
 					color = colorMap.get(entry.commitId);
 					break;
 				}
-				Component data = new Label("data", StringUtils.escapeForHtml(entry.data, true, tabLength)).setEscapeModelStrings(false);
+				final Component data = new Label("data", StringUtils.escapeForHtml(entry.data,
+						true, tabLength)).setEscapeModelStrings(false);
 				data.add(new SimpleAttributeModifier("style", "background-color: " + color + ";"));
 				item.add(data);
 			}
@@ -233,10 +233,10 @@ public class BlamePage extends RepositoryPage {
 		add(blameView);
 	}
 
-	private String getInitials(String author) {
-		StringBuilder sb = new StringBuilder();
-		String[] chunks = author.split(" ");
-		for (String chunk : chunks) {
+	private static String getInitials(String author) {
+		final StringBuilder sb = new StringBuilder();
+		final String[] chunks = author.split(" ");
+		for (final String chunk : chunks) {
 			sb.append(chunk.charAt(0));
 		}
 		return sb.toString().toUpperCase();
@@ -258,20 +258,21 @@ public class BlamePage extends RepositoryPage {
 	}
 
 	protected String missingBlob(String blobPath, RevCommit commit) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		sb.append("<div class=\"alert alert-error\">");
-		String pattern = getString("gb.doesNotExistInTree").replace("{0}", "<b>{0}</b>").replace("{1}", "<b>{1}</b>");
+		final String pattern = getString("gb.doesNotExistInTree").replace("{0}", "<b>{0}</b>")
+				.replace("{1}", "<b>{1}</b>");
 		sb.append(MessageFormat.format(pattern, blobPath, commit.getTree().getId().getName()));
 		sb.append("</div>");
 		return sb.toString();
 	}
 
-	private Map<?, String> initializeColors(BlameType blameType, List<AnnotatedLine> lines) {
-		ColorFactory colorFactory = new ColorFactory();
+	private static Map<?, String> initializeColors(BlameType blameType, List<AnnotatedLine> lines) {
+		final ColorFactory colorFactory = new ColorFactory();
 		Map<?, String> colorMap;
 
 		if (BlameType.AGE == blameType) {
-			Set<Date> keys = new TreeSet<Date>(new Comparator<Date>() {
+			final Set<Date> keys = new TreeSet<Date>(new Comparator<Date>() {
 				@Override
 				public int compare(Date o1, Date o2) {
 					// younger code has a brighter, older code lightens to white
@@ -279,16 +280,16 @@ public class BlamePage extends RepositoryPage {
 				}
 			});
 
-			for (AnnotatedLine line : lines) {
+			for (final AnnotatedLine line : lines) {
 				keys.add(line.when);
 			}
 
 			// TODO consider making this a setting
 			colorMap = colorFactory.getGraduatedColorMap(keys, Color.decode("#FFA63A"));
 		} else {
-			Set<String> keys = new HashSet<String>();
+			final Set<String> keys = new HashSet<String>();
 
-			for (AnnotatedLine line : lines) {
+			for (final AnnotatedLine line : lines) {
 				if (blameType == BlameType.AUTHOR) {
 					keys.add(line.author);
 				} else {

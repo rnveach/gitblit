@@ -58,7 +58,6 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.internal.JGitText;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.ReceivePack;
-import org.eclipse.jgit.transport.ServiceMayNotContinueException;
 import org.eclipse.jgit.transport.UploadPack;
 import org.eclipse.jgit.transport.resolver.ReceivePackFactory;
 import org.eclipse.jgit.transport.resolver.ServiceNotAuthorizedException;
@@ -97,7 +96,7 @@ public class GitDaemon {
 
 	private final ThreadGroup processors;
 
-	private AtomicBoolean run;
+	private final AtomicBoolean run;
 
 	private ServerSocket acceptSocket;
 
@@ -105,65 +104,63 @@ public class GitDaemon {
 
 	private int timeout;
 
-	private RepositoryResolver<GitDaemonClient> repositoryResolver;
+	private final RepositoryResolver<GitDaemonClient> repositoryResolver;
 
-	private UploadPackFactory<GitDaemonClient> uploadPackFactory;
+	private final UploadPackFactory<GitDaemonClient> uploadPackFactory;
 
-	private ReceivePackFactory<GitDaemonClient> receivePackFactory;
+	private final ReceivePackFactory<GitDaemonClient> receivePackFactory;
 
 	public GitDaemon(IGitblit gitblit) {
 
-		IStoredSettings settings = gitblit.getSettings();
-		int port = settings.getInteger(Keys.git.daemonPort, 0);
-		String bindInterface = settings.getString(Keys.git.daemonBindInterface, "localhost");
+		final IStoredSettings settings = gitblit.getSettings();
+		final int port = settings.getInteger(Keys.git.daemonPort, 0);
+		final String bindInterface = settings.getString(Keys.git.daemonBindInterface, "localhost");
 
 		if (StringUtils.isEmpty(bindInterface)) {
-			myAddress = new InetSocketAddress(port);
+			this.myAddress = new InetSocketAddress(port);
 		} else {
-			myAddress = new InetSocketAddress(bindInterface, port);
+			this.myAddress = new InetSocketAddress(bindInterface, port);
 		}
 
-		repositoryResolver = new RepositoryResolver<GitDaemonClient>(gitblit);
-		uploadPackFactory = new GitblitUploadPackFactory<GitDaemonClient>(gitblit);
-		receivePackFactory = new GitblitReceivePackFactory<GitDaemonClient>(gitblit);
+		this.repositoryResolver = new RepositoryResolver<GitDaemonClient>(gitblit);
+		this.uploadPackFactory = new GitblitUploadPackFactory<GitDaemonClient>(gitblit);
+		this.receivePackFactory = new GitblitReceivePackFactory<GitDaemonClient>(gitblit);
 
-		run = new AtomicBoolean(false);
-		processors = new ThreadGroup("Git-Daemon");
-		services = new GitDaemonService[] { new GitDaemonService("upload-pack", "uploadpack") {
-					{
-						setEnabled(true);
-						setOverridable(false);
-					}
+		this.run = new AtomicBoolean(false);
+		this.processors = new ThreadGroup("Git-Daemon");
+		this.services = new GitDaemonService[] { new GitDaemonService("upload-pack", "uploadpack") {
+			{
+				setEnabled(true);
+				setOverridable(false);
+			}
 
-					@Override
-					protected void execute(final GitDaemonClient dc, final Repository db)
-							throws IOException, ServiceNotEnabledException,
-							ServiceNotAuthorizedException {
-						UploadPack up = uploadPackFactory.create(dc, db);
-						InputStream in = dc.getInputStream();
-						OutputStream out = dc.getOutputStream();
-						up.upload(in, out, null);
-					}
-				}, new GitDaemonService("receive-pack", "receivepack") {
-					{
-						setEnabled(true);
-						setOverridable(false);
-					}
+			@Override
+			protected void execute(final GitDaemonClient dc, final Repository db)
+					throws IOException, ServiceNotEnabledException, ServiceNotAuthorizedException {
+				final UploadPack up = GitDaemon.this.uploadPackFactory.create(dc, db);
+				final InputStream in = dc.getInputStream();
+				final OutputStream out = dc.getOutputStream();
+				up.upload(in, out, null);
+			}
+		}, new GitDaemonService("receive-pack", "receivepack") {
+			{
+				setEnabled(true);
+				setOverridable(false);
+			}
 
-					@Override
-					protected void execute(final GitDaemonClient dc, final Repository db)
-							throws IOException, ServiceNotEnabledException,
-							ServiceNotAuthorizedException {
-						ReceivePack rp = receivePackFactory.create(dc, db);
-						InputStream in = dc.getInputStream();
-						OutputStream out = dc.getOutputStream();
-						rp.receive(in, out, null);
-					}
-				} };
+			@Override
+			protected void execute(final GitDaemonClient dc, final Repository db)
+					throws IOException, ServiceNotEnabledException, ServiceNotAuthorizedException {
+				final ReceivePack rp = GitDaemon.this.receivePackFactory.create(dc, db);
+				final InputStream in = dc.getInputStream();
+				final OutputStream out = dc.getOutputStream();
+				rp.receive(in, out, null);
+			}
+		} };
 	}
 
 	public int getPort() {
-		return myAddress.getPort();
+		return this.myAddress.getPort();
 	}
 
 	public String formatUrl(String servername, String repository) {
@@ -172,13 +169,14 @@ public class GitDaemon {
 			return MessageFormat.format("git://{0}/{1}", servername, repository);
 		} else {
 			// non-standard port
-			return MessageFormat.format("git://{0}:{1,number,0}/{2}", servername, getPort(), repository);
+			return MessageFormat.format("git://{0}:{1,number,0}/{2}", servername, getPort(),
+					repository);
 		}
 	}
 
 	/** @return timeout (in seconds) before aborting an IO operation. */
 	public int getTimeout() {
-		return timeout;
+		return this.timeout;
 	}
 
 	/**
@@ -190,7 +188,7 @@ public class GitDaemon {
 	 *            connected client.
 	 */
 	public void setTimeout(final int seconds) {
-		timeout = seconds;
+		this.timeout = seconds;
 	}
 
 	/**
@@ -202,67 +200,77 @@ public class GitDaemon {
 	 *             the daemon is already running.
 	 */
 	public synchronized void start() throws IOException {
-		if (acceptThread != null)
+		if (this.acceptThread != null) {
 			throw new IllegalStateException(JGitText.get().daemonAlreadyRunning);
+		}
 
-		final ServerSocket listenSock = new ServerSocket(myAddress != null ? myAddress.getPort()
-				: 0, BACKLOG, myAddress != null ? myAddress.getAddress() : null);
-		myAddress = (InetSocketAddress) listenSock.getLocalSocketAddress();
+		final ServerSocket listenSock = new ServerSocket(
+				this.myAddress != null ? this.myAddress.getPort() : 0, BACKLOG,
+				this.myAddress != null ? this.myAddress.getAddress() : null);
+		this.myAddress = (InetSocketAddress) listenSock.getLocalSocketAddress();
 
-		run.set(true);
-		acceptSocket = listenSock;
-		acceptThread = new Thread(processors, "Git-Daemon-Accept") {
+		this.run.set(true);
+		this.acceptSocket = listenSock;
+		this.acceptThread = new Thread(this.processors, "Git-Daemon-Accept") {
 			@Override
 			public void run() {
 				while (isRunning()) {
 					try {
 						startClient(listenSock.accept());
-					} catch (InterruptedIOException e) {
+					}
+					catch (final InterruptedIOException e) {
 						// Test again to see if we should keep accepting.
-					} catch (IOException e) {
+					}
+					catch (final IOException e) {
 						break;
 					}
 				}
 
 				try {
 					listenSock.close();
-				} catch (IOException err) {
+				}
+				catch (final IOException err) {
 					//
-				} finally {
-					acceptSocket = null;
+				}
+				finally {
+					GitDaemon.this.acceptSocket = null;
 				}
 
 			}
 		};
-		acceptThread.start();
+		this.acceptThread.start();
 
-		logger.info(MessageFormat.format("Git Daemon is listening on {0}:{1,number,0}", myAddress.getAddress().getHostAddress(), myAddress.getPort()));
+		this.logger.info(MessageFormat.format("Git Daemon is listening on {0}:{1,number,0}",
+				this.myAddress.getAddress().getHostAddress(), this.myAddress.getPort()));
 	}
 
 	/** @return true if this daemon is receiving connections. */
 	public boolean isRunning() {
-		return run.get();
+		return this.run.get();
 	}
 
 	/** Stop this daemon. */
 	public synchronized void stop() {
-		if (isRunning() && acceptThread != null) {
-			run.set(false);
-			logger.info("Git Daemon stopping...");
+		if (isRunning() && (this.acceptThread != null)) {
+			this.run.set(false);
+			this.logger.info("Git Daemon stopping...");
 			try {
 				// close the accept socket
 				// this throws a SocketException in the accept thread
-				acceptSocket.close();
-			} catch (IOException e1) {
+				this.acceptSocket.close();
+			}
+			catch (final IOException e1) {
 			}
 			try {
 				// join the accept thread
-				acceptThread.join();
-				logger.info("Git Daemon stopped.");
-			} catch (InterruptedException e) {
-				logger.error("Accept thread join interrupted", e);
-			} finally {
-				acceptThread = null;
+				this.acceptThread.join();
+				this.logger.info("Git Daemon stopped.");
+			}
+			catch (final InterruptedException e) {
+				this.logger.error("Accept thread join interrupted", e);
+			}
+			finally {
+				this.acceptThread = null;
 			}
 		}
 	}
@@ -271,29 +279,36 @@ public class GitDaemon {
 		final GitDaemonClient dc = new GitDaemonClient(this);
 
 		final SocketAddress peer = s.getRemoteSocketAddress();
-		if (peer instanceof InetSocketAddress)
+		if (peer instanceof InetSocketAddress) {
 			dc.setRemoteAddress(((InetSocketAddress) peer).getAddress());
+		}
 
-		new Thread(processors, "Git-Daemon-Client " + peer.toString()) {
+		new Thread(this.processors, "Git-Daemon-Client " + peer.toString()) {
 			@Override
 			public void run() {
 				try {
 					dc.execute(s);
-				} catch (ServiceNotEnabledException e) {
+				}
+				catch (final ServiceNotEnabledException e) {
 					// Ignored. Client cannot use this repository.
-				} catch (ServiceNotAuthorizedException e) {
+				}
+				catch (final ServiceNotAuthorizedException e) {
 					// Ignored. Client cannot use this repository.
-				} catch (IOException e) {
+				}
+				catch (final IOException e) {
 					// Ignore unexpected IO exceptions from clients
-				} finally {
+				}
+				finally {
 					try {
 						s.getInputStream().close();
-					} catch (IOException e) {
+					}
+					catch (final IOException e) {
 						// Ignore close exceptions
 					}
 					try {
 						s.getOutputStream().close();
-					} catch (IOException e) {
+					}
+					catch (final IOException e) {
 						// Ignore close exceptions
 					}
 				}
@@ -302,15 +317,15 @@ public class GitDaemon {
 	}
 
 	synchronized GitDaemonService matchService(final String cmd) {
-		for (final GitDaemonService d : services) {
-			if (d.handles(cmd))
+		for (final GitDaemonService d : this.services) {
+			if (d.handles(cmd)) {
 				return d;
+			}
 		}
 		return null;
 	}
 
-	Repository openRepository(GitDaemonClient client, String name)
-			throws ServiceMayNotContinueException {
+	Repository openRepository(GitDaemonClient client, String name) {
 		// Assume any attempt to use \ was by a Windows client
 		// and correct to the more typical / used in Git URIs.
 		//
@@ -318,16 +333,19 @@ public class GitDaemon {
 
 		// git://thishost/path should always be name="/path" here
 		//
-		if (!name.startsWith("/")) //$NON-NLS-1$
+		if (!name.startsWith("/")) {
 			return null;
+		}
 
 		try {
-			return repositoryResolver.open(client, name.substring(1));
-		} catch (RepositoryNotFoundException e) {
+			return this.repositoryResolver.open(client, name.substring(1));
+		}
+		catch (final RepositoryNotFoundException e) {
 			// null signals it "wasn't found", which is all that is suitable
 			// for the remote client to know.
 			return null;
-		} catch (ServiceNotEnabledException e) {
+		}
+		catch (final ServiceNotEnabledException e) {
 			// null signals it "wasn't found", which is all that is suitable
 			// for the remote client to know.
 			return null;

@@ -32,7 +32,8 @@ import com.gitblit.utils.StringUtils;
 import com.gitblit.wicket.GitBlitWebSession;
 
 /**
- * A panel for naming a repository, specifying it's project, and entering a description.
+ * A panel for naming a repository, specifying it's project, and entering a
+ * description.
  *
  * @author James Moger
  *
@@ -45,16 +46,16 @@ public class RepositoryNamePanel extends BasePanel {
 
 	private final IModel<String> projectPath;
 
-	private DropDownChoice<String> pathChoice;
+	private final DropDownChoice<String> pathChoice;
 
 	private final IModel<String> repoName;
 
-	private TextField<String> nameField;
+	private final TextField<String> nameField;
 
 	public RepositoryNamePanel(String wicketId, RepositoryModel repository) {
 		super(wicketId);
 
-		GitBlitWebSession session = GitBlitWebSession.get();
+		final GitBlitWebSession session = GitBlitWebSession.get();
 		UserModel user = session.getUser();
 		if (user == null) {
 			user = UserModel.ANONYMOUS;
@@ -63,10 +64,10 @@ public class RepositoryNamePanel extends BasePanel {
 		// build project set for repository destination
 		String defaultPath = null;
 		String defaultName = null;
-		Set<String> pathNames = new TreeSet<String>();
+		final Set<String> pathNames = new TreeSet<String>();
 
 		// add the registered/known projects
-		for (ProjectModel project : app().projects().getProjectModels(user, false)) {
+		for (final ProjectModel project : app().projects().getProjectModels(user, false)) {
 			// TODO issue-351: user.canAdmin(project)
 			if (user.canAdmin()) {
 				if (project.isRoot) {
@@ -95,7 +96,8 @@ public class RepositoryNamePanel extends BasePanel {
 			pathNames.add(defaultPath);
 		}
 
-		// if default project is not already set, set preference based on the user permissions
+		// if default project is not already set, set preference based on the
+		// user permissions
 		if (defaultPath == null) {
 			if (user.canAdmin()) {
 				defaultPath = "/";
@@ -104,66 +106,67 @@ public class RepositoryNamePanel extends BasePanel {
 			}
 		}
 
-		projectPath = Model.of(defaultPath);
-		pathChoice = new DropDownChoice<String>("projectPath", projectPath, new ArrayList<String>(pathNames));
-		repoName = Model.of(defaultName);
-		nameField = new TextField<String>("name", repoName);
+		this.projectPath = Model.of(defaultPath);
+		this.pathChoice = new DropDownChoice<String>("projectPath", this.projectPath,
+				new ArrayList<String>(pathNames));
+		this.repoName = Model.of(defaultName);
+		this.nameField = new TextField<String>("name", this.repoName);
 
 		// only enable project selection if we actually have multiple choices
-		add(pathChoice.setEnabled(pathNames.size() > 1));
-		add(nameField);
+		add(this.pathChoice.setEnabled(pathNames.size() > 1));
+		add(this.nameField);
 		add(new TextField<String>("description"));
 	}
 
 	public void setEditable(boolean editable) {
 		// only enable project selection if we actually have multiple choices
-		pathChoice.setEnabled(pathChoice.getChoices().size() > 1 && editable);
-		nameField.setEnabled(editable);
+		this.pathChoice.setEnabled((this.pathChoice.getChoices().size() > 1) && editable);
+		this.nameField.setEnabled(editable);
 	}
 
 	public boolean updateModel(RepositoryModel repositoryModel) {
 		// confirm a project path was selected
-		if (StringUtils.isEmpty(projectPath.getObject())) {
+		if (StringUtils.isEmpty(this.projectPath.getObject())) {
 			error(getString("gb.pleaseSelectProject"));
 			return false;
 		}
 
 		// confirm a repository name was entered
-		if (StringUtils.isEmpty(repoName.getObject())) {
+		if (StringUtils.isEmpty(this.repoName.getObject())) {
 			error(getString("gb.pleaseSetRepositoryName"));
 			return false;
 		}
 
-		String project = projectPath.getObject();
-		String name = repoName.getObject();
+		final String project = this.projectPath.getObject();
+		final String name = this.repoName.getObject();
 
-		fullName = (project + name).trim();
-		fullName = fullName.replace('\\', '/');
-		fullName = fullName.replace("//", "/");
-		if (fullName.charAt(0) == '/') {
-			fullName = fullName.substring(1);
+		this.fullName = (project + name).trim();
+		this.fullName = this.fullName.replace('\\', '/');
+		this.fullName = this.fullName.replace("//", "/");
+		if (this.fullName.charAt(0) == '/') {
+			this.fullName = this.fullName.substring(1);
 		}
-		if (fullName.endsWith("/")) {
-			fullName = fullName.substring(0, fullName.length() - 1);
+		if (this.fullName.endsWith("/")) {
+			this.fullName = this.fullName.substring(0, this.fullName.length() - 1);
 		}
 
-		if (fullName.contains("../")) {
+		if (this.fullName.contains("../")) {
 			error(getString("gb.illegalRelativeSlash"));
 			return false;
 		}
-		if (fullName.contains("/../")) {
+		if (this.fullName.contains("/../")) {
 			error(getString("gb.illegalRelativeSlash"));
 			return false;
 		}
 
 		// confirm valid characters in repository name
-		Character c = StringUtils.findInvalidCharacter(fullName);
+		final Character c = StringUtils.findInvalidCharacter(this.fullName);
 		if (c != null) {
 			error(MessageFormat.format(getString("gb.illegalCharacterRepositoryName"), c));
 			return false;
 		}
 
-		repositoryModel.name = fullName;
+		repositoryModel.name = this.fullName;
 
 		return true;
 	}

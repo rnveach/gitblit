@@ -48,7 +48,7 @@ public class FederationModel implements Serializable, Comparable<FederationModel
 
 	public boolean bare;
 
-    public boolean mirror;
+	public boolean mirror;
 
 	public boolean mergeAccounts;
 
@@ -64,7 +64,7 @@ public class FederationModel implements Serializable, Comparable<FederationModel
 
 	public Date nextPull;
 
-	private Map<String, FederationPullStatus> results = new ConcurrentHashMap<String, FederationPullStatus>();
+	private final Map<String, FederationPullStatus> results = new ConcurrentHashMap<String, FederationPullStatus>();
 
 	/**
 	 * The constructor for a remote server configuration.
@@ -73,8 +73,8 @@ public class FederationModel implements Serializable, Comparable<FederationModel
 	 */
 	public FederationModel(String serverName) {
 		this.name = serverName;
-		bare = true;
-		mirror = true;
+		this.bare = true;
+		this.mirror = true;
 		this.lastPull = new Date(0);
 		this.nextPull = new Date(0);
 	}
@@ -82,27 +82,27 @@ public class FederationModel implements Serializable, Comparable<FederationModel
 	public boolean isIncluded(RepositoryModel repository) {
 		// if exclusions has the all wildcard, then check for specific
 		// inclusions
-		if (exclusions.contains("*")) {
-			for (String name : inclusions) {
+		if (this.exclusions.contains("*")) {
+			for (final String name : this.inclusions) {
 				if (StringUtils.fuzzyMatch(repository.name, name)) {
-					results.put(repository.name, FederationPullStatus.PENDING);
+					this.results.put(repository.name, FederationPullStatus.PENDING);
 					return true;
 				}
 			}
-			results.put(repository.name, FederationPullStatus.EXCLUDED);
+			this.results.put(repository.name, FederationPullStatus.EXCLUDED);
 			return false;
 		}
 
 		// named exclusions
-		for (String name : exclusions) {
+		for (final String name : this.exclusions) {
 			if (StringUtils.fuzzyMatch(repository.name, name)) {
-				results.put(repository.name, FederationPullStatus.EXCLUDED);
+				this.results.put(repository.name, FederationPullStatus.EXCLUDED);
 				return false;
 			}
 		}
 
 		// included by default
-		results.put(repository.name, FederationPullStatus.PENDING);
+		this.results.put(repository.name, FederationPullStatus.PENDING);
 		return true;
 	}
 
@@ -114,17 +114,17 @@ public class FederationModel implements Serializable, Comparable<FederationModel
 	 * @param status
 	 */
 	public void updateStatus(RepositoryModel repository, FederationPullStatus status) {
-		if (!results.containsKey(repository.name)) {
-			results.put(repository.name, FederationPullStatus.PENDING);
+		if (!this.results.containsKey(repository.name)) {
+			this.results.put(repository.name, FederationPullStatus.PENDING);
 		}
 		if (status != null) {
-			results.put(repository.name, status);
+			this.results.put(repository.name, status);
 		}
 	}
 
 	public List<RepositoryStatus> getStatusList() {
-		List<RepositoryStatus> list = new ArrayList<RepositoryStatus>();
-		for (Map.Entry<String, FederationPullStatus> entry : results.entrySet()) {
+		final List<RepositoryStatus> list = new ArrayList<RepositoryStatus>();
+		for (final Map.Entry<String, FederationPullStatus> entry : this.results.entrySet()) {
 			list.add(new RepositoryStatus(entry.getKey(), entry.getValue()));
 		}
 		return list;
@@ -137,11 +137,11 @@ public class FederationModel implements Serializable, Comparable<FederationModel
 	 * @return the lowest pull status of the registration
 	 */
 	public FederationPullStatus getLowestStatus() {
-		if (results.size() == 0) {
+		if (this.results.size() == 0) {
 			return FederationPullStatus.PENDING;
 		}
 		FederationPullStatus status = FederationPullStatus.MIRRORED;
-		for (FederationPullStatus result : results.values()) {
+		for (final FederationPullStatus result : this.results.values()) {
 			if (result.ordinal() < status.ordinal()) {
 				status = result;
 			}
@@ -156,21 +156,22 @@ public class FederationModel implements Serializable, Comparable<FederationModel
 	 * @return true, if this is result data
 	 */
 	public boolean isResultData() {
-		return !url.toLowerCase().startsWith("http://") && !url.toLowerCase().startsWith("https://");
+		return !this.url.toLowerCase().startsWith("http://")
+				&& !this.url.toLowerCase().startsWith("https://");
 	}
 
 	@Override
 	public String toString() {
-		return "Federated " + name + " (" + url + ")";
+		return "Federated " + this.name + " (" + this.url + ")";
 	}
 
 	@Override
 	public int compareTo(FederationModel o) {
-		boolean r1 = isResultData();
-		boolean r2 = o.isResultData();
+		final boolean r1 = isResultData();
+		final boolean r2 = o.isResultData();
 		if ((r1 && r2) || (!r1 && !r2)) {
 			// sort registrations and results by name
-			return name.compareTo(o.name);
+			return this.name.compareTo(o.name);
 		}
 		// sort registrations first
 		if (r1) {
@@ -197,10 +198,10 @@ public class FederationModel implements Serializable, Comparable<FederationModel
 
 		@Override
 		public int compareTo(RepositoryStatus o) {
-			if (status.equals(o.status)) {
-				return StringUtils.compareRepositoryNames(name, o.name);
+			if (this.status.equals(o.status)) {
+				return StringUtils.compareRepositoryNames(this.name, o.name);
 			}
-			return status.compareTo(o.status);
+			return this.status.compareTo(o.status);
 		}
 	}
 }

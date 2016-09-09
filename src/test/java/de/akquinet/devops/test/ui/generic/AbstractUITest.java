@@ -41,8 +41,7 @@ public abstract class AbstractUITest {
 	private static Thread serverThread;
 	private static WebDriver driver;
 
-	private static final int HTTP_PORT = 8080, HTTPS_PORT = 8443,
-			SHUTDOWN_PORT = 8081;
+	private static final int HTTP_PORT = 8080, HTTPS_PORT = 8443, SHUTDOWN_PORT = 8081;
 	private static final String GITBLIT_PROPERTIES_PATH = "test-ui-gitblit.properties",
 			USERS_PROPERTIES_PATH = "test-ui-users.conf";
 
@@ -52,24 +51,21 @@ public abstract class AbstractUITest {
 	 */
 	@BeforeClass
 	public static void setUpClass() {
-		Runnable gitblitRunnable = new GitblitRunnable(HTTP_PORT, HTTPS_PORT,
-				SHUTDOWN_PORT, GITBLIT_PROPERTIES_PATH, USERS_PROPERTIES_PATH);
+		final Runnable gitblitRunnable = new GitblitRunnable(HTTP_PORT, HTTPS_PORT, SHUTDOWN_PORT,
+				GITBLIT_PROPERTIES_PATH, USERS_PROPERTIES_PATH);
 
 		serverThread = new Thread(gitblitRunnable);
 		serverThread.start();
-		FirefoxProfile firefoxProfile = new FirefoxProfile();
-		firefoxProfile.setPreference("startup.homepage_welcome_url",
-				"https://www.google.de");
+		final FirefoxProfile firefoxProfile = new FirefoxProfile();
+		firefoxProfile.setPreference("startup.homepage_welcome_url", "https://www.google.de");
 
 		firefoxProfile.setPreference("browser.download.folderList", 2);
-		firefoxProfile.setPreference(
-				"browser.download.manager.showWhenStarting", false);
-		String downloadDir = System.getProperty("java.io.tmpdir");
+		firefoxProfile.setPreference("browser.download.manager.showWhenStarting", false);
+		final String downloadDir = System.getProperty("java.io.tmpdir");
 		firefoxProfile.setPreference("browser.download.dir", downloadDir);
 		firefoxProfile.setPreference("browser.helperApps.neverAsk.saveToDisk",
 				"text/csv,text/plain,application/zip,application/pdf");
-		firefoxProfile.setPreference("browser.helperApps.alwaysAsk.force",
-				false);
+		firefoxProfile.setPreference("browser.helperApps.alwaysAsk.force", false);
 		System.out.println("Saving all attachments to: " + downloadDir);
 
 		driver = new FirefoxDriver(firefoxProfile);

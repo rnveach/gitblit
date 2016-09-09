@@ -70,18 +70,22 @@ public class FanoutClient implements Runnable {
 
 	public interface FanoutListener {
 		public void pong(Date timestamp);
+
 		public void announcement(String channel, String message);
 	}
 
 	public static class FanoutAdapter implements FanoutListener {
 		@Override
-		public void pong(Date timestamp) { }
+		public void pong(Date timestamp) {
+		}
+
 		@Override
-		public void announcement(String channel, String message) { }
+		public void announcement(String channel, String message) {
+		}
 	}
 
 	public static void main(String args[]) throws Exception {
-		FanoutClient client = new FanoutClient("localhost", 2000);
+		final FanoutClient client = new FanoutClient("localhost", 2000);
 		client.addListener(new FanoutAdapter() {
 
 			@Override
@@ -91,7 +95,8 @@ public class FanoutClient implements Runnable {
 
 			@Override
 			public void announcement(String channel, String message) {
-				System.out.println(MessageFormat.format("Here ye, Here ye. {0} says {1}", channel, message));
+				System.out.println(MessageFormat.format("Here ye, Here ye. {0} says {1}", channel,
+						message));
 			}
 		});
 		client.start();
@@ -111,30 +116,30 @@ public class FanoutClient implements Runnable {
 	public FanoutClient(String host, int port) {
 		this.host = host;
 		this.port = port;
-		readBuffer = ByteBuffer.allocateDirect(FanoutConstants.BUFFER_LENGTH);
-		writeBuffer = ByteBuffer.allocateDirect(FanoutConstants.BUFFER_LENGTH);
-		decoder = Charset.forName(FanoutConstants.CHARSET).newDecoder();
-		listeners = Collections.synchronizedList(new ArrayList<FanoutListener>());
-		subscriptions = new LinkedHashSet<String>();
-		isRunning = new AtomicBoolean(false);
-		isConnected = new AtomicBoolean(false);
-		isAutomaticReconnect = new AtomicBoolean(true);
+		this.readBuffer = ByteBuffer.allocateDirect(FanoutConstants.BUFFER_LENGTH);
+		this.writeBuffer = ByteBuffer.allocateDirect(FanoutConstants.BUFFER_LENGTH);
+		this.decoder = Charset.forName(FanoutConstants.CHARSET).newDecoder();
+		this.listeners = Collections.synchronizedList(new ArrayList<FanoutListener>());
+		this.subscriptions = new LinkedHashSet<String>();
+		this.isRunning = new AtomicBoolean(false);
+		this.isConnected = new AtomicBoolean(false);
+		this.isAutomaticReconnect = new AtomicBoolean(true);
 	}
 
 	public void addListener(FanoutListener listener) {
-		listeners.add(listener);
+		this.listeners.add(listener);
 	}
 
 	public void removeListener(FanoutListener listener) {
-		listeners.remove(listener);
+		this.listeners.remove(listener);
 	}
 
 	public boolean isAutomaticReconnect() {
-		return isAutomaticReconnect.get();
+		return this.isAutomaticReconnect.get();
 	}
 
 	public void setAutomaticReconnect(boolean value) {
-		isAutomaticReconnect.set(value);
+		this.isAutomaticReconnect.set(value);
 	}
 
 	public void ping() {
@@ -149,14 +154,14 @@ public class FanoutClient implements Runnable {
 
 	public void subscribe(String channel) {
 		confirmConnection();
-		if (subscriptions.add(channel)) {
+		if (this.subscriptions.add(channel)) {
 			write("subscribe " + channel);
 		}
 	}
 
 	public void unsubscribe(String channel) {
 		confirmConnection();
-		if (subscriptions.remove(channel)) {
+		if (this.subscriptions.remove(channel)) {
 			write("unsubscribe " + channel);
 		}
 	}
@@ -173,19 +178,19 @@ public class FanoutClient implements Runnable {
 	}
 
 	public boolean isConnected() {
-		return isRunning.get() && socketCh != null && isConnected.get();
+		return this.isRunning.get() && (this.socketCh != null) && this.isConnected.get();
 	}
 
 	/**
 	 * Start client connection and return immediately.
 	 */
 	public void start() {
-		if (isRunning.get()) {
+		if (this.isRunning.get()) {
 			logger.warn("Fanout client is already running");
 			return;
 		}
-		clientThread = new Thread(this, "Fanout client");
-		clientThread.start();
+		this.clientThread = new Thread(this, "Fanout client");
+		this.clientThread.start();
 	}
 
 	/**
@@ -196,27 +201,29 @@ public class FanoutClient implements Runnable {
 		while (!isConnected()) {
 			try {
 				Thread.sleep(100);
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 			}
 		}
 	}
 
 	/**
-	 * Stops client connection.  This method returns when the connection has
-	 * been completely shutdown.
+	 * Stops client connection. This method returns when the connection has been
+	 * completely shutdown.
 	 */
 	public void stop() {
-		if (!isRunning.get()) {
+		if (!this.isRunning.get()) {
 			logger.warn("Fanout client is not running");
 			return;
 		}
-		isRunning.set(false);
+		this.isRunning.set(false);
 		try {
-			if (clientThread != null) {
-				clientThread.join();
-				clientThread = null;
+			if (this.clientThread != null) {
+				this.clientThread.join();
+				this.clientThread = null;
 			}
-		} catch (InterruptedException e1) {
+		}
+		catch (final InterruptedException e1) {
 		}
 	}
 
@@ -224,22 +231,26 @@ public class FanoutClient implements Runnable {
 	public void run() {
 		resetState();
 
-		isRunning.set(true);
-		while (isRunning.get()) {
+		this.isRunning.set(true);
+		while (this.isRunning.get()) {
 			// (re)connect
-			if (socketCh == null) {
+			if (this.socketCh == null) {
 				try {
-					InetAddress addr = InetAddress.getByName(host);
-					socketCh = SocketChannel.open(new InetSocketAddress(addr, port));
-					socketCh.configureBlocking(false);
-					selector = Selector.open();
-					id = FanoutConstants.getLocalSocketId(socketCh.socket());
-					socketCh.register(selector, SelectionKey.OP_READ);
-				} catch (Exception e) {
-					logger.error(MessageFormat.format("failed to open client connection to {0}:{1,number,0}", host, port), e);
+					final InetAddress addr = InetAddress.getByName(this.host);
+					this.socketCh = SocketChannel.open(new InetSocketAddress(addr, this.port));
+					this.socketCh.configureBlocking(false);
+					this.selector = Selector.open();
+					this.id = FanoutConstants.getLocalSocketId(this.socketCh.socket());
+					this.socketCh.register(this.selector, SelectionKey.OP_READ);
+				}
+				catch (final Exception e) {
+					logger.error(MessageFormat.format(
+							"failed to open client connection to {0}:{1,number,0}", this.host,
+							this.port), e);
 					try {
-						Thread.sleep(reconnectTimeout);
-					} catch (InterruptedException x) {
+						Thread.sleep(this.reconnectTimeout);
+					}
+					catch (final InterruptedException x) {
 					}
 					continue;
 				}
@@ -247,40 +258,46 @@ public class FanoutClient implements Runnable {
 
 			// read/write
 			try {
-				selector.select(clientTimeout);
+				this.selector.select(this.clientTimeout);
 
-				Iterator<SelectionKey> i = selector.selectedKeys().iterator();
+				final Iterator<SelectionKey> i = this.selector.selectedKeys().iterator();
 				while (i.hasNext()) {
-					SelectionKey key = i.next();
+					final SelectionKey key = i.next();
 					i.remove();
 
 					if (key.isReadable()) {
 						// read message
-						String content = read();
-						String[] lines = content.split("\n");
-						for (String reply : lines) {
-							logger.trace(MessageFormat.format("fanout client {0} received: {1}", id, reply));
+						final String content = read();
+						final String[] lines = content.split("\n");
+						for (final String reply : lines) {
+							logger.trace(MessageFormat.format("fanout client {0} received: {1}",
+									this.id, reply));
 							if (!processReply(reply)) {
-								logger.error(MessageFormat.format("fanout client {0} received unknown message", id));
+								logger.error(MessageFormat.format(
+										"fanout client {0} received unknown message", this.id));
 							}
 						}
 					} else if (key.isWritable()) {
 						// resubscribe
-						if (resubscribe) {
-							resubscribe = false;
-							logger.info(MessageFormat.format("fanout client {0} re-subscribing to {1} channels", id, subscriptions.size()));
-							for (String subscription : subscriptions) {
+						if (this.resubscribe) {
+							this.resubscribe = false;
+							logger.info(MessageFormat.format(
+									"fanout client {0} re-subscribing to {1} channels", this.id,
+									this.subscriptions.size()));
+							for (final String subscription : this.subscriptions) {
 								write("subscribe " + subscription);
 							}
 						}
-						socketCh.register(selector, SelectionKey.OP_READ);
+						this.socketCh.register(this.selector, SelectionKey.OP_READ);
 					}
 				}
-			} catch (IOException e) {
-				logger.error(MessageFormat.format("fanout client {0} error: {1}", id, e.getMessage()));
+			}
+			catch (final IOException e) {
+				logger.error(MessageFormat.format("fanout client {0} error: {1}", this.id,
+						e.getMessage()));
 				closeChannel();
-				if (!isAutomaticReconnect.get()) {
-					isRunning.set(false);
+				if (!this.isAutomaticReconnect.get()) {
+					this.isRunning.set(false);
 					continue;
 				}
 			}
@@ -291,53 +308,56 @@ public class FanoutClient implements Runnable {
 	}
 
 	protected void resetState() {
-		readBuffer.clear();
-		writeBuffer.clear();
-		isRunning.set(false);
-		isConnected.set(false);
+		this.readBuffer.clear();
+		this.writeBuffer.clear();
+		this.isRunning.set(false);
+		this.isConnected.set(false);
 	}
 
 	private void closeChannel() {
 		try {
-			if (socketCh != null) {
-				socketCh.close();
-				socketCh = null;
-				selector.close();
-				selector = null;
-				isConnected.set(false);
+			if (this.socketCh != null) {
+				this.socketCh.close();
+				this.socketCh = null;
+				this.selector.close();
+				this.selector = null;
+				this.isConnected.set(false);
 			}
-		} catch (IOException x) {
+		}
+		catch (final IOException x) {
 		}
 	}
 
 	protected boolean processReply(String reply) {
-		String[] fields = reply.split("!", 2);
+		final String[] fields = reply.split("!", 2);
 		if (fields.length == 1) {
 			try {
-				long time = Long.parseLong(fields[0]);
-				Date date = new Date(time);
+				final long time = Long.parseLong(fields[0]);
+				final Date date = new Date(time);
 				firePong(date);
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 			}
 			return true;
 		} else if (fields.length == 2) {
-			String channel = fields[0];
-			String message = fields[1];
+			final String channel = fields[0];
+			final String message = fields[1];
 			if (FanoutConstants.CH_DEBUG.equals(channel)) {
 				// debug messages are for internal use
 				if (FanoutConstants.MSG_CONNECTED.equals(message)) {
-					isConnected.set(true);
-					resubscribe = subscriptions.size() > 0;
-					if (resubscribe) {
+					this.isConnected.set(true);
+					this.resubscribe = this.subscriptions.size() > 0;
+					if (this.resubscribe) {
 						try {
 							// register for async resubscribe
-							socketCh.register(selector, SelectionKey.OP_WRITE);
-						} catch (Exception e) {
+							this.socketCh.register(this.selector, SelectionKey.OP_WRITE);
+						}
+						catch (final Exception e) {
 							logger.error("an error occurred", e);
 						}
 					}
 				}
-				logger.debug(MessageFormat.format("fanout client {0} < {1}", id, reply));
+				logger.debug(MessageFormat.format("fanout client {0} < {1}", this.id, reply));
 			} else {
 				fireAnnouncement(channel, message);
 			}
@@ -349,66 +369,75 @@ public class FanoutClient implements Runnable {
 	}
 
 	protected void firePong(Date timestamp) {
-		logger.info(MessageFormat.format("fanout client {0} < pong {1,date,yyyy-MM-dd HH:mm:ss}", id, timestamp));
-		for (FanoutListener listener : listeners) {
+		logger.info(MessageFormat.format("fanout client {0} < pong {1,date,yyyy-MM-dd HH:mm:ss}",
+				this.id, timestamp));
+		for (final FanoutListener listener : this.listeners) {
 			try {
 				listener.pong(timestamp);
-			} catch (Throwable t) {
+			}
+			catch (final Throwable t) {
 				logger.error("FanoutListener threw an exception!", t);
 			}
 		}
 	}
+
 	protected void fireAnnouncement(String channel, String message) {
-		logger.info(MessageFormat.format("fanout client {0} < announcement {1} {2}", id, channel, message));
-		for (FanoutListener listener : listeners) {
+		logger.info(MessageFormat.format("fanout client {0} < announcement {1} {2}", this.id,
+				channel, message));
+		for (final FanoutListener listener : this.listeners) {
 			try {
 				listener.announcement(channel, message);
-			} catch (Throwable t) {
+			}
+			catch (final Throwable t) {
 				logger.error("FanoutListener threw an exception!", t);
 			}
 		}
 	}
 
 	protected synchronized String read() throws IOException {
-		readBuffer.clear();
-		long len = socketCh.read(readBuffer);
+		this.readBuffer.clear();
+		final long len = this.socketCh.read(this.readBuffer);
 
 		if (len == -1) {
-			logger.error(MessageFormat.format("fanout client {0} lost connection to {1}:{2,number,0}, end of stream", id, host, port));
-			socketCh.close();
+			logger.error(MessageFormat.format(
+					"fanout client {0} lost connection to {1}:{2,number,0}, end of stream",
+					this.id, this.host, this.port));
+			this.socketCh.close();
 			return null;
 		} else {
-			readBuffer.flip();
-			String content = decoder.decode(readBuffer).toString();
-			readBuffer.clear();
+			this.readBuffer.flip();
+			final String content = this.decoder.decode(this.readBuffer).toString();
+			this.readBuffer.clear();
 			return content;
 		}
 	}
 
 	protected synchronized boolean write(String message) {
 		try {
-			logger.info(MessageFormat.format("fanout client {0} > {1}", id, message));
-			byte [] bytes = message.getBytes(FanoutConstants.CHARSET);
-			writeBuffer.clear();
-			writeBuffer.put(bytes);
+			logger.info(MessageFormat.format("fanout client {0} > {1}", this.id, message));
+			final byte[] bytes = message.getBytes(FanoutConstants.CHARSET);
+			this.writeBuffer.clear();
+			this.writeBuffer.put(bytes);
 			if (bytes[bytes.length - 1] != 0xa) {
-				writeBuffer.put((byte) 0xa);
+				this.writeBuffer.put((byte) 0xa);
 			}
-			writeBuffer.flip();
+			this.writeBuffer.flip();
 
 			// loop until write buffer has been completely sent
 			long written = 0;
-			long toWrite = writeBuffer.remaining();
+			final long toWrite = this.writeBuffer.remaining();
 			while (written != toWrite) {
-				written += socketCh.write(writeBuffer);
+				written += this.socketCh.write(this.writeBuffer);
 				try {
 					Thread.sleep(10);
-				} catch (Exception x) {
+				}
+				catch (final Exception x) {
 				}
 			}
 			return true;
-		} catch (IOException e) {
-			logger.error("fanout client {0} error: {1}", id, e.getMessage());
+		}
+		catch (final IOException e) {
+			logger.error("fanout client {0} error: {1}", this.id, e.getMessage());
 		}
 		return false;
 	}

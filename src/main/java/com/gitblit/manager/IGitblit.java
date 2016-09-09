@@ -25,16 +25,9 @@ import com.gitblit.models.UserModel;
 import com.gitblit.tickets.ITicketService;
 import com.gitblit.transport.ssh.IPublicKeyManager;
 
-public interface IGitblit extends IManager,
-									IRuntimeManager,
-									IPluginManager,
-									INotificationManager,
-									IUserManager,
-									IAuthenticationManager,
-									IRepositoryManager,
-									IProjectManager,
-									IFederationManager,
-									IFilestoreManager {
+public interface IGitblit extends IRuntimeManager, IPluginManager, INotificationManager,
+		IUserManager, IAuthenticationManager, IRepositoryManager, IProjectManager,
+		IFederationManager, IFilestoreManager {
 
 	/**
 	 * Creates a complete user object.
@@ -47,8 +40,8 @@ public interface IGitblit extends IManager,
 	void addUser(UserModel user) throws GitBlitException;
 
 	/**
-	 * Updates a complete user object keyed by username. This method allows
-	 * for renaming a user.
+	 * Updates a complete user object keyed by username. This method allows for
+	 * renaming a user.
 	 *
 	 * @param username
 	 * @param user

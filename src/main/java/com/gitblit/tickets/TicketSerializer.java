@@ -47,10 +47,11 @@ import com.google.gson.reflect.TypeToken;
  */
 public class TicketSerializer {
 
-	protected static final Type JOURNAL_TYPE = new TypeToken<Collection<Change>>() {}.getType();
+	protected static final Type JOURNAL_TYPE = new TypeToken<Collection<Change>>() {
+	}.getType();
 
 	public static List<Change> deserializeJournal(String json) {
-		Collection<Change> list = gson().fromJson(json, JOURNAL_TYPE);
+		final Collection<Change> list = gson().fromJson(json, JOURNAL_TYPE);
 		return new ArrayList<Change>(list);
 	}
 
@@ -66,12 +67,12 @@ public class TicketSerializer {
 		return gson().fromJson(json, TicketMilestone.class);
 	}
 
-
 	public static String serializeJournal(List<Change> changes) {
 		try {
-			Gson gson = gson();
+			final Gson gson = gson();
 			return gson.toJson(changes);
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			// won't happen
 		}
 		return null;
@@ -82,12 +83,13 @@ public class TicketSerializer {
 			return null;
 		}
 		try {
-			Gson gson = gson(
-					new ExcludeField("com.gitblit.models.TicketModel$Attachment.content"),
-					new ExcludeField("com.gitblit.models.TicketModel$Attachment.deleted"),
-					new ExcludeField("com.gitblit.models.TicketModel$Comment.deleted"));
+			final Gson gson = gson(new ExcludeField(
+					"com.gitblit.models.TicketModel$Attachment.content"), new ExcludeField(
+					"com.gitblit.models.TicketModel$Attachment.deleted"), new ExcludeField(
+					"com.gitblit.models.TicketModel$Comment.deleted"));
 			return gson.toJson(ticket);
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			// won't happen
 		}
 		return null;
@@ -98,10 +100,11 @@ public class TicketSerializer {
 			return null;
 		}
 		try {
-			Gson gson = gson(
-					new ExcludeField("com.gitblit.models.TicketModel$Attachment.content"));
+			final Gson gson = gson(new ExcludeField(
+					"com.gitblit.models.TicketModel$Attachment.content"));
 			return gson.toJson(change);
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			// won't happen
 		}
 		return null;
@@ -112,9 +115,10 @@ public class TicketSerializer {
 			return null;
 		}
 		try {
-			Gson gson = gson();
+			final Gson gson = gson();
 			return gson.toJson(label);
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			// won't happen
 		}
 		return null;
@@ -125,9 +129,10 @@ public class TicketSerializer {
 			return null;
 		}
 		try {
-			Gson gson = gson();
+			final Gson gson = gson();
 			return gson.toJson(milestone);
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			// won't happen
 		}
 		return null;
@@ -136,7 +141,7 @@ public class TicketSerializer {
 	// build custom gson instance with GMT date serializer/deserializer
 	// http://code.google.com/p/google-gson/issues/detail?id=281
 	public static Gson gson(ExclusionStrategy... strategies) {
-		GsonBuilder builder = new GsonBuilder();
+		final GsonBuilder builder = new GsonBuilder();
 		builder.registerTypeAdapter(Date.class, new GmtDateTypeAdapter());
 		builder.registerTypeAdapter(Score.class, new ScoreTypeAdapter());
 		if (!ArrayUtils.isEmpty(strategies)) {
@@ -153,21 +158,22 @@ public class TicketSerializer {
 		@Override
 		public synchronized JsonElement serialize(Score score, Type type,
 				JsonSerializationContext jsonSerializationContext) {
-				return new JsonPrimitive(score.getValue());
+			return new JsonPrimitive(score.getValue());
 		}
 
 		@Override
 		public synchronized Score deserialize(JsonElement jsonElement, Type type,
 				JsonDeserializationContext jsonDeserializationContext) {
 			try {
-				int value = jsonElement.getAsInt();
-				for (Score score : Score.values()) {
+				final int value = jsonElement.getAsInt();
+				for (final Score score : Score.values()) {
 					if (score.getValue() == value) {
 						return score;
 					}
 				}
 				return Score.not_reviewed;
-			} catch (Exception e) {
+			}
+			catch (final Exception e) {
 				throw new JsonSyntaxException(jsonElement.getAsString(), e);
 			}
 		}

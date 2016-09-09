@@ -44,27 +44,23 @@ public class BranchTicketServiceTest extends TicketServiceTest {
 
 	@Override
 	protected RepositoryModel getRepository() {
-		return repo;
+		return this.repo;
 	}
-
 
 	@Override
 	protected ITicketService getService(boolean deleteAll) throws Exception {
 
-		IStoredSettings settings = getSettings(deleteAll);
-		XssFilter xssFilter = new AllowXssFilter();
-		IRuntimeManager runtimeManager = new RuntimeManager(settings, xssFilter).start();
-		IPluginManager pluginManager = new PluginManager(runtimeManager).start();
-		INotificationManager notificationManager = new NotificationManager(settings).start();
-		IUserManager userManager = new UserManager(runtimeManager, pluginManager).start();
-		IRepositoryManager repositoryManager = new RepositoryManager(runtimeManager, pluginManager, userManager).start();
+		final IStoredSettings settings = getSettings(deleteAll);
+		final XssFilter xssFilter = new AllowXssFilter();
+		final IRuntimeManager runtimeManager = new RuntimeManager(settings, xssFilter).start();
+		final IPluginManager pluginManager = new PluginManager(runtimeManager).start();
+		final INotificationManager notificationManager = new NotificationManager(settings).start();
+		final IUserManager userManager = new UserManager(runtimeManager, pluginManager).start();
+		final IRepositoryManager repositoryManager = new RepositoryManager(runtimeManager,
+				pluginManager, userManager).start();
 
-		BranchTicketService service = new BranchTicketService(
-				runtimeManager,
-				pluginManager,
-				notificationManager,
-				userManager,
-				repositoryManager).start();
+		final BranchTicketService service = new BranchTicketService(runtimeManager, pluginManager,
+				notificationManager, userManager, repositoryManager).start();
 
 		if (deleteAll) {
 			service.deleteAll(getRepository());

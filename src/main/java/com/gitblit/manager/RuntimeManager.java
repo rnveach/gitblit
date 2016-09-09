@@ -72,12 +72,12 @@ public class RuntimeManager implements IRuntimeManager {
 
 	@Override
 	public RuntimeManager start() {
-		logger.info("Basefolder  : " + baseFolder.getAbsolutePath());
-		logger.info("Settings    : " + settings.toString());
+		this.logger.info("Basefolder  : " + this.baseFolder.getAbsolutePath());
+		this.logger.info("Settings    : " + this.settings.toString());
 		logTimezone("JVM timezone: ", TimeZone.getDefault());
 		logTimezone("App timezone: ", getTimezone());
-		logger.info("JVM locale  : " + Locale.getDefault());
-		logger.info("App locale  : " +  (getLocale() == null ? "<client>" : getLocale()));
+		this.logger.info("JVM locale  : " + Locale.getDefault());
+		this.logger.info("App locale  : " + (getLocale() == null ? "<client>" : getLocale()));
 		return this;
 	}
 
@@ -88,12 +88,12 @@ public class RuntimeManager implements IRuntimeManager {
 
 	@Override
 	public Injector getInjector() {
-		return injector;
+		return this.injector;
 	}
 
 	@Override
 	public File getBaseFolder() {
-		return baseFolder;
+		return this.baseFolder;
 	}
 
 	@Override
@@ -108,24 +108,24 @@ public class RuntimeManager implements IRuntimeManager {
 	 */
 	@Override
 	public Date getBootDate() {
-		return serverStatus.bootDate;
+		return this.serverStatus.bootDate;
 	}
 
 	@Override
 	public ServerSettings getSettingsModel() {
 		// ensure that the current values are updated in the setting models
-		for (String key : settings.getAllKeys(null)) {
-			SettingModel setting = settingsModel.get(key);
+		for (final String key : this.settings.getAllKeys(null)) {
+			SettingModel setting = this.settingsModel.get(key);
 			if (setting == null) {
 				// unreferenced setting, create a setting model
 				setting = new SettingModel();
 				setting.name = key;
-				settingsModel.add(setting);
+				this.settingsModel.add(setting);
 			}
-			setting.currentValue = settings.getString(key, "");
+			setting.currentValue = this.settings.getString(key, "");
 		}
-//		settingsModel.pushScripts = getAllScripts();
-		return settingsModel;
+		// settingsModel.pushScripts = getAllScripts();
+		return this.settingsModel;
 	}
 
 	/**
@@ -135,32 +135,32 @@ public class RuntimeManager implements IRuntimeManager {
 	 */
 	@Override
 	public TimeZone getTimezone() {
-		if (timezone == null) {
-			String tzid = settings.getString(Keys.web.timezone, null);
+		if (this.timezone == null) {
+			final String tzid = this.settings.getString(Keys.web.timezone, null);
 			if (StringUtils.isEmpty(tzid)) {
-				timezone = TimeZone.getDefault();
-				return timezone;
+				this.timezone = TimeZone.getDefault();
+				return this.timezone;
 			}
-			timezone = TimeZone.getTimeZone(tzid);
+			this.timezone = TimeZone.getTimeZone(tzid);
 		}
-		return timezone;
+		return this.timezone;
 	}
 
 	private void logTimezone(String type, TimeZone zone) {
-		SimpleDateFormat df = new SimpleDateFormat("z Z");
+		final SimpleDateFormat df = new SimpleDateFormat("z Z");
 		df.setTimeZone(zone);
-		String offset = df.format(new Date());
-		logger.info("{}{} ({})", new Object [] { type, zone.getID(), offset });
+		final String offset = df.format(new Date());
+		this.logger.info("{}{} ({})", new Object[] { type, zone.getID(), offset });
 	}
 
 	@Override
 	public Locale getLocale() {
-		String lc = settings.getString(Keys.web.forceDefaultLocale, null);
+		final String lc = this.settings.getString(Keys.web.forceDefaultLocale, null);
 		if (!StringUtils.isEmpty(lc)) {
-			int underscore = lc.indexOf('_');
+			final int underscore = lc.indexOf('_');
 			if (underscore > 0) {
-				String lang = lc.substring(0, underscore);
-				String cc = lc.substring(underscore + 1);
+				final String lang = lc.substring(0, underscore);
+				final String cc = lc.substring(underscore + 1);
 				return new Locale(lang, cc);
 			} else {
 				return new Locale(lc);
@@ -176,7 +176,7 @@ public class RuntimeManager implements IRuntimeManager {
 	 */
 	@Override
 	public boolean isDebugMode() {
-		return settings.getBoolean(Keys.web.debugMode, false);
+		return this.settings.getBoolean(Keys.web.debugMode, false);
 	}
 
 	/**
@@ -186,7 +186,7 @@ public class RuntimeManager implements IRuntimeManager {
 	 */
 	@Override
 	public File getFileOrFolder(String key, String defaultFileOrFolder) {
-		String fileOrFolder = settings.getString(key, defaultFileOrFolder);
+		final String fileOrFolder = this.settings.getString(key, defaultFileOrFolder);
 		return getFileOrFolder(fileOrFolder);
 	}
 
@@ -201,8 +201,8 @@ public class RuntimeManager implements IRuntimeManager {
 	 */
 	@Override
 	public File getFileOrFolder(String fileOrFolder) {
-		return com.gitblit.utils.FileUtils.resolveParameter(Constants.baseFolder$,
-				baseFolder, fileOrFolder);
+		return com.gitblit.utils.FileUtils.resolveParameter(Constants.baseFolder$, this.baseFolder,
+				fileOrFolder);
 	}
 
 	/**
@@ -212,7 +212,7 @@ public class RuntimeManager implements IRuntimeManager {
 	 */
 	@Override
 	public IStoredSettings getSettings() {
-		return settings;
+		return this.settings;
 	}
 
 	/**
@@ -223,15 +223,15 @@ public class RuntimeManager implements IRuntimeManager {
 	 */
 	@Override
 	public boolean updateSettings(Map<String, String> updatedSettings) {
-		return settings.saveSettings(updatedSettings);
+		return this.settings.saveSettings(updatedSettings);
 	}
 
 	@Override
 	public ServerStatus getStatus() {
 		// update heap memory status
-		serverStatus.heapAllocated = Runtime.getRuntime().totalMemory();
-		serverStatus.heapFree = Runtime.getRuntime().freeMemory();
-		return serverStatus;
+		this.serverStatus.heapAllocated = Runtime.getRuntime().totalMemory();
+		this.serverStatus.heapFree = Runtime.getRuntime().freeMemory();
+		return this.serverStatus;
 	}
 
 	/**
@@ -241,7 +241,7 @@ public class RuntimeManager implements IRuntimeManager {
 	 */
 	@Override
 	public XssFilter getXssFilter() {
-		return xssFilter;
+		return this.xssFilter;
 	}
 
 }

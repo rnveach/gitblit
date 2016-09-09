@@ -37,11 +37,12 @@ public abstract class IconAjaxLink<T> extends AjaxLink<T> {
 
 	@Override
 	protected void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag) {
-		replaceComponentTagBody(markupStream, openTag, MessageFormat.format("<i class=\"{0}\"></i> {1}", iconClass, getModelObject().toString()));
+		replaceComponentTagBody(markupStream, openTag, MessageFormat.format(
+				"<i class=\"{0}\"></i> {1}", this.iconClass, getModelObject().toString()));
 	}
 
 	public void setNoFollow() {
-		Component c = get("link");
+		final Component c = get("link");
 		c.add(new SimpleAttributeModifier("rel", "nofollow"));
 	}
 }

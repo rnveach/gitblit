@@ -45,30 +45,30 @@ public class ObjectCache<X> implements Serializable {
 
 		CachedObject(String name) {
 			this.name = name;
-			date = new Date(0);
+			this.date = new Date(0);
 		}
 
 		@Override
 		public String toString() {
-			return getClass().getSimpleName() + ": " + name;
+			return getClass().getSimpleName() + ": " + this.name;
 		}
 	}
 
 	public void clear() {
-		cache.clear();
+		this.cache.clear();
 	}
 
 	public boolean hasCurrent(String name, Date date) {
-		return cache.containsKey(name) && cache.get(name).date.compareTo(date) == 0;
+		return this.cache.containsKey(name) && (this.cache.get(name).date.compareTo(date) == 0);
 	}
 
 	public Date getDate(String name) {
-		return cache.get(name).date;
+		return this.cache.get(name).date;
 	}
 
 	public X getObject(String name) {
-		if (cache.containsKey(name)) {
-			return cache.get(name).object;
+		if (this.cache.containsKey(name)) {
+			return this.cache.get(name).object;
 		}
 		return null;
 	}
@@ -79,24 +79,24 @@ public class ObjectCache<X> implements Serializable {
 
 	public void updateObject(String name, Date date, X object) {
 		CachedObject<X> obj;
-		if (cache.containsKey(name)) {
-			obj = cache.get(name);
+		if (this.cache.containsKey(name)) {
+			obj = this.cache.get(name);
 		} else {
 			obj = new CachedObject<X>(name);
-			cache.put(name, obj);
+			this.cache.put(name, obj);
 		}
 		obj.date = date;
 		obj.object = object;
 	}
 
 	public X remove(String name) {
-		if (cache.containsKey(name)) {
-			return cache.remove(name).object;
+		if (this.cache.containsKey(name)) {
+			return this.cache.remove(name).object;
 		}
 		return null;
 	}
 
 	public int size() {
-		return cache.size();
+		return this.cache.size();
 	}
 }

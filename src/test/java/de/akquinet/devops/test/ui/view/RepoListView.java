@@ -34,45 +34,41 @@ public class RepoListView extends GitblitDashboardView {
 	public RepoListView(WebDriver driver, String baseUrl) {
 		super(driver, baseUrl);
 	}
-	
+
 	public boolean isEmptyRepo(String fullyQualifiedRepoName) {
-		String pathToLink = "//a[@href = \"?" + WICKET_HREF_PAGE_PATH
+		final String pathToLink = "//a[@href = \"?" + WICKET_HREF_PAGE_PATH
 				+ ".EmptyRepositoryPage&r=" + fullyQualifiedRepoName + "\"]";
-		List<WebElement> found = getDriver().findElements(By.xpath(pathToLink));
-		return found != null && found.size() > 0;
+		final List<WebElement> found = getDriver().findElements(By.xpath(pathToLink));
+		return (found != null) && (found.size() > 0);
 	}
 
-	private String getEditRepoPath(String fullyQualifiedRepoName) {
-		return "//a[@href =\"?" + WICKET_HREF_PAGE_PATH
-				+ ".EditRepositoryPage&r=" + fullyQualifiedRepoName + "\"]";
+	private static String getEditRepoPath(String fullyQualifiedRepoName) {
+		return "//a[@href =\"?" + WICKET_HREF_PAGE_PATH + ".EditRepositoryPage&r="
+				+ fullyQualifiedRepoName + "\"]";
 	}
 
-	private String getDeleteRepoOnclickIdentifier(
-			String fullyQualifiedRepoPathAndName) {
-		return "var conf = confirm('Delete repository \""
-				+ fullyQualifiedRepoPathAndName
+	private static String getDeleteRepoOnclickIdentifier(String fullyQualifiedRepoPathAndName) {
+		return "var conf = confirm('Delete repository \"" + fullyQualifiedRepoPathAndName
 				+ "\"?'); if (!conf) return false; ";
 	}
 
 	public boolean navigateToNewRepo(long waitSecToLoad) {
-		String pathToLink = "//a[@href =\"?" + WICKET_HREF_PAGE_PATH
+		final String pathToLink = "//a[@href =\"?" + WICKET_HREF_PAGE_PATH
 				+ ".EditRepositoryPage\"]";
-		List<WebElement> found = getDriver().findElements(By.xpath(pathToLink));
-		if (found == null || found.size() == 0 || found.size() > 1) {
+		final List<WebElement> found = getDriver().findElements(By.xpath(pathToLink));
+		if ((found == null) || (found.size() == 0) || (found.size() > 1)) {
 			return false;
 		}
 		found.get(0).click();
-		WebDriverWait webDriverWait = new WebDriverWait(getDriver(),
-				waitSecToLoad);
+		final WebDriverWait webDriverWait = new WebDriverWait(getDriver(), waitSecToLoad);
 		webDriverWait.until(new Exp.EditRepoViewLoaded());
 		return true;
 	}
 
-	private boolean checkOrDoEditRepo(String fullyQualifiedRepoName,
-			boolean doEdit) {
-		List<WebElement> found = getDriver().findElements(
+	private boolean checkOrDoEditRepo(String fullyQualifiedRepoName, boolean doEdit) {
+		final List<WebElement> found = getDriver().findElements(
 				By.xpath(getEditRepoPath(fullyQualifiedRepoName)));
-		if (found == null || found.size() == 0 || found.size() > 1) {
+		if ((found == null) || (found.size() == 0) || (found.size() > 1)) {
 			return false;
 		}
 		if (doEdit) {
@@ -81,11 +77,9 @@ public class RepoListView extends GitblitDashboardView {
 		return true;
 	}
 
-	public boolean navigateToEditRepo(String fullyQualifiedRepoName,
-			int waitSecToLoad) {
-		boolean result = checkOrDoEditRepo(fullyQualifiedRepoName, true);
-		WebDriverWait webDriverWait = new WebDriverWait(getDriver(),
-				waitSecToLoad);
+	public boolean navigateToEditRepo(String fullyQualifiedRepoName, int waitSecToLoad) {
+		final boolean result = checkOrDoEditRepo(fullyQualifiedRepoName, true);
+		final WebDriverWait webDriverWait = new WebDriverWait(getDriver(), waitSecToLoad);
 		webDriverWait.until(new Exp.EditRepoViewLoaded());
 		return result;
 	}
@@ -94,16 +88,13 @@ public class RepoListView extends GitblitDashboardView {
 		return checkOrDoEditRepo(fullyQualifiedRepoName, false);
 	}
 
-	private boolean checkOrDoDeleteRepo(String fullyQualifiedRepoPathAndName,
-			boolean doDelete) {
-		List<WebElement> found = getDriver().findElements(
-				By.partialLinkText("delete"));
-		String onclickIdentifier = getDeleteRepoOnclickIdentifier(fullyQualifiedRepoPathAndName);
+	private boolean checkOrDoDeleteRepo(String fullyQualifiedRepoPathAndName, boolean doDelete) {
+		final List<WebElement> found = getDriver().findElements(By.partialLinkText("delete"));
+		final String onclickIdentifier = getDeleteRepoOnclickIdentifier(fullyQualifiedRepoPathAndName);
 		WebElement result = null;
-		for (WebElement webElement : found) {
-			if (webElement.getAttribute("onclick") != null
-					&& webElement.getAttribute("onclick").equals(
-							onclickIdentifier)) {
+		for (final WebElement webElement : found) {
+			if ((webElement.getAttribute("onclick") != null)
+					&& webElement.getAttribute("onclick").equals(onclickIdentifier)) {
 				result = webElement;
 				break;
 			}

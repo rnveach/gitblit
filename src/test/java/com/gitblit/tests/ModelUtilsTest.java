@@ -9,22 +9,17 @@ import com.gitblit.utils.ModelUtils;
 public class ModelUtilsTest extends GitblitUnitTest {
 
 	@After
-	public void resetPrefix()
-	{
+	public void resetPrefix() {
 		ModelUtils.setUserRepoPrefix(null);
 	}
 
-
 	@Test
-	public void testGetUserRepoPrefix()
-	{
+	public void testGetUserRepoPrefix() {
 		assertEquals(Constants.DEFAULT_USER_REPOSITORY_PREFIX, ModelUtils.getUserRepoPrefix());
 	}
 
-
 	@Test
-	public void testSetUserRepoPrefix()
-	{
+	public void testSetUserRepoPrefix() {
 
 		assertEquals(Constants.DEFAULT_USER_REPOSITORY_PREFIX, ModelUtils.getUserRepoPrefix());
 
@@ -47,25 +42,23 @@ public class ModelUtilsTest extends GitblitUnitTest {
 		assertEquals("somedir/otherdir/", ModelUtils.getUserRepoPrefix());
 	}
 
-
 	@Test
-	public void testGetPersonalPath()
-	{
+	public void testGetPersonalPath() {
 		String username = "rob";
-		assertEquals(Constants.DEFAULT_USER_REPOSITORY_PREFIX+username.toLowerCase(), ModelUtils.getPersonalPath(username));
+		assertEquals(Constants.DEFAULT_USER_REPOSITORY_PREFIX + username.toLowerCase(),
+				ModelUtils.getPersonalPath(username));
 
 		username = "James";
-		assertEquals(Constants.DEFAULT_USER_REPOSITORY_PREFIX+username.toLowerCase(), ModelUtils.getPersonalPath(username));
+		assertEquals(Constants.DEFAULT_USER_REPOSITORY_PREFIX + username.toLowerCase(),
+				ModelUtils.getPersonalPath(username));
 
 		ModelUtils.setUserRepoPrefix("usr/");
 		username = "noMan";
-		assertEquals("usr/"+username.toLowerCase(), ModelUtils.getPersonalPath(username));
+		assertEquals("usr/" + username.toLowerCase(), ModelUtils.getPersonalPath(username));
 	}
 
-
 	@Test
-	public void testIsPersonalRepository()
-	{
+	public void testIsPersonalRepository() {
 		String reponame = Constants.DEFAULT_USER_REPOSITORY_PREFIX + "one";
 		assertTrue(ModelUtils.isPersonalRepository(reponame));
 
@@ -84,10 +77,8 @@ public class ModelUtilsTest extends GitblitUnitTest {
 		assertFalse(ModelUtils.isPersonalRepository(reponame));
 	}
 
-
 	@Test
-	public void testIsUsersPersonalRepository()
-	{
+	public void testIsUsersPersonalRepository() {
 		String reponame = Constants.DEFAULT_USER_REPOSITORY_PREFIX + "lynn";
 		assertTrue(ModelUtils.isUsersPersonalRepository("lynn", reponame));
 
@@ -108,10 +99,8 @@ public class ModelUtilsTest extends GitblitUnitTest {
 		assertFalse(ModelUtils.isUsersPersonalRepository("fee", reponame));
 	}
 
-
 	@Test
-	public void testGetUserNameFromRepoPath()
-	{
+	public void testGetUserNameFromRepoPath() {
 		String reponame = Constants.DEFAULT_USER_REPOSITORY_PREFIX + "lynn";
 		assertEquals("lynn", ModelUtils.getUserNameFromRepoPath(reponame));
 

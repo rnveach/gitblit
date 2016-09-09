@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class ClientLogger {
 
 	static final Logger logger = LoggerFactory.getLogger(ClientLogger.class);
-	private ReceivePack rp;
+	private final ReceivePack rp;
 
 	public ClientLogger(ReceivePack rp) {
 		this.rp = rp;
@@ -45,7 +45,7 @@ public class ClientLogger {
 	 * @param message
 	 */
 	public void info(String message) {
-		rp.sendMessage(message);
+		this.rp.sendMessage(message);
 	}
 
 	/**
@@ -54,7 +54,7 @@ public class ClientLogger {
 	 * @param message
 	 */
 	public void error(String message) {
-		rp.sendError(message);
+		this.rp.sendError(message);
 	}
 
 	/**
@@ -65,13 +65,13 @@ public class ClientLogger {
 	 *            an exception
 	 */
 	public void error(String message, Throwable t) {
-		PrintWriter writer = new PrintWriter(new StringWriter());
+		final PrintWriter writer = new PrintWriter(new StringWriter());
 		if (!StringUtils.isEmpty(message)) {
 			writer.append(message);
 			writer.append('\n');
 		}
 		t.printStackTrace(writer);
-		rp.sendError(writer.toString());
+		this.rp.sendError(writer.toString());
 	}
 
 }

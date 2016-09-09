@@ -11,7 +11,8 @@ public class SafeTextModel implements IModel<String> {
 	private static final long serialVersionUID = 1L;
 
 	public enum Mode {
-		relaxed, none
+		relaxed,
+		none
 	}
 
 	private final Mode mode;
@@ -49,21 +50,21 @@ public class SafeTextModel implements IModel<String> {
 
 	@Override
 	public String getObject() {
-		if (StringUtils.isEmpty(value)) {
-			return value;
+		if (StringUtils.isEmpty(this.value)) {
+			return this.value;
 		}
 		String safeValue;
-		switch (mode) {
+		switch (this.mode) {
 		case none:
-			safeValue = GitBlitWebApp.get().xssFilter().none(value);
+			safeValue = GitBlitWebApp.get().xssFilter().none(this.value);
 			break;
 		default:
-			safeValue = GitBlitWebApp.get().xssFilter().relaxed(value);
+			safeValue = GitBlitWebApp.get().xssFilter().relaxed(this.value);
 			break;
 		}
-		if (!value.equals(safeValue)) {
-			LoggerFactory.getLogger(getClass()).warn("XSS filter trigggered on suspicious form field value {}",
-					value);
+		if (!this.value.equals(safeValue)) {
+			LoggerFactory.getLogger(getClass()).warn(
+					"XSS filter trigggered on suspicious form field value {}", this.value);
 		}
 		return safeValue;
 	}
@@ -74,23 +75,19 @@ public class SafeTextModel implements IModel<String> {
 	}
 
 	@Override
-	public int hashCode()
-	{
-		return Objects.hashCode(value);
+	public int hashCode() {
+		return Objects.hashCode(this.value);
 	}
 
 	@Override
-	public boolean equals(Object obj)
-	{
-		if (this == obj)
-		{
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof Model<?>))
-		{
+		if (!(obj instanceof Model<?>)) {
 			return false;
 		}
-		Model<?> that = (Model<?>)obj;
-		return Objects.equal(value, that.getObject());
+		final Model<?> that = (Model<?>) obj;
+		return Objects.equal(this.value, that.getObject());
 	}
 }

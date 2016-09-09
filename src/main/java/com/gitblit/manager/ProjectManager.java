@@ -72,9 +72,7 @@ public class ProjectManager implements IProjectManager {
 	private FileBasedConfig projectConfigs;
 
 	@Inject
-	public ProjectManager(
-			IRuntimeManager runtimeManager,
-			IUserManager userManager,
+	public ProjectManager(IRuntimeManager runtimeManager, IUserManager userManager,
 			IRepositoryManager repositoryManager) {
 
 		this.settings = runtimeManager.getSettings();
@@ -86,7 +84,8 @@ public class ProjectManager implements IProjectManager {
 	@Override
 	public ProjectManager start() {
 		// load and cache the project metadata
-		projectConfigs = new FileBasedConfig(runtimeManager.getFileOrFolder(Keys.web.projectsFile, "${baseFolder}/projects.conf"), FS.detect());
+		this.projectConfigs = new FileBasedConfig(this.runtimeManager.getFileOrFolder(
+				Keys.web.projectsFile, "${baseFolder}/projects.conf"), FS.detect());
 		getProjectConfigs();
 
 		return this;
@@ -99,70 +98,74 @@ public class ProjectManager implements IProjectManager {
 
 	private void reloadProjectMarkdown(ProjectModel project) {
 		// project markdown
-		File pmkd = new File(repositoryManager.getRepositoriesFolder(), (project.isRoot ? "" : project.name) + "/project.mkd");
+		final File pmkd = new File(this.repositoryManager.getRepositoriesFolder(),
+				(project.isRoot ? "" : project.name) + "/project.mkd");
 		if (pmkd.exists()) {
-			Date lm = new Date(pmkd.lastModified());
-			if (!projectMarkdownCache.hasCurrent(project.name, lm)) {
-				String mkd = com.gitblit.utils.FileUtils.readContent(pmkd,  "\n");
-				projectMarkdownCache.updateObject(project.name, lm, mkd);
+			final Date lm = new Date(pmkd.lastModified());
+			if (!this.projectMarkdownCache.hasCurrent(project.name, lm)) {
+				final String mkd = com.gitblit.utils.FileUtils.readContent(pmkd, "\n");
+				this.projectMarkdownCache.updateObject(project.name, lm, mkd);
 			}
-			project.projectMarkdown = projectMarkdownCache.getObject(project.name);
+			project.projectMarkdown = this.projectMarkdownCache.getObject(project.name);
 		}
 
 		// project repositories markdown
-		File rmkd = new File(repositoryManager.getRepositoriesFolder(), (project.isRoot ? "" : project.name) + "/repositories.mkd");
+		final File rmkd = new File(this.repositoryManager.getRepositoriesFolder(),
+				(project.isRoot ? "" : project.name) + "/repositories.mkd");
 		if (rmkd.exists()) {
-			Date lm = new Date(rmkd.lastModified());
-			if (!projectRepositoriesMarkdownCache.hasCurrent(project.name, lm)) {
-				String mkd = com.gitblit.utils.FileUtils.readContent(rmkd,  "\n");
-				projectRepositoriesMarkdownCache.updateObject(project.name, lm, mkd);
+			final Date lm = new Date(rmkd.lastModified());
+			if (!this.projectRepositoriesMarkdownCache.hasCurrent(project.name, lm)) {
+				final String mkd = com.gitblit.utils.FileUtils.readContent(rmkd, "\n");
+				this.projectRepositoriesMarkdownCache.updateObject(project.name, lm, mkd);
 			}
-			project.repositoriesMarkdown = projectRepositoriesMarkdownCache.getObject(project.name);
+			project.repositoriesMarkdown = this.projectRepositoriesMarkdownCache
+					.getObject(project.name);
 		}
 	}
 
-
 	/**
-	 * Returns the map of project config.  This map is cached and reloaded if
-	 * the underlying projects.conf file changes.
+	 * Returns the map of project config. This map is cached and reloaded if the
+	 * underlying projects.conf file changes.
 	 *
 	 * @return project config map
 	 */
 	private Map<String, ProjectModel> getProjectConfigs() {
-		if (projectCache.isEmpty() || projectConfigs.isOutdated()) {
+		if (this.projectCache.isEmpty() || this.projectConfigs.isOutdated()) {
 
 			try {
-				projectConfigs.load();
-			} catch (Exception e) {
+				this.projectConfigs.load();
+			}
+			catch (final Exception e) {
 			}
 
 			// project configs
-			String rootName = settings.getString(Keys.web.repositoryRootGroupName, "main");
-			ProjectModel rootProject = new ProjectModel(rootName, true);
+			final String rootName = this.settings.getString(Keys.web.repositoryRootGroupName,
+					"main");
+			final ProjectModel rootProject = new ProjectModel(rootName, true);
 
-			Map<String, ProjectModel> configs = new HashMap<String, ProjectModel>();
+			final Map<String, ProjectModel> configs = new HashMap<String, ProjectModel>();
 			// cache the root project under its alias and an empty path
 			configs.put("", rootProject);
 			configs.put(rootProject.name.toLowerCase(), rootProject);
 
-			for (String name : projectConfigs.getSubsections("project")) {
+			for (final String name : this.projectConfigs.getSubsections("project")) {
 				ProjectModel project;
 				if (name.equalsIgnoreCase(rootName)) {
 					project = rootProject;
 				} else {
 					project = new ProjectModel(name);
 				}
-				project.title = projectConfigs.getString("project", name, "title");
-				project.description = projectConfigs.getString("project", name, "description");
+				project.title = this.projectConfigs.getString("project", name, "title");
+				project.description = this.projectConfigs.getString("project", name, "description");
 
 				reloadProjectMarkdown(project);
 
 				configs.put(name.toLowerCase(), project);
 			}
-			projectCache.clear();
-			projectCache.putAll(configs);
+			this.projectCache.clear();
+			this.projectCache.putAll(configs);
 		}
-		return projectCache;
+		return this.projectCache;
 	}
 
 	/**
@@ -174,16 +177,16 @@ public class ProjectManager implements IProjectManager {
 	 */
 	@Override
 	public List<ProjectModel> getProjectModels(UserModel user, boolean includeUsers) {
-		Map<String, ProjectModel> configs = getProjectConfigs();
+		final Map<String, ProjectModel> configs = getProjectConfigs();
 
 		// per-user project lists, this accounts for security and visibility
-		Map<String, ProjectModel> map = new TreeMap<String, ProjectModel>();
+		final Map<String, ProjectModel> map = new TreeMap<String, ProjectModel>();
 		// root project
 		map.put("", configs.get(""));
 
-		for (RepositoryModel model : repositoryManager.getRepositoryModels(user)) {
-			String projectPath = StringUtils.getRootPath(model.name);
-			String projectKey = projectPath.toLowerCase();
+		for (final RepositoryModel model : this.repositoryManager.getRepositoryModels(user)) {
+			final String projectPath = StringUtils.getRootPath(model.name);
+			final String projectKey = projectPath.toLowerCase();
 			if (!map.containsKey(projectKey)) {
 				ProjectModel project;
 				if (configs.containsKey(projectKey)) {
@@ -209,8 +212,8 @@ public class ProjectManager implements IProjectManager {
 		} else {
 			// all non-user projects
 			projects = new ArrayList<ProjectModel>();
-			ProjectModel root = map.remove("");
-			for (ProjectModel model : map.values()) {
+			final ProjectModel root = map.remove("");
+			for (final ProjectModel model : map.values()) {
 				if (!model.isUserProject()) {
 					projects.add(model);
 				}
@@ -230,7 +233,7 @@ public class ProjectManager implements IProjectManager {
 	 */
 	@Override
 	public ProjectModel getProjectModel(String name, UserModel user) {
-		for (ProjectModel project : getProjectModels(user, true)) {
+		for (final ProjectModel project : getProjectModels(user, true)) {
 			if (project.name.equalsIgnoreCase(name)) {
 				return project;
 			}
@@ -241,17 +244,19 @@ public class ProjectManager implements IProjectManager {
 	/**
 	 * Returns a project model for the Gitblit/system user.
 	 *
-	 * @param name a project name
+	 * @param name
+	 *            a project name
 	 * @return a project model or null if the project does not exist
 	 */
 	@Override
 	public ProjectModel getProjectModel(String name) {
-		Map<String, ProjectModel> configs = getProjectConfigs();
+		final Map<String, ProjectModel> configs = getProjectConfigs();
 		ProjectModel project = configs.get(name.toLowerCase());
 		if (project == null) {
 			project = new ProjectModel(name);
 			if (ModelUtils.isPersonalRepository(name)) {
-				UserModel user = userManager.getUserModel(ModelUtils.getUserNameFromRepoPath(name));
+				final UserModel user = this.userManager.getUserModel(ModelUtils
+						.getUserNameFromRepoPath(name));
 				if (user != null) {
 					project.title = user.getDisplayName();
 					project.description = "personal repositories";
@@ -263,15 +268,15 @@ public class ProjectManager implements IProjectManager {
 		}
 		if (StringUtils.isEmpty(name)) {
 			// get root repositories
-			for (String repository : repositoryManager.getRepositoryList()) {
+			for (final String repository : this.repositoryManager.getRepositoryList()) {
 				if (repository.indexOf('/') == -1) {
 					project.addRepository(repository);
 				}
 			}
 		} else {
 			// get repositories in subfolder
-			String folder = name.toLowerCase() + "/";
-			for (String repository : repositoryManager.getRepositoryList()) {
+			final String folder = name.toLowerCase() + "/";
+			for (final String repository : this.repositoryManager.getRepositoryList()) {
 				if (repository.toLowerCase().startsWith(folder)) {
 					project.addRepository(repository);
 				}
@@ -288,7 +293,7 @@ public class ProjectManager implements IProjectManager {
 
 	/**
 	 * Returns the list of project models that are referenced by the supplied
-	 * repository model	list.  This is an alternative method exists to ensure
+	 * repository model list. This is an alternative method exists to ensure
 	 * Gitblit does not call getRepositoryModels(UserModel) twice in a request.
 	 *
 	 * @param repositoryModels
@@ -296,17 +301,19 @@ public class ProjectManager implements IProjectManager {
 	 * @return a list of project models
 	 */
 	@Override
-	public List<ProjectModel> getProjectModels(List<RepositoryModel> repositoryModels, boolean includeUsers) {
-		Map<String, ProjectModel> projects = new LinkedHashMap<String, ProjectModel>();
-		for (RepositoryModel repository : repositoryModels) {
+	public List<ProjectModel> getProjectModels(List<RepositoryModel> repositoryModels,
+			boolean includeUsers) {
+		final Map<String, ProjectModel> projects = new LinkedHashMap<String, ProjectModel>();
+		for (final RepositoryModel repository : repositoryModels) {
 			if (!includeUsers && repository.isPersonalRepository()) {
 				// exclude personal repositories
 				continue;
 			}
 			if (!projects.containsKey(repository.projectPath)) {
-				ProjectModel project = getProjectModel(repository.projectPath);
+				final ProjectModel project = getProjectModel(repository.projectPath);
 				if (project == null) {
-					logger.warn(MessageFormat.format("excluding project \"{0}\" from project list because it is empty!",
+					this.logger.warn(MessageFormat.format(
+							"excluding project \"{0}\" from project list because it is empty!",
 							repository.projectPath));
 					continue;
 				}
@@ -320,7 +327,7 @@ public class ProjectManager implements IProjectManager {
 			} else {
 				// update the user-accessible list
 				// this is used for repository count
-				ProjectModel project = projects.get(repository.projectPath);
+				final ProjectModel project = projects.get(repository.projectPath);
 				project.repositories.add(repository.name);
 				if (project.lastChange.before(repository.lastChange)) {
 					project.lastChange = repository.lastChange;

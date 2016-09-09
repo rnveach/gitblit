@@ -71,44 +71,48 @@ public class FilterableRepositoryList extends BasePanel {
 	protected void onInitialize() {
 		super.onInitialize();
 
-		String id = getId();
-		String ngCtrl = id + "Ctrl";
-		String ngList = id + "List";
+		final String id = getId();
+		final String ngCtrl = id + "Ctrl";
+		final String ngList = id + "List";
 
-		Map<String, Object> values = new HashMap<String, Object>();
-		values.put("ngCtrl",  ngCtrl);
-		values.put("ngList",  ngList);
+		final Map<String, Object> values = new HashMap<String, Object>();
+		values.put("ngCtrl", ngCtrl);
+		values.put("ngList", ngList);
 
 		// use Freemarker to setup an AngularJS/Wicket html snippet
-		FreemarkerPanel panel = new FreemarkerPanel("listComponent", "FilterableRepositoryList.fm", values);
+		final FreemarkerPanel panel = new FreemarkerPanel("listComponent",
+				"FilterableRepositoryList.fm", values);
 		panel.setParseGeneratedMarkup(true);
 		panel.setRenderBodyOnly(true);
 		add(panel);
 
 		// add the Wicket controls that are referenced in the snippet
-		String listTitle = StringUtils.isEmpty(title) ? getString("gb.repositories") : title;
-		panel.add(new Label(ngList + "Title", MessageFormat.format("{0} ({1})", listTitle, repositories.size())));
-		if (StringUtils.isEmpty(iconClass)) {
+		final String listTitle = StringUtils.isEmpty(this.title) ? getString("gb.repositories")
+				: this.title;
+		panel.add(new Label(ngList + "Title", MessageFormat.format("{0} ({1})", listTitle,
+				this.repositories.size())));
+		if (StringUtils.isEmpty(this.iconClass)) {
 			panel.add(new Label(ngList + "Icon").setVisible(false));
 		} else {
-			Label icon = new Label(ngList + "Icon");
-			WicketUtils.setCssClass(icon, iconClass);
+			final Label icon = new Label(ngList + "Icon");
+			WicketUtils.setCssClass(icon, this.iconClass);
 			panel.add(icon);
 		}
 
-		if (allowCreate) {
-			panel.add(new LinkPanel(ngList + "Button", "btn btn-mini", getString("gb.newRepository"), app().getNewRepositoryPage()));
+		if (this.allowCreate) {
+			panel.add(new LinkPanel(ngList + "Button", "btn btn-mini",
+					getString("gb.newRepository"), app().getNewRepositoryPage()));
 		} else {
 			panel.add(new Label(ngList + "Button").setVisible(false));
 		}
 
-		String format = app().settings().getString(Keys.web.datestampShortFormat, "MM/dd/yy");
+		final String format = app().settings().getString(Keys.web.datestampShortFormat, "MM/dd/yy");
 		final DateFormat df = new SimpleDateFormat(format);
 		df.setTimeZone(getTimeZone());
 
 		// prepare the simplified repository models list
-		List<RepoListItem> list = new ArrayList<RepoListItem>();
-		for (RepositoryModel repo : repositories) {
+		final List<RepoListItem> list = new ArrayList<RepoListItem>();
+		for (final RepositoryModel repo : this.repositories) {
 			String name = StringUtils.stripDotGit(repo.name);
 			String path = "";
 			if (name.indexOf('/') > -1) {
@@ -116,7 +120,7 @@ public class FilterableRepositoryList extends BasePanel {
 				name = name.substring(name.lastIndexOf('/') + 1);
 			}
 
-			RepoListItem item = new RepoListItem();
+			final RepoListItem item = new RepoListItem();
 			item.n = name;
 			item.p = path;
 			item.r = repo.name;
@@ -138,7 +142,7 @@ public class FilterableRepositoryList extends BasePanel {
 		}
 
 		// inject an AngularJS controller with static data
-		NgController ctrl = new NgController(ngCtrl);
+		final NgController ctrl = new NgController(ngCtrl);
 		ctrl.addVariable(ngList, list);
 		add(new HeaderContributor(ctrl));
 	}
@@ -153,8 +157,8 @@ public class FilterableRepositoryList extends BasePanel {
 		String t; // time ago
 		String d; // last updated
 		String i; // information/description
-		long s;   // stars
+		long s; // stars
 		String c; // html color
-		int y;    // type: 0 = normal, 1 = fork, 2 = mirror, 3 = clone
+		int y; // type: 0 = normal, 1 = fork, 2 = mirror, 3 = clone
 	}
 }

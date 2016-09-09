@@ -29,36 +29,36 @@ public class ArrayUtilsTest extends GitblitUnitTest {
 
 	@Test
 	public void testArrays() {
-		Object [] nullArray = null;
+		final Object[] nullArray = null;
 		assertTrue(ArrayUtils.isEmpty(nullArray));
 
-		Object [] emptyArray = new Object[0];
+		final Object[] emptyArray = new Object[0];
 		assertTrue(ArrayUtils.isEmpty(emptyArray));
 
-		assertFalse(ArrayUtils.isEmpty(new String [] { "" }));
+		assertFalse(ArrayUtils.isEmpty(new String[] { "" }));
 	}
 
 	@Test
 	public void testLists() {
-		List<?> nullList = null;
+		final List<?> nullList = null;
 		assertTrue(ArrayUtils.isEmpty(nullList));
 
-		List<?> emptyList = new ArrayList<Object>();
+		final List<?> emptyList = new ArrayList<Object>();
 		assertTrue(ArrayUtils.isEmpty(emptyList));
 
-		List<?> list = Arrays.asList("");
+		final List<?> list = Arrays.asList("");
 		assertFalse(ArrayUtils.isEmpty(list));
 	}
 
 	@Test
 	public void testSets() {
-		Set<?> nullSet = null;
+		final Set<?> nullSet = null;
 		assertTrue(ArrayUtils.isEmpty(nullSet));
 
-		Set<?> emptySet = new HashSet<Object>();
+		final Set<?> emptySet = new HashSet<Object>();
 		assertTrue(ArrayUtils.isEmpty(emptySet));
 
-		Set<?> set = new HashSet<Object>(Arrays.asList(""));
+		final Set<?> set = new HashSet<Object>(Arrays.asList(""));
 		assertFalse(ArrayUtils.isEmpty(set));
 	}
 }

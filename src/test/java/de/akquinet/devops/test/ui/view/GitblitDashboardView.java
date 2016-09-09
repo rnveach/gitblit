@@ -39,9 +39,8 @@ public class GitblitDashboardView extends GitblitPageView {
 	}
 
 	public boolean isLoginPartVisible() {
-		List<WebElement> found = getDriver().findElements(
-				By.partialLinkText("logout"));
-		return found == null || found.size() == 0;
+		final List<WebElement> found = getDriver().findElements(By.partialLinkText("logout"));
+		return (found == null) || (found.size() == 0);
 	}
 
 	public void logout() {
@@ -53,8 +52,7 @@ public class GitblitDashboardView extends GitblitPageView {
 		// replaced by url call because click hangs sometimes if the clicked
 		// object is not a button or selenium ff driver does not notice the
 		// change for any other reason
-		getDriver().navigate().to(
-				getBaseUrl() + "?" + WICKET_HREF_PAGE_PATH + ".LogoutPage");
+		getDriver().navigate().to(getBaseUrl() + "?" + WICKET_HREF_PAGE_PATH + ".LogoutPage");
 	}
 
 	public static final String LOGIN_AREA_SELECTOR = "//span[@class = \"form-search\" ]";
@@ -63,8 +61,9 @@ public class GitblitDashboardView extends GitblitPageView {
 			+ WICKET_PAGES_PACKAGE_NAME;
 
 	synchronized public void waitToLoadFor(int sec) {
-		WebDriverWait webDriverWait = new WebDriverWait(getDriver(), sec);
+		final WebDriverWait webDriverWait = new WebDriverWait(getDriver(), sec);
 		webDriverWait.until(new ExpectedCondition<Boolean>() {
+			@Override
 			public Boolean apply(WebDriver d) {
 				return d.getTitle().toLowerCase()
 						.startsWith(GitblitDashboardView.TITLE_STARTS_WITH);
@@ -73,10 +72,9 @@ public class GitblitDashboardView extends GitblitPageView {
 	}
 
 	public void login(String id, String pw) {
-		String pathID = LOGIN_AREA_SELECTOR + "/input[@name = \"username\" ]";
-		String pathPW = LOGIN_AREA_SELECTOR + "/input[@name = \"password\" ]";
-		String pathSubmit = LOGIN_AREA_SELECTOR
-				+ "/button[@type = \"submit\" ]";
+		final String pathID = LOGIN_AREA_SELECTOR + "/input[@name = \"username\" ]";
+		final String pathPW = LOGIN_AREA_SELECTOR + "/input[@name = \"password\" ]";
+		final String pathSubmit = LOGIN_AREA_SELECTOR + "/button[@type = \"submit\" ]";
 		// System.out.println("DRIVER:"+getDriver());
 		// List<WebElement> findElement =
 		// getDriver().findElements(By.xpath("//span[@class = \"form-search\" ]"));
@@ -84,13 +82,13 @@ public class GitblitDashboardView extends GitblitPageView {
 		// System.out.println("ELEM: "+findElement);
 		// System.out.println("SIZE: "+findElement.size());
 		// System.out.println("XPath: "+pathID);
-		WebElement idField = getDriver().findElement(By.xpath(pathID));
+		final WebElement idField = getDriver().findElement(By.xpath(pathID));
 		// System.out.println("IDFIELD:"+idField);
 		idField.sendKeys(id);
-		WebElement pwField = getDriver().findElement(By.xpath(pathPW));
+		final WebElement pwField = getDriver().findElement(By.xpath(pathPW));
 		// System.out.println(pwField);
 		pwField.sendKeys(pw);
-		WebElement submit = getDriver().findElement(By.xpath(pathSubmit));
+		final WebElement submit = getDriver().findElement(By.xpath(pathSubmit));
 		submit.click();
 	}
 

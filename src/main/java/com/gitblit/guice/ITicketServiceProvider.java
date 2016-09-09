@@ -29,7 +29,8 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 /**
- * Provides a lazily-instantiated ITicketService configured from IStoredSettings.
+ * Provides a lazily-instantiated ITicketService configured from
+ * IStoredSettings.
  *
  * @author James Moger
  *
@@ -50,24 +51,27 @@ public class ITicketServiceProvider implements Provider<ITicketService> {
 
 	@Override
 	public synchronized ITicketService get() {
-		if (service != null) {
-			return service;
+		if (this.service != null) {
+			return this.service;
 		}
 
-		IStoredSettings settings = runtimeManager.getSettings();
+		final IStoredSettings settings = this.runtimeManager.getSettings();
 		String clazz = settings.getString(Keys.tickets.service, NullTicketService.class.getName());
 		if (StringUtils.isEmpty(clazz)) {
 			clazz = NullTicketService.class.getName();
 		}
 
 		try {
-			Class<? extends ITicketService> serviceClass = (Class<? extends ITicketService>) Class.forName(clazz);
-			service = runtimeManager.getInjector().getInstance(serviceClass);
-		} catch (Exception e) {
-			logger.error("failed to create ticket service", e);
-			service = runtimeManager.getInjector().getInstance(NullTicketService.class);
+			@SuppressWarnings("unchecked")
+			final Class<? extends ITicketService> serviceClass = (Class<? extends ITicketService>) Class
+					.forName(clazz);
+			this.service = this.runtimeManager.getInjector().getInstance(serviceClass);
+		}
+		catch (final Exception e) {
+			this.logger.error("failed to create ticket service", e);
+			this.service = this.runtimeManager.getInjector().getInstance(NullTicketService.class);
 		}
 
-		return service;
+		return this.service;
 	}
 }

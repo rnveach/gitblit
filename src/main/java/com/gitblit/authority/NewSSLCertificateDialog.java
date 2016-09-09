@@ -50,7 +50,7 @@ public class NewSSLCertificateDialog extends JDialog {
 
 		setTitle(Translation.get("gb.newSSLCertificate"));
 
-		JPanel content = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN)) {
+		final JPanel content = new JPanel(new BorderLayout(Utils.MARGIN, Utils.MARGIN)) {
 			private static final long serialVersionUID = 1L;
 
 			@Override
@@ -60,48 +60,50 @@ public class NewSSLCertificateDialog extends JDialog {
 			}
 		};
 
-		expirationDate = new JDateChooser(defaultExpiration);
-		hostname = new JTextField(20);
-		serveCertificate = new JCheckBox(Translation.get("gb.serveCertificate"), true);
+		this.expirationDate = new JDateChooser(defaultExpiration);
+		this.hostname = new JTextField(20);
+		this.serveCertificate = new JCheckBox(Translation.get("gb.serveCertificate"), true);
 
-		JPanel panel = new JPanel(new GridLayout(0, 2, Utils.MARGIN, Utils.MARGIN));
+		final JPanel panel = new JPanel(new GridLayout(0, 2, Utils.MARGIN, Utils.MARGIN));
 
 		panel.add(new JLabel(Translation.get("gb.hostname")));
-		panel.add(hostname);
+		panel.add(this.hostname);
 
 		panel.add(new JLabel(Translation.get("gb.expires")));
-		panel.add(expirationDate);
+		panel.add(this.expirationDate);
 
 		panel.add(new JLabel(""));
-		panel.add(serveCertificate);
+		panel.add(this.serveCertificate);
 
-		JButton ok = new JButton(Translation.get("gb.ok"));
+		final JButton ok = new JButton(Translation.get("gb.ok"));
 		ok.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (validateInputs()) {
-					isCanceled = false;
+					NewSSLCertificateDialog.this.isCanceled = false;
 					setVisible(false);
 				}
 			}
 		});
-		JButton cancel = new JButton(Translation.get("gb.cancel"));
+		final JButton cancel = new JButton(Translation.get("gb.cancel"));
 		cancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				isCanceled = true;
+				NewSSLCertificateDialog.this.isCanceled = true;
 				setVisible(false);
 			}
 		});
 
-		JPanel controls = new JPanel();
+		final JPanel controls = new JPanel();
 		controls.add(ok);
 		controls.add(cancel);
 
 		content.add(panel, BorderLayout.CENTER);
 		content.add(controls, BorderLayout.SOUTH);
 
-		getContentPane().add(new HeaderPanel(Translation.get("gb.newSSLCertificate"), "rosette_16x16.png"), BorderLayout.NORTH);
+		getContentPane().add(
+				new HeaderPanel(Translation.get("gb.newSSLCertificate"), "rosette_16x16.png"),
+				BorderLayout.NORTH);
 		getContentPane().add(content, BorderLayout.CENTER);
 		pack();
 
@@ -125,18 +127,18 @@ public class NewSSLCertificateDialog extends JDialog {
 	}
 
 	public String getHostname() {
-		return hostname.getText();
+		return this.hostname.getText();
 	}
 
 	public Date getExpiration() {
-		return expirationDate.getDate();
+		return this.expirationDate.getDate();
 	}
 
 	public boolean isServeCertificate() {
-		return serveCertificate.isSelected();
+		return this.serveCertificate.isSelected();
 	}
 
 	public boolean isCanceled() {
-		return isCanceled;
+		return this.isCanceled;
 	}
 }

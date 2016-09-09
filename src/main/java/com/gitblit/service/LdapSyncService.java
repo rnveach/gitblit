@@ -49,21 +49,23 @@ public final class LdapSyncService implements Runnable {
 	 */
 	@Override
 	public void run() {
-		logger.info("Starting user and group sync with ldap service");
-		if (!running.getAndSet(true)) {
+		this.logger.info("Starting user and group sync with ldap service");
+		if (!this.running.getAndSet(true)) {
 			try {
-				ldapAuthProvider.sync();
-			} catch (Exception e) {
-				logger.error("Failed to synchronize with ldap", e);
-			} finally {
-				running.getAndSet(false);
+				this.ldapAuthProvider.sync();
+			}
+			catch (final Exception e) {
+				this.logger.error("Failed to synchronize with ldap", e);
+			}
+			finally {
+				this.running.getAndSet(false);
 			}
 		}
-		logger.info("Finished user and group sync with ldap service");
+		this.logger.info("Finished user and group sync with ldap service");
 	}
 
 	public boolean isReady() {
-		return settings.getBoolean(Keys.realm.ldap.synchronize, false);
+		return this.settings.getBoolean(Keys.realm.ldap.synchronize, false);
 	}
 
 }

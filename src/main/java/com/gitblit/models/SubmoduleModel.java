@@ -43,6 +43,6 @@ public class SubmoduleModel implements Serializable {
 
 	@Override
 	public String toString() {
-		return path + "=" + url;
+		return this.path + "=" + this.url;
 	}
 }

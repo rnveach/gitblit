@@ -49,10 +49,10 @@ public abstract class BasePanel extends Panel {
 	}
 
 	protected Logger logger() {
-		if (logger == null) {
-			logger = LoggerFactory.getLogger(getClass());
+		if (this.logger == null) {
+			this.logger = LoggerFactory.getLogger(getClass());
 		}
-		return logger;
+		return this.logger;
 	}
 
 	protected String getContextUrl() {
@@ -60,24 +60,27 @@ public abstract class BasePanel extends Panel {
 	}
 
 	protected TimeZone getTimeZone() {
-		return app().settings().getBoolean(Keys.web.useClientTimezone, false) ? GitBlitWebSession.get()
-				.getTimezone() : app().getTimezone();
+		return app().settings().getBoolean(Keys.web.useClientTimezone, false) ? GitBlitWebSession
+				.get().getTimezone() : app().getTimezone();
 	}
 
 	protected TimeUtils getTimeUtils() {
-		if (timeUtils == null) {
+		if (this.timeUtils == null) {
 			ResourceBundle bundle;
 			try {
-				bundle = ResourceBundle.getBundle("com.gitblit.wicket.GitBlitWebApp", GitBlitWebSession.get().getLocale());
-			} catch (Throwable t) {
+				bundle = ResourceBundle.getBundle("com.gitblit.wicket.GitBlitWebApp",
+						GitBlitWebSession.get().getLocale());
+			}
+			catch (final Throwable t) {
 				bundle = ResourceBundle.getBundle("com.gitblit.wicket.GitBlitWebApp");
 			}
-			timeUtils = new TimeUtils(bundle, getTimeZone());
+			this.timeUtils = new TimeUtils(bundle, getTimeZone());
 		}
-		return timeUtils;
+		return this.timeUtils;
 	}
 
-	protected void setPersonSearchTooltip(Component component, String value, Constants.SearchType searchType) {
+	protected void setPersonSearchTooltip(Component component, String value,
+			Constants.SearchType searchType) {
 		if (searchType.equals(Constants.SearchType.AUTHOR)) {
 			WicketUtils.setHtmlTooltip(component, getString("gb.searchForAuthor") + " " + value);
 		} else if (searchType.equals(Constants.SearchType.COMMITTER)) {
@@ -95,7 +98,7 @@ public abstract class BasePanel extends Panel {
 
 		@Override
 		protected String newValue(final String currentValue, final String replacementValue) {
-			String prefix = "var conf = confirm('" + replacementValue + "'); "
+			final String prefix = "var conf = confirm('" + replacementValue + "'); "
 					+ "if (!conf) return false; ";
 			String result = prefix;
 			if (currentValue != null) {
@@ -113,13 +116,14 @@ public abstract class BasePanel extends Panel {
 
 		public JavascriptTextPrompt(String event, String msg, String value) {
 			super(event, true, new Model<String>(msg));
-			initialValue = value;
+			this.initialValue = value;
 		}
 
 		@Override
 		protected String newValue(final String currentValue, final String message) {
-			String result = "var userText = prompt('" + message + "','"
-					+ (initialValue == null ? "" : initialValue) + "'); " + "return userText; ";
+			final String result = "var userText = prompt('" + message + "','"
+					+ (this.initialValue == null ? "" : this.initialValue) + "'); "
+					+ "return userText; ";
 			return result;
 		}
 	}

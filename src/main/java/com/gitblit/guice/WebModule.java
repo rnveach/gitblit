@@ -18,6 +18,8 @@ package com.gitblit.guice;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.wicket.protocol.http.WicketFilter;
+
 import com.gitblit.AvatarGenerator;
 import com.gitblit.Constants;
 import com.gitblit.servlet.AccessDeniedServlet;
@@ -70,7 +72,6 @@ public class WebModule extends ServletModule {
 		serve(fuzzy(Constants.RPC_PATH)).with(RpcServlet.class);
 		serve(fuzzy(Constants.ZIP_PATH)).with(DownloadZipServlet.class);
 		serve(fuzzy(Constants.SYNDICATION_PATH)).with(SyndicationServlet.class);
-		
 
 		serve(fuzzy(Constants.FEDERATION_PATH)).with(FederationServlet.class);
 		serve(fuzzy(Constants.SPARKLESHARE_INVITE_PATH)).with(SparkleShareInviteServlet.class);
@@ -79,13 +80,15 @@ public class WebModule extends ServletModule {
 		serve("/robots.txt").with(RobotsTxtServlet.class);
 		serve("/logo.png").with(LogoServlet.class);
 
-		/* Prevent accidental access to 'resources' such as GitBlit java classes
-		 *
-		 * In the GO setup the JAR containing the application and the WAR injected
-		 * into Jetty are the same file. However Jetty expects to serve the entire WAR
-		 * contents, except the WEB-INF folder. Thus, all java binary classes in the
-		 * JAR are served by default as is they were legitimate resources.
-		 *
+		/*
+		 * Prevent accidental access to 'resources' such as GitBlit java classes
+		 * 
+		 * In the GO setup the JAR containing the application and the WAR
+		 * injected into Jetty are the same file. However Jetty expects to serve
+		 * the entire WAR contents, except the WEB-INF folder. Thus, all java
+		 * binary classes in the JAR are served by default as is they were
+		 * legitimate resources.
+		 * 
 		 * The below servlet mappings prevent that behavior
 		 */
 		serve(fuzzy("/com/")).with(AccessDeniedServlet.class);
@@ -101,21 +104,21 @@ public class WebModule extends ServletModule {
 		filter(fuzzy(Constants.RPC_PATH)).through(RpcFilter.class);
 		filter(fuzzy(Constants.ZIP_PATH)).through(DownloadZipFilter.class);
 		filter(fuzzy(Constants.SYNDICATION_PATH)).through(SyndicationFilter.class);
-		
-		
-		// Wicket
-		String toIgnore = Joiner.on(",").join(Constants.R_PATH, Constants.GIT_PATH, Constants.RAW_PATH,
-				Constants.PAGES, Constants.RPC_PATH, Constants.ZIP_PATH, Constants.SYNDICATION_PATH,
-				Constants.FEDERATION_PATH, Constants.SPARKLESHARE_INVITE_PATH, Constants.BRANCH_GRAPH_PATH,
-				Constants.PT_PATH, "/robots.txt", "/logo.png");
 
-		Map<String, String> params = new HashMap<String, String>();
-		params.put(GitblitWicketFilter.FILTER_MAPPING_PARAM, ALL);
-		params.put(GitblitWicketFilter.IGNORE_PATHS_PARAM, toIgnore);
+		// Wicket
+		final String toIgnore = Joiner.on(",").join(Constants.R_PATH, Constants.GIT_PATH,
+				Constants.RAW_PATH, Constants.PAGES, Constants.RPC_PATH, Constants.ZIP_PATH,
+				Constants.SYNDICATION_PATH, Constants.FEDERATION_PATH,
+				Constants.SPARKLESHARE_INVITE_PATH, Constants.BRANCH_GRAPH_PATH, Constants.PT_PATH,
+				"/robots.txt", "/logo.png");
+
+		final Map<String, String> params = new HashMap<String, String>();
+		params.put(WicketFilter.FILTER_MAPPING_PARAM, ALL);
+		params.put(WicketFilter.IGNORE_PATHS_PARAM, toIgnore);
 		filter(ALL).through(GitblitWicketFilter.class, params);
 	}
 
-	private String fuzzy(String path) {
+	private static String fuzzy(String path) {
 		if (path.endsWith(ALL)) {
 			return path;
 		} else if (path.endsWith("/")) {

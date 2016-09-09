@@ -33,7 +33,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 /**
- * The notification manager dispatches notifications.  Currently, email is the
+ * The notification manager dispatches notifications. Currently, email is the
  * only supported transport, however there is no reason why other transports
  * could be supported (tweets, irc, sms, etc).
  *
@@ -59,25 +59,26 @@ public class NotificationManager implements INotificationManager {
 
 	@Override
 	public NotificationManager start() {
-		if (mailService.isReady()) {
-			int period = 2;
-			logger.info("Mail service will process the queue every {} minutes.", period);
-			scheduledExecutor.scheduleAtFixedRate(mailService, 1, period, TimeUnit.MINUTES);
+		if (this.mailService.isReady()) {
+			final int period = 2;
+			this.logger.info("Mail service will process the queue every {} minutes.", period);
+			this.scheduledExecutor.scheduleAtFixedRate(this.mailService, 1, period,
+					TimeUnit.MINUTES);
 		} else {
-			logger.warn("Mail service disabled.");
+			this.logger.warn("Mail service disabled.");
 		}
 		return this;
 	}
 
 	@Override
 	public NotificationManager stop() {
-		scheduledExecutor.shutdownNow();
+		this.scheduledExecutor.shutdownNow();
 		return this;
 	}
 
 	@Override
 	public boolean isSendingMail() {
-		return mailService.isReady();
+		return this.mailService.isReady();
 	}
 
 	/**
@@ -88,10 +89,10 @@ public class NotificationManager implements INotificationManager {
 	 */
 	@Override
 	public void sendMailToAdministrators(String subject, String message) {
-		Mailing mail = Mailing.newPlain();
+		final Mailing mail = Mailing.newPlain();
 		mail.subject = subject;
 		mail.content = message;
-		mail.setRecipients(settings.getStrings(Keys.mail.adminAddresses));
+		mail.setRecipients(this.settings.getStrings(Keys.mail.adminAddresses));
 		send(mail);
 	}
 
@@ -104,7 +105,7 @@ public class NotificationManager implements INotificationManager {
 	 */
 	@Override
 	public void sendMail(String subject, String message, Collection<String> toAddresses) {
-		Mailing mail = Mailing.newPlain();
+		final Mailing mail = Mailing.newPlain();
 		mail.subject = subject;
 		mail.content = message;
 		mail.setRecipients(toAddresses);
@@ -120,7 +121,7 @@ public class NotificationManager implements INotificationManager {
 	 */
 	@Override
 	public void sendHtmlMail(String subject, String message, Collection<String> toAddresses) {
-		Mailing mail = Mailing.newHtml();
+		final Mailing mail = Mailing.newHtml();
 		mail.subject = subject;
 		mail.content = message;
 		mail.setRecipients(toAddresses);
@@ -135,12 +136,13 @@ public class NotificationManager implements INotificationManager {
 	@Override
 	public void send(Mailing mailing) {
 		if (!mailing.hasRecipients()) {
-			logger.debug("Dropping message {} because there are no recipients", mailing.subject);
+			this.logger.debug("Dropping message {} because there are no recipients",
+					mailing.subject);
 			return;
 		}
-		Message msg = mailService.createMessage(mailing);
+		final Message msg = this.mailService.createMessage(mailing);
 		if (msg != null) {
-			mailService.queue(msg);
+			this.mailService.queue(msg);
 		}
 	}
 

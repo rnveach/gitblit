@@ -46,15 +46,13 @@ import com.gitblit.utils.XssFilter.AllowXssFilter;
 public class ReindexTickets {
 
 	public static void main(String... args) {
-		ReindexTickets reindex = new ReindexTickets();
-
 		// filter out the baseFolder parameter
-		List<String> filtered = new ArrayList<String>();
+		final List<String> filtered = new ArrayList<String>();
 		String folder = "data";
 		for (int i = 0; i < args.length; i++) {
-			String arg = args[i];
+			final String arg = args[i];
 			if (arg.equals("--baseFolder")) {
-				if (i + 1 == args.length) {
+				if ((i + 1) == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
 					System.exit(-1);
 				} else if (!".".equals(args[i + 1])) {
@@ -67,16 +65,17 @@ public class ReindexTickets {
 		}
 
 		Params.baseFolder = folder;
-		Params params = new Params();
-		CmdLineParser parser = new CmdLineParser(params);
+		final Params params = new Params();
+		final CmdLineParser parser = new CmdLineParser(params);
 		try {
 			parser.parseArgument(filtered);
 			if (params.help) {
-				reindex.usage(parser, null);
+				ReindexTickets.usage(parser, null);
 				return;
 			}
-		} catch (CmdLineException t) {
-			reindex.usage(parser, t);
+		}
+		catch (final CmdLineException t) {
+			ReindexTickets.usage(parser, t);
 			return;
 		}
 
@@ -89,7 +88,7 @@ public class ReindexTickets {
 		}
 
 		// reindex tickets
-		reindex.reindex(new File(Params.baseFolder), settings);
+		reindex(new File(Params.baseFolder), settings);
 		System.exit(0);
 	}
 
@@ -99,7 +98,7 @@ public class ReindexTickets {
 	 * @param parser
 	 * @param t
 	 */
-	protected final void usage(CmdLineParser parser, CmdLineException t) {
+	private static final void usage(CmdLineParser parser, CmdLineException t) {
 		System.out.println(Constants.BORDER);
 		System.out.println(Constants.getGitBlitVersion());
 		System.out.println(Constants.BORDER);
@@ -121,39 +120,47 @@ public class ReindexTickets {
 	 *
 	 * @param settings
 	 */
-	protected void reindex(File baseFolder, IStoredSettings settings) {
+	private static void reindex(File baseFolder, IStoredSettings settings) {
 		// disable some services
 		settings.overrideSetting(Keys.web.allowLuceneIndexing, false);
 		settings.overrideSetting(Keys.git.enableGarbageCollection, false);
 		settings.overrideSetting(Keys.git.enableMirroring, false);
 		settings.overrideSetting(Keys.web.activityCacheDays, 0);
 
-		XssFilter xssFilter = new AllowXssFilter();
-		IRuntimeManager runtimeManager = new RuntimeManager(settings, xssFilter, baseFolder).start();
-		IRepositoryManager repositoryManager = new RepositoryManager(runtimeManager, null, null).start();
+		final XssFilter xssFilter = new AllowXssFilter();
+		final IRuntimeManager runtimeManager = new RuntimeManager(settings, xssFilter, baseFolder)
+				.start();
+		final IRepositoryManager repositoryManager = new RepositoryManager(runtimeManager, null,
+				null).start();
 
-		String serviceName = settings.getString(Keys.tickets.service, BranchTicketService.class.getSimpleName());
+		final String serviceName = settings.getString(Keys.tickets.service,
+				BranchTicketService.class.getSimpleName());
 		if (StringUtils.isEmpty(serviceName)) {
-			System.err.println(MessageFormat.format("Please define a ticket service in \"{0}\"", Keys.tickets.service));
+			System.err.println(MessageFormat.format("Please define a ticket service in \"{0}\"",
+					Keys.tickets.service));
 			System.exit(1);
 		}
 		ITicketService ticketService = null;
 		try {
-			Class<?> serviceClass = Class.forName(serviceName);
+			final Class<?> serviceClass = Class.forName(serviceName);
 			if (RedisTicketService.class.isAssignableFrom(serviceClass)) {
 				// Redis ticket service
-				ticketService = new RedisTicketService(runtimeManager, null, null, null, repositoryManager).start();
+				ticketService = new RedisTicketService(runtimeManager, null, null, null,
+						repositoryManager).start();
 			} else if (BranchTicketService.class.isAssignableFrom(serviceClass)) {
 				// Branch ticket service
-				ticketService = new BranchTicketService(runtimeManager, null, null, null, repositoryManager).start();
+				ticketService = new BranchTicketService(runtimeManager, null, null, null,
+						repositoryManager).start();
 			} else if (FileTicketService.class.isAssignableFrom(serviceClass)) {
 				// File ticket service
-				ticketService = new FileTicketService(runtimeManager, null, null, null, repositoryManager).start();
+				ticketService = new FileTicketService(runtimeManager, null, null, null,
+						repositoryManager).start();
 			} else {
 				System.err.println("Unknown ticket service " + serviceName);
 				System.exit(1);
 			}
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -171,13 +178,15 @@ public class ReindexTickets {
 
 		public static String baseFolder;
 
-		@Option(name = "--help", aliases = { "-h"}, usage = "Show this help")
+		@Option(name = "--help", aliases = { "-h" }, usage = "Show this help")
 		public Boolean help = false;
 
-		private final FileSettings FILESETTINGS = new FileSettings(new File(baseFolder, Constants.PROPERTIES_FILE).getAbsolutePath());
+		private final FileSettings FILESETTINGS = new FileSettings(new File(baseFolder,
+				Constants.PROPERTIES_FILE).getAbsolutePath());
 
 		@Option(name = "--repositoriesFolder", usage = "Git Repositories Folder", metaVar = "PATH")
-		public String repositoriesFolder = FILESETTINGS.getString(Keys.git.repositoriesFolder, "git");
+		public String repositoriesFolder = this.FILESETTINGS.getString(Keys.git.repositoriesFolder,
+				"git");
 
 		@Option(name = "--settings", usage = "Path to alternative settings", metaVar = "FILE")
 		public String settingsfile;

@@ -22,7 +22,7 @@ import com.gitblit.utils.MarkdownUtils;
 public class MarkdownUtilsTest extends GitblitUnitTest {
 
 	@Test
-	public void testMarkdown() throws Exception {
+	public void testMarkdown() {
 		assertEquals("<h1>H1</h1>", MarkdownUtils.transformMarkdown("# H1"));
 		assertEquals("<h2>H2</h2>", MarkdownUtils.transformMarkdown("## H2"));
 		assertEquals("<p><strong>THIS</strong> is a test</p>",

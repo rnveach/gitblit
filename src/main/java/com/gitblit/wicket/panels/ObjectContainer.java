@@ -21,19 +21,20 @@ import java.util.List;
 import org.apache.wicket.Component;
 import org.apache.wicket.ResourceReference;
 import org.apache.wicket.Response;
+import org.apache.wicket.Session;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.protocol.http.ClientProperties;
 import org.apache.wicket.protocol.http.WebRequestCycle;
-import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
 import org.apache.wicket.request.ClientInfo;
 import org.apache.wicket.util.value.IValueMap;
 
 /**
- * https://cwiki.apache.org/WICKET/object-container-adding-flash-to-a-wicket-application.html
+ * https://cwiki.apache.org/WICKET/object-container-adding-flash-to-a-wicket-
+ * application.html
  */
 public abstract class ObjectContainer extends WebMarkupContainer {
 
@@ -75,8 +76,9 @@ public abstract class ObjectContainer extends WebMarkupContainer {
 	// Utility function to get the URL for the object's data
 	protected String resolveResource(String src) {
 		// if it's an absolute path, return it:
-		if (src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://"))
+		if (src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://")) {
 			return (src);
+		}
 
 		// use the parent container class to resolve the resource reference
 		Component parent = getParent();
@@ -85,7 +87,7 @@ public abstract class ObjectContainer extends WebMarkupContainer {
 			parent = parent.getParent();
 		}
 		if (parent != null) {
-			ResourceReference resRef = new ResourceReference(parent.getClass(), src, false);
+			final ResourceReference resRef = new ResourceReference(parent.getClass(), src, false);
 			return (urlFor(resRef).toString());
 		}
 
@@ -97,40 +99,44 @@ public abstract class ObjectContainer extends WebMarkupContainer {
 		super.onComponentTag(tag);
 
 		// get the attributes from the html-source
-		IValueMap attributeMap = tag.getAttributes();
+		final IValueMap attributeMap = tag.getAttributes();
 
 		// set the content type
-		String contentType = getContentType();
-		if (contentType != null && !"".equals(contentType))
+		final String contentType = getContentType();
+		if ((contentType != null) && !"".equals(contentType)) {
 			attributeMap.put(ATTRIBUTE_CONTENTTYPE, contentType);
+		}
 
 		// set clsid and codebase for IE
 		if (getClientProperties().isBrowserInternetExplorer()) {
-			String clsid = getClsid();
-			String codeBase = getCodebase();
+			final String clsid = getClsid();
+			final String codeBase = getCodebase();
 
-			if (clsid != null && !"".equals(clsid))
+			if ((clsid != null) && !"".equals(clsid)) {
 				attributeMap.put(ATTRIBUTE_CLASSID, clsid);
-			if (codeBase != null && !"".equals(codeBase))
+			}
+			if ((codeBase != null) && !"".equals(codeBase)) {
 				attributeMap.put(ATTRIBUTE_CODEBASE, codeBase);
+			}
 		}
 
 		// add all attributes
-		for (String name : getAttributeNames()) {
-			String value = getValue(name);
-			if (value != null)
+		for (final String name : getAttributeNames()) {
+			final String value = getValue(name);
+			if (value != null) {
 				attributeMap.put(name, value);
+			}
 		}
 	}
 
 	@Override
 	public void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag) {
-		Response response = getResponse();
+		final Response response = getResponse();
 		response.write("\n");
 
 		// add all object's parameters:
-		for (String name : getParameterNames()) {
-			String value = getValue(name);
+		for (final String name : getParameterNames()) {
+			final String value = getValue(name);
 			if (value != null) {
 				response.write("<param name=\"");
 				response.write(name);
@@ -145,16 +151,16 @@ public abstract class ObjectContainer extends WebMarkupContainer {
 
 	// shortcut to the client properties:
 	protected ClientProperties getClientProperties() {
-		if (clientProperties == null) {
-			ClientInfo clientInfo = WebSession.get().getClientInfo();
+		if (this.clientProperties == null) {
+			ClientInfo clientInfo = Session.get().getClientInfo();
 
-			if (clientInfo == null || !(clientInfo instanceof WebClientInfo)) {
+			if ((clientInfo == null) || !(clientInfo instanceof WebClientInfo)) {
 				clientInfo = new WebClientInfo((WebRequestCycle) getRequestCycle());
-				WebSession.get().setClientInfo(clientInfo);
+				Session.get().setClientInfo(clientInfo);
 			}
 
-			clientProperties = ((WebClientInfo) clientInfo).getProperties();
+			this.clientProperties = ((WebClientInfo) clientInfo).getProperties();
 		}
-		return (clientProperties);
+		return (this.clientProperties);
 	}
 }

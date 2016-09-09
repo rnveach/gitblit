@@ -31,6 +31,7 @@ import java.util.Date;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 import com.gitblit.utils.StringUtils;
 
@@ -40,11 +41,11 @@ public class HeaderPanel extends JPanel {
 
 	private final Insets insets = new Insets(5, 5, 5, 5);
 
-	private Color lightColor = new Color(0, 0, 0x60);
+	private final Color lightColor = new Color(0, 0, 0x60);
 
-	private JLabel headerLabel;
+	private final JLabel headerLabel;
 
-	private JLabel refreshLabel;
+	private final JLabel refreshLabel;
 
 	public HeaderPanel(String text, String icon) {
 		// super(new FlowLayout(FlowLayout.LEFT), true);
@@ -52,41 +53,41 @@ public class HeaderPanel extends JPanel {
 		setOpaque(true);
 		setBackground(new Color(0, 0, 0x20));
 
-		headerLabel = new JLabel(text);
+		this.headerLabel = new JLabel(text);
 		if (!StringUtils.isEmpty(icon)) {
-			headerLabel.setIcon(new ImageIcon(getClass().getResource("/" + icon)));
+			this.headerLabel.setIcon(new ImageIcon(getClass().getResource("/" + icon)));
 		}
-		headerLabel.setForeground(Color.white);
-		headerLabel.setFont(headerLabel.getFont().deriveFont(14f));
-		add(headerLabel);
+		this.headerLabel.setForeground(Color.white);
+		this.headerLabel.setFont(this.headerLabel.getFont().deriveFont(14f));
+		add(this.headerLabel);
 
-		refreshLabel = new JLabel("", JLabel.RIGHT);
-		refreshLabel.setForeground(Color.white);
-		add(refreshLabel);
+		this.refreshLabel = new JLabel("", SwingConstants.RIGHT);
+		this.refreshLabel.setForeground(Color.white);
+		add(this.refreshLabel);
 	}
 
 	public void setText(String text) {
-		headerLabel.setText(text);
-		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		refreshLabel.setText("refreshed " + df.format(new Date()));
+		this.headerLabel.setText(text);
+		final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		this.refreshLabel.setText("refreshed " + df.format(new Date()));
 	}
 
 	@Override
 	public Insets getInsets() {
-		return insets;
+		return this.insets;
 	}
 
 	@Override
 	public void paintComponent(Graphics oldG) {
-		Graphics2D g = (Graphics2D) oldG;
-		Point2D startPoint = new Point2D.Float(0, 0);
-		Point2D endPoint = new Point2D.Float(0, getHeight());
-		Paint gradientPaint = new GradientPaint(startPoint, lightColor, endPoint, getBackground(),
-				false);
+		final Graphics2D g = (Graphics2D) oldG;
+		final Point2D startPoint = new Point2D.Float(0, 0);
+		final Point2D endPoint = new Point2D.Float(0, getHeight());
+		final Paint gradientPaint = new GradientPaint(startPoint, this.lightColor, endPoint,
+				getBackground(), false);
 		g.setPaint(gradientPaint);
 		g.fill(new Rectangle2D.Double(0, 0, getWidth(), getHeight()));
 		g.setColor(new Color(0xff, 0x99, 0x00));
-		int stroke = 2;
+		final int stroke = 2;
 		g.setStroke(new BasicStroke(stroke));
 		g.drawLine(0, getHeight() - 1, getWidth(), getHeight() - 1);
 	}

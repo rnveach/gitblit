@@ -53,7 +53,7 @@ public class WelcomeShell implements Factory<Command> {
 
 	@Override
 	public Command create() {
-		return new SendMessage(settings);
+		return new SendMessage(this.settings);
 	}
 
 	private static class SendMessage implements Command, SessionAware {
@@ -97,13 +97,13 @@ public class WelcomeShell implements Factory<Command> {
 
 		@Override
 		public void start(final Environment env) throws IOException {
-			err.write(Constants.encode(getMessage()));
-			err.flush();
+			this.err.write(Constants.encode(getMessage()));
+			this.err.flush();
 
-			in.close();
-			out.close();
-			err.close();
-			exit.onExit(127);
+			this.in.close();
+			this.out.close();
+			this.err.close();
+			this.exit.onExit(127);
 		}
 
 		@Override
@@ -112,16 +112,16 @@ public class WelcomeShell implements Factory<Command> {
 		}
 
 		String getMessage() {
-			SshDaemonClient client = session.getAttribute(SshDaemonClient.KEY);
-			UserModel user = client.getUser();
-			String hostname = getHostname();
-			int port = settings.getInteger(Keys.git.sshPort, 0);
+			final SshDaemonClient client = this.session.getAttribute(SshDaemonClient.KEY);
+			final UserModel user = client.getUser();
+			final String hostname = getHostname();
+			final int port = this.settings.getInteger(Keys.git.sshPort, 0);
 
 			final String b1 = StringUtils.rightPad("", 72, '═');
 			final String b2 = StringUtils.rightPad("", 72, '─');
 			final String nl = "\r\n";
 
-			StringBuilder msg = new StringBuilder();
+			final StringBuilder msg = new StringBuilder();
 			msg.append(nl);
 			msg.append(b1);
 			msg.append(nl);
@@ -139,7 +139,7 @@ public class WelcomeShell implements Factory<Command> {
 			msg.append(nl);
 			msg.append(nl);
 			msg.append("   client:   ");
-			msg.append(session.getClientVersion());
+			msg.append(this.session.getClientVersion());
 			msg.append(nl);
 			msg.append(nl);
 
@@ -166,7 +166,8 @@ public class WelcomeShell implements Factory<Command> {
 				msg.append(nl);
 				msg.append(nl);
 
-				msg.append(String.format("   cat ~/.ssh/id_rsa.pub | ssh -l %s -p %d %s keys add", user.username, port, hostname));
+				msg.append(String.format("   cat ~/.ssh/id_rsa.pub | ssh -l %s -p %d %s keys add",
+						user.username, port, hostname));
 				msg.append(nl);
 				msg.append(nl);
 
@@ -176,9 +177,10 @@ public class WelcomeShell implements Factory<Command> {
 			}
 
 			// display the core commands
-			SshCommandFactory cmdFactory = (SshCommandFactory) session.getFactoryManager().getCommandFactory();
-			DispatchCommand root = cmdFactory.createRootDispatcher(client, "");
-			String usage = root.usage().replace("\n", nl);
+			final SshCommandFactory cmdFactory = (SshCommandFactory) this.session
+					.getFactoryManager().getCommandFactory();
+			final DispatchCommand root = cmdFactory.createRootDispatcher(client, "");
+			final String usage = root.usage().replace("\n", nl);
 			msg.append(usage);
 
 			return msg.toString();
@@ -186,11 +188,13 @@ public class WelcomeShell implements Factory<Command> {
 
 		private String getHostname() {
 			String host = null;
-			String url = settings.getString(Keys.web.canonicalUrl, "https://localhost:8443");
+			final String url = this.settings.getString(Keys.web.canonicalUrl,
+					"https://localhost:8443");
 			if (url != null) {
 				try {
 					host = new URL(url).getHost();
-				} catch (MalformedURLException e) {
+				}
+				catch (final MalformedURLException e) {
 				}
 			}
 			if (StringUtils.isEmpty(host)) {
@@ -200,9 +204,9 @@ public class WelcomeShell implements Factory<Command> {
 		}
 
 		private String formatUrl(String hostname, int port, String username) {
-			int displayPort = settings.getInteger(Keys.git.sshAdvertisedPort, port);
-			String displayHostname = settings.getString(Keys.git.sshAdvertisedHost, "");
-			if(displayHostname.isEmpty()) {
+			final int displayPort = this.settings.getInteger(Keys.git.sshAdvertisedPort, port);
+			String displayHostname = this.settings.getString(Keys.git.sshAdvertisedHost, "");
+			if (displayHostname.isEmpty()) {
 				displayHostname = hostname;
 			}
 			if (displayPort == 22) {
@@ -210,8 +214,8 @@ public class WelcomeShell implements Factory<Command> {
 				return MessageFormat.format("{0}@{1}/REPOSITORY.git", username, displayHostname);
 			} else {
 				// non-standard port
-				return MessageFormat.format("ssh://{0}@{1}:{2,number,0}/REPOSITORY.git",
-						username, displayHostname, displayPort);
+				return MessageFormat.format("ssh://{0}@{1}:{2,number,0}/REPOSITORY.git", username,
+						displayHostname, displayPort);
 			}
 		}
 	}

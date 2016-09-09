@@ -25,14 +25,16 @@ import com.gitblit.transport.ssh.commands.CommandMetaData;
 public class Receive extends BaseGitCommand {
 	@Override
 	protected void runImpl() throws Failure {
-		SshKey key = getContext().getClient().getKey();
-		if (key != null && !key.canPush()) {
+		final SshKey key = getContext().getClient().getKey();
+		if ((key != null) && !key.canPush()) {
 			throw new Failure(1, "Sorry, your SSH public key is not allowed to push changes!");
 		}
 		try {
-			ReceivePack rp = receivePackFactory.create(getContext().getClient(), repo);
-			rp.receive(in, out, null);
-		} catch (Exception e) {
+			final ReceivePack rp = this.receivePackFactory.create(getContext().getClient(),
+					this.repo);
+			rp.receive(this.in, this.out, null);
+		}
+		catch (final Exception e) {
 			throw new Failure(1, "fatal: Cannot receive pack: ", e);
 		}
 	}

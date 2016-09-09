@@ -37,7 +37,11 @@ public class FeedEntryTableModel extends AbstractTableModel {
 	List<FeedEntryModel> entries;
 
 	enum Columns {
-		Date, Repository, Branch, Author, Message;
+		Date,
+		Repository,
+		Branch,
+		Author,
+		Message;
 
 		@Override
 		public String toString() {
@@ -56,7 +60,7 @@ public class FeedEntryTableModel extends AbstractTableModel {
 
 	@Override
 	public int getRowCount() {
-		return entries.size();
+		return this.entries.size();
 	}
 
 	@Override
@@ -66,7 +70,7 @@ public class FeedEntryTableModel extends AbstractTableModel {
 
 	@Override
 	public String getColumnName(int column) {
-		Columns col = Columns.values()[column];
+		final Columns col = Columns.values()[column];
 		switch (col) {
 		case Date:
 			return Translation.get("gb.date");
@@ -101,8 +105,8 @@ public class FeedEntryTableModel extends AbstractTableModel {
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		FeedEntryModel entry = entries.get(rowIndex);
-		Columns col = Columns.values()[columnIndex];
+		final FeedEntryModel entry = this.entries.get(rowIndex);
+		final Columns col = Columns.values()[columnIndex];
 		switch (col) {
 		case Date:
 			return entry.published;
@@ -119,6 +123,6 @@ public class FeedEntryTableModel extends AbstractTableModel {
 	}
 
 	public FeedEntryModel get(int modelRow) {
-		return entries.get(modelRow);
+		return this.entries.get(modelRow);
 	}
 }

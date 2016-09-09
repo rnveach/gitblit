@@ -17,7 +17,6 @@ package com.gitblit.client;
 
 import java.awt.Component;
 import java.awt.FlowLayout;
-import java.io.Serializable;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -34,7 +33,7 @@ import com.gitblit.models.RepositoryModel;
  * @author James Moger
  *
  */
-public class IndicatorsRenderer extends JPanel implements TableCellRenderer, Serializable {
+public class IndicatorsRenderer extends JPanel implements TableCellRenderer {
 
 	private static final long serialVersionUID = 1L;
 
@@ -45,8 +44,6 @@ public class IndicatorsRenderer extends JPanel implements TableCellRenderer, Ser
 	private final ImageIcon pullIcon;
 
 	private final ImageIcon viewIcon;
-
-	private final ImageIcon doxIcon;
 
 	private final ImageIcon frozenIcon;
 
@@ -60,80 +57,80 @@ public class IndicatorsRenderer extends JPanel implements TableCellRenderer, Ser
 
 	public IndicatorsRenderer() {
 		super(new FlowLayout(FlowLayout.RIGHT, 1, 0));
-		blankIcon = new ImageIcon(getClass().getResource("/blank.png"));
-		pushIcon = new ImageIcon(getClass().getResource("/lock_go_16x16.png"));
-		pullIcon = new ImageIcon(getClass().getResource("/lock_pull_16x16.png"));
-		viewIcon = new ImageIcon(getClass().getResource("/shield_16x16.png"));
-		doxIcon = new ImageIcon(getClass().getResource("/book_16x16.png"));
-		frozenIcon = new ImageIcon(getClass().getResource("/cold_16x16.png"));
-		federatedIcon = new ImageIcon(getClass().getResource("/federated_16x16.png"));
-		forkIcon = new ImageIcon(getClass().getResource("/commit_divide_16x16.png"));
-		sparkleshareIcon = new ImageIcon(getClass().getResource("/star_16x16.png"));
-		mirrorIcon = new ImageIcon(getClass().getResource("/mirror_16x16.png"));
+		this.blankIcon = new ImageIcon(getClass().getResource("/blank.png"));
+		this.pushIcon = new ImageIcon(getClass().getResource("/lock_go_16x16.png"));
+		this.pullIcon = new ImageIcon(getClass().getResource("/lock_pull_16x16.png"));
+		this.viewIcon = new ImageIcon(getClass().getResource("/shield_16x16.png"));
+		this.frozenIcon = new ImageIcon(getClass().getResource("/cold_16x16.png"));
+		this.federatedIcon = new ImageIcon(getClass().getResource("/federated_16x16.png"));
+		this.forkIcon = new ImageIcon(getClass().getResource("/commit_divide_16x16.png"));
+		this.sparkleshareIcon = new ImageIcon(getClass().getResource("/star_16x16.png"));
+		this.mirrorIcon = new ImageIcon(getClass().getResource("/mirror_16x16.png"));
 	}
 
 	@Override
 	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 			boolean hasFocus, int row, int column) {
-		if (isSelected)
+		if (isSelected) {
 			setBackground(table.getSelectionBackground());
-		else
+		} else {
 			setBackground(table.getBackground());
+		}
 		removeAll();
 		if (value instanceof RepositoryModel) {
-			StringBuilder tooltip = new StringBuilder();
-			RepositoryModel model = (RepositoryModel) value;
+			final StringBuilder tooltip = new StringBuilder();
+			final RepositoryModel model = (RepositoryModel) value;
 			if (model.isSparkleshared()) {
-				JLabel icon = new JLabel(sparkleshareIcon);
+				final JLabel icon = new JLabel(this.sparkleshareIcon);
 				tooltip.append(Translation.get("gb.isSparkleshared")).append("<br/>");
 				add(icon);
 			}
 			if (model.isMirror) {
-				JLabel icon = new JLabel(mirrorIcon);
+				final JLabel icon = new JLabel(this.mirrorIcon);
 				tooltip.append(Translation.get("gb.isMirror")).append("<br/>");
 				add(icon);
 			}
 			if (model.isFork()) {
-				JLabel icon = new JLabel(forkIcon);
+				final JLabel icon = new JLabel(this.forkIcon);
 				tooltip.append(Translation.get("gb.isFork")).append("<br/>");
 				add(icon);
 			}
 			if (model.isFrozen) {
-				JLabel icon = new JLabel(frozenIcon);
+				final JLabel icon = new JLabel(this.frozenIcon);
 				tooltip.append(Translation.get("gb.isFrozen")).append("<br/>");
 				add(icon);
 			}
 			if (model.isFederated) {
-				JLabel icon = new JLabel(federatedIcon);
+				final JLabel icon = new JLabel(this.federatedIcon);
 				tooltip.append(Translation.get("gb.isFederated")).append("<br/>");
 				add(icon);
 			}
 
 			switch (model.accessRestriction) {
 			case NONE: {
-				add(new JLabel(blankIcon));
+				add(new JLabel(this.blankIcon));
 				break;
 			}
 			case PUSH: {
-				JLabel icon = new JLabel(pushIcon);
+				final JLabel icon = new JLabel(this.pushIcon);
 				tooltip.append(Translation.get("gb.pushRestricted")).append("<br/>");
 				add(icon);
 				break;
 			}
 			case CLONE: {
-				JLabel icon = new JLabel(pullIcon);
+				final JLabel icon = new JLabel(this.pullIcon);
 				tooltip.append(Translation.get("gb.cloneRestricted")).append("<br/>");
 				add(icon);
 				break;
 			}
 			case VIEW: {
-				JLabel icon = new JLabel(viewIcon);
+				final JLabel icon = new JLabel(this.viewIcon);
 				tooltip.append(Translation.get("gb.viewRestricted")).append("<br/>");
 				add(icon);
 				break;
 			}
 			default:
-				add(new JLabel(blankIcon));
+				add(new JLabel(this.blankIcon));
 			}
 			if (tooltip.length() > 0) {
 				tooltip.insert(0, "<html><body>");

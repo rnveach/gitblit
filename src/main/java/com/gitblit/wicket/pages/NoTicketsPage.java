@@ -27,9 +27,11 @@ public class NoTicketsPage extends RepositoryPage {
 	public NoTicketsPage(PageParameters params) {
 		super(params);
 
-		UserModel user = GitBlitWebSession.get().getUser();
-		boolean isAuthenticated = user != null && user.isAuthenticated;
-		add(new BookmarkablePageLink<Void>("newticket", NewTicketPage.class, WicketUtils.newRepositoryParameter(repositoryName)).setVisible(isAuthenticated));
+		final UserModel user = GitBlitWebSession.get().getUser();
+		final boolean isAuthenticated = (user != null) && user.isAuthenticated;
+		add(new BookmarkablePageLink<Void>("newticket", NewTicketPage.class,
+				WicketUtils.newRepositoryParameter(this.repositoryName))
+				.setVisible(isAuthenticated));
 	}
 
 	@Override

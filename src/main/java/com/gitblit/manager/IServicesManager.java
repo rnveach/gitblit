@@ -31,7 +31,7 @@ public interface IServicesManager extends IManager {
 	 * or if it is merely a repository viewer.
 	 *
 	 * @return true if Gitblit is serving repositories
- 	 * @since 1.7.0
+	 * @since 1.7.0
 	 */
 	boolean isServingRepositories();
 
@@ -40,7 +40,7 @@ public interface IServicesManager extends IManager {
 	 * over HTTP.
 	 *
 	 * @return true if Gitblit is serving repositories over HTTP
- 	 * @since 1.7.0
+	 * @since 1.7.0
 	 */
 	boolean isServingHTTP();
 
@@ -49,7 +49,7 @@ public interface IServicesManager extends IManager {
 	 * over HTTP.
 	 *
 	 * @return true if Gitblit is serving repositories over HTTPS
- 	 * @since 1.7.0
+	 * @since 1.7.0
 	 */
 	boolean isServingHTTPS();
 
@@ -57,8 +57,9 @@ public interface IServicesManager extends IManager {
 	 * Determine if this Gitblit instance is actively serving git repositories
 	 * over the GIT Daemon protocol.
 	 *
-	 * @return true if Gitblit is serving repositories over the GIT Daemon protocol
- 	 * @since 1.7.0
+	 * @return true if Gitblit is serving repositories over the GIT Daemon
+	 *         protocol
+	 * @since 1.7.0
 	 */
 	boolean isServingGIT();
 
@@ -67,7 +68,7 @@ public interface IServicesManager extends IManager {
 	 * over the SSH protocol.
 	 *
 	 * @return true if Gitblit is serving repositories over the SSH protocol
- 	 * @since 1.7.0
+	 * @since 1.7.0
 	 */
 	boolean isServingSSH();
 
@@ -80,7 +81,8 @@ public interface IServicesManager extends IManager {
 	 * @return a list of repository urls
 	 * @since 1.7.0
 	 */
-	List<RepositoryUrl> getRepositoryUrls(HttpServletRequest request, UserModel user, RepositoryModel repository);
+	List<RepositoryUrl> getRepositoryUrls(HttpServletRequest request, UserModel user,
+			RepositoryModel repository);
 
 	/**
 	 * Returns true if the transport may be used for pushing.

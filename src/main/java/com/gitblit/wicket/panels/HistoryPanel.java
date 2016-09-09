@@ -61,38 +61,39 @@ public class HistoryPanel extends BasePanel {
 
 	private static final long serialVersionUID = 1L;
 
-	private boolean hasMore;
+	private final boolean hasMore;
 
 	public HistoryPanel(String wicketId, final String repositoryName, final String objectId,
 			final String path, Repository r, int limit, int pageOffset, boolean showRemoteRefs) {
 		super(wicketId);
-		boolean pageResults = limit <= 0;
+		final boolean pageResults = limit <= 0;
 		int itemsPerPage = app().settings().getInteger(Keys.web.itemsPerPage, 50);
 		if (itemsPerPage <= 1) {
 			itemsPerPage = 50;
 		}
 
-		RevCommit commit = JGitUtils.getCommit(r, objectId);
+		final RevCommit commit = JGitUtils.getCommit(r, objectId);
 		PathModel matchingPath = null;
-		Map<String, SubmoduleModel> submodules = new HashMap<String, SubmoduleModel>();
+		final Map<String, SubmoduleModel> submodules = new HashMap<String, SubmoduleModel>();
 
 		if (commit == null) {
 			// commit missing
-			String msg = MessageFormat.format("Failed to find history of **{0}** *{1}*",
+			final String msg = MessageFormat.format("Failed to find history of **{0}** *{1}*",
 					path, objectId);
 			logger().error(msg + " " + repositoryName);
-			add(new Label("commitHeader", MarkdownUtils.transformMarkdown(msg)).setEscapeModelStrings(false));
+			add(new Label("commitHeader", MarkdownUtils.transformMarkdown(msg))
+					.setEscapeModelStrings(false));
 			add(new Label("breadcrumbs"));
 		} else {
 			// commit found
-			List<PathChangeModel> paths = JGitUtils.getFilesInCommit(r, commit);
+			final List<PathChangeModel> paths = JGitUtils.getFilesInCommit(r, commit);
 			add(new CommitHeaderPanel("commitHeader", repositoryName, commit));
 			add(new PathBreadcrumbsPanel("breadcrumbs", repositoryName, path, objectId));
-			for (SubmoduleModel model : JGitUtils.getSubmodules(r, commit.getTree())) {
+			for (final SubmoduleModel model : JGitUtils.getSubmodules(r, commit.getTree())) {
 				submodules.put(model.path, model);
 			}
 
-			for (PathModel p : paths) {
+			for (final PathModel p : paths) {
 				if (p.path.equals(path)) {
 					matchingPath = p;
 					break;
@@ -101,7 +102,7 @@ public class HistoryPanel extends BasePanel {
 			if (matchingPath == null) {
 				// path not in commit
 				// manually locate path in tree
-				TreeWalk tw = new TreeWalk(r);
+				final TreeWalk tw = new TreeWalk(r);
 				tw.reset();
 				tw.setRecursive(true);
 				try {
@@ -109,13 +110,16 @@ public class HistoryPanel extends BasePanel {
 					tw.setFilter(PathFilterGroup.createFromStrings(Collections.singleton(path)));
 					while (tw.next()) {
 						if (tw.getPathString().equals(path)) {
-							matchingPath = new PathChangeModel(tw.getPathString(), tw.getPathString(), null, 0, tw
-								.getRawMode(0), tw.getObjectId(0).getName(), commit.getId().getName(),
-								ChangeType.MODIFY);
+							matchingPath = new PathChangeModel(tw.getPathString(),
+									tw.getPathString(), null, 0, tw.getRawMode(0), tw
+											.getObjectId(0).getName(), commit.getId().getName(),
+									ChangeType.MODIFY);
 						}
 					}
-				} catch (Exception e) {
-				} finally {
+				}
+				catch (final Exception e) {
+				}
+				finally {
 					tw.close();
 				}
 			}
@@ -128,7 +132,8 @@ public class HistoryPanel extends BasePanel {
 		final String submodulePath;
 		final boolean hasSubmodule;
 		if (isSubmodule) {
-			SubmoduleModel submodule = getSubmodule(submodules, repositoryName, matchingPath == null ? null : matchingPath.path);
+			final SubmoduleModel submodule = getSubmodule(submodules, repositoryName,
+					matchingPath == null ? null : matchingPath.path);
 			submodulePath = submodule.gitblitPath;
 			hasSubmodule = submodule.hasSubmodule;
 		} else {
@@ -149,11 +154,11 @@ public class HistoryPanel extends BasePanel {
 
 		// inaccurate way to determine if there are more commits.
 		// works unless commits.size() represents the exact end.
-		hasMore = commits.size() >= itemsPerPage;
+		this.hasMore = commits.size() >= itemsPerPage;
 
 		final int hashLen = app().settings().getInteger(Keys.web.shortCommitIdLength, 6);
-		ListDataProvider<RevCommit> dp = new ListDataProvider<RevCommit>(commits);
-		DataView<RevCommit> logView = new DataView<RevCommit>("commit", dp) {
+		final ListDataProvider<RevCommit> dp = new ListDataProvider<RevCommit>(commits);
+		final DataView<RevCommit> logView = new DataView<RevCommit>("commit", dp) {
 			private static final long serialVersionUID = 1L;
 			int counter;
 
@@ -162,13 +167,13 @@ public class HistoryPanel extends BasePanel {
 				final RevCommit entry = item.getModelObject();
 				final Date date = JGitUtils.getAuthorDate(entry);
 
-				item.add(WicketUtils.createDateLabel("commitDate", date, getTimeZone(), getTimeUtils()));
+				item.add(WicketUtils.createDateLabel("commitDate", date, getTimeZone(),
+						getTimeUtils()));
 
 				// author search link
-				String author = entry.getAuthorIdent().getName();
-				LinkPanel authorLink = new LinkPanel("commitAuthor", "list", author,
-						GitSearchPage.class,
-						WicketUtils.newSearchParameter(repositoryName, null,
+				final String author = entry.getAuthorIdent().getName();
+				final LinkPanel authorLink = new LinkPanel("commitAuthor", "list", author,
+						GitSearchPage.class, WicketUtils.newSearchParameter(repositoryName, null,
 								author, Constants.SearchType.AUTHOR));
 				setPersonSearchTooltip(authorLink, author, Constants.SearchType.AUTHOR);
 				item.add(authorLink);
@@ -180,14 +185,15 @@ public class HistoryPanel extends BasePanel {
 					item.add(WicketUtils.newBlankImage("commitIcon"));
 				}
 
-				String shortMessage = entry.getShortMessage();
+				final String shortMessage = entry.getShortMessage();
 				String trimmedMessage = shortMessage;
 				if (allRefs.containsKey(entry.getId())) {
-					trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG_REFS);
+					trimmedMessage = StringUtils.trimString(shortMessage,
+							Constants.LEN_SHORTLOG_REFS);
 				} else {
 					trimmedMessage = StringUtils.trimString(shortMessage, Constants.LEN_SHORTLOG);
 				}
-				LinkPanel shortlog = new LinkPanel("commitShortMessage", "list subject",
+				final LinkPanel shortlog = new LinkPanel("commitShortMessage", "list subject",
 						trimmedMessage, CommitPage.class, WicketUtils.newObjectParameter(
 								repositoryName, entry.getName()));
 				if (!shortMessage.equals(trimmedMessage)) {
@@ -200,21 +206,23 @@ public class HistoryPanel extends BasePanel {
 				if (isTree) {
 					// tree
 					item.add(new Label("hashLabel", getString("gb.tree") + "@"));
-					LinkPanel commitHash = new LinkPanel("hashLink", null, entry.getName().substring(0, hashLen),
-							TreePage.class, WicketUtils.newObjectParameter(
-									repositoryName, entry.getName()));
+					final LinkPanel commitHash = new LinkPanel("hashLink", null, entry.getName()
+							.substring(0, hashLen), TreePage.class, WicketUtils.newObjectParameter(
+							repositoryName, entry.getName()));
 					WicketUtils.setCssClass(commitHash, "shortsha1");
 					WicketUtils.setHtmlTooltip(commitHash, entry.getName());
 					item.add(commitHash);
 
-					Fragment links = new Fragment("historyLinks", "treeLinks", this);
+					final Fragment links = new Fragment("historyLinks", "treeLinks", this);
 					links.add(new BookmarkablePageLink<Void>("commitdiff", CommitDiffPage.class,
 							WicketUtils.newObjectParameter(repositoryName, entry.getName())));
 					item.add(links);
 				} else if (isSubmodule) {
 					// submodule
-					Repository repository = app().repositories().getRepository(repositoryName);
-					String submoduleId = JGitUtils.getSubmoduleCommitId(repository, path, entry);
+					final Repository repository = app().repositories()
+							.getRepository(repositoryName);
+					final String submoduleId = JGitUtils.getSubmoduleCommitId(repository, path,
+							entry);
 					repository.close();
 					if (StringUtils.isEmpty(submoduleId)) {
 						// not a submodule at this commit, just a matching path
@@ -223,38 +231,38 @@ public class HistoryPanel extends BasePanel {
 					} else {
 						// really a submodule
 						item.add(new Label("hashLabel", submodulePath + "@"));
-						LinkPanel commitHash = new LinkPanel("hashLink", null, submoduleId.substring(0, hashLen),
-								TreePage.class, WicketUtils.newObjectParameter(
-										submodulePath, submoduleId));
+						final LinkPanel commitHash = new LinkPanel("hashLink", null,
+								submoduleId.substring(0, hashLen), TreePage.class,
+								WicketUtils.newObjectParameter(submodulePath, submoduleId));
 						WicketUtils.setCssClass(commitHash, "shortsha1");
 						WicketUtils.setHtmlTooltip(commitHash, submoduleId);
 						item.add(commitHash.setEnabled(hasSubmodule));
 					}
-					Fragment links = new Fragment("historyLinks", "treeLinks", this);
+					final Fragment links = new Fragment("historyLinks", "treeLinks", this);
 					links.add(new BookmarkablePageLink<Void>("commitdiff", CommitDiffPage.class,
 							WicketUtils.newObjectParameter(repositoryName, entry.getName())));
 					item.add(links);
 				} else {
 					// commit
 					item.add(new Label("hashLabel", getString("gb.blob") + "@"));
-					LinkPanel commitHash = new LinkPanel("hashLink", null, entry.getName().substring(0, hashLen),
-							BlobPage.class, WicketUtils.newPathParameter(
-									repositoryName, entry.getName(), path));
+					final LinkPanel commitHash = new LinkPanel("hashLink", null, entry.getName()
+							.substring(0, hashLen), BlobPage.class, WicketUtils.newPathParameter(
+							repositoryName, entry.getName(), path));
 					WicketUtils.setCssClass(commitHash, "sha1");
 					WicketUtils.setHtmlTooltip(commitHash, entry.getName());
 					item.add(commitHash);
 
-					Fragment links = new Fragment("historyLinks", "blobLinks", this);
+					final Fragment links = new Fragment("historyLinks", "blobLinks", this);
 					links.add(new BookmarkablePageLink<Void>("commitdiff", CommitDiffPage.class,
 							WicketUtils.newObjectParameter(repositoryName, entry.getName())));
 					links.add(new BookmarkablePageLink<Void>("difftocurrent", BlobDiffPage.class,
 							WicketUtils.newBlobDiffParameter(repositoryName, entry.getName(),
-									objectId, path)).setEnabled(counter > 0));
+									objectId, path)).setEnabled(this.counter > 0));
 					item.add(links);
 				}
 
-				WicketUtils.setAlternatingBackground(item, counter);
-				counter++;
+				WicketUtils.setAlternatingBackground(item, this.counter);
+				this.counter++;
 			}
 		};
 		add(logView);
@@ -283,10 +291,11 @@ public class HistoryPanel extends BasePanel {
 	}
 
 	public boolean hasMore() {
-		return hasMore;
+		return this.hasMore;
 	}
 
-	protected SubmoduleModel getSubmodule(Map<String, SubmoduleModel> submodules, String repositoryName, String path) {
+	protected SubmoduleModel getSubmodule(Map<String, SubmoduleModel> submodules,
+			String repositoryName, String path) {
 		SubmoduleModel model = submodules.get(path);
 		if (model == null) {
 			// undefined submodule?!
@@ -296,8 +305,10 @@ public class HistoryPanel extends BasePanel {
 			return model;
 		} else {
 			// extract the repository name from the clone url
-			List<String> patterns = app().settings().getStrings(Keys.git.submoduleUrlPatterns);
-			String submoduleName = StringUtils.extractRepositoryPath(model.url, patterns.toArray(new String[0]));
+			final List<String> patterns = app().settings()
+					.getStrings(Keys.git.submoduleUrlPatterns);
+			final String submoduleName = StringUtils.extractRepositoryPath(model.url,
+					patterns.toArray(new String[0]));
 
 			// determine the current path for constructing paths relative
 			// to the current repository
@@ -308,7 +319,7 @@ public class HistoryPanel extends BasePanel {
 
 			// try to locate the submodule repository
 			// prefer bare to non-bare names
-			List<String> candidates = new ArrayList<String>();
+			final List<String> candidates = new ArrayList<String>();
 
 			// relative
 			candidates.add(currentPath + StringUtils.stripDotGit(submoduleName));
@@ -316,7 +327,7 @@ public class HistoryPanel extends BasePanel {
 
 			// relative, no subfolder
 			if (submoduleName.lastIndexOf('/') > -1) {
-				String name = submoduleName.substring(submoduleName.lastIndexOf('/') + 1);
+				final String name = submoduleName.substring(submoduleName.lastIndexOf('/') + 1);
 				candidates.add(currentPath + StringUtils.stripDotGit(name));
 				candidates.add(candidates.get(candidates.size() - 1) + ".git");
 			}
@@ -327,14 +338,14 @@ public class HistoryPanel extends BasePanel {
 
 			// absolute, no subfolder
 			if (submoduleName.lastIndexOf('/') > -1) {
-				String name = submoduleName.substring(submoduleName.lastIndexOf('/') + 1);
+				final String name = submoduleName.substring(submoduleName.lastIndexOf('/') + 1);
 				candidates.add(StringUtils.stripDotGit(name));
 				candidates.add(candidates.get(candidates.size() - 1) + ".git");
 			}
 
 			// create a unique, ordered set of candidate paths
-			Set<String> paths = new LinkedHashSet<String>(candidates);
-			for (String candidate : paths) {
+			final Set<String> paths = new LinkedHashSet<String>(candidates);
+			for (final String candidate : paths) {
 				if (app().repositories().hasRepository(candidate)) {
 					model.hasSubmodule = true;
 					model.gitblitPath = candidate;

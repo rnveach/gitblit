@@ -21,7 +21,7 @@ public interface IManager {
 	 * Start the manager.
 	 *
 	 * @return the manager
- 	 * @since 1.4.0
+	 * @since 1.4.0
 	 */
 	IManager start();
 
@@ -29,7 +29,7 @@ public interface IManager {
 	 * Stop the manager.
 	 *
 	 * @return the manager
- 	 * @since 1.4.0
+	 * @since 1.4.0
 	 */
 	IManager stop();
 

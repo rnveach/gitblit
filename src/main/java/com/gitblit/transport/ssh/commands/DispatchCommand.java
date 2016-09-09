@@ -50,13 +50,13 @@ import com.google.common.collect.Maps;
  */
 public abstract class DispatchCommand extends BaseCommand implements ExtensionPoint {
 
-	private Logger log = LoggerFactory.getLogger(getClass());
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Argument(index = 0, required = false, metaVar = "COMMAND", handler = SubcommandHandler.class)
 	private String commandName;
 
 	@Argument(index = 1, multiValued = true, metaVar = "ARG")
-	private List<String> args = new ArrayList<String>();
+	private final List<String> args = new ArrayList<String>();
 
 	private final Set<Class<? extends BaseCommand>> commands;
 	private final Map<String, DispatchCommand> dispatchers;
@@ -66,30 +66,30 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 	private Map<String, Class<? extends BaseCommand>> map;
 
 	protected DispatchCommand() {
-		commands = new HashSet<Class<? extends BaseCommand>>();
-		dispatchers = Maps.newHashMap();
-		aliasToCommand = Maps.newHashMap();
-		commandToAliases = Maps.newHashMap();
-		instantiated = new ArrayList<BaseCommand>();
+		this.commands = new HashSet<Class<? extends BaseCommand>>();
+		this.dispatchers = Maps.newHashMap();
+		this.aliasToCommand = Maps.newHashMap();
+		this.commandToAliases = Maps.newHashMap();
+		this.instantiated = new ArrayList<BaseCommand>();
 	}
 
 	@Override
 	public void destroy() {
 		super.destroy();
-		commands.clear();
-		aliasToCommand.clear();
-		commandToAliases.clear();
-		map = null;
+		this.commands.clear();
+		this.aliasToCommand.clear();
+		this.commandToAliases.clear();
+		this.map = null;
 
-		for (BaseCommand command : instantiated) {
+		for (final BaseCommand command : this.instantiated) {
 			command.destroy();
 		}
-		instantiated.clear();
+		this.instantiated.clear();
 
-		for (DispatchCommand dispatcher : dispatchers.values()) {
+		for (final DispatchCommand dispatcher : this.dispatchers.values()) {
 			dispatcher.destroy();
 		}
-		dispatchers.clear();
+		this.dispatchers.clear();
 	}
 
 	/**
@@ -130,24 +130,25 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 
 	private void registerDispatcher(Class<? extends DispatchCommand> clazz) {
 		try {
-			DispatchCommand dispatcher = clazz.newInstance();
+			final DispatchCommand dispatcher = clazz.newInstance();
 			registerDispatcher(dispatcher);
-		} catch (Exception e) {
-			log.error("failed to instantiate {}", clazz.getName());
+		}
+		catch (final Exception e) {
+			this.log.error("failed to instantiate {}", clazz.getName());
 		}
 	}
 
 	private void registerDispatcher(DispatchCommand dispatcher) {
-		Class<? extends DispatchCommand> dispatcherClass = dispatcher.getClass();
+		final Class<? extends DispatchCommand> dispatcherClass = dispatcher.getClass();
 		if (!dispatcherClass.isAnnotationPresent(CommandMetaData.class)) {
-			throw new RuntimeException(MessageFormat.format("{0} must be annotated with {1}!", dispatcher.getName(),
-					CommandMetaData.class.getName()));
+			throw new RuntimeException(MessageFormat.format("{0} must be annotated with {1}!",
+					dispatcher.getName(), CommandMetaData.class.getName()));
 		}
 
-		UserModel user = getContext().getClient().getUser();
-		CommandMetaData meta = dispatcherClass.getAnnotation(CommandMetaData.class);
+		final UserModel user = getContext().getClient().getUser();
+		final CommandMetaData meta = dispatcherClass.getAnnotation(CommandMetaData.class);
 		if (meta.admin() && !user.canAdmin()) {
-			log.debug(MessageFormat.format("excluding admin dispatcher {0} for {1}",
+			this.log.debug(MessageFormat.format("excluding admin dispatcher {0} for {1}",
 					meta.name(), user.username));
 			return;
 		}
@@ -157,22 +158,23 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 			dispatcher.setWorkQueue(getWorkQueue());
 			dispatcher.setup();
 			if (dispatcher.commands.isEmpty() && dispatcher.dispatchers.isEmpty()) {
-				log.debug(MessageFormat.format("excluding empty dispatcher {0} for {1}",
+				this.log.debug(MessageFormat.format("excluding empty dispatcher {0} for {1}",
 						meta.name(), user.username));
 				return;
 			}
 
-			log.debug("registering {} dispatcher", meta.name());
-			dispatchers.put(meta.name(), dispatcher);
-			for (String alias : meta.aliases()) {
-				aliasToCommand.put(alias, meta.name());
-				if (!commandToAliases.containsKey(meta.name())) {
-					commandToAliases.put(meta.name(), new ArrayList<String>());
+			this.log.debug("registering {} dispatcher", meta.name());
+			this.dispatchers.put(meta.name(), dispatcher);
+			for (final String alias : meta.aliases()) {
+				this.aliasToCommand.put(alias, meta.name());
+				if (!this.commandToAliases.containsKey(meta.name())) {
+					this.commandToAliases.put(meta.name(), new ArrayList<String>());
 				}
-				commandToAliases.get(meta.name()).add(alias);
+				this.commandToAliases.get(meta.name()).add(alias);
 			}
-		} catch (Exception e) {
-			log.error("failed to register {} dispatcher", meta.name());
+		}
+		catch (final Exception e) {
+			this.log.error("failed to register {} dispatcher", meta.name());
 		}
 	}
 
@@ -183,17 +185,18 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 	 */
 	private void registerCommand(Class<? extends BaseCommand> clazz) {
 		if (!clazz.isAnnotationPresent(CommandMetaData.class)) {
-			throw new RuntimeException(MessageFormat.format("{0} must be annotated with {1}!", clazz.getName(),
-					CommandMetaData.class.getName()));
+			throw new RuntimeException(MessageFormat.format("{0} must be annotated with {1}!",
+					clazz.getName(), CommandMetaData.class.getName()));
 		}
 
-		UserModel user = getContext().getClient().getUser();
-		CommandMetaData meta = clazz.getAnnotation(CommandMetaData.class);
+		final UserModel user = getContext().getClient().getUser();
+		final CommandMetaData meta = clazz.getAnnotation(CommandMetaData.class);
 		if (meta.admin() && !user.canAdmin()) {
-			log.debug(MessageFormat.format("excluding admin command {0} for {1}", meta.name(), user.username));
+			this.log.debug(MessageFormat.format("excluding admin command {0} for {1}", meta.name(),
+					user.username));
 			return;
 		}
-		commands.add(clazz);
+		this.commands.add(clazz);
 	}
 
 	/**
@@ -203,99 +206,103 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 	 */
 	private void registerCommand(BaseCommand cmd) {
 		if (!cmd.getClass().isAnnotationPresent(CommandMetaData.class)) {
-			throw new RuntimeException(MessageFormat.format("{0} must be annotated with {1}!", cmd.getName(),
-					CommandMetaData.class.getName()));
+			throw new RuntimeException(MessageFormat.format("{0} must be annotated with {1}!",
+					cmd.getName(), CommandMetaData.class.getName()));
 		}
 
-		UserModel user = getContext().getClient().getUser();
-		CommandMetaData meta = cmd.getClass().getAnnotation(CommandMetaData.class);
+		final UserModel user = getContext().getClient().getUser();
+		final CommandMetaData meta = cmd.getClass().getAnnotation(CommandMetaData.class);
 		if (meta.admin() && !user.canAdmin()) {
-			log.debug(MessageFormat.format("excluding admin command {0} for {1}", meta.name(), user.username));
+			this.log.debug(MessageFormat.format("excluding admin command {0} for {1}", meta.name(),
+					user.username));
 			return;
 		}
-		commands.add(cmd.getClass());
-		instantiated.add(cmd);
+		this.commands.add(cmd.getClass());
+		this.instantiated.add(cmd);
 	}
 
 	private Map<String, Class<? extends BaseCommand>> getMap() {
-		if (map == null) {
-			map = Maps.newHashMapWithExpectedSize(commands.size());
-			for (Class<? extends BaseCommand> cmd : commands) {
-				CommandMetaData meta = cmd.getAnnotation(CommandMetaData.class);
-				if (map.containsKey(meta.name()) || aliasToCommand.containsKey(meta.name())) {
-					log.warn("{} already contains the \"{}\" command!", getName(), meta.name());
+		if (this.map == null) {
+			this.map = Maps.newHashMapWithExpectedSize(this.commands.size());
+			for (final Class<? extends BaseCommand> cmd : this.commands) {
+				final CommandMetaData meta = cmd.getAnnotation(CommandMetaData.class);
+				if (this.map.containsKey(meta.name())
+						|| this.aliasToCommand.containsKey(meta.name())) {
+					this.log.warn("{} already contains the \"{}\" command!", getName(), meta.name());
 				} else {
-					map.put(meta.name(), cmd);
+					this.map.put(meta.name(), cmd);
 				}
-				for (String alias : meta.aliases()) {
-					if (map.containsKey(alias) || aliasToCommand.containsKey(alias)) {
-						log.warn("{} already contains the \"{}\" command!", getName(), alias);
+				for (final String alias : meta.aliases()) {
+					if (this.map.containsKey(alias) || this.aliasToCommand.containsKey(alias)) {
+						this.log.warn("{} already contains the \"{}\" command!", getName(), alias);
 					} else {
-						aliasToCommand.put(alias, meta.name());
-						if (!commandToAliases.containsKey(meta.name())) {
-							commandToAliases.put(meta.name(), new ArrayList<String>());
+						this.aliasToCommand.put(alias, meta.name());
+						if (!this.commandToAliases.containsKey(meta.name())) {
+							this.commandToAliases.put(meta.name(), new ArrayList<String>());
 						}
-						commandToAliases.get(meta.name()).add(alias);
+						this.commandToAliases.get(meta.name()).add(alias);
 					}
 				}
 			}
 
-			for (Map.Entry<String, DispatchCommand> entry : dispatchers.entrySet()) {
-				map.put(entry.getKey(), entry.getValue().getClass());
+			for (final Map.Entry<String, DispatchCommand> entry : this.dispatchers.entrySet()) {
+				this.map.put(entry.getKey(), entry.getValue().getClass());
 			}
 		}
-		return map;
+		return this.map;
 	}
 
 	@Override
 	public void start(Environment env) throws IOException {
 		try {
 			parseCommandLine();
-			if (Strings.isNullOrEmpty(commandName)) {
-				StringWriter msg = new StringWriter();
+			if (Strings.isNullOrEmpty(this.commandName)) {
+				final StringWriter msg = new StringWriter();
 				msg.write(usage());
 				throw new UnloggedFailure(1, msg.toString());
 			}
 
-			BaseCommand cmd = getCommand();
+			final BaseCommand cmd = getCommand();
 			if (getName().isEmpty()) {
-				cmd.setName(commandName);
+				cmd.setName(this.commandName);
 			} else {
-				cmd.setName(getName() + " " + commandName);
+				cmd.setName(getName() + " " + this.commandName);
 			}
-			cmd.setArguments(args.toArray(new String[args.size()]));
+			cmd.setArguments(this.args.toArray(new String[this.args.size()]));
 
 			provideStateTo(cmd);
 			// atomicCmd.set(cmd);
 			cmd.start(env);
 
-		} catch (UnloggedFailure e) {
+		}
+		catch (final UnloggedFailure e) {
 			String msg = e.getMessage();
 			if (!msg.endsWith("\n")) {
 				msg += "\n";
 			}
-			err.write(msg.getBytes(Charsets.UTF_8));
-			err.flush();
-			exit.onExit(e.exitCode);
+			this.err.write(msg.getBytes(Charsets.UTF_8));
+			this.err.flush();
+			this.exit.onExit(e.exitCode);
 		}
 	}
 
 	private BaseCommand getCommand() throws UnloggedFailure {
-		Map<String, Class<? extends BaseCommand>> map = getMap();
-		String name = commandName;
-		if (aliasToCommand.containsKey(commandName)) {
-			name = aliasToCommand.get(name);
+		final Map<String, Class<? extends BaseCommand>> map = getMap();
+		String name = this.commandName;
+		if (this.aliasToCommand.containsKey(this.commandName)) {
+			name = this.aliasToCommand.get(name);
 		}
-		if (dispatchers.containsKey(name)) {
-			return dispatchers.get(name);
+		if (this.dispatchers.containsKey(name)) {
+			return this.dispatchers.get(name);
 		}
 		final Class<? extends BaseCommand> c = map.get(name);
 		if (c == null) {
-			String msg = (getName().isEmpty() ? "Gitblit" : getName()) + ": " + commandName + ": not found";
+			final String msg = (getName().isEmpty() ? "Gitblit" : getName()) + ": "
+					+ this.commandName + ": not found";
 			throw new UnloggedFailure(1, msg);
 		}
 
-		for (BaseCommand cmd : instantiated) {
+		for (final BaseCommand cmd : this.instantiated) {
 			// use an already instantiated command
 			if (cmd.getClass().equals(c)) {
 				return cmd;
@@ -305,22 +312,24 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 		BaseCommand cmd = null;
 		try {
 			cmd = c.newInstance();
-			instantiated.add(cmd);
-		} catch (Exception e) {
-			throw new UnloggedFailure(1, MessageFormat.format("Failed to instantiate {0} command", commandName));
+			this.instantiated.add(cmd);
+		}
+		catch (final Exception e) {
+			throw new UnloggedFailure(1, MessageFormat.format("Failed to instantiate {0} command",
+					this.commandName));
 		}
 		return cmd;
 	}
 
 	private boolean hasVisibleCommands() {
 		boolean visible = false;
-		for (Class<? extends BaseCommand> cmd : commands) {
-			visible  |= !cmd.getAnnotation(CommandMetaData.class).hidden();
+		for (final Class<? extends BaseCommand> cmd : this.commands) {
+			visible |= !cmd.getAnnotation(CommandMetaData.class).hidden();
 			if (visible) {
 				return true;
 			}
 		}
-		for (DispatchCommand cmd : dispatchers.values()) {
+		for (final DispatchCommand cmd : this.dispatchers.values()) {
 			visible |= cmd.hasVisibleCommands();
 			if (visible) {
 				return true;
@@ -335,27 +344,28 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 
 	@Override
 	public String usage() {
-		Set<String> cmds = new TreeSet<String>();
-		Set<String> dcs = new TreeSet<String>();
-		Map<String, String> displayNames = Maps.newHashMap();
+		final Set<String> cmds = new TreeSet<String>();
+		final Set<String> dcs = new TreeSet<String>();
+		final Map<String, String> displayNames = Maps.newHashMap();
 		int maxLength = -1;
-		Map<String, Class<? extends BaseCommand>> m = getMap();
-		for (String name : m.keySet()) {
-			Class<? extends BaseCommand> c = m.get(name);
-			CommandMetaData meta = c.getAnnotation(CommandMetaData.class);
+		final Map<String, Class<? extends BaseCommand>> m = getMap();
+		for (final String name : m.keySet()) {
+			final Class<? extends BaseCommand> c = m.get(name);
+			final CommandMetaData meta = c.getAnnotation(CommandMetaData.class);
 			if (meta.hidden()) {
 				continue;
 			}
 
-			String displayName = name  + (meta.admin() ? "*" : "");
-			if (commandToAliases.containsKey(meta.name())) {
-				displayName = name  + (meta.admin() ? "*" : "")+ " (" + Joiner.on(',').join(commandToAliases.get(meta.name())) + ")";
+			String displayName = name + (meta.admin() ? "*" : "");
+			if (this.commandToAliases.containsKey(meta.name())) {
+				displayName = name + (meta.admin() ? "*" : "") + " ("
+						+ Joiner.on(',').join(this.commandToAliases.get(meta.name())) + ")";
 			}
 			displayNames.put(name, displayName);
 
 			maxLength = Math.max(maxLength, displayName.length());
 			if (DispatchCommand.class.isAssignableFrom(c)) {
-				DispatchCommand d = dispatchers.get(name);
+				final DispatchCommand d = this.dispatchers.get(name);
 				if (d.hasVisibleCommands()) {
 					dcs.add(name);
 				}
@@ -363,12 +373,12 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 				cmds.add(name);
 			}
 		}
-		String format = "%-" + maxLength + "s   %s";
+		final String format = "%-" + maxLength + "s   %s";
 
 		final StringBuilder usage = new StringBuilder();
 		if (!StringUtils.isEmpty(getName())) {
-			String title = getName().toUpperCase() + ": " + getDescription();
-			String b = com.gitblit.utils.StringUtils.leftPad("", title.length() + 2, '═');
+			final String title = getName().toUpperCase() + ": " + getDescription();
+			final String b = com.gitblit.utils.StringUtils.leftPad("", title.length() + 2, '═');
 			usage.append('\n');
 			usage.append(b).append('\n');
 			usage.append(' ').append(title).append('\n');
@@ -384,12 +394,13 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 			}
 			usage.append(" are:\n");
 			usage.append("\n");
-			for (String name : cmds) {
+			for (final String name : cmds) {
 				final Class<? extends Command> c = m.get(name);
-				String displayName = displayNames.get(name);
-				CommandMetaData meta = c.getAnnotation(CommandMetaData.class);
+				final String displayName = displayNames.get(name);
+				final CommandMetaData meta = c.getAnnotation(CommandMetaData.class);
 				usage.append("   ");
-				usage.append(String.format(format, displayName, Strings.nullToEmpty(meta.description())));
+				usage.append(String.format(format, displayName,
+						Strings.nullToEmpty(meta.description())));
 				usage.append("\n");
 			}
 			usage.append("\n");
@@ -403,12 +414,13 @@ public abstract class DispatchCommand extends BaseCommand implements ExtensionPo
 			}
 			usage.append(" are:\n");
 			usage.append("\n");
-			for (String name : dcs) {
+			for (final String name : dcs) {
 				final Class<? extends BaseCommand> c = m.get(name);
-				String displayName = displayNames.get(name);
-				CommandMetaData meta = c.getAnnotation(CommandMetaData.class);
+				final String displayName = displayNames.get(name);
+				final CommandMetaData meta = c.getAnnotation(CommandMetaData.class);
 				usage.append("   ");
-				usage.append(String.format(format, displayName, Strings.nullToEmpty(meta.description())));
+				usage.append(String.format(format, displayName,
+						Strings.nullToEmpty(meta.description())));
 				usage.append("\n");
 			}
 			usage.append("\n");

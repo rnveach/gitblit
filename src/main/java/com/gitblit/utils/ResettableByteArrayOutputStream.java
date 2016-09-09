@@ -23,10 +23,10 @@ import java.io.ByteArrayOutputStream;
 public class ResettableByteArrayOutputStream extends ByteArrayOutputStream {
 
 	/**
-	 * Reset the stream to the given position. If {@code mark} is <= 0, see {@link #reset()}.
-	 * A no-op if the stream contains less than {@code mark} bytes. Otherwise, resets the
-	 * current writing position to {@code mark}. Previously allocated buffer space will be
-	 * reused in subsequent writes.
+	 * Reset the stream to the given position. If {@code mark} is <= 0, see
+	 * {@link #reset()}. A no-op if the stream contains less than {@code mark}
+	 * bytes. Otherwise, resets the current writing position to {@code mark}.
+	 * Previously allocated buffer space will be reused in subsequent writes.
 	 *
 	 * @param mark
 	 *            to set the current writing position to.
@@ -34,8 +34,8 @@ public class ResettableByteArrayOutputStream extends ByteArrayOutputStream {
 	public synchronized void resetTo(int mark) {
 		if (mark <= 0) {
 			reset();
-		} else if (mark < count) {
-			count = mark;
+		} else if (mark < this.count) {
+			this.count = mark;
 		}
 	}
 

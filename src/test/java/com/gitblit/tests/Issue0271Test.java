@@ -28,8 +28,7 @@ import com.gitblit.models.UserModel;
 /**
  * https://code.google.com/p/gitblit/issues/detail?id=271
  *
- * Reported Problem:
- * Inherited team permissions are incorrect.
+ * Reported Problem: Inherited team permissions are incorrect.
  *
  * @see src/test/resources/issue0270.conf
  *
@@ -39,7 +38,7 @@ import com.gitblit.models.UserModel;
 public class Issue0271Test extends GitblitUnitTest {
 
 	RepositoryModel repo(String name, AccessRestrictionType restriction) {
-		RepositoryModel repo = new RepositoryModel();
+		final RepositoryModel repo = new RepositoryModel();
 		repo.name = name;
 		repo.accessRestriction = restriction;
 		return repo;
@@ -51,16 +50,16 @@ public class Issue0271Test extends GitblitUnitTest {
 	 * @throws Exception
 	 */
 	@Test
-	public void testFile() throws Exception {
-		File realmFile = new File("src/test/resources/issue0271.conf");
-		ConfigUserService service = new ConfigUserService(realmFile);
+	public void testFile() {
+		final File realmFile = new File("src/test/resources/issue0271.conf");
+		final ConfigUserService service = new ConfigUserService(realmFile);
 
-		RepositoryModel test = repo("test.git", AccessRestrictionType.VIEW);
-		RepositoryModel teama_test = repo("teama/test.git", AccessRestrictionType.VIEW);
+		final RepositoryModel test = repo("test.git", AccessRestrictionType.VIEW);
+		final RepositoryModel teama_test = repo("teama/test.git", AccessRestrictionType.VIEW);
 
-		UserModel a = service.getUserModel("a");
-		UserModel b = service.getUserModel("b");
-		UserModel c = service.getUserModel("c");
+		final UserModel a = service.getUserModel("a");
+		final UserModel b = service.getUserModel("b");
+		final UserModel c = service.getUserModel("c");
 
 		// assert V for test.git
 		assertEquals(AccessPermission.VIEW, a.getRepositoryPermission(test).permission);

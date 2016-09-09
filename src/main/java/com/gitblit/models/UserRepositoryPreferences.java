@@ -35,6 +35,6 @@ public class UserRepositoryPreferences implements Serializable {
 
 	@Override
 	public String toString() {
-		return username + ":" + repositoryName;
+		return this.username + ":" + this.repositoryName;
 	}
 }

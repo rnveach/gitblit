@@ -43,14 +43,14 @@ public abstract class IStoredSettings {
 	protected final Set<String> removals = new TreeSet<String>();
 
 	public IStoredSettings(Class<? extends IStoredSettings> clazz) {
-		logger = LoggerFactory.getLogger(clazz);
+		this.logger = LoggerFactory.getLogger(clazz);
 	}
 
 	protected abstract Properties read();
 
 	private Properties getSettings() {
-		Properties props = read();
-		props.putAll(overrides);
+		final Properties props = read();
+		props.putAll(this.overrides);
 		return props;
 	}
 
@@ -62,14 +62,14 @@ public abstract class IStoredSettings {
 	 * @return list of keys
 	 */
 	public List<String> getAllKeys(String startingWith) {
-		List<String> keys = new ArrayList<String>();
-		Properties props = getSettings();
+		final List<String> keys = new ArrayList<String>();
+		final Properties props = getSettings();
 		if (StringUtils.isEmpty(startingWith)) {
 			keys.addAll(props.stringPropertyNames());
 		} else {
 			startingWith = startingWith.toLowerCase();
-			for (Object o : props.keySet()) {
-				String key = o.toString();
+			for (final Object o : props.keySet()) {
+				final String key = o.toString();
 				if (key.toLowerCase().startsWith(startingWith)) {
 					keys.add(key);
 				}
@@ -88,9 +88,9 @@ public abstract class IStoredSettings {
 	 * @return key value or defaultValue
 	 */
 	public boolean getBoolean(String name, boolean defaultValue) {
-		Properties props = getSettings();
+		final Properties props = getSettings();
 		if (props.containsKey(name)) {
-			String value = props.getProperty(name);
+			final String value = props.getProperty(name);
 			if (!StringUtils.isEmpty(value)) {
 				return Boolean.parseBoolean(value.trim());
 			}
@@ -108,15 +108,16 @@ public abstract class IStoredSettings {
 	 * @return key value or defaultValue
 	 */
 	public int getInteger(String name, int defaultValue) {
-		Properties props = getSettings();
+		final Properties props = getSettings();
 		if (props.containsKey(name)) {
 			try {
-				String value = props.getProperty(name);
+				final String value = props.getProperty(name);
 				if (!StringUtils.isEmpty(value)) {
 					return Integer.parseInt(value.trim());
 				}
-			} catch (NumberFormatException e) {
-				logger.warn("Failed to parse integer for " + name + " using default of "
+			}
+			catch (final NumberFormatException e) {
+				this.logger.warn("Failed to parse integer for " + name + " using default of "
 						+ defaultValue);
 			}
 		}
@@ -124,8 +125,8 @@ public abstract class IStoredSettings {
 	}
 
 	/**
-	 * Returns the long value for the specified key. If the key does not
-	 * exist or the value for the key can not be interpreted as an long, the
+	 * Returns the long value for the specified key. If the key does not exist
+	 * or the value for the key can not be interpreted as an long, the
 	 * defaultValue is returned.
 	 *
 	 * @param key
@@ -133,15 +134,16 @@ public abstract class IStoredSettings {
 	 * @return key value or defaultValue
 	 */
 	public long getLong(String name, long defaultValue) {
-		Properties props = getSettings();
+		final Properties props = getSettings();
 		if (props.containsKey(name)) {
 			try {
-				String value = props.getProperty(name);
+				final String value = props.getProperty(name);
 				if (!StringUtils.isEmpty(value)) {
 					return Long.parseLong(value.trim());
 				}
-			} catch (NumberFormatException e) {
-				logger.warn("Failed to parse long for " + name + " using default of "
+			}
+			catch (final NumberFormatException e) {
+				this.logger.warn("Failed to parse long for " + name + " using default of "
 						+ defaultValue);
 			}
 		}
@@ -150,13 +152,14 @@ public abstract class IStoredSettings {
 
 	/**
 	 * Returns an int filesize from a string value such as 50m or 50mb
+	 * 
 	 * @param name
 	 * @param defaultValue
 	 * @return an int filesize or defaultValue if the key does not exist or can
 	 *         not be parsed
 	 */
 	public int getFilesize(String name, int defaultValue) {
-		String val = getString(name, null);
+		final String val = getString(name, null);
 		if (StringUtils.isEmpty(val)) {
 			return defaultValue;
 		}
@@ -165,13 +168,14 @@ public abstract class IStoredSettings {
 
 	/**
 	 * Returns an long filesize from a string value such as 50m or 50mb
+	 * 
 	 * @param n
 	 * @param defaultValue
 	 * @return a long filesize or defaultValue if the key does not exist or can
 	 *         not be parsed
 	 */
 	public long getFilesize(String key, long defaultValue) {
-		String val = getString(key, null);
+		final String val = getString(key, null);
 		if (StringUtils.isEmpty(val)) {
 			return defaultValue;
 		}
@@ -188,9 +192,9 @@ public abstract class IStoredSettings {
 	 * @return key value or defaultValue
 	 */
 	public char getChar(String name, char defaultValue) {
-		Properties props = getSettings();
+		final Properties props = getSettings();
 		if (props.containsKey(name)) {
-			String value = props.getProperty(name);
+			final String value = props.getProperty(name);
 			if (!StringUtils.isEmpty(value)) {
 				return value.trim().charAt(0);
 			}
@@ -208,9 +212,9 @@ public abstract class IStoredSettings {
 	 * @return key value or defaultValue
 	 */
 	public String getString(String name, String defaultValue) {
-		Properties props = getSettings();
+		final Properties props = getSettings();
 		if (props.containsKey(name)) {
-			String value = props.getProperty(name);
+			final String value = props.getProperty(name);
 			if (value != null) {
 				return value.trim();
 			}
@@ -219,16 +223,16 @@ public abstract class IStoredSettings {
 	}
 
 	/**
-	 * Returns the string value for the specified key.  If the key does not
-	 * exist an exception is thrown.
+	 * Returns the string value for the specified key. If the key does not exist
+	 * an exception is thrown.
 	 *
 	 * @param key
 	 * @return key value
 	 */
 	public String getRequiredString(String name) {
-		Properties props = getSettings();
+		final Properties props = getSettings();
 		if (props.containsKey(name)) {
-			String value = props.getProperty(name);
+			final String value = props.getProperty(name);
 			if (value != null) {
 				return value.trim();
 			}
@@ -256,9 +260,9 @@ public abstract class IStoredSettings {
 	 */
 	public List<String> getStrings(String name, String separator) {
 		List<String> strings = new ArrayList<String>();
-		Properties props = getSettings();
+		final Properties props = getSettings();
 		if (props.containsKey(name)) {
-			String value = props.getProperty(name);
+			final String value = props.getProperty(name);
 			strings = StringUtils.getStringsFromValue(value, separator);
 		}
 		return strings;
@@ -283,16 +287,17 @@ public abstract class IStoredSettings {
 	 * @return list of integers
 	 */
 	public List<Integer> getIntegers(String name, String separator) {
-		List<Integer> ints = new ArrayList<Integer>();
-		Properties props = getSettings();
+		final List<Integer> ints = new ArrayList<Integer>();
+		final Properties props = getSettings();
 		if (props.containsKey(name)) {
-			String value = props.getProperty(name);
-			List<String> strings = StringUtils.getStringsFromValue(value, separator);
-			for (String str : strings) {
+			final String value = props.getProperty(name);
+			final List<String> strings = StringUtils.getStringsFromValue(value, separator);
+			for (final String str : strings) {
 				try {
-					int i = Integer.parseInt(str);
+					final int i = Integer.parseInt(str);
 					ints.add(i);
-				} catch (NumberFormatException e) {
+				}
+				catch (final NumberFormatException e) {
 				}
 			}
 		}
@@ -306,12 +311,12 @@ public abstract class IStoredSettings {
 	 * @return map of string, string
 	 */
 	public Map<String, String> getMap(String name) {
-		Map<String, String> map = new LinkedHashMap<String, String>();
-		for (String string : getStrings(name)) {
-			String[] kvp = string.split("=", 2);
-			String key = kvp[0];
-			String value = kvp[1];
-			map.put(key,  value);
+		final Map<String, String> map = new LinkedHashMap<String, String>();
+		for (final String string : getStrings(name)) {
+			final String[] kvp = string.split("=", 2);
+			final String key = kvp[0];
+			final String value = kvp[1];
+			map.put(key, value);
 		}
 		return map;
 	}
@@ -323,7 +328,7 @@ public abstract class IStoredSettings {
 	 * @param value
 	 */
 	public void overrideSetting(String key, String value) {
-		overrides.put(key, value);
+		this.overrides.put(key, value);
 	}
 
 	/**
@@ -333,7 +338,7 @@ public abstract class IStoredSettings {
 	 * @param value
 	 */
 	public void overrideSetting(String key, int value) {
-		overrides.put(key, "" + value);
+		this.overrides.put(key, "" + value);
 	}
 
 	/**
@@ -343,7 +348,7 @@ public abstract class IStoredSettings {
 	 * @param value
 	 */
 	public void overrideSetting(String key, boolean value) {
-		overrides.put(key, "" + value);
+		this.overrides.put(key, "" + value);
 	}
 
 	/**
@@ -363,8 +368,8 @@ public abstract class IStoredSettings {
 	 */
 	public void removeSetting(String key) {
 		getSettings().remove(key);
-		overrides.remove(key);
-		removals.add(key);
+		this.overrides.remove(key);
+		this.removals.add(key);
 	}
 
 	/**
@@ -391,6 +396,6 @@ public abstract class IStoredSettings {
 	 */
 	public void merge(IStoredSettings settings) {
 		getSettings().putAll(settings.getSettings());
-		overrides.putAll(settings.overrides);
+		this.overrides.putAll(settings.overrides);
 	}
 }

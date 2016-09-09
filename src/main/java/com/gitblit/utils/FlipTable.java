@@ -16,16 +16,12 @@
  */
 package com.gitblit.utils;
 
-
 /**
  * This is a forked version of FlipTables which supports controlling the
  * displayed borders and gracefully handles null cell values.
  *
- * FULL = all borders
- * BODY_COLS = header + perimeter + column separators
- * COLS = header + column separators
- * BODY = header + perimeter
- * HEADER = header only
+ * FULL = all borders BODY_COLS = header + perimeter + column separators COLS =
+ * header + column separators BODY = header + perimeter HEADER = header only
  *
  * <pre>
  * ╔═════════════╤════════════════════════════╤══════════════╗
@@ -39,7 +35,12 @@ public final class FlipTable {
 	public static final String EMPTY = "(empty)";
 
 	public static enum Borders {
-		FULL(15), BODY_HCOLS(13), HCOLS(12), BODY(9), HEADER(8), COLS(4);
+		FULL(15),
+		BODY_HCOLS(13),
+		HCOLS(12),
+		BODY(9),
+		HEADER(8),
+		COLS(4);
 
 		final int bitmask;
 
@@ -64,7 +65,7 @@ public final class FlipTable {
 		}
 
 		boolean isset(int v) {
-			return (bitmask & v) == v;
+			return (this.bitmask & v) == v;
 		}
 	}
 
@@ -75,12 +76,15 @@ public final class FlipTable {
 
 	/** Create a new table with the specified headers and row data. */
 	public static String of(String[] headers, Object[][] data, Borders borders) {
-		if (headers == null)
+		if (headers == null) {
 			throw new NullPointerException("headers == null");
-		if (headers.length == 0)
+		}
+		if (headers.length == 0) {
 			throw new IllegalArgumentException("Headers must not be empty.");
-		if (data == null)
+		}
+		if (data == null) {
 			throw new NullPointerException("data == null");
+		}
 		return new FlipTable(headers, data, borders).toString();
 	}
 
@@ -96,87 +100,88 @@ public final class FlipTable {
 		this.data = data;
 		this.borders = borders;
 
-		columns = headers.length;
-		columnWidths = new int[columns];
+		this.columns = headers.length;
+		this.columnWidths = new int[this.columns];
 		for (int row = -1; row < data.length; row++) {
-			Object[] rowData = (row == -1) ? headers : data[row];
-			if (rowData.length != columns) {
-				throw new IllegalArgumentException(String.format("Row %s's %s columns != %s columns", row + 1,
-						rowData.length, columns));
+			final Object[] rowData = (row == -1) ? headers : data[row];
+			if (rowData.length != this.columns) {
+				throw new IllegalArgumentException(String.format(
+						"Row %s's %s columns != %s columns", row + 1, rowData.length, this.columns));
 			}
-			for (int column = 0; column < columns; column++) {
-				Object cell = rowData[column];
+			for (int column = 0; column < this.columns; column++) {
+				final Object cell = rowData[column];
 				if (cell == null) {
 					continue;
 				}
-				for (String rowDataLine : cell.toString().split("\\n")) {
-					columnWidths[column] = Math.max(columnWidths[column], rowDataLine.length());
+				for (final String rowDataLine : cell.toString().split("\\n")) {
+					this.columnWidths[column] = Math.max(this.columnWidths[column],
+							rowDataLine.length());
 				}
 			}
 		}
 
-		 // Account for column dividers and their spacing.
-		int emptyWidth = 3 * (columns - 1);
-		for (int columnWidth : columnWidths) {
+		// Account for column dividers and their spacing.
+		int emptyWidth = 3 * (this.columns - 1);
+		for (final int columnWidth : this.columnWidths) {
 			emptyWidth += columnWidth;
 		}
 		this.emptyWidth = emptyWidth;
 
 		if (emptyWidth < EMPTY.length()) {
 			// Make sure we're wide enough for the empty text.
-			columnWidths[columns - 1] += EMPTY.length() - emptyWidth;
+			this.columnWidths[this.columns - 1] += EMPTY.length() - emptyWidth;
 		}
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		if (borders.header()) {
+		final StringBuilder builder = new StringBuilder();
+		if (this.borders.header()) {
 			printDivider(builder, "╔═╤═╗");
 		}
-		printData(builder, headers, true);
-		if (data.length == 0) {
-			if (borders.body()) {
+		printData(builder, this.headers, true);
+		if (this.data.length == 0) {
+			if (this.borders.body()) {
 				printDivider(builder, "╠═╧═╣");
-				builder.append('║').append(pad(emptyWidth, EMPTY)).append("║\n");
+				builder.append('║').append(pad(this.emptyWidth, EMPTY)).append("║\n");
 				printDivider(builder, "╚═══╝");
-			} else if (borders.header()) {
+			} else if (this.borders.header()) {
 				printDivider(builder, "╚═╧═╝");
-				builder.append(' ').append(pad(emptyWidth, EMPTY)).append(" \n");
+				builder.append(' ').append(pad(this.emptyWidth, EMPTY)).append(" \n");
 			}
 		} else {
-			for (int row = 0; row < data.length; row++) {
-				if (row == 0 && borders.header()) {
-					if (borders.body()) {
-						if (borders.columns()) {
+			for (int row = 0; row < this.data.length; row++) {
+				if ((row == 0) && this.borders.header()) {
+					if (this.borders.body()) {
+						if (this.borders.columns()) {
 							printDivider(builder, "╠═╪═╣");
 						} else {
 							printDivider(builder, "╠═╧═╣");
 						}
 					} else {
-						if (borders.columns()) {
+						if (this.borders.columns()) {
 							printDivider(builder, "╚═╪═╝");
 						} else {
 							printDivider(builder, "╚═╧═╝");
 						}
 					}
-				} else if (row == 0 && !borders.header()) {
-					if (borders.columns()) {
+				} else if ((row == 0) && !this.borders.header()) {
+					if (this.borders.columns()) {
 						printDivider(builder, " ─┼─ ");
 					} else {
 						printDivider(builder, " ─┼─ ");
 					}
-				} else if (borders.rows()) {
-					if (borders.columns()) {
+				} else if (this.borders.rows()) {
+					if (this.borders.columns()) {
 						printDivider(builder, "╟─┼─╢");
 					} else {
 						printDivider(builder, "╟─┼─╢");
 					}
 				}
-				printData(builder, data[row], false);
+				printData(builder, this.data[row], false);
 			}
-			if (borders.body()) {
-				if (borders.columns()) {
+			if (this.borders.body()) {
+				if (this.borders.columns()) {
 					printDivider(builder, "╚═╧═╝");
 				} else {
 					printDivider(builder, "╚═══╝");
@@ -187,23 +192,23 @@ public final class FlipTable {
 	}
 
 	private void printDivider(StringBuilder out, String format) {
-		for (int column = 0; column < columns; column++) {
+		for (int column = 0; column < this.columns; column++) {
 			out.append(column == 0 ? format.charAt(0) : format.charAt(2));
-			out.append(pad(columnWidths[column], "").replace(' ', format.charAt(1)));
+			out.append(pad(this.columnWidths[column], "").replace(' ', format.charAt(1)));
 		}
 		out.append(format.charAt(4)).append('\n');
 	}
 
 	private void printData(StringBuilder out, Object[] data, boolean isHeader) {
 		for (int line = 0, lines = 1; line < lines; line++) {
-			for (int column = 0; column < columns; column++) {
+			for (int column = 0; column < this.columns; column++) {
 				if (column == 0) {
-					if ((isHeader && borders.header()) || borders.body()) {
+					if ((isHeader && this.borders.header()) || this.borders.body()) {
 						out.append('║');
 					} else {
 						out.append(' ');
 					}
-				} else if (isHeader || borders.columns()) {
+				} else if (isHeader || this.borders.columns()) {
 					out.append('│');
 				} else {
 					out.append(' ');
@@ -212,12 +217,12 @@ public final class FlipTable {
 				if (cell == null) {
 					cell = "";
 				}
-				String[] cellLines = cell.toString().split("\\n");
+				final String[] cellLines = cell.toString().split("\\n");
 				lines = Math.max(lines, cellLines.length);
-				String cellLine = line < cellLines.length ? cellLines[line] : "";
-				out.append(pad(columnWidths[column], cellLine));
+				final String cellLine = line < cellLines.length ? cellLines[line] : "";
+				out.append(pad(this.columnWidths[column], cellLine));
 			}
-			if ((isHeader && borders.header()) || borders.body()) {
+			if ((isHeader && this.borders.header()) || this.borders.body()) {
 				out.append("║\n");
 			} else {
 				out.append('\n');

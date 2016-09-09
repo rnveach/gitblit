@@ -24,8 +24,8 @@ import com.gitblit.IStoredSettings;
 import com.gitblit.manager.IRuntimeManager;
 
 /**
- * Wraps a filter config and will prefer a setting retrieved from IStoredSettings
- * if one is available.
+ * Wraps a filter config and will prefer a setting retrieved from
+ * IStoredSettings if one is available.
  *
  * @author James Moger
  * @since 1.6.0
@@ -46,26 +46,26 @@ public class FilterRuntimeConfig implements FilterConfig {
 
 	@Override
 	public String getFilterName() {
-		return config.getFilterName();
+		return this.config.getFilterName();
 	}
 
 	@Override
 	public ServletContext getServletContext() {
-		return config.getServletContext();
+		return this.config.getServletContext();
 	}
 
 	@Override
 	public String getInitParameter(String name) {
-		String key = namespace + "." + name;
-		if (settings.hasSettings(key)) {
-			String value = settings.getString(key, null);
+		final String key = this.namespace + "." + name;
+		if (this.settings.hasSettings(key)) {
+			final String value = this.settings.getString(key, null);
 			return value;
 		}
-		return config.getInitParameter(name);
+		return this.config.getInitParameter(name);
 	}
 
 	@Override
 	public Enumeration<String> getInitParameterNames() {
-		return config.getInitParameterNames();
+		return this.config.getInitParameterNames();
 	}
 }

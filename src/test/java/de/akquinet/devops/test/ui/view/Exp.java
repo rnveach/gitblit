@@ -30,15 +30,18 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
  */
 public class Exp {
 	public static class EditRepoViewLoaded implements ExpectedCondition<Boolean> {
+		@Override
 		public Boolean apply(WebDriver d) {
-			List<WebElement> findElements = d.findElements(By.partialLinkText("general"));
+			final List<WebElement> findElements = d.findElements(By.partialLinkText("general"));
 			return findElements.size() == 1;
 		}
 	}
+
 	public static class RepoListViewLoaded implements ExpectedCondition<Boolean> {
+		@Override
 		public Boolean apply(WebDriver d) {
-			String xpath = "//img[@src=\"git-black-16x16.png\"]";
-			List<WebElement> findElements = d.findElements(By.xpath(xpath ));
+			final String xpath = "//img[@src=\"git-black-16x16.png\"]";
+			final List<WebElement> findElements = d.findElements(By.xpath(xpath));
 			return findElements.size() == 1;
 		}
 	}

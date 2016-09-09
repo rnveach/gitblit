@@ -41,13 +41,14 @@ public class TagPage extends RepositoryPage {
 	public TagPage(PageParameters params) {
 		super(params);
 
-		Repository r = getRepository();
+		final Repository r = getRepository();
 
 		// Find tag in repository
-		List<RefModel> tags = JGitUtils.getTags(r, true, -1);
+		final List<RefModel> tags = JGitUtils.getTags(r, true, -1);
 		RefModel tagRef = null;
-		for (RefModel tag : tags) {
-			if (tag.getName().equals(objectId) || tag.getObjectId().getName().equals(objectId)) {
+		for (final RefModel tag : tags) {
+			if (tag.getName().equals(this.objectId)
+					|| tag.getObjectId().getName().equals(this.objectId)) {
 				tagRef = tag;
 				break;
 			}
@@ -55,12 +56,13 @@ public class TagPage extends RepositoryPage {
 
 		// Failed to find tag!
 		if (tagRef == null) {
-			error(MessageFormat.format(getString("gb.couldNotFindTag"), objectId), true);
+			error(MessageFormat.format(getString("gb.couldNotFindTag"), this.objectId), true);
 		}
 
 		// Display tag.
 		Class<? extends WebPage> linkClass;
-		PageParameters linkParameters = newCommitParameter(tagRef.getReferencedObjectId().getName());
+		final PageParameters linkParameters = newCommitParameter(tagRef.getReferencedObjectId()
+				.getName());
 		String typeKey;
 		switch (tagRef.getReferencedObjectType()) {
 		case Constants.OBJ_BLOB:
@@ -79,13 +81,14 @@ public class TagPage extends RepositoryPage {
 		}
 		add(new AvatarImage("taggerAvatar", tagRef.getAuthorIdent()));
 
-		add(new RefsPanel("tagName", repositoryName, Arrays.asList(tagRef)));
+		add(new RefsPanel("tagName", this.repositoryName, Arrays.asList(tagRef)));
 		add(new Label("tagId", tagRef.getObjectId().getName()));
 		add(new LinkPanel("taggedObject", "list", tagRef.getReferencedObjectId().getName(),
 				linkClass, linkParameters));
 		add(new Label("taggedObjectType", getString(typeKey)));
 
-		add(createPersonPanel("tagger", tagRef.getAuthorIdent(), com.gitblit.Constants.SearchType.AUTHOR));
+		add(createPersonPanel("tagger", tagRef.getAuthorIdent(),
+				com.gitblit.Constants.SearchType.AUTHOR));
 		Date when = new Date(0);
 		if (tagRef.getAuthorIdent() != null) {
 			when = tagRef.getAuthorIdent().getWhen();

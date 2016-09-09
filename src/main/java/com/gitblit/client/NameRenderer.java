@@ -30,7 +30,7 @@ import javax.swing.table.DefaultTableCellRenderer;
  * @author James Moger
  *
  */
-public class NameRenderer extends DefaultTableCellRenderer implements ListCellRenderer {
+public class NameRenderer<E> extends DefaultTableCellRenderer implements ListCellRenderer<E> {
 
 	private static final long serialVersionUID = 1L;
 
@@ -43,15 +43,16 @@ public class NameRenderer extends DefaultTableCellRenderer implements ListCellRe
 	}
 
 	private NameRenderer(Color group, Color repo) {
-		groupSpan = "<span style='color:" + getHexColor(group) + "'>";
+		this.groupSpan = "<span style='color:" + getHexColor(group) + "'>";
 		setForeground(repo);
 	}
 
-	String getHexColor(Color c) {
-		StringBuilder sb = new StringBuilder();
+	private static String getHexColor(Color c) {
+		final StringBuilder sb = new StringBuilder();
 		sb.append(Integer.toHexString((c.getRGB() & 0x00FFFFFF)));
-		while (sb.length() < 6)
+		while (sb.length() < 6) {
 			sb.insert(0, '0');
+		}
 		sb.insert(0, '#');
 		return sb.toString();
 	}
@@ -65,7 +66,7 @@ public class NameRenderer extends DefaultTableCellRenderer implements ListCellRe
 	}
 
 	@Override
-	public Component getListCellRendererComponent(JList list, Object value, int index,
+	public Component getListCellRendererComponent(JList<? extends E> list, E value, int index,
 			boolean isSelected, boolean cellHasFocus) {
 		setValue(value == null ? "" : value, isSelected);
 		if (isSelected) {
@@ -79,14 +80,14 @@ public class NameRenderer extends DefaultTableCellRenderer implements ListCellRe
 	}
 
 	private void setValue(Object value, boolean isSelected) {
-		String name = value.toString();
-		int lastSlash = name.lastIndexOf('/');
-		if (!isSelected && lastSlash > -1) {
-			String group = name.substring(0, lastSlash + 1);
-			String repo = name.substring(lastSlash + 1);
-			setText("<html><body>" + groupSpan + group + "</span>" + repo);
+		final String name = value.toString();
+		final int lastSlash = name.lastIndexOf('/');
+		if (!isSelected && (lastSlash > -1)) {
+			final String group = name.substring(0, lastSlash + 1);
+			final String repo = name.substring(lastSlash + 1);
+			setText("<html><body>" + this.groupSpan + group + "</span>" + repo);
 		} else {
-			this.setText(name);
+			setText(name);
 		}
 	}
 }
