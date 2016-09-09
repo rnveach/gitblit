@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ant-phase-sources" default="execute">
+  <target name="execute">
+    <echo>Executing Ant Sources script...</echo>
+
+    <!-- copy distrib/data to project data directory -->
+    <mkdir dir="${basedir}/data" />
+    <copy todir="${basedir}/data" overwrite="false">
+      <fileset dir="${basedir}/src/main/distrib/data" />
+    </copy>
+
+    <!-- copy defaults.properties to the source directory -->
+    <copy tofile="${basedir}/src/main/java/defaults.properties" overwrite="true"
+      file="${basedir}/src/main/distrib/data/defaults.properties" />
+
+    <!-- copy clientapps.json to the source directory. this file is only used if a local file is not 
+      provided. -->
+    <copy tofile="${basedir}/src/main/java/clientapps.json" overwrite="true"
+      file="${basedir}/src/main/distrib/data/clientapps.json" />
+
+    <echo>Done</echo>
+  </target>
+</project>

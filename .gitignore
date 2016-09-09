@@ -1,32 +1,12 @@
-tags
-/temp
-/lib
-/ext
-/build
-/site
-/git
-/lucene
-/build.properties
-/federation.properties
-/mailtest.properties
-/test-users.conf
-/.settings/
-/src/main/java/reference.properties
-/src/main/java/WEB-INF/reference.properties
-/bin/
-/build-demo.xml
-*.directory
-/.gradle
-/pom.xml
-/x509test
+# maven generated folders
+
+/target
+
+# ant generated folders
+
 /data
+
+# unknown
+
+/lucene
 /*.conf
-/build-next.xml
-/*.ps1
-/*.sh
-/*.factorypath
-/src/main/dagger
-/**/.idea
-/**/init.lua
-/**/session
-/nbproject/private

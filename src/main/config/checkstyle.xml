@@ -9,7 +9,10 @@
     Checkstyle-Configuration: gitblit Description: none
 -->
 <module name="Checker">
-    <property name="severity" value="warning" />
+    <property name="charset" value="UTF-8" />
+
+    <property name="severity" value="error" />
+
     <module name="TreeWalker">
         <property name="tabWidth" value="4" />
         <module name="ConstantName" />
@@ -33,17 +36,14 @@
         </module>
         <module name="NoWhitespaceBefore" />
         <module name="OperatorWrap">
-            <property name="severity" value="ignore" />
             <property name="tokens"
                 value="BAND,BOR,BSR,BXOR,COLON,DIV,EQUAL,GE,GT,LAND,LE,LITERAL_INSTANCEOF,LT,MINUS,MOD,NOT_EQUAL,SL,SR,STAR" />
-            <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity"
-                value="inherit" />
         </module>
         <module name="ParenPad" />
         <module name="WhitespaceAfter" />
         <module name="WhitespaceAround">
             <property name="tokens"
-                value="ASSIGN,BAND,BAND_ASSIGN,BOR,BOR_ASSIGN,BSR,BSR_ASSIGN,BXOR,BXOR_ASSIGN,DIV_ASSIGN,EQUAL,GE,GT,LAND,LE,LITERAL_ASSERT,LITERAL_CATCH,LITERAL_DO,LITERAL_ELSE,LITERAL_FINALLY,LITERAL_FOR,LITERAL_IF,LITERAL_RETURN,LITERAL_SYNCHRONIZED,LITERAL_TRY,LITERAL_WHILE,LOR,LT,MINUS,MINUS_ASSIGN,MOD,MOD_ASSIGN,NOT_EQUAL,PLUS_ASSIGN,SL,SLIST,SL_ASSIGN,SR,SR_ASSIGN,STAR,STAR_ASSIGN,LITERAL_ASSERT,TYPE_EXTENSION_AND,WILDCARD_TYPE" />
+                value="ASSIGN,BAND,BAND_ASSIGN,BOR,BOR_ASSIGN,BSR,BSR_ASSIGN,BXOR,BXOR_ASSIGN,DIV_ASSIGN,EQUAL,GE,GT,LAND,LE,LITERAL_ASSERT,LITERAL_CATCH,LITERAL_DO,LITERAL_ELSE,LITERAL_FINALLY,LITERAL_FOR,LITERAL_IF,LITERAL_RETURN,LITERAL_SYNCHRONIZED,LITERAL_TRY,LITERAL_WHILE,LOR,LT,MINUS,MINUS_ASSIGN,MOD,MOD_ASSIGN,NOT_EQUAL,PLUS_ASSIGN,SL,SLIST,SL_ASSIGN,SR,SR_ASSIGN,STAR,STAR_ASSIGN,LITERAL_ASSERT,TYPE_EXTENSION_AND" />
         </module>
         <module name="ModifierOrder" />
         <module name="RedundantModifier" />
@@ -51,31 +51,18 @@
             <property name="tokens"
                 value="CTOR_DEF,INTERFACE_DEF,LITERAL_CATCH,LITERAL_DO,LITERAL_ELSE,LITERAL_FINALLY,LITERAL_FOR,LITERAL_IF,LITERAL_SWITCH,LITERAL_SYNCHRONIZED,LITERAL_TRY,LITERAL_WHILE,METHOD_DEF" />
         </module>
-        <module name="NeedBraces" />
+        <module name="NeedBraces">
+          <property name="allowSingleLineStatement" value="true" />
+          <property name="allowEmptyLoopBody" value="true" />
+        </module>
         <module name="RightCurly" />
         <module name="EmptyStatement" />
         <module name="EqualsHashCode" />
         <module name="IllegalInstantiation" />
-        <module name="RedundantThrows">
-            <property name="allowUnchecked" value="true" />
-            <property name="allowSubclasses" value="true" />
-            <property name="logLoadErrors" value="true" />
-            <property name="suppressLoadErrors" value="true" />
-        </module>
         <module name="SimplifyBooleanExpression" />
         <module name="SimplifyBooleanReturn" />
         <module name="InterfaceIsType" />
         <module name="ArrayTypeStyle" />
-        <module name="GenericIllegalRegexp">
-            <property name="severity" value="ignore" />
-            <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity"
-                value="inherit" />
-        </module>
-        <module name="TodoComment">
-            <property name="severity" value="ignore" />
-            <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity"
-                value="inherit" />
-        </module>
         <module name="UpperEll" />
         <module name="JavadocType" />
         <module name="EmptyForInitializerPad" />
@@ -87,22 +74,9 @@
         <module name="IllegalThrows" />
         <module name="SuperClone" />
         <module name="UnnecessaryParentheses" />
-        <module name="TrailingComment" />
-        <module name="PackageHtml">
-            <property name="severity" value="ignore" />
-            <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity"
-                value="inherit" />
-        </module>
-    </module>
-    <module name="FileTabCharacter">
-        <property name="severity" value="ignore" />
-        <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity"
-            value="inherit" />
     </module>
     <module name="NewlineAtEndOfFile">
-        <property name="severity" value="ignore" />
-        <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity"
-            value="inherit" />
+        <property name="lineSeparator" value="lf" />
     </module>
     <module name="Translation" />
 </module>
