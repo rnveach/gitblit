@@ -30,7 +30,7 @@ public class PushLogTest extends GitblitUnitTest {
 
 	@Test
 	public void testPushLog() throws IOException {
-		final String name = "~james/helloworld.git";
+		final String name = "test/helloworld.git";
 		final File gitDir = FileKey.resolve(new File(GitBlitSuite.REPOSITORIES, name), FS.DETECTED);
 		final Repository repository = new FileRepositoryBuilder().setGitDir(gitDir).build();
 		RefLogUtils.getRefLog(name, repository);
