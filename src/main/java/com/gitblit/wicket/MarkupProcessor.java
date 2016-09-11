@@ -24,6 +24,7 @@ import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,10 +42,14 @@ import org.eclipse.mylyn.wikitext.mediawiki.core.MediaWikiLanguage;
 import org.eclipse.mylyn.wikitext.textile.core.TextileLanguage;
 import org.eclipse.mylyn.wikitext.tracwiki.core.TracWikiLanguage;
 import org.eclipse.mylyn.wikitext.twiki.core.TWikiLanguage;
+import org.pegdown.DefaultVerbatimSerializer;
 import org.pegdown.LinkRenderer;
+import org.pegdown.ToHtmlSerializer;
+import org.pegdown.VerbatimSerializer;
 import org.pegdown.ast.ExpImageNode;
 import org.pegdown.ast.RefImageNode;
 import org.pegdown.ast.WikiLinkNode;
+import org.pegdown.plugins.ToHtmlSerializerPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -268,8 +273,8 @@ public class MarkupProcessor {
 	 * @param commitId
 	 * @param lang
 	 */
-	private void parse(final MarkupDocument doc, final String repositoryName, final String commitId,
-			MarkupLanguage lang) {
+	private void parse(final MarkupDocument doc, final String repositoryName,
+			final String commitId, MarkupLanguage lang) {
 		final StringWriter writer = new StringWriter();
 		final HtmlDocumentBuilder builder = new HtmlDocumentBuilder(writer) {
 
@@ -329,8 +334,7 @@ public class MarkupProcessor {
 	 * @param repositoryName
 	 * @param commitId
 	 */
-	private void parse(final MarkupDocument doc, final String repositoryName,
-			final String commitId) {
+	private void parse(final MarkupDocument doc, final String repositoryName, final String commitId) {
 		final LinkRenderer renderer = new LinkRenderer() {
 
 			@Override
@@ -340,8 +344,8 @@ public class MarkupProcessor {
 					final String path = doc.getRelativePath(node.url);
 					final String contextUrl = RequestCycle.get().getRequest()
 							.getRelativePathPrefixToContextRoot();
-					final String url = RawServlet.asLink(contextUrl, repositoryName, commitId,
-							path);
+					final String url = RawServlet
+							.asLink(contextUrl, repositoryName, commitId, path);
 					return new Rendering(url, text);
 				}
 				// absolute image link
@@ -363,8 +367,8 @@ public class MarkupProcessor {
 					// absolute image link
 					rendering = new Rendering(url, alt);
 				}
-				return StringUtils.isEmpty(title) ? rendering
-						: rendering.withAttribute("title", encode(title));
+				return StringUtils.isEmpty(title) ? rendering : rendering.withAttribute("title",
+						encode(title));
 			}
 
 			@Override
@@ -394,7 +398,8 @@ public class MarkupProcessor {
 		}
 		encodedPath = encodedPath.replace("/", fsc).replace("%2F", fsc);
 
-		final String url = RequestCycle.get()
+		final String url = RequestCycle
+				.get()
 				.urlFor(pageClass,
 						WicketUtils.newPathParameter(repositoryName, commitId, encodedPath))
 				.toString();
@@ -448,8 +453,8 @@ public class MarkupProcessor {
 					return ref;
 				}
 				// this is a simple relative path resolver
-				final List<String> currPathStrings = new ArrayList<String>(
-						Arrays.asList(cp.split("/")));
+				final List<String> currPathStrings = new ArrayList<String>(Arrays.asList(cp
+						.split("/")));
 				String file = ref;
 				while (file.startsWith("../")) {
 					// strip ../ from the file reference
@@ -461,6 +466,38 @@ public class MarkupProcessor {
 				final String path = Joiner.on("/").join(currPathStrings);
 				return path;
 			}
+		}
+	}
+
+	/**
+	 * This class implements a workaround for a bug reported in issue-379. The
+	 * bug was introduced by my own pegdown pull request #115.
+	 *
+	 * @author James Moger
+	 *
+	 */
+	public static class WorkaroundHtmlSerializer extends ToHtmlSerializer {
+
+		public WorkaroundHtmlSerializer(final LinkRenderer linkRenderer) {
+			super(linkRenderer, Collections.<String, VerbatimSerializer> singletonMap(
+					VerbatimSerializer.DEFAULT, DefaultVerbatimSerializer.INSTANCE), Collections
+					.<ToHtmlSerializerPlugin> emptyList());
+		}
+
+		private void printAttribute(String name, String value) {
+			this.printer.print(' ').print(name).print('=').print('"').print(value).print('"');
+		}
+
+		/* Reimplement print image tag to eliminate a trailing double-quote */
+		@Override
+		protected void printImageTag(LinkRenderer.Rendering rendering) {
+			this.printer.print("<img");
+			printAttribute("src", rendering.href);
+			printAttribute("alt", rendering.text);
+			for (final LinkRenderer.Attribute attr : rendering.attributes) {
+				printAttribute(attr.name, attr.value);
+			}
+			this.printer.print("/>");
 		}
 	}
 }
