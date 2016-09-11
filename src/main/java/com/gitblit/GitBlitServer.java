@@ -96,7 +96,7 @@ public class GitBlitServer {
 			if (arg.equals("--baseFolder")) {
 				if ((i + 1) == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
-					System.exit(-1);
+					throw new RuntimeException("System.exit(-1);");
 				} else if (!".".equals(args[i + 1])) {
 					folder = args[i + 1];
 				}
@@ -143,10 +143,10 @@ public class GitBlitServer {
 		}
 		if (parser != null) {
 			parser.printUsage(System.out);
-			System.out
-					.println("\nExample:\n  java -server -Xmx1024M -jar gitblit.jar --repositoriesFolder c:\\git --httpPort 80 --httpsPort 443");
+			System.out.println(
+					"\nExample:\n  java -server -Xmx1024M -jar gitblit.jar --repositoriesFolder c:\\git --httpPort 80 --httpsPort 443");
 		}
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	private static File getBaseFolder(Params params) {
@@ -199,8 +199,8 @@ public class GitBlitServer {
 				final Properties loggingProperties = new Properties();
 				loggingProperties.load(is);
 
-				loggingProperties.put("log4j.appender.R.File", new File(baseFolder,
-						"logs/gitblit.log").getAbsolutePath());
+				loggingProperties.put("log4j.appender.R.File",
+						new File(baseFolder, "logs/gitblit.log").getAbsolutePath());
 				loggingProperties.put("log4j.rootCategory", "INFO, R");
 
 				if (settings.getBoolean(Keys.web.debugMode, false)) {
@@ -271,16 +271,17 @@ public class GitBlitServer {
 				public void log(String message) {
 					BufferedWriter writer = null;
 					try {
-						writer = new BufferedWriter(new FileWriter(new File(baseFolder,
-								X509Utils.CERTS + File.separator + "log.txt"), true));
+						writer = new BufferedWriter(new FileWriter(
+								new File(baseFolder, X509Utils.CERTS + File.separator + "log.txt"),
+								true));
 						writer.write(MessageFormat.format("{0,date,yyyy-MM-dd HH:mm}: {1}",
 								new Date(), message));
 						writer.newLine();
 						writer.flush();
 					}
 					catch (final Exception e) {
-						LoggerFactory.getLogger(GitblitAuthority.class).error(
-								"Failed to append log entry!", e);
+						LoggerFactory.getLogger(GitblitAuthority.class)
+								.error("Failed to append log entry!", e);
 					}
 					finally {
 						if (writer != null) {
@@ -353,9 +354,9 @@ public class GitBlitServer {
 			connector.setPort(params.port);
 			final String bindInterface = settings.getString(Keys.server.httpBindInterface, null);
 			if (!StringUtils.isEmpty(bindInterface)) {
-				logger.warn(MessageFormat.format(
-						"Binding HTTP transport on port {0,number,0} to {1}", params.port,
-						bindInterface));
+				logger.warn(
+						MessageFormat.format("Binding HTTP transport on port {0,number,0} to {1}",
+								params.port, bindInterface));
 				connector.setHost(bindInterface);
 			}
 			if ((params.port < 1024) && !isWindows()) {
@@ -435,8 +436,8 @@ public class GitBlitServer {
 					final InMemoryDirectoryServerConfig config = new InMemoryDirectoryServerConfig(
 							rootDN);
 					config.addAdditionalBindCredentials(bindUserName, bindPassword);
-					config.setListenerConfigs(InMemoryListenerConfig.createLDAPConfig("default",
-							port));
+					config.setListenerConfigs(
+							InMemoryListenerConfig.createLDAPConfig("default", port));
 					config.setSchema(null);
 
 					final InMemoryDirectoryServer ds = new InMemoryDirectoryServer(config);
@@ -493,7 +494,7 @@ public class GitBlitServer {
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			System.exit(100);
+			throw new RuntimeException("System.exit(100);");
 		}
 	}
 
@@ -551,8 +552,8 @@ public class GitBlitServer {
 				Socket accept;
 				try {
 					accept = this.socket.accept();
-					final BufferedReader reader = new BufferedReader(new InputStreamReader(
-							accept.getInputStream()));
+					final BufferedReader reader = new BufferedReader(
+							new InputStreamReader(accept.getInputStream()));
 					reader.readLine();
 					this.logger.info(Constants.BORDER);
 					this.logger.info("Stopping " + Constants.NAME);
@@ -576,8 +577,8 @@ public class GitBlitServer {
 
 		public static String baseFolder;
 
-		private final FileSettings FILESETTINGS = new FileSettings(new File(baseFolder,
-				Constants.PROPERTIES_FILE).getAbsolutePath());
+		private final FileSettings FILESETTINGS = new FileSettings(
+				new File(baseFolder, Constants.PROPERTIES_FILE).getAbsolutePath());
 
 		/*
 		 * Server parameters
@@ -633,8 +634,8 @@ public class GitBlitServer {
 		public Integer shutdownPort = this.FILESETTINGS.getInteger(Keys.server.shutdownPort, 8081);
 
 		@Option(name = "--requireClientCertificates", usage = "Require client X509 certificates for https connections.")
-		public Boolean requireClientCertificates = this.FILESETTINGS.getBoolean(
-				Keys.server.requireClientCertificates, false);
+		public Boolean requireClientCertificates = this.FILESETTINGS
+				.getBoolean(Keys.server.requireClientCertificates, false);
 
 		/*
 		 * Setting overrides

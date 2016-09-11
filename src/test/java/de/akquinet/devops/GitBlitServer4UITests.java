@@ -25,7 +25,7 @@ public class GitBlitServer4UITests extends GitBlitServer {
 			if (arg.equals("--baseFolder")) {
 				if ((i + 1) == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
-					System.exit(-1);
+					throw new RuntimeException("System.exit(-1);");
 				} else if (args[i + 1] != ".") {
 					folder = args[i + 1];
 				}

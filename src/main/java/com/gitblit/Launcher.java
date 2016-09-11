@@ -50,8 +50,8 @@ public class Launcher {
 		if (DEBUG) {
 			System.out.println("jcp=" + System.getProperty("java.class.path"));
 			final ProtectionDomain protectionDomain = Launcher.class.getProtectionDomain();
-			System.out.println("launcher="
-					+ protectionDomain.getCodeSource().getLocation().toExternalForm());
+			System.out.println(
+					"launcher=" + protectionDomain.getCodeSource().getLocation().toExternalForm());
 		}
 
 		// Load the JARs in the lib and ext folder
@@ -80,7 +80,7 @@ public class Launcher {
 				// more really interesting things
 				System.err.println("Failed to find any JARs in " + libFolder.getPath());
 			}
-			System.exit(-1);
+			throw new RuntimeException("System.exit(-1);");
 		} else {
 			for (final File jar : jars) {
 				try {
@@ -143,8 +143,8 @@ public class Launcher {
 			method.invoke(sysloader, new Object[] { u });
 		}
 		catch (final Throwable t) {
-			throw new IOException(MessageFormat.format(
-					"Error, could not add {0} to system classloader", f.getPath()), t);
+			throw new IOException(MessageFormat
+					.format("Error, could not add {0} to system classloader", f.getPath()), t);
 		}
 	}
 }

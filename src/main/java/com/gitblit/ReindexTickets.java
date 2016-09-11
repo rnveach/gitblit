@@ -54,7 +54,7 @@ public class ReindexTickets {
 			if (arg.equals("--baseFolder")) {
 				if ((i + 1) == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
-					System.exit(-1);
+					throw new RuntimeException("System.exit(-1);");
 				} else if (!".".equals(args[i + 1])) {
 					folder = args[i + 1];
 				}
@@ -89,7 +89,7 @@ public class ReindexTickets {
 
 		// reindex tickets
 		reindex(new File(Params.baseFolder), settings);
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	/**
@@ -109,10 +109,10 @@ public class ReindexTickets {
 		}
 		if (parser != null) {
 			parser.printUsage(System.out);
-			System.out
-					.println("\nExample:\n  java -gitblit.jar com.gitblit.ReindexTickets --baseFolder c:\\gitblit-data");
+			System.out.println(
+					"\nExample:\n  java -gitblit.jar com.gitblit.ReindexTickets --baseFolder c:\\gitblit-data");
 		}
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class ReindexTickets {
 		if (StringUtils.isEmpty(serviceName)) {
 			System.err.println(MessageFormat.format("Please define a ticket service in \"{0}\"",
 					Keys.tickets.service));
-			System.exit(1);
+			throw new RuntimeException("System.exit(1);");
 		}
 		ITicketService ticketService = null;
 		try {
@@ -157,12 +157,12 @@ public class ReindexTickets {
 						repositoryManager).start();
 			} else {
 				System.err.println("Unknown ticket service " + serviceName);
-				System.exit(1);
+				throw new RuntimeException("System.exit(1);");
 			}
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
-			System.exit(1);
+			throw new RuntimeException("System.exit(1);");
 		}
 
 		ticketService.reindex();
@@ -181,8 +181,8 @@ public class ReindexTickets {
 		@Option(name = "--help", aliases = { "-h" }, usage = "Show this help")
 		public Boolean help = false;
 
-		private final FileSettings FILESETTINGS = new FileSettings(new File(baseFolder,
-				Constants.PROPERTIES_FILE).getAbsolutePath());
+		private final FileSettings FILESETTINGS = new FileSettings(
+				new File(baseFolder, Constants.PROPERTIES_FILE).getAbsolutePath());
 
 		@Option(name = "--repositoriesFolder", usage = "Git Repositories Folder", metaVar = "PATH")
 		public String repositoriesFolder = this.FILESETTINGS.getString(Keys.git.repositoriesFolder,

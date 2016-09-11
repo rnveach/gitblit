@@ -141,7 +141,7 @@ public class GitblitAuthority extends JFrame implements X509Log {
 			if (arg.equals("--baseFolder")) {
 				if ((i + 1) == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
-					System.exit(-1);
+					throw new RuntimeException("System.exit(-1);");
 				} else if (!".".equals(args[i + 1])) {
 					folder = args[i + 1];
 				}
@@ -271,14 +271,14 @@ public class GitblitAuthority extends JFrame implements X509Log {
 		}
 
 		if (us.endsWith(".conf")) {
-			service = new ConfigUserService(FileUtils.resolveParameter(Constants.baseFolder$,
-					folder, us));
+			service = new ConfigUserService(
+					FileUtils.resolveParameter(Constants.baseFolder$, folder, us));
 		} else {
 			throw new RuntimeException("Unsupported user service: " + us);
 		}
 
-		service = new ConfigUserService(FileUtils.resolveParameter(Constants.baseFolder$, folder,
-				us));
+		service = new ConfigUserService(
+				FileUtils.resolveParameter(Constants.baseFolder$, folder, us));
 		return service;
 	}
 
@@ -287,8 +287,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 		this.userService = loadUsers(folder);
 		System.out.println(Constants.baseFolder$ + " set to " + folder);
 		if (this.userService == null) {
-			JOptionPane.showMessageDialog(this, MessageFormat.format(
-					"Sorry, {0} doesn't look like a Gitblit GO installation.", folder));
+			JOptionPane.showMessageDialog(this, MessageFormat
+					.format("Sorry, {0} doesn't look like a Gitblit GO installation.", folder));
 		} else {
 			// build empty certificate model for all users
 			final Map<String, UserCertificateModel> map = new HashMap<String, UserCertificateModel>();
@@ -303,7 +303,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 				try {
 					config.load();
 					// replace user certificate model with actual data
-					final List<UserCertificateModel> list = UserCertificateConfig.KEY.parse(config).list;
+					final List<UserCertificateModel> list = UserCertificateConfig.KEY
+							.parse(config).list;
 					for (final UserCertificateModel ucm : list) {
 						ucm.user = this.userService.getUserModel(ucm.user.username);
 						map.put(ucm.user.username, ucm);
@@ -335,15 +336,14 @@ public class GitblitAuthority extends JFrame implements X509Log {
 						if (Desktop.isDesktopSupported()) {
 							if (Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 								try {
-									Desktop.getDesktop()
-											.browse(URI
-													.create("http://www.oracle.com/technetwork/java/javase/downloads/index.html"));
+									Desktop.getDesktop().browse(URI.create(
+											"http://www.oracle.com/technetwork/java/javase/downloads/index.html"));
 								}
 								catch (final IOException e) {
 								}
 							}
 						}
-						System.exit(1);
+						throw new RuntimeException("System.exit(1);");
 					}
 				}
 
@@ -532,8 +532,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 					final int modelIndex = GitblitAuthority.this.table
 							.convertRowIndexToModel(GitblitAuthority.this.table.getSelectedRow());
 					GitblitAuthority.this.tableModel.fireTableDataChanged();
-					GitblitAuthority.this.table.getSelectionModel().setSelectionInterval(
-							modelIndex, modelIndex);
+					GitblitAuthority.this.table.getSelectionModel().setSelectionInterval(modelIndex,
+							modelIndex);
 
 					return true;
 				}
@@ -579,8 +579,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 		usersPanel.add(new JScrollPane(this.table), BorderLayout.CENTER);
 		usersPanel.setMinimumSize(new Dimension(400, 10));
 
-		this.certificateDefaultsButton = new JButton(new ImageIcon(getClass().getResource(
-				"/settings_16x16.png")));
+		this.certificateDefaultsButton = new JButton(
+				new ImageIcon(getClass().getResource("/settings_16x16.png")));
 		this.certificateDefaultsButton.setFocusable(false);
 		this.certificateDefaultsButton.setToolTipText(Translation.get("gb.newCertificateDefaults"));
 		this.certificateDefaultsButton.addActionListener(new ActionListener() {
@@ -589,8 +589,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 				final X509Metadata metadata = new X509Metadata("whocares", "whocares");
 				final File certificatesConfigFile = new File(GitblitAuthority.this.folder,
 						X509Utils.CA_CONFIG);
-				final FileBasedConfig config = new FileBasedConfig(certificatesConfigFile, FS
-						.detect());
+				final FileBasedConfig config = new FileBasedConfig(certificatesConfigFile,
+						FS.detect());
 				NewCertificateConfig certificateConfig = null;
 				if (certificatesConfigFile.exists()) {
 					try {
@@ -619,8 +619,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 				};
 
 				final JTextField siteNameTF = new JTextField(20);
-				siteNameTF.setText(GitblitAuthority.this.gitblitSettings.getString(
-						Keys.web.siteName, "Gitblit"));
+				siteNameTF.setText(GitblitAuthority.this.gitblitSettings
+						.getString(Keys.web.siteName, "Gitblit"));
 				final JPanel siteNamePanel = Utils.newFieldPanel(Translation.get("gb.siteName"),
 						siteNameTF, Translation.get("gb.siteNameDescription"));
 
@@ -663,15 +663,15 @@ public class GitblitAuthority extends JFrame implements X509Log {
 			}
 		});
 
-		this.newSSLCertificate = new JButton(new ImageIcon(getClass().getResource(
-				"/rosette_16x16.png")));
+		this.newSSLCertificate = new JButton(
+				new ImageIcon(getClass().getResource("/rosette_16x16.png")));
 		this.newSSLCertificate.setFocusable(false);
 		this.newSSLCertificate.setToolTipText(Translation.get("gb.newSSLCertificate"));
 		this.newSSLCertificate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				final Date defaultExpiration = new Date(System.currentTimeMillis()
-						+ (10 * TimeUtils.ONEYEAR));
+				final Date defaultExpiration = new Date(
+						System.currentTimeMillis() + (10 * TimeUtils.ONEYEAR));
 				final NewSSLCertificateDialog dialog = new NewSSLCertificateDialog(
 						GitblitAuthority.this, defaultExpiration);
 				dialog.setModal(true);
@@ -721,15 +721,17 @@ public class GitblitAuthority extends JFrame implements X509Log {
 					@Override
 					protected void onSuccess() {
 						if (serveCertificate) {
-							JOptionPane.showMessageDialog(GitblitAuthority.this, MessageFormat
-									.format(Translation.get("gb.sslCertificateGeneratedRestart"),
-											hostname), Translation.get("gb.newSSLCertificate"),
+							JOptionPane.showMessageDialog(GitblitAuthority.this,
+									MessageFormat.format(
+											Translation.get("gb.sslCertificateGeneratedRestart"),
+											hostname),
+									Translation.get("gb.newSSLCertificate"),
 									JOptionPane.INFORMATION_MESSAGE);
 						} else {
-							JOptionPane.showMessageDialog(
-									GitblitAuthority.this,
+							JOptionPane.showMessageDialog(GitblitAuthority.this,
 									MessageFormat.format(
-											Translation.get("gb.sslCertificateGenerated"), hostname),
+											Translation.get("gb.sslCertificateGenerated"),
+											hostname),
 									Translation.get("gb.newSSLCertificate"),
 									JOptionPane.INFORMATION_MESSAGE);
 						}
@@ -740,8 +742,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 			}
 		});
 
-		final JButton emailBundle = new JButton(new ImageIcon(getClass().getResource(
-				"/mail_16x16.png")));
+		final JButton emailBundle = new JButton(
+				new ImageIcon(getClass().getResource("/mail_16x16.png")));
 		emailBundle.setFocusable(false);
 		emailBundle.setToolTipText(Translation.get("gb.emailCertificateBundle"));
 		emailBundle.addActionListener(new ActionListener() {
@@ -754,15 +756,14 @@ public class GitblitAuthority extends JFrame implements X509Log {
 				final int modelIndex = GitblitAuthority.this.table.convertRowIndexToModel(row);
 				final UserCertificateModel ucm = GitblitAuthority.this.tableModel.get(modelIndex);
 				if (ArrayUtils.isEmpty(ucm.certs)) {
-					JOptionPane.showMessageDialog(
-							GitblitAuthority.this,
+					JOptionPane.showMessageDialog(GitblitAuthority.this,
 							MessageFormat.format(
 									Translation.get("gb.pleaseGenerateClientCertificate"),
 									ucm.user.getDisplayName()));
 				}
-				final File zip = new File(GitblitAuthority.this.folder, X509Utils.CERTS
-						+ File.separator + ucm.user.username + File.separator + ucm.user.username
-						+ ".zip");
+				final File zip = new File(GitblitAuthority.this.folder,
+						X509Utils.CERTS + File.separator + ucm.user.username + File.separator
+								+ ucm.user.username + ".zip");
 				if (!zip.exists()) {
 					return;
 				}
@@ -772,8 +773,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 					protected Boolean doRequest() throws IOException {
 						final X509Metadata metadata = new X509Metadata(ucm.user.username,
 								"whocares");
-						metadata.serverHostname = GitblitAuthority.this.gitblitSettings.getString(
-								Keys.web.siteName, Constants.NAME);
+						metadata.serverHostname = GitblitAuthority.this.gitblitSettings
+								.getString(Keys.web.siteName, Constants.NAME);
 						if (StringUtils.isEmpty(metadata.serverHostname)) {
 							metadata.serverHostname = Constants.NAME;
 						}
@@ -783,8 +784,7 @@ public class GitblitAuthority extends JFrame implements X509Log {
 
 					@Override
 					protected void onSuccess() {
-						JOptionPane.showMessageDialog(
-								GitblitAuthority.this,
+						JOptionPane.showMessageDialog(GitblitAuthority.this,
 								MessageFormat.format(
 										Translation.get("gb.clientCertificateBundleSent"),
 										ucm.user.getDisplayName()));
@@ -795,15 +795,15 @@ public class GitblitAuthority extends JFrame implements X509Log {
 			}
 		});
 
-		final JButton logButton = new JButton(new ImageIcon(getClass().getResource(
-				"/script_16x16.png")));
+		final JButton logButton = new JButton(
+				new ImageIcon(getClass().getResource("/script_16x16.png")));
 		logButton.setFocusable(false);
 		logButton.setToolTipText(Translation.get("gb.log"));
 		logButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				final File log = new File(GitblitAuthority.this.folder, X509Utils.CERTS
-						+ File.separator + "log.txt");
+				final File log = new File(GitblitAuthority.this.folder,
+						X509Utils.CERTS + File.separator + "log.txt");
 				if (log.exists()) {
 					final String content = FileUtils.readContent(log, "\n");
 					final JTextArea textarea = new JTextArea(content);
@@ -836,8 +836,8 @@ public class GitblitAuthority extends JFrame implements X509Log {
 		buttonControls.add(emailBundle);
 		buttonControls.add(logButton);
 
-		final JPanel userControls = new JPanel(new FlowLayout(FlowLayout.RIGHT, Utils.MARGIN,
-				Utils.MARGIN));
+		final JPanel userControls = new JPanel(
+				new FlowLayout(FlowLayout.RIGHT, Utils.MARGIN, Utils.MARGIN));
 		userControls.add(new JLabel(Translation.get("gb.filter")));
 		userControls.add(filterTextfield);
 
@@ -904,10 +904,10 @@ public class GitblitAuthority extends JFrame implements X509Log {
 	public void log(String message) {
 		BufferedWriter writer = null;
 		try {
-			writer = new BufferedWriter(new FileWriter(new File(this.folder, X509Utils.CERTS
-					+ File.separator + "log.txt"), true));
-			writer.write(MessageFormat
-					.format("{0,date,yyyy-MM-dd HH:mm}: {1}", new Date(), message));
+			writer = new BufferedWriter(new FileWriter(
+					new File(this.folder, X509Utils.CERTS + File.separator + "log.txt"), true));
+			writer.write(
+					MessageFormat.format("{0,date,yyyy-MM-dd HH:mm}: {1}", new Date(), message));
 			writer.newLine();
 			writer.flush();
 		}
@@ -932,12 +932,13 @@ public class GitblitAuthority extends JFrame implements X509Log {
 				final Mailing mailing = Mailing.newPlain();
 				mailing.subject = "Your Gitblit client certificate for " + metadata.serverHostname;
 				mailing.setRecipients(user.emailAddress);
-				String body = X509Utils.processTemplate(new File(this.folder, X509Utils.CERTS
-						+ File.separator + "mail.tmpl"), metadata);
+				String body = X509Utils.processTemplate(
+						new File(this.folder, X509Utils.CERTS + File.separator + "mail.tmpl"),
+						metadata);
 				if (StringUtils.isEmpty(body)) {
-					body = MessageFormat
-							.format("Hi {0}\n\nHere is your client certificate bundle.\nInside the zip file are installation instructions.",
-									user.getDisplayName());
+					body = MessageFormat.format(
+							"Hi {0}\n\nHere is your client certificate bundle.\nInside the zip file are installation instructions.",
+							user.getDisplayName());
 				}
 				mailing.content = body;
 				mailing.addAttachment(zip);
@@ -947,11 +948,9 @@ public class GitblitAuthority extends JFrame implements X509Log {
 				this.mail.sendNow(message);
 				return true;
 			} else {
-				JOptionPane
-						.showMessageDialog(
-								GitblitAuthority.this,
-								"Sorry, the mail server settings are not configured properly.\nCan not send email.",
-								Translation.get("gb.error"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(GitblitAuthority.this,
+						"Sorry, the mail server settings are not configured properly.\nCan not send email.",
+						Translation.get("gb.error"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		catch (final Exception e) {
