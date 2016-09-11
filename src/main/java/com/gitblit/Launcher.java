@@ -80,7 +80,7 @@ public class Launcher {
 				// more really interesting things
 				System.err.println("Failed to find any JARs in " + libFolder.getPath());
 			}
-			System.exit(-1);
+			throw new RuntimeException("System.exit(-1);");
 		} else {
 			for (File jar : jars) {
 				try {

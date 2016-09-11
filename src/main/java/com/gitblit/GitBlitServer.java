@@ -96,7 +96,7 @@ public class GitBlitServer {
 			if (arg.equals("--baseFolder")) {
 				if (i + 1 == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
-					System.exit(-1);
+					throw new RuntimeException("System.exit(-1);");
 				} else if (!".".equals(args[i + 1])) {
 					folder = args[i + 1];
 				}
@@ -142,10 +142,10 @@ public class GitBlitServer {
 		}
 		if (parser != null) {
 			parser.printUsage(System.out);
-			System.out
-					.println("\nExample:\n  java -server -Xmx1024M -jar gitblit.jar --repositoriesFolder c:\\git --httpPort 80 --httpsPort 443");
+			System.out.println(
+					"\nExample:\n  java -server -Xmx1024M -jar gitblit.jar --repositoriesFolder c:\\git --httpPort 80 --httpsPort 443");
 		}
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	protected File getBaseFolder(Params params) {
@@ -462,7 +462,7 @@ public class GitBlitServer {
 			server.join();
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.exit(100);
+			throw new RuntimeException("System.exit(100);");
 		}
 	}
 

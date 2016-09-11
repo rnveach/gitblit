@@ -61,7 +61,7 @@ public class MigrateTickets {
 			if (arg.equals("--baseFolder")) {
 				if (i + 1 == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
-					System.exit(-1);
+					throw new RuntimeException("System.exit(-1);");
 				} else if (!".".equals(args[i + 1])) {
 					folder = args[i + 1];
 				}
@@ -95,7 +95,7 @@ public class MigrateTickets {
 
 		// migrate tickets
 		migrate.migrate(new File(Params.baseFolder), settings, params.outputServiceName);
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	/**
@@ -115,10 +115,10 @@ public class MigrateTickets {
 		}
 		if (parser != null) {
 			parser.printUsage(System.out);
-			System.out
-					.println("\nExample:\n  java -gitblit.jar com.gitblit.MigrateTickets com.gitblit.tickets.RedisTicketService --baseFolder c:\\gitblit-data");
+			System.out.println(
+					"\nExample:\n  java -gitblit.jar com.gitblit.MigrateTickets com.gitblit.tickets.RedisTicketService --baseFolder c:\\gitblit-data");
 		}
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	/**
@@ -143,7 +143,7 @@ public class MigrateTickets {
 		String inputServiceName = settings.getString(Keys.tickets.service, BranchTicketService.class.getSimpleName());
 		if (StringUtils.isEmpty(inputServiceName)) {
 			System.err.println(MessageFormat.format("Please define a ticket service in \"{0}\"", Keys.tickets.service));
-			System.exit(1);
+			throw new RuntimeException("System.exit(1);");
 		}
 
 		ITicketService inputService = null;
@@ -153,17 +153,17 @@ public class MigrateTickets {
 			outputService = getService(outputServiceName, runtimeManager, repositoryManager);
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.exit(1);
+			throw new RuntimeException("System.exit(1);");
 		}
 
 		if (!inputService.isReady()) {
 			System.err.println(String.format("%s INPUT service is not ready, check config.", inputService.getClass().getSimpleName()));
-			System.exit(1);
+			throw new RuntimeException("System.exit(1);");
 		}
 
 		if (!outputService.isReady()) {
 			System.err.println(String.format("%s OUTPUT service is not ready, check config.", outputService.getClass().getSimpleName()));
-			System.exit(1);
+			throw new RuntimeException("System.exit(1);");
 		}
 
 		// migrate tickets
@@ -188,7 +188,7 @@ public class MigrateTickets {
 				TicketModel ticket = outputService.createTicket(repository, id, journal.get(0));
 				if (ticket == null) {
 					System.err.println(String.format("Failed to migrate %s #%s", repository.name, id));
-					System.exit(1);
+					throw new RuntimeException("System.exit(1);");
 				}
 				totalTickets++;
 				System.out.println(String.format("%s #%s: %s", repository.name, ticket.number, ticket.title));
@@ -199,7 +199,7 @@ public class MigrateTickets {
 						totalChanges++;
 					} else {
 						System.err.println(String.format("Failed to apply change %d:\n%s", i, journal.get(i)));
-						System.exit(1);
+						throw new RuntimeException("System.exit(1);");
 					}
 				}
 			}

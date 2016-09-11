@@ -72,7 +72,7 @@ public class FederationClient {
 		} else {
 			if (StringUtils.isEmpty(params.token)) {
 				System.out.println("Must specify --token parameter!");
-				System.exit(0);
+				throw new RuntimeException("System.exit(0);");
 			}
 			FederationModel model = new FederationModel("Gitblit");
 			model.url = params.url;
@@ -84,13 +84,13 @@ public class FederationClient {
 		}
 		if (registrations.size() == 0) {
 			System.out.println("No Federation Registrations!  Nothing to do.");
-			System.exit(0);
+			throw new RuntimeException("System.exit(0);");
 		}
 
 		// command-line specified repositories folder
 		if (!StringUtils.isEmpty(params.repositoriesFolder)) {
-			settings.overrideSetting(Keys.git.repositoriesFolder, new File(
-					params.repositoriesFolder).getAbsolutePath());
+			settings.overrideSetting(Keys.git.repositoriesFolder,
+					new File(params.repositoriesFolder).getAbsolutePath());
 		}
 
 		// configure the Gitblit singleton for minimal, non-server operation
@@ -111,7 +111,7 @@ public class FederationClient {
 		puller.run();
 
 		System.out.println("Finished.");
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	private static void usage(CmdLineParser parser, CmdLineException t) {
@@ -125,7 +125,7 @@ public class FederationClient {
 		if (parser != null) {
 			parser.printUsage(System.out);
 		}
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	/**

@@ -56,7 +56,7 @@ public class ReindexTickets {
 			if (arg.equals("--baseFolder")) {
 				if (i + 1 == args.length) {
 					System.out.println("Invalid --baseFolder parameter!");
-					System.exit(-1);
+					throw new RuntimeException("System.exit(-1);");
 				} else if (!".".equals(args[i + 1])) {
 					folder = args[i + 1];
 				}
@@ -90,7 +90,7 @@ public class ReindexTickets {
 
 		// reindex tickets
 		reindex.reindex(new File(Params.baseFolder), settings);
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	/**
@@ -110,10 +110,10 @@ public class ReindexTickets {
 		}
 		if (parser != null) {
 			parser.printUsage(System.out);
-			System.out
-					.println("\nExample:\n  java -gitblit.jar com.gitblit.ReindexTickets --baseFolder c:\\gitblit-data");
+			System.out.println(
+					"\nExample:\n  java -gitblit.jar com.gitblit.ReindexTickets --baseFolder c:\\gitblit-data");
 		}
-		System.exit(0);
+		throw new RuntimeException("System.exit(0);");
 	}
 
 	/**
@@ -135,7 +135,7 @@ public class ReindexTickets {
 		String serviceName = settings.getString(Keys.tickets.service, BranchTicketService.class.getSimpleName());
 		if (StringUtils.isEmpty(serviceName)) {
 			System.err.println(MessageFormat.format("Please define a ticket service in \"{0}\"", Keys.tickets.service));
-			System.exit(1);
+			throw new RuntimeException("System.exit(1);");
 		}
 		ITicketService ticketService = null;
 		try {
@@ -151,11 +151,11 @@ public class ReindexTickets {
 				ticketService = new FileTicketService(runtimeManager, null, null, null, repositoryManager).start();
 			} else {
 				System.err.println("Unknown ticket service " + serviceName);
-				System.exit(1);
+				throw new RuntimeException("System.exit(1);");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.exit(1);
+			throw new RuntimeException("System.exit(1);");
 		}
 
 		ticketService.reindex();
