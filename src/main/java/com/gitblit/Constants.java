@@ -63,6 +63,8 @@ public class Constants {
 
 	public static final String REGEX_SHA256 = "[a-fA-F0-9]{64}";
 
+	public static final String REGEX_TICKET_MENTION = "(?:^|\\s)@([^\\s]+)";
+
 	public static final String ZIP_PATH = "/zip/";
 
 	public static final String SYNDICATION_PATH = "/feed/";

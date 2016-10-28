@@ -43,6 +43,8 @@ import java.util.regex.Pattern;
 
 import org.eclipse.jgit.util.RelativeDateFormatter;
 
+import com.gitblit.Constants;
+
 /**
  * The Gitblit Ticket model, its component classes, and enums.
  *
@@ -775,7 +777,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 			}
 
 			try {
-				final Pattern mentions = Pattern.compile("\\s@([A-Za-z0-9-_]+)");
+				final Pattern mentions = Pattern.compile(Constants.REGEX_TICKET_MENTION);
 				final Matcher m = mentions.matcher(text);
 				while (m.find()) {
 					final String username = m.group(1);
@@ -974,8 +976,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 		 */
 		private boolean isEmptyChange() {
 			return ((this.comment == null) && (this.reference == null) && (this.fields == null)
-					&& (this.attachments == null) && (this.patchset == null)
-					&& (this.review == null));
+					&& (this.attachments == null) && (this.patchset == null) && (this.review == null));
 		}
 
 		@Override
@@ -1301,8 +1302,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				// find by name
 				for (final ReferenceType type : values()) {
 					final String str = o.toString();
-					if (type.name().equalsIgnoreCase(str)
-							|| type.toString().equalsIgnoreCase(str)) {
+					if (type.name().equalsIgnoreCase(str) || type.toString().equalsIgnoreCase(str)) {
 						return type;
 					}
 				}
@@ -1507,8 +1507,7 @@ public class TicketModel implements Serializable, Comparable<TicketModel> {
 				// find by name
 				for (final Type type : values()) {
 					final String str = o.toString();
-					if (type.name().equalsIgnoreCase(str)
-							|| type.toString().equalsIgnoreCase(str)) {
+					if (type.name().equalsIgnoreCase(str) || type.toString().equalsIgnoreCase(str)) {
 						return type;
 					}
 				}

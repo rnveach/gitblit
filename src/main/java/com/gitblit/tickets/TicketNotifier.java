@@ -606,7 +606,7 @@ public class TicketNotifier {
 		// cc users mentioned in last comment
 		final Change lastChange = ticket.changes.get(ticket.changes.size() - 1);
 		if (lastChange.hasComment()) {
-			final Pattern p = Pattern.compile("\\s@([A-Za-z0-9-_]+)");
+			final Pattern p = Pattern.compile(Constants.REGEX_TICKET_MENTION);
 			final Matcher m = p.matcher(lastChange.comment.text);
 			while (m.find()) {
 				final String username = m.group();
