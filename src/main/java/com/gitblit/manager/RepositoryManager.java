@@ -113,7 +113,7 @@ public class RepositoryManager implements IRepositoryManager {
 
 	private final ObjectCache<List<Metric>> repositoryMetricsCache = new ObjectCache<List<Metric>>();
 
-	private final Map<String, RepositoryModel> repositoryListCache = new ConcurrentHashMap<String, RepositoryModel>();
+	private Map<String, RepositoryModel> repositoryListCache = null;
 
 	private final AtomicReference<String> repositoryListSettingsChecksum = new AtomicReference<String>("");
 
@@ -488,10 +488,10 @@ public class RepositoryManager implements IRepositoryManager {
 	 */
 	@Override
 	public void resetRepositoryListCache() {
-		logger.info("Repository cache manually reset");
-		repositoryListCache.clear();
-		repositorySizeCache.clear();
-		repositoryMetricsCache.clear();
+		this.logger.info("Repository cache manually reset");
+		this.repositoryListCache = null;
+		this.repositorySizeCache.clear();
+		this.repositoryMetricsCache.clear();
 		CommitCache.instance().clear();
 	}
 
@@ -517,12 +517,13 @@ public class RepositoryManager implements IRepositoryManager {
 	 * @return true if the cached repository list is valid since the last check
 	 */
 	private boolean isValidRepositoryList() {
-		String newChecksum = getRepositoryListSettingsChecksum();
-		boolean valid = newChecksum.equals(repositoryListSettingsChecksum.get());
-		repositoryListSettingsChecksum.set(newChecksum);
-		if (!valid && settings.getBoolean(Keys.git.cacheRepositoryList,  true)) {
-			logger.info("Repository list settings have changed. Clearing repository list cache.");
-			repositoryListCache.clear();
+		final String newChecksum = getRepositoryListSettingsChecksum();
+		final boolean valid = newChecksum.equals(this.repositoryListSettingsChecksum.get());
+		this.repositoryListSettingsChecksum.set(newChecksum);
+		if (!valid && this.settings.getBoolean(Keys.git.cacheRepositoryList, true)) {
+			this.logger
+					.info("Repository list settings have changed. Clearing repository list cache.");
+			this.repositoryListCache = null;
 		}
 		return valid;
 	}
@@ -535,14 +536,17 @@ public class RepositoryManager implements IRepositoryManager {
 	 */
 	@Override
 	public List<String> getRepositoryList() {
-		if (repositoryListCache.size() == 0 || !isValidRepositoryList()) {
-			// we are not caching OR we have not yet cached OR the cached list is invalid
-			long startTime = System.currentTimeMillis();
-			List<String> repositories = JGitUtils.getRepositoryList(repositoriesFolder,
-					settings.getBoolean(Keys.git.onlyAccessBareRepositories, false),
-					settings.getBoolean(Keys.git.searchRepositoriesSubfolders, true),
-					settings.getInteger(Keys.git.searchRecursionDepth, -1),
-					settings.getStrings(Keys.git.searchExclusions));
+		if ((this.repositoryListCache == null) || !isValidRepositoryList()) {
+			this.repositoryListCache = new ConcurrentHashMap<String, RepositoryModel>();
+
+			// we are not caching OR we have not yet cached OR the cached list
+			// is invalid
+			final long startTime = System.currentTimeMillis();
+			final List<String> repositories = JGitUtils.getRepositoryList(this.repositoriesFolder,
+					this.settings.getBoolean(Keys.git.onlyAccessBareRepositories, false),
+					this.settings.getBoolean(Keys.git.searchRepositoriesSubfolders, true),
+					this.settings.getInteger(Keys.git.searchRecursionDepth, -1),
+					this.settings.getStrings(Keys.git.searchExclusions));
 
 			if (!settings.getBoolean(Keys.git.cacheRepositoryList,  true)) {
 				// we are not caching
