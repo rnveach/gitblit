@@ -150,9 +150,9 @@ public class GitFilter extends AccessRestrictionFilter {
 	 */
 	@Override
 	protected boolean isCreationAllowed(String action) {
-		
-		//Repository must already exist before large files can be deposited
-		if (action.equals(gitLfs)) {
+
+		// Repository must already exist before large files can be deposited
+		if (gitLfs.equals(action)) {
 			return false;
 		}
 		
