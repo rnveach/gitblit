@@ -21,6 +21,7 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 
@@ -175,12 +176,14 @@ public class PathModel implements Serializable, Comparable<PathModel> {
 
 			if (repository != null) {
 				try (RevWalk revWalk = new RevWalk(repository)) {
-					size = revWalk.getObjectReader().getObjectSize(diff.getNewId().toObjectId(),
-							Constants.OBJ_BLOB);
+					if (!diff.getNewId().toObjectId().equals(ObjectId.zeroId())) {
+						size = revWalk.getObjectReader().getObjectSize(
+								diff.getNewId().toObjectId(), Constants.OBJ_BLOB);
 
-					if (JGitUtils.isPossibleFilestoreItem(size)) {
-						filestoreItem = JGitUtils.getFilestoreItem(revWalk.getObjectReader().open(
-								diff.getNewId().toObjectId()));
+						if (JGitUtils.isPossibleFilestoreItem(size)) {
+							filestoreItem = JGitUtils.getFilestoreItem(revWalk.getObjectReader()
+									.open(diff.getNewId().toObjectId()));
+						}
 					}
 				}
 				catch (final Exception e) {
