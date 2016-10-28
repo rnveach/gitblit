@@ -113,7 +113,7 @@ public class RepositoryManager implements IRepositoryManager {
 
 	private final ObjectCache<List<Metric>> repositoryMetricsCache = new ObjectCache<List<Metric>>();
 
-	private final Map<String, RepositoryModel> repositoryListCache = new ConcurrentHashMap<String, RepositoryModel>();
+	private Map<String, RepositoryModel> repositoryListCache = null;
 
 	private final AtomicReference<String> repositoryListSettingsChecksum = new AtomicReference<String>(
 			"");
@@ -500,7 +500,7 @@ public class RepositoryManager implements IRepositoryManager {
 	@Override
 	public void resetRepositoryListCache() {
 		this.logger.info("Repository cache manually reset");
-		this.repositoryListCache.clear();
+		this.repositoryListCache = null;
 		this.repositorySizeCache.clear();
 		this.repositoryMetricsCache.clear();
 		CommitCache.instance().clear();
@@ -535,7 +535,7 @@ public class RepositoryManager implements IRepositoryManager {
 		if (!valid && this.settings.getBoolean(Keys.git.cacheRepositoryList, true)) {
 			this.logger
 					.info("Repository list settings have changed. Clearing repository list cache.");
-			this.repositoryListCache.clear();
+			this.repositoryListCache = null;
 		}
 		return valid;
 	}
@@ -548,7 +548,9 @@ public class RepositoryManager implements IRepositoryManager {
 	 */
 	@Override
 	public List<String> getRepositoryList() {
-		if ((this.repositoryListCache.size() == 0) || !isValidRepositoryList()) {
+		if ((this.repositoryListCache == null) || !isValidRepositoryList()) {
+			this.repositoryListCache = new ConcurrentHashMap<String, RepositoryModel>();
+
 			// we are not caching OR we have not yet cached OR the cached list
 			// is invalid
 			final long startTime = System.currentTimeMillis();
