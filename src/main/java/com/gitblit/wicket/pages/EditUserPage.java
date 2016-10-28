@@ -49,6 +49,8 @@ import com.gitblit.wicket.panels.RegistrantPermissionsPanel;
 
 @RequiresAdminRole
 public class EditUserPage extends RootSubPage {
+	private static final char[] invalidCharacters = new char[] { '@', '&', '\"', '\'', '\\', '/',
+			'~' };
 
 	private final boolean isCreate;
 
@@ -128,6 +130,14 @@ public class EditUserPage extends RootSubPage {
 				// force username to lower-case
 				userModel.username = userModel.username.toLowerCase();
 				final String username = userModel.username;
+
+				for (final char c : invalidCharacters) {
+					if (username.indexOf(c) != -1) {
+						error(MessageFormat.format(getString("gb.userNameInvalidCharacter"),
+								username, c));
+						return;
+					}
+				}
 				if (EditUserPage.this.isCreate) {
 					final UserModel model = app().users().getUserModel(username);
 					if (model != null) {
