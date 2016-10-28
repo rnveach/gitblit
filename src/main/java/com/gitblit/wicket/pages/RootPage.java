@@ -211,8 +211,13 @@ public abstract class RootPage extends BasePage {
 			navLinks.add(new PageNavLink("gb.repositories", RepositoriesPage.class,
 					getRootPageParameters()));
 
+<<<<<<< Upstream, final based on 8e193final a917d9d11eba675c41c38d2c202e080506e
 			navLinks.add(
 					new PageNavLink("gb.filestore", FilestorePage.class, getRootPageParameters()));
+=======
+			// navLinks.add(new PageNavLink("gb.filestore", FilestorePage.class,
+			// getRootPageParameters()));
+>>>>>>> 2d76fac remove file store link
 
 			navLinks.add(
 					new PageNavLink("gb.activity", ActivityPage.class, getRootPageParameters()));
