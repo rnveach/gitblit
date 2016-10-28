@@ -91,7 +91,7 @@ public abstract class RootPage extends BasePage {
 
 	IModel<String> username = new Model<String>("");
 	IModel<String> password = new Model<String>("");
-	List<RepositoryModel> repositoryModels = new ArrayList<RepositoryModel>();
+	List<RepositoryModel> repositoryModels = null;
 
 	public RootPage() {
 		super();
@@ -113,22 +113,27 @@ public abstract class RootPage extends BasePage {
 				StringBuilder buffer = new StringBuilder();
 				buffer.append("<style type=\"text/css\">\n");
 				buffer.append(".navbar-inner {\n");
-				final String headerBackground = app().settings().getString(Keys.web.headerBackgroundColor, null);
+				final String headerBackground = app().settings()
+						.getString(Keys.web.headerBackgroundColor, null);
 				if (!StringUtils.isEmpty(headerBackground)) {
-					buffer.append(MessageFormat.format("background-color: {0};\n", headerBackground));
+					buffer.append(
+							MessageFormat.format("background-color: {0};\n", headerBackground));
 				}
 				final String headerBorder = app().settings().getString(Keys.web.headerBorderColor, null);
 				if (!StringUtils.isEmpty(headerBorder)) {
-					buffer.append(MessageFormat.format("border-bottom: 1px solid {0} !important;\n", headerBorder));
+					buffer.append(MessageFormat.format("border-bottom: 1px solid {0} !important;\n",
+							headerBorder));
 				}
 				buffer.append("}\n");
-				final String headerBorderFocus = app().settings().getString(Keys.web.headerBorderFocusColor, null);
+				final String headerBorderFocus = app().settings()
+						.getString(Keys.web.headerBorderFocusColor, null);
 				if (!StringUtils.isEmpty(headerBorderFocus)) {
 					buffer.append(".navbar ul li:focus, .navbar .active {\n");
 					buffer.append(MessageFormat.format("border-bottom: 4px solid {0};\n", headerBorderFocus));
 					buffer.append("}\n");
 				}
-				final String headerForeground = app().settings().getString(Keys.web.headerForegroundColor, null);
+				final String headerForeground = app().settings()
+						.getString(Keys.web.headerForegroundColor, null);
 				if (!StringUtils.isEmpty(headerForeground)) {
 					buffer.append(".navbar ul.nav li a {\n");
 					buffer.append(MessageFormat.format("color: {0};\n", headerForeground));
@@ -148,12 +153,15 @@ public abstract class RootPage extends BasePage {
 				}
 			}));
 
-		boolean authenticateView = app().settings().getBoolean(Keys.web.authenticateViewPages, false);
-		boolean authenticateAdmin = app().settings().getBoolean(Keys.web.authenticateAdminPages, true);
-		boolean allowAdmin = app().settings().getBoolean(Keys.web.allowAdministration, true);
-		boolean allowLucene = app().settings().getBoolean(Keys.web.allowLuceneIndexing, true);
-		boolean displayUserPanel = app().settings().getBoolean(Keys.web.displayUserPanel, true);
-		boolean isLoggedIn = GitBlitWebSession.get().isLoggedIn();
+		final boolean authenticateView = app().settings().getBoolean(Keys.web.authenticateViewPages,
+				false);
+		final boolean authenticateAdmin = app().settings()
+				.getBoolean(Keys.web.authenticateAdminPages, true);
+		final boolean allowAdmin = app().settings().getBoolean(Keys.web.allowAdministration, true);
+		final boolean allowLucene = app().settings().getBoolean(Keys.web.allowLuceneIndexing, true);
+		final boolean displayUserPanel = app().settings().getBoolean(Keys.web.displayUserPanel,
+				true);
+		final boolean isLoggedIn = GitBlitWebSession.get().isLoggedIn();
 
 		if (authenticateAdmin) {
 			showAdmin = allowAdmin && GitBlitWebSession.get().canAdmin();
@@ -197,10 +205,12 @@ public abstract class RootPage extends BasePage {
 			}
 			navLinks.add(new PageNavLink("gb.repositories", RepositoriesPage.class,
 					getRootPageParameters()));
-			
-			navLinks.add(new PageNavLink("gb.filestore", FilestorePage.class, getRootPageParameters()));
-				
-			navLinks.add(new PageNavLink("gb.activity", ActivityPage.class, getRootPageParameters()));
+
+			navLinks.add(
+					new PageNavLink("gb.filestore", FilestorePage.class, getRootPageParameters()));
+
+			navLinks.add(
+					new PageNavLink("gb.activity", ActivityPage.class, getRootPageParameters()));
 			if (allowLucene) {
 				navLinks.add(new PageNavLink("gb.search", LuceneSearchPage.class));
 			}
@@ -210,8 +220,9 @@ public abstract class RootPage extends BasePage {
 			}
 
 			// add nav link extensions
-			List<NavLinkExtension> extensions = app().plugins().getExtensions(NavLinkExtension.class);
-			for (NavLinkExtension ext : extensions) {
+			final List<NavLinkExtension> extensions = app().plugins()
+					.getExtensions(NavLinkExtension.class);
+			for (final NavLinkExtension ext : extensions) {
 				navLinks.addAll(ext.getNavLinks(user));
 			}
 		}
@@ -255,8 +266,8 @@ public abstract class RootPage extends BasePage {
 				params.remove("user");
 
 				// remove days back parameter if it is the default value
-				if (params.containsKey("db")
-						&& params.getInt("db") == app().settings().getInteger(Keys.web.activityDuration, 7)) {
+				if (params.containsKey("db") && (params.getInt("db") == app().settings()
+						.getInteger(Keys.web.activityDuration, 7))) {
 					params.remove("db");
 				}
 				return params;
@@ -304,11 +315,13 @@ public abstract class RootPage extends BasePage {
 	}
 
 	protected List<RepositoryModel> getRepositoryModels() {
-		if (repositoryModels.isEmpty()) {
+		if (this.repositoryModels == null) {
 			final UserModel user = GitBlitWebSession.get().getUser();
-			List<RepositoryModel> repositories = app().repositories().getRepositoryModels(user);
-			repositoryModels.addAll(repositories);
-			Collections.sort(repositoryModels);
+			final List<RepositoryModel> repositories = app().repositories()
+					.getRepositoryModels(user);
+			this.repositoryModels = new ArrayList<RepositoryModel>();
+			this.repositoryModels.addAll(repositories);
+			Collections.sort(this.repositoryModels);
 		}
 		return repositoryModels;
 	}
@@ -317,7 +330,8 @@ public abstract class RootPage extends BasePage {
 
 	}
 
-	protected List<com.gitblit.models.Menu.MenuItem> getRepositoryFilterItems(PageParameters params) {
+	protected List<com.gitblit.models.Menu.MenuItem> getRepositoryFilterItems(
+			PageParameters params) {
 		final UserModel user = GitBlitWebSession.get().getUser();
 		Set<MenuItem> filters = new LinkedHashSet<MenuItem>();
 		List<RepositoryModel> repositories = getRepositoryModels();
@@ -337,9 +351,10 @@ public abstract class RootPage extends BasePage {
 		if (setMap.size() > 0) {
 			List<String> sets = new ArrayList<String>(setMap.keySet());
 			Collections.sort(sets);
-			for (String set : sets) {
-				filters.add(new ToggleMenuItem(MessageFormat.format("{0} ({1})", set,
-						setMap.get(set).get()), "set", set, params));
+			for (final String set : sets) {
+				filters.add(new ToggleMenuItem(
+						MessageFormat.format("{0} ({1})", set, setMap.get(set).get()), "set", set,
+						params));
 			}
 			// divider
 			filters.add(new MenuDivider());
@@ -349,9 +364,10 @@ public abstract class RootPage extends BasePage {
 		if (user != null && user.teams.size() > 0) {
 			List<TeamModel> teams = new ArrayList<TeamModel>(user.teams);
 			Collections.sort(teams);
-			for (TeamModel team : teams) {
-				filters.add(new ToggleMenuItem(MessageFormat.format("{0} ({1})", team.name,
-						team.repositories.size()), "team", team.name, params));
+			for (final TeamModel team : teams) {
+				filters.add(new ToggleMenuItem(
+						MessageFormat.format("{0} ({1})", team.name, team.repositories.size()),
+						"team", team.name, params));
 			}
 			// divider
 			filters.add(new MenuDivider());
@@ -397,8 +413,9 @@ public abstract class RootPage extends BasePage {
 			clonedParams.put("db",  daysBack);
 		}
 
-		List<MenuItem> items = new ArrayList<MenuItem>();
-		Set<Integer> choicesSet = new TreeSet<Integer>(app().settings().getIntegers(Keys.web.activityDurationChoices));
+		final List<MenuItem> items = new ArrayList<MenuItem>();
+		final Set<Integer> choicesSet = new TreeSet<Integer>(
+				app().settings().getIntegers(Keys.web.activityDurationChoices));
 		if (choicesSet.isEmpty()) {
 			 choicesSet.addAll(Arrays.asList(1, 3, 7, 14, 21, 28));
 		}
@@ -454,7 +471,8 @@ public abstract class RootPage extends BasePage {
 		if (!StringUtils.isEmpty(projectName)) {
 			// try named project
 			hasParameter = true;
-			if (projectName.equalsIgnoreCase(app().settings().getString(Keys.web.repositoryRootGroupName, "main"))) {
+			if (projectName.equalsIgnoreCase(
+					app().settings().getString(Keys.web.repositoryRootGroupName, "main"))) {
 				// root project/group
 				for (RepositoryModel model : availableModels) {
 					if (model.name.indexOf('/') == -1) {
@@ -610,12 +628,14 @@ public abstract class RootPage extends BasePage {
 		protected void onInitialize() {
 			super.onInitialize();
 
-			GitBlitWebSession session = GitBlitWebSession.get();
-			UserModel user = session.getUser();
-			boolean editCredentials = app().authentication().supportsCredentialChanges(user);
-			HttpServletRequest request = ((WebRequest) getRequest()).getHttpServletRequest();
-			AuthenticationType authenticationType = (AuthenticationType) request.getAttribute(Constants.ATTRIB_AUTHTYPE);
-			boolean standardLogin = (null != authenticationType) ? authenticationType.isStandard() : true;
+			final GitBlitWebSession session = GitBlitWebSession.get();
+			final UserModel user = session.getUser();
+			final boolean editCredentials = app().authentication().supportsCredentialChanges(user);
+			final HttpServletRequest request = ((WebRequest) getRequest()).getHttpServletRequest();
+			final AuthenticationType authenticationType = (AuthenticationType) request
+					.getAttribute(Constants.ATTRIB_AUTHTYPE);
+			final boolean standardLogin = (null != authenticationType)
+					? authenticationType.isStandard() : true;
 
 			if (app().settings().getBoolean(Keys.web.allowGravatar, true)) {
 				add(new AvatarImage("username", user, "navbarGravatar", 20, false));
@@ -626,12 +646,14 @@ public abstract class RootPage extends BasePage {
 			List<MenuItem> standardItems = new ArrayList<MenuItem>();
 			standardItems.add(new MenuDivider());
 			if (user.canAdmin() || user.canCreate()) {
-				standardItems.add(new PageLinkMenuItem("gb.newRepository", app().getNewRepositoryPage()));
+				standardItems.add(
+						new PageLinkMenuItem("gb.newRepository", app().getNewRepositoryPage()));
 			}
 			standardItems.add(new PageLinkMenuItem("gb.myProfile", UserPage.class,
 					WicketUtils.newUsernameParameter(user.username)));
 			if (editCredentials) {
-				standardItems.add(new PageLinkMenuItem("gb.changePassword", ChangePasswordPage.class));
+				standardItems
+						.add(new PageLinkMenuItem("gb.changePassword", ChangePasswordPage.class));
 			}
 			standardItems.add(new MenuDivider());
 			add(newSubmenu("standardMenu", user.getDisplayName(), standardItems));
@@ -656,10 +678,11 @@ public abstract class RootPage extends BasePage {
 			}
 
 			// plugin extension items
-			List<MenuItem> extensionItems = new ArrayList<MenuItem>();
-			List<UserMenuExtension> extensions = app().plugins().getExtensions(UserMenuExtension.class);
-			for (UserMenuExtension ext : extensions) {
-				List<MenuItem> items = ext.getMenuItems(user);
+			final List<MenuItem> extensionItems = new ArrayList<MenuItem>();
+			final List<UserMenuExtension> extensions = app().plugins()
+					.getExtensions(UserMenuExtension.class);
+			for (final UserMenuExtension ext : extensions) {
+				final List<MenuItem> items = ext.getMenuItems(user);
 				extensionItems.addAll(items);
 			}
 
@@ -686,11 +709,14 @@ public abstract class RootPage extends BasePage {
 		 * @param menuItems
 		 * @return a submenu fragment
 		 */
-		private Fragment newSubmenu(String wicketId, String submenuTitle, List<MenuItem> menuItems) {
-			Fragment submenu = new Fragment(wicketId, "submenuFragment", this);
+		private Fragment newSubmenu(String wicketId, String submenuTitle,
+				List<MenuItem> menuItems) {
+			final Fragment submenu = new Fragment(wicketId, "submenuFragment", this);
 			submenu.add(new Label("submenuTitle", submenuTitle).setRenderBodyOnly(true));
-			ListDataProvider<MenuItem> menuItemsDp = new ListDataProvider<MenuItem>(menuItems);
-			DataView<MenuItem> submenuItems = new DataView<MenuItem>("submenuItem", menuItemsDp) {
+			final ListDataProvider<MenuItem> menuItemsDp = new ListDataProvider<MenuItem>(
+					menuItems);
+			final DataView<MenuItem> submenuItems = new DataView<MenuItem>("submenuItem",
+					menuItemsDp) {
 				private static final long serialVersionUID = 1L;
 
 				@Override
@@ -704,9 +730,10 @@ public abstract class RootPage extends BasePage {
 					}
 					if (item instanceof PageLinkMenuItem) {
 						// link to another Wicket page
-						PageLinkMenuItem pageLink = (PageLinkMenuItem) item;
-						menuItem.add(new LinkPanel("submenuLink", null, null, name, pageLink.getPageClass(),
-								pageLink.getPageParameters(), false).setRenderBodyOnly(true));
+						final PageLinkMenuItem pageLink = (PageLinkMenuItem) item;
+						menuItem.add(new LinkPanel("submenuLink", null, null, name,
+								pageLink.getPageClass(), pageLink.getPageParameters(), false)
+										.setRenderBodyOnly(true));
 					} else if (item instanceof ExternalLinkMenuItem) {
 						// link to a specified href
 						ExternalLinkMenuItem extLink = (ExternalLinkMenuItem) item;
