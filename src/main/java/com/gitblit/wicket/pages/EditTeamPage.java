@@ -55,6 +55,7 @@ import com.gitblit.wicket.panels.RegistrantPermissionsPanel;
 
 @RequiresAdminRole
 public class EditTeamPage extends RootSubPage {
+	private static final char[] invalidCharacters = new char[] { '&', '\"', '\'', '\\', '/', '~' };
 
 	private final boolean isCreate;
 
@@ -146,8 +147,15 @@ public class EditTeamPage extends RootSubPage {
 					error(getString("gb.pleaseSetTeamName"));
 					return;
 				}
-				if (isCreate) {
-					TeamModel model = app().users().getTeamModel(teamname);
+				for (final char c : invalidCharacters) {
+					if (teamname.indexOf(c) != -1) {
+						error(MessageFormat.format(getString("gb.teamNameInvalidCharacter"),
+								teamname, c));
+						return;
+					}
+				}
+				if (EditTeamPage.this.isCreate) {
+					final TeamModel model = app().users().getTeamModel(teamname);
 					if (model != null) {
 						error(MessageFormat.format(getString("gb.teamNameUnavailable"), teamname));
 						return;
