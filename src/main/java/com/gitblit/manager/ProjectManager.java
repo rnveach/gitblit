@@ -55,7 +55,7 @@ public class ProjectManager implements IProjectManager {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private final Map<String, ProjectModel> projectCache = new ConcurrentHashMap<String, ProjectModel>();
+	private Map<String, ProjectModel> projectCache = null;
 
 	private final ObjectCache<String> projectMarkdownCache = new ObjectCache<String>();
 
@@ -129,7 +129,7 @@ public class ProjectManager implements IProjectManager {
 	 * @return project config map
 	 */
 	private Map<String, ProjectModel> getProjectConfigs() {
-		if (projectCache.isEmpty() || projectConfigs.isOutdated()) {
+		if ((this.projectCache == null) || this.projectConfigs.isOutdated()) {
 
 			try {
 				projectConfigs.load();
@@ -159,8 +159,8 @@ public class ProjectManager implements IProjectManager {
 
 				configs.put(name.toLowerCase(), project);
 			}
-			projectCache.clear();
-			projectCache.putAll(configs);
+			this.projectCache = new ConcurrentHashMap<String, ProjectModel>();
+			this.projectCache.putAll(configs);
 		}
 		return projectCache;
 	}
@@ -251,7 +251,8 @@ public class ProjectManager implements IProjectManager {
 		if (project == null) {
 			project = new ProjectModel(name);
 			if (ModelUtils.isPersonalRepository(name)) {
-				UserModel user = userManager.getUserModel(ModelUtils.getUserNameFromRepoPath(name));
+				final UserModel user = this.userManager
+						.getUserModel(ModelUtils.getUserNameFromRepoPath(name));
 				if (user != null) {
 					project.title = user.getDisplayName();
 					project.description = "personal repositories";
