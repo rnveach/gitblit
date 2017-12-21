@@ -44,6 +44,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import com.gitblit.Constants;
+import com.gitblit.Constants.SearchType;
 import com.gitblit.models.FeedEntryModel;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.utils.StringUtils;
@@ -71,15 +72,15 @@ public class SearchDialog extends JFrame {
 
 	private JComboBox repositorySelector;
 
-	private DefaultComboBoxModel branchChoices;
+	private DefaultComboBoxModel<String> branchChoices;
 
-	private JComboBox branchSelector;
+	private JComboBox<String> branchSelector;
 
-	private JComboBox searchTypeSelector;
+	private JComboBox<SearchType> searchTypeSelector;
 
 	private JTextField searchFragment;
 
-	private JComboBox maxHitsSelector;
+	private JComboBox<Integer> maxHitsSelector;
 
 	private int page;
 
@@ -230,8 +231,8 @@ public class SearchDialog extends JFrame {
 			}
 		});
 
-		branchChoices = new DefaultComboBoxModel();
-		branchSelector = new JComboBox(branchChoices);
+		branchChoices = new DefaultComboBoxModel<String>();
+		branchSelector = new JComboBox<String>(branchChoices);
 		branchSelector.setRenderer(new BranchRenderer());
 
 		searchTypeSelector = new JComboBox(Constants.SearchType.values());

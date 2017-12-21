@@ -110,7 +110,7 @@ public class EditRepositoryDialog extends JDialog {
 
 	private JTextField mailingListsField;
 
-	private JComboBox accessRestriction;
+	private JComboBox<AccessRestrictionType> accessRestriction;
 
 	private JRadioButton allowAuthenticated;
 
@@ -126,11 +126,11 @@ public class EditRepositoryDialog extends JDialog {
 
 	private JComboBox headRefField;
 
-	private JComboBox gcPeriod;
+	private JComboBox<Integer> gcPeriod;
 
 	private JTextField gcThreshold;
 
-	private JComboBox maxActivityCommits;
+	private JComboBox<Integer> maxActivityCommits;
 
 	private RegistrantPermissionsPanel usersPalette;
 
@@ -207,7 +207,7 @@ public class EditRepositoryDialog extends JDialog {
 		}
 
 		Integer []  gcPeriods =  { 1, 2, 3, 4, 5, 7, 10, 14 };
-		gcPeriod = new JComboBox(gcPeriods);
+		gcPeriod = new JComboBox<Integer>(gcPeriods);
 		gcPeriod.setSelectedItem(anRepository.gcPeriod);
 
 		gcThreshold = new JTextField(8);
@@ -245,7 +245,7 @@ public class EditRepositoryDialog extends JDialog {
 		isFrozen = new JCheckBox(Translation.get("gb.isFrozenDescription"),
 				anRepository.isFrozen);
 
-		maxActivityCommits = new JComboBox(new Integer [] { -1, 0, 25, 50, 75, 100, 150, 250, 500 });
+		maxActivityCommits = new JComboBox<Integer>(new Integer [] { -1, 0, 25, 50, 75, 100, 150, 250, 500 });
 		maxActivityCommits.setSelectedItem(anRepository.maxActivityCommits);
 
 		mailingListsField = new JTextField(
@@ -253,7 +253,7 @@ public class EditRepositoryDialog extends JDialog {
 						: StringUtils.flattenStrings(anRepository.mailingLists,
 								" "), 50);
 
-		accessRestriction = new JComboBox(AccessRestrictionType.values());
+		accessRestriction = new JComboBox<AccessRestrictionType>(AccessRestrictionType.values());
 		accessRestriction.setRenderer(new AccessRestrictionRenderer());
 		accessRestriction.setSelectedItem(anRepository.accessRestriction);
 		accessRestriction.addItemListener(new ItemListener() {
