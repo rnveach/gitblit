@@ -32,7 +32,7 @@ import org.apache.sshd.common.io.nio2.Nio2ServiceFactoryFactory;
 import org.apache.sshd.common.util.SecurityUtils;
 import org.apache.sshd.server.SshServer;
 import org.apache.sshd.server.auth.CachingPublicKeyAuthenticator;
-import org.bouncycastle.openssl.PEMWriter;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.eclipse.jgit.internal.JGitText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -260,7 +260,7 @@ public class SshDaemon {
             }
 
             FileOutputStream os = new FileOutputStream(file);
-            PEMWriter w = new PEMWriter(new OutputStreamWriter(os));
+            JcaPEMWriter w = new JcaPEMWriter(new OutputStreamWriter(os));
             w.writeObject(kp);
             w.flush();
             w.close();
