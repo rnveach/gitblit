@@ -73,7 +73,7 @@ public abstract class LdapBasedUnitTest extends GitblitUnitTest {
 	 * but not groups. Normal users can search groups, though.
 	 *
 	 */
-	protected enum AuthMode {
+	public enum AuthMode {
 		ANONYMOUS,
 		DS_MANAGER,
 		USR_MANAGER;
@@ -107,7 +107,7 @@ public abstract class LdapBasedUnitTest extends GitblitUnitTest {
 			this.bindTracker = bindTracker;
 		}
 
-		BindTracker getBindTracker() {
+		public BindTracker getBindTracker() {
 			return bindTracker;
 		}
 
@@ -278,11 +278,11 @@ public abstract class LdapBasedUnitTest extends GitblitUnitTest {
 			}
 		}
 
-		String getLastSuccessfulBindDN() {
+		public String getLastSuccessfulBindDN() {
 			return lastSuccessfulBindDN;
 		}
 
-		String getLastSuccessfulBindDN(int messageID) {
+		public String getLastSuccessfulBindDN(int messageID) {
 			return lastSuccessfulBindDNs.get(messageID);
 		}
 

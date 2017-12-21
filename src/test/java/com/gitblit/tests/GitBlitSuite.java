@@ -35,10 +35,41 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import com.gitblit.GitBlitException;
 import com.gitblit.GitBlitServer;
+import com.gitblit.fanout.FanoutServiceTest;
+import com.gitblit.manager.AuthenticationManagerTest;
+import com.gitblit.manager.FilestoreManagerTest;
 import com.gitblit.manager.IRepositoryManager;
 import com.gitblit.models.RepositoryModel;
+import com.gitblit.models.RepositoryModelTest;
+import com.gitblit.models.UserChoiceTest;
+import com.gitblit.models.UserModelTest;
+import com.gitblit.service.LdapSyncServiceTest;
+import com.gitblit.servlet.FilestoreServletTest;
+import com.gitblit.servlet.GitServletTest;
 import com.gitblit.servlet.GitblitContext;
+import com.gitblit.tickets.BranchTicketServiceTest;
+import com.gitblit.tickets.FileTicketServiceTest;
+import com.gitblit.tickets.RedisTicketServiceTest;
+import com.gitblit.transport.git.GitDaemonTest;
+import com.gitblit.transport.ssh.SshDaemonTest;
+import com.gitblit.utils.ArrayUtilsTest;
+import com.gitblit.utils.Base64Test;
+import com.gitblit.utils.ByteFormatTest;
+import com.gitblit.utils.DiffUtilsTest;
+import com.gitblit.utils.FileUtilsTest;
 import com.gitblit.utils.JGitUtils;
+import com.gitblit.utils.JGitUtilsTest;
+import com.gitblit.utils.JnaUtilsTest;
+import com.gitblit.utils.JsonUtilsTest;
+import com.gitblit.utils.MarkdownUtilsTest;
+import com.gitblit.utils.MetricUtilsTest;
+import com.gitblit.utils.ModelUtilsTest;
+import com.gitblit.utils.ObjectCacheTest;
+import com.gitblit.utils.PathUtilsTest;
+import com.gitblit.utils.StringUtilsTest;
+import com.gitblit.utils.SyndicationUtilsTest;
+import com.gitblit.utils.TimeUtilsTest;
+import com.gitblit.utils.X509UtilsTest;
 
 /**
  * The GitBlitSuite uses test-gitblit.properties and test-users.conf. The suite
@@ -80,7 +111,7 @@ public class GitBlitSuite {
 	static int port = 8280;
 	static int gitPort = 8300;
 	static int shutdownPort = 8281;
-	static int sshPort = 39418;
+	public static int sshPort = 39418;
 
 	public static String url = "http://localhost:" + port;
 	public static String gitServletUrl = "http://localhost:" + port + "/git";
