@@ -15,20 +15,16 @@
  */
 package com.gitblit.models;
 
-import java.io.IOException;
 import java.io.Serializable;
 
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevWalk;
 
-import com.gitblit.manager.FilestoreManager;
 import com.gitblit.utils.JGitUtils;
 
 /**

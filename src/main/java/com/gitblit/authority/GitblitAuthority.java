@@ -100,7 +100,6 @@ import com.gitblit.utils.X509Utils;
 import com.gitblit.utils.X509Utils.RevocationReason;
 import com.gitblit.utils.X509Utils.X509Log;
 import com.gitblit.utils.X509Utils.X509Metadata;
-import com.gitblit.wicket.GitBlitWebSession;
 
 /**
  * Simple GUI tool for administering Gitblit client certificates.
