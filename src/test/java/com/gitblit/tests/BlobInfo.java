@@ -6,9 +6,9 @@ import org.apache.commons.codec.digest.DigestUtils;
  * Test helper structure to create blobs of a given size
  */
 public final class BlobInfo {
-	public byte[] blob;
-	public String hash;
-	public int length;
+	public final byte[] blob;
+	public final String hash;
+	public final int length;
 	
 	public BlobInfo(int nBytes) {
 		blob = new byte[nBytes];
