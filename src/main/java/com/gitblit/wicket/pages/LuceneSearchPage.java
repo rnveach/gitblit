@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
@@ -33,6 +32,7 @@ import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.lib.Constants;
 
 import com.gitblit.Constants.SearchType;
@@ -156,9 +156,9 @@ public class LuceneSearchPage extends RootPage {
 					return;
 				}
 				PageParameters params = new PageParameters();
-				params.put("repositories", StringUtils.flattenStrings(repositoriesModel.getObject()));
-				params.put("query", queryModel.getObject());
-				params.put("allrepos", allreposModel.getObject());
+				params.set("repositories", StringUtils.flattenStrings(repositoriesModel.getObject()));
+				params.set("query", queryModel.getObject());
+				params.set("allrepos", allreposModel.getObject());
 				LuceneSearchPage page = new LuceneSearchPage(params);
 				setResponsePage(page);
 			}
@@ -253,8 +253,8 @@ public class LuceneSearchPage extends RootPage {
 		add(resultsView.setVisible(results.size() > 0));
 
 		PageParameters pagerParams = new PageParameters();
-		pagerParams.put("repositories", StringUtils.flattenStrings(repositoriesModel.getObject()));
-		pagerParams.put("query", queryModel.getObject());
+		pagerParams.set("repositories", StringUtils.flattenStrings(repositoriesModel.getObject()));
+		pagerParams.set("query", queryModel.getObject());
 
 		boolean showPager = false;
 		int totalPages = 0;

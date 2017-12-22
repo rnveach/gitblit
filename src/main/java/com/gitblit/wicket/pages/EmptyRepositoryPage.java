@@ -19,9 +19,9 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.protocol.http.WebRequest;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.RepositoryUrl;
@@ -54,7 +54,7 @@ public class EmptyRepositoryPage extends RepositoryPage {
 			user = UserModel.ANONYMOUS;
 		}
 
-		HttpServletRequest req = ((WebRequest) getRequest()).getHttpServletRequest();
+		HttpServletRequest req = ((ServletWebRequest) getRequest()).getContainerRequest();
 		List<RepositoryUrl> repositoryUrls = app().services().getRepositoryUrls(req, user, repository);
 		RepositoryUrl primaryUrl = repositoryUrls.size() == 0 ? null : repositoryUrls.get(0);
 		String url = primaryUrl != null ? primaryUrl.url : "";

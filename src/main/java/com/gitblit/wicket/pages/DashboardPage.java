@@ -28,18 +28,17 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.TreeSet;
 
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.behavior.HeaderContributor;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.lib.Repository;
 
 import com.gitblit.Keys;
 import com.gitblit.models.DailyLogEntry;
 import com.gitblit.models.Menu.ParameterMenuItem;
-import com.gitblit.models.NavLink.DropDownPageMenuNavLink;
 import com.gitblit.models.Metric;
 import com.gitblit.models.NavLink;
+import com.gitblit.models.NavLink.DropDownPageMenuNavLink;
 import com.gitblit.models.RefLogEntry;
 import com.gitblit.models.RepositoryCommit;
 import com.gitblit.models.RepositoryModel;

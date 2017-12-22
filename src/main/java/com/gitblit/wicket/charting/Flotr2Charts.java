@@ -37,8 +37,8 @@ public class Flotr2Charts extends Charts {
 		ServletContext servletContext = WebApplication.get().getServletContext();
 		String contextPath = servletContext.getContextPath();
 
-		response.renderJavascriptReference(contextPath + "/bootstrap/js/jquery.js");
-		response.renderJavascriptReference(contextPath + "/flotr2/flotr2.min.js");
+		response.renderJavaScriptReference(contextPath + "/bootstrap/js/jquery.js");
+		response.renderJavaScriptReference(contextPath + "/flotr2/flotr2.min.js");
 		response.renderCSSReference(contextPath + "/flotr2/flotr2.custom.css");
 
 		// prepare draw chart function
@@ -58,7 +58,7 @@ public class Flotr2Charts extends Charts {
 		line(sb, "}");
 		// end draw chart function
 		line(sb, "});");
-		response.renderJavascript(sb.toString(), null);
+		response.renderJavaScript(sb.toString(), null);
 	}
 
 	@Override

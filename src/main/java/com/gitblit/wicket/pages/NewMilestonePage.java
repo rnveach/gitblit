@@ -17,7 +17,6 @@ package com.gitblit.wicket.pages;
 
 import java.util.Date;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
@@ -27,6 +26,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.UserModel;

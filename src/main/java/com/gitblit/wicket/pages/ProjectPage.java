@@ -21,16 +21,16 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.ExternalLink;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.Keys;
 import com.gitblit.models.Menu.MenuDivider;
 import com.gitblit.models.Menu.MenuItem;
 import com.gitblit.models.Menu.ParameterMenuItem;
-import com.gitblit.models.NavLink.DropDownPageMenuNavLink;
 import com.gitblit.models.NavLink;
+import com.gitblit.models.NavLink.DropDownPageMenuNavLink;
 import com.gitblit.models.ProjectModel;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.UserModel;

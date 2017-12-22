@@ -18,10 +18,10 @@ package com.gitblit.wicket.pages;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.protocol.http.WebResponse;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.Constants;
 import com.gitblit.Constants.AuthenticationType;
@@ -53,7 +53,7 @@ public abstract class SessionPage extends WebPage {
 
 	private void login() {
 		GitBlitWebSession session = GitBlitWebSession.get();
-		HttpServletRequest request = ((WebRequest) getRequest()).getHttpServletRequest();
+		HttpServletRequest request = ((ServletWebRequest) getRequest()).getContainerRequest();
 		HttpServletResponse response = ((WebResponse) getResponse()).getHttpServletResponse();
 
 		// If using container/external servlet authentication, use request attribute

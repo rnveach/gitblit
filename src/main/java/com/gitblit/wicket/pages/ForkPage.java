@@ -17,8 +17,8 @@ package com.gitblit.wicket.pages;
 
 import java.text.MessageFormat;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.slf4j.LoggerFactory;
 
 import com.gitblit.models.RepositoryModel;

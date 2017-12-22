@@ -35,9 +35,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.RequestCycle;
-import org.apache.wicket.behavior.HeaderContributor;
 import org.apache.wicket.markup.html.IHeaderContributor;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
@@ -49,8 +46,10 @@ import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.protocol.http.WebResponse;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.Constants;
 import com.gitblit.Constants.AuthenticationType;
@@ -282,7 +281,7 @@ public abstract class RootPage extends BasePage {
 
 	private void loginUser(UserModel user) {
 		if (user != null) {
-			HttpServletRequest request = ((WebRequest) getRequest()).getHttpServletRequest();
+			HttpServletRequest request = ((ServletWebRequest) getRequest()).getContainerRequest();
 			HttpServletResponse response = ((WebResponse) getResponse()).getHttpServletResponse();
 
 			// Set the user into the session
@@ -292,7 +291,7 @@ public abstract class RootPage extends BasePage {
 			session.replaceSession();
 			session.setUser(user);
 
-			request = ((WebRequest) getRequest()).getHttpServletRequest();
+			request = ((ServletWebRequest) getRequest()).getContainerRequest();
 			response = ((WebResponse) getResponse()).getHttpServletResponse();
 			request.getSession().setAttribute(Constants.ATTRIB_AUTHTYPE, AuthenticationType.CREDENTIALS);
 
@@ -410,7 +409,7 @@ public abstract class RootPage extends BasePage {
 		}
 
 		if (!clonedParams.containsKey("db")) {
-			clonedParams.put("db",  daysBack);
+			clonedParams.set("db",  daysBack);
 		}
 
 		final List<MenuItem> items = new ArrayList<MenuItem>();
@@ -587,7 +586,7 @@ public abstract class RootPage extends BasePage {
 					String username = RootPage.this.username.getObject();
 					char[] password = RootPage.this.password.getObject().toCharArray();
 
-					HttpServletRequest request = ((WebRequest)RequestCycle.get().getRequest()).getHttpServletRequest();
+					HttpServletRequest request = ((ServletWebRequest)RequestCycle.get().getRequest()).getContainerRequest();
 
 					UserModel user = app().authentication().authenticate(username, password, request.getRemoteAddr());
 					if (user == null) {
@@ -631,7 +630,7 @@ public abstract class RootPage extends BasePage {
 			final GitBlitWebSession session = GitBlitWebSession.get();
 			final UserModel user = session.getUser();
 			final boolean editCredentials = app().authentication().supportsCredentialChanges(user);
-			final HttpServletRequest request = ((WebRequest) getRequest()).getHttpServletRequest();
+			final HttpServletRequest request = ((ServletWebRequest) getRequest()).getContainerRequest();
 			final AuthenticationType authenticationType = (AuthenticationType) request
 					.getAttribute(Constants.ATTRIB_AUTHTYPE);
 			final boolean standardLogin = (null != authenticationType)

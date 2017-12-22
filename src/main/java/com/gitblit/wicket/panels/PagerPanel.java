@@ -19,11 +19,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.wicket.WicketUtils;
 import com.gitblit.wicket.pages.BasePage;
@@ -69,7 +69,7 @@ public class PagerPanel extends Panel {
 			public void populateItem(final Item<PageObject> item) {
 				PageObject pageItem = item.getModelObject();
 				PageParameters pageParams = new PageParameters(baseParams);
-				pageParams.put("pg", pageItem.page);
+				pageParams.set("pg", pageItem.page);
 				LinkPanel link = new LinkPanel("pageLink", null, pageItem.text, pageClass, pageParams);
 				link.setRenderBodyOnly(true);
 				item.add(link);

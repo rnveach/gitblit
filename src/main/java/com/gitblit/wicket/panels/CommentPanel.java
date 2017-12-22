@@ -15,7 +15,6 @@
  */
 package com.gitblit.wicket.panels;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.markup.html.basic.Label;
@@ -23,7 +22,8 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.RequestUtils;
-import org.apache.wicket.request.target.basic.RedirectRequestTarget;
+import org.apache.wicket.request.http.handler.RedirectRequestHandler;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.models.TicketModel;
@@ -105,7 +105,7 @@ public class CommentPanel extends BasePanel {
             {
                 String relativeUrl = urlFor(pageClass, parameters).toString();
                 String canonicalUrl = RequestUtils.toAbsolutePath(relativeUrl);
-                getRequestCycle().setRequestTarget(new RedirectRequestTarget(canonicalUrl));
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(canonicalUrl));
             }
 			
 		}.setVisible(ticket != null && ticket.number > 0));

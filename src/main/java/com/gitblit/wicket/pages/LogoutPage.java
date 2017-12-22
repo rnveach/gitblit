@@ -15,8 +15,9 @@
  */
 package com.gitblit.wicket.pages;
 
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.protocol.http.WebResponse;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.http.WebRequest;
+import org.apache.wicket.request.http.WebResponse;
 
 import com.gitblit.models.UserModel;
 import com.gitblit.wicket.GitBlitWebSession;
@@ -27,7 +28,7 @@ public class LogoutPage extends BasePage {
 		super();
 		GitBlitWebSession session = GitBlitWebSession.get();
 		UserModel user = session.getUser();
-		app().authentication().logout(((WebRequest) getRequest()).getHttpServletRequest(),
+		app().authentication().logout(((ServletWebRequest) getRequest()).getContainerRequest(),
 				((WebResponse) getResponse()).getHttpServletResponse(), user);
 		session.invalidate();
 
@@ -36,7 +37,7 @@ public class LogoutPage extends BasePage {
 		 * If so, it is likely to be cached by the browser, and cannot be undone. Effectively, this means
 		 * that you cannot log out...
 		 */
-		if ( ((WebRequest)getRequest()).getHttpServletRequest().getHeader("Authorization") != null ) {
+		if ( ((ServletWebRequest)getRequest()).getContainerRequest().getHeader("Authorization") != null ) {
 			// authentication will be done via this route anyway, show a page to close the browser:
 			// this will be done by Wicket.
 			setupPage(null, getString("gb.logout"));

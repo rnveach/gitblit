@@ -24,12 +24,11 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.wicket.IRequestTarget;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.RequestCycle;
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.protocol.http.WebResponse;
-import org.apache.wicket.protocol.http.servlet.AbortWithWebErrorCodeException;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.IRequestCycle;
+import org.apache.wicket.request.IRequestHandler;
+import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
@@ -57,13 +56,13 @@ public class RawPage extends SessionPage {
 			redirectToInterceptPage(new RepositoriesPage());
 		}
 
-		getRequestCycle().setRequestTarget(new IRequestTarget() {
+		getRequestCycle().scheduleRequestHandlerAfterCurrent(new IRequestHandler() {
 			@Override
-			public void detach(RequestCycle requestCycle) {
+			public void detach(IRequestCycle requestCycle) {
 			}
 
 			@Override
-			public void respond(RequestCycle requestCycle) {
+			public void respond(IRequestCycle requestCycle) {
 				WebResponse response = (WebResponse) requestCycle.getResponse();
 
 				final String repositoryName = WicketUtils.getRepositoryName(params);
@@ -172,8 +171,8 @@ public class RawPage extends SessionPage {
 							response.setContentType(contentType);
 
 						    try {
-						    	WebRequest request = (WebRequest) requestCycle.getRequest();
-						    	String userAgent = request.getHttpServletRequest().getHeader("User-Agent");
+						    	ServletWebRequest request = (ServletWebRequest) requestCycle.getRequest();
+						    	String userAgent = request.getContainerRequest().getHeader("User-Agent");
 
 								if (userAgent != null && userAgent.indexOf("MSIE 5.5") > -1) {
 								      response.setHeader("Content-Disposition", "filename=\""

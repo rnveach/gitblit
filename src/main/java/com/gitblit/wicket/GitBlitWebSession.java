@@ -21,14 +21,13 @@ import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.RedirectToUrlException;
-import org.apache.wicket.Request;
 import org.apache.wicket.Session;
 import org.apache.wicket.protocol.http.RequestUtils;
-import org.apache.wicket.protocol.http.WebRequestCycle;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
+import org.apache.wicket.request.Request;
+import org.apache.wicket.request.flow.RedirectToUrlException;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.models.UserModel;
 

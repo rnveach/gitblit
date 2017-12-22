@@ -18,7 +18,6 @@ package com.gitblit.wicket.pages;
 import java.io.OutputStream;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.ExternalLink;
@@ -27,7 +26,8 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
-import org.apache.wicket.request.target.resource.ResourceStreamRequestTarget;
+import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.util.resource.AbstractResourceStreamWriter;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.eclipse.jgit.lib.FileMode;
@@ -41,8 +41,8 @@ import com.gitblit.servlet.RawServlet;
 import com.gitblit.utils.ByteFormat;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.wicket.CacheControl;
-import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.CacheControl.LastModified;
+import com.gitblit.wicket.GitBlitWebSession;
 import com.gitblit.wicket.WicketUtils;
 import com.gitblit.wicket.panels.CommitHeaderPanel;
 import com.gitblit.wicket.panels.CompressedDownloadsPanel;
@@ -192,7 +192,7 @@ public class TreePage extends RepositoryPage {
 							    	  };
 							    	      
 							    	
-							    	getRequestCycle().setRequestTarget(new ResourceStreamRequestTarget(resourceStream, entry.path));
+							    	getRequestCycle().scheduleRequestHandlerAfterCurrent(new ResourceStreamRequestHandler(resourceStream, entry.path));
 							    }}));
 							
 							links.add(new Link<Object>("view", null) {
@@ -216,7 +216,7 @@ public class TreePage extends RepositoryPage {
 							    	  };
 							    	      
 							    	
-							    	getRequestCycle().setRequestTarget(new ResourceStreamRequestTarget(resourceStream, entry.path));
+							    	getRequestCycle().scheduleRequestHandlerAfterCurrent(new ResourceStreamRequestHandler(resourceStream, entry.path));
 							    }});
 							
 							links.add(new Link<Object>("raw", null) {
@@ -240,7 +240,7 @@ public class TreePage extends RepositoryPage {
 							    	  };
 							    	      
 							    	
-							    	getRequestCycle().setRequestTarget(new ResourceStreamRequestTarget(resourceStream, entry.path));
+							    	getRequestCycle().scheduleRequestHandlerAfterCurrent(new ResourceStreamRequestHandler(resourceStream, entry.path));
 							    }});
 							
 						} else {

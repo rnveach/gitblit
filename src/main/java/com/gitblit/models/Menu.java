@@ -2,8 +2,8 @@ package com.gitblit.models;
 
 import java.io.Serializable;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.utils.StringUtils;
 
@@ -125,7 +125,7 @@ public class Menu {
 				if (StringUtils.isEmpty(value)) {
 					this.parameters.remove(parameter);
 				} else {
-					this.parameters.put(parameter, value);
+					this.parameters.set(parameter, value);
 				}
 			}
 		}

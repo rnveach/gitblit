@@ -27,18 +27,17 @@ import java.util.TimeZone;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.Request;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.behavior.HeaderContributor;
 import org.apache.wicket.behavior.SimpleAttributeModifier;
 import org.apache.wicket.markup.html.IHeaderContributor;
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.ContextImage;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.resource.ContextRelativeResource;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.Request;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.ContextRelativeResource;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 
 import com.gitblit.Constants;
@@ -251,7 +250,7 @@ public class WicketUtils {
 	}
 
 	public static String getGitblitURL(Request request) {
-		HttpServletRequest req = ((WebRequest) request).getHttpServletRequest();
+		HttpServletRequest req = ((ServletWebRequest) request).getContainerRequest();
 		return HttpUtils.getGitblitURL(req);
 	}
 

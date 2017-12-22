@@ -18,13 +18,11 @@ package com.gitblit.wicket;
 import java.text.MessageFormat;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.form.StatelessForm;
 import org.apache.wicket.protocol.http.RequestUtils;
-import org.apache.wicket.protocol.http.WicketURLDecoder;
-import org.apache.wicket.protocol.http.request.WebRequestCodingStrategy;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.util.string.AppendingStringBuffer;
 import org.apache.wicket.util.string.Strings;
 import org.slf4j.Logger;
@@ -100,7 +98,7 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 	 *            The open tag for the body
 	 */
 	@Override
-	protected void onComponentTagBody(final MarkupStream markupStream, final ComponentTag openTag)
+	public void onComponentTagBody(final MarkupStream markupStream, final ComponentTag openTag)
 	{
 		// render the hidden bookmarkable page field
 		AppendingStringBuffer buffer = new AppendingStringBuffer(HIDDEN_DIV_START);
@@ -113,7 +111,7 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 		// insert the page parameters, if any, as hidden fields as long as they
 		// do not collide with any child wicket:id of the form.
 		if (pageParameters != null) {
-			for (String key : pageParameters.keySet()) {
+			for (String key : pageParameters.getNamedKeys()) {
 				Component c = get(key);
 				if (c != null) {
 					// this form has a field id which matches the

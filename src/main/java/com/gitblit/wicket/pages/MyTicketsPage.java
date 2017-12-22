@@ -22,12 +22,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.Keys;
 import com.gitblit.models.RepositoryModel;

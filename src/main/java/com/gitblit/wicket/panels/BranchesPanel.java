@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.ExternalLink;
@@ -32,7 +31,8 @@ import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.protocol.http.RequestUtils;
-import org.apache.wicket.request.target.basic.RedirectRequestTarget;
+import org.apache.wicket.request.http.handler.RedirectRequestHandler;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 
@@ -233,7 +233,7 @@ public class BranchesPanel extends BasePanel {
 				PageParameters params = WicketUtils.newRepositoryParameter(repositoryModel.name);
 				String relativeUrl = urlFor(getPage().getClass(), params).toString();
 				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
-				getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
+				getRequestCycle().scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(absoluteUrl));
 			}
 		};
 

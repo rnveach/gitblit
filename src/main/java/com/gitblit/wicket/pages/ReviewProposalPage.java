@@ -19,8 +19,8 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.Constants.FederationToken;
 import com.gitblit.Keys;

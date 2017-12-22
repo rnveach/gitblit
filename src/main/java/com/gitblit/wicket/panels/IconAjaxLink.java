@@ -36,7 +36,7 @@ public abstract class IconAjaxLink<T> extends AjaxLink<T> {
 	}
 
 	@Override
-	protected void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag) {
+	public void onComponentTagBody(MarkupStream markupStream, ComponentTag openTag) {
 		replaceComponentTagBody(markupStream, openTag, MessageFormat.format("<i class=\"{0}\"></i> {1}", iconClass, getModelObject().toString()));
 	}
 

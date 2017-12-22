@@ -35,7 +35,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.SimpleAttributeModifier;
@@ -51,7 +50,8 @@ import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.RequestUtils;
-import org.apache.wicket.protocol.http.WebRequest;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
@@ -84,9 +84,9 @@ import com.gitblit.tickets.TicketLabel;
 import com.gitblit.tickets.TicketMilestone;
 import com.gitblit.tickets.TicketResponsible;
 import com.gitblit.utils.ArrayUtils;
+import com.gitblit.utils.CommitCache;
 import com.gitblit.utils.JGitUtils;
 import com.gitblit.utils.JGitUtils.MergeStatus;
-import com.gitblit.utils.CommitCache;
 import com.gitblit.utils.MarkdownUtils;
 import com.gitblit.utils.RefLogUtils;
 import com.gitblit.utils.StringUtils;
@@ -265,7 +265,7 @@ public class TicketPage extends RepositoryPage {
 			} else {
 				milestoneParameters = WicketUtils.newRepositoryParameter(repositoryName);
 			}
-			milestoneParameters.put(Lucene.milestone.name(), ticket.milestone);
+			milestoneParameters.set(Lucene.milestone.name(), ticket.milestone);
 			int progress = 0;
 			int open = 0;
 			int closed = 0;
@@ -1569,7 +1569,7 @@ public class TicketPage extends RepositoryPage {
 	 * @return the primary repository url
 	 */
 	protected RepositoryUrl getRepositoryUrl(UserModel user, RepositoryModel repository) {
-		HttpServletRequest req = ((WebRequest) getRequest()).getHttpServletRequest();
+		HttpServletRequest req = ((ServletWebRequest) getRequest()).getContainerRequest();
 		List<RepositoryUrl> urls = app().services().getRepositoryUrls(req, user, repository);
 		if (ArrayUtils.isEmpty(urls)) {
 			return null;

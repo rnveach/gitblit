@@ -19,11 +19,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.wicket.IRequestTarget;
 import org.apache.wicket.Page;
-import org.apache.wicket.protocol.http.request.WebRequestCodingStrategy;
-import org.apache.wicket.request.RequestParameters;
-import org.apache.wicket.request.target.coding.MixedParamUrlCodingStrategy;
+import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.util.string.AppendingStringBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.gitblit.IStoredSettings;
 import com.gitblit.Keys;
 import com.gitblit.utils.XssFilter;
+import com.google.inject.servlet.RequestParameters;
 
 /**
  * Simple subclass of mixed parameter url coding strategy that works around the
@@ -115,7 +113,7 @@ public class GitblitParamUrlCodingStrategy extends MixedParamUrlCodingStrategy {
 	 * @return the decoded request target
 	 */
 	@Override
-	public IRequestTarget decode(RequestParameters requestParameters) {
+	public IRequestHandler decode(RequestParameters requestParameters) {
 		Map<String, Object> parameterMap = (Map<String, Object>) requestParameters.getParameters();
 		for (Map.Entry<String, Object> entry : parameterMap.entrySet()) {
 			String parameter = entry.getKey();

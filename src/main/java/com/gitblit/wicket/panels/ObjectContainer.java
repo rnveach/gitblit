@@ -19,17 +19,16 @@ package com.gitblit.wicket.panels;
 import java.util.List;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.ResourceReference;
-import org.apache.wicket.Response;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.protocol.http.ClientProperties;
-import org.apache.wicket.protocol.http.WebRequestCycle;
 import org.apache.wicket.protocol.http.WebSession;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
 import org.apache.wicket.request.ClientInfo;
+import org.apache.wicket.request.Response;
+import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.util.value.IValueMap;
 
 /**
@@ -85,7 +84,7 @@ public abstract class ObjectContainer extends WebMarkupContainer {
 			parent = parent.getParent();
 		}
 		if (parent != null) {
-			ResourceReference resRef = new ResourceReference(parent.getClass(), src, false);
+			PackageResourceReference resRef = new PackageResourceReference(parent.getClass(), src, false);
 			return (urlFor(resRef).toString());
 		}
 

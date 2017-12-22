@@ -19,13 +19,13 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.http.client.RedirectException;
 import org.apache.wicket.Component;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.RedirectException;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.image.Image;
+import org.apache.wicket.markup.html.image.NonCachingImage;
 import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.markup.html.link.ExternalLink;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
@@ -127,7 +127,7 @@ public class BlobPage extends RepositoryPage {
 				case 3:
 					// binary blobs
 					add(new Label("blobText", "Binary File"));
-					add(new Image("blobImage").setVisible(false));
+					add(new NonCachingImage("blobImage").setVisible(false));
 					break;
 				default:
 					// plain text
@@ -140,7 +140,7 @@ public class BlobPage extends RepositoryPage {
 						addBottomScriptInline("jQuery(prettyPrint);");
 					}
 					add(new Label("blobText", table).setEscapeModelStrings(false));
-					add(new Image("blobImage").setVisible(false));
+					add(new NonCachingImage("blobImage").setVisible(false));
 					fileExtension = extension;
 				}
 			} else {
@@ -154,7 +154,7 @@ public class BlobPage extends RepositoryPage {
 					addBottomScriptInline("jQuery(prettyPrint);");
 				}
 				add(new Label("blobText", table).setEscapeModelStrings(false));
-				add(new Image("blobImage").setVisible(false));
+				add(new NonCachingImage("blobImage").setVisible(false));
 			}
 		}
 	}

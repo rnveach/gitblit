@@ -19,9 +19,9 @@ import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.wicket.ResourceReference;
 import org.apache.wicket.markup.html.IHeaderContributor;
 import org.apache.wicket.markup.html.IHeaderResponse;
+import org.apache.wicket.request.resource.PackageResourceReference;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -54,7 +54,7 @@ public class NgController implements IHeaderContributor {
 	@Override
 	public void renderHead(IHeaderResponse response) {
 		// add Google AngularJS reference
-		response.renderJavascriptReference(new ResourceReference(NgController.class, "angular.js"));
+		response.renderJavaScriptReference(new PackageResourceReference(NgController.class, "angular.js"));
 
 		Gson gson = new GsonBuilder().create();
 
@@ -69,7 +69,7 @@ public class NgController implements IHeaderContributor {
 		}
 		line(sb, "}");
 
-		response.renderJavascript(sb.toString(), null);
+		response.renderJavaScript(sb.toString(), null);
 	}
 
 	private void line(StringBuilder sb, String line) {

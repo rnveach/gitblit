@@ -19,7 +19,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -33,7 +32,8 @@ import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.RequestUtils;
-import org.apache.wicket.request.target.basic.RedirectRequestTarget;
+import org.apache.wicket.request.http.handler.RedirectRequestHandler;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -236,12 +236,12 @@ public class ComparePage extends RepositoryPage {
 
 				PageParameters params = WicketUtils.newRangeParameter(repositoryName, from, to);
 				if (ignoreWS) {
-					params.put("w", 1);
+					params.set("w", 1);
 				}
 
 				String relativeUrl = urlFor(ComparePage.class, params).toString();
 				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
-				getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
+				getRequestCycle().scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(absoluteUrl));
 			}
 		};
 
@@ -278,11 +278,11 @@ public class ComparePage extends RepositoryPage {
 
 				PageParameters params = WicketUtils.newRangeParameter(repositoryName, from, to);
 				if (ignoreWS) {
-					params.put("w", 1);
+					params.set("w", 1);
 				}
 				String relativeUrl = urlFor(ComparePage.class, params).toString();
 				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
-				getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
+				getRequestCycle().scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(absoluteUrl));
 			}
 		};
 

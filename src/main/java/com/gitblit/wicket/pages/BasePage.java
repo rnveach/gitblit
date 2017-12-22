@@ -36,18 +36,17 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.io.IOUtils;
 import org.apache.wicket.Application;
 import org.apache.wicket.Page;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.RedirectToUrlException;
-import org.apache.wicket.markup.html.CSSPackageResource;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.markup.html.resources.JavascriptResourceReference;
 import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.protocol.http.RequestUtils;
-import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.target.basic.RedirectRequestTarget;
+import org.apache.wicket.request.flow.RedirectToUrlException;
+import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.request.http.handler.RedirectRequestHandler;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.CssPackageResource;
 import org.apache.wicket.util.time.Duration;
 import org.apache.wicket.util.time.Time;
 import org.slf4j.Logger;
@@ -94,10 +93,10 @@ public abstract class BasePage extends SessionPage {
 
 	private void customizeHeader() {
 		if (app().settings().getBoolean(Keys.web.useResponsiveLayout, true)) {
-			add(CSSPackageResource.getHeaderContribution("bootstrap/css/bootstrap-responsive.css"));
+			add(CssPackageResource.getHeaderContribution("bootstrap/css/bootstrap-responsive.css"));
 		}
 		if (app().settings().getBoolean(Keys.web.hideHeader, false)) {
-			add(CSSPackageResource.getHeaderContribution("hideheader.css"));
+			add(CssPackageResource.getHeaderContribution("hideheader.css"));
 		}
 	}
 
@@ -121,7 +120,7 @@ public abstract class BasePage extends SessionPage {
 
 	protected void redirectTo(Class<? extends BasePage> pageClass, PageParameters parameters) {
 		String absoluteUrl = getCanonicalUrl(pageClass, parameters);
-		getRequestCycle().setRequestTarget(new RedirectRequestTarget(absoluteUrl));
+		getRequestCycle().scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(absoluteUrl));
 	}
 
 	protected String getLanguageCode() {
@@ -227,7 +226,7 @@ public abstract class BasePage extends SessionPage {
 		int expires = app().settings().getInteger(Keys.web.pageCacheExpires, 0);
 		WebResponse response = (WebResponse) getResponse();
 		response.setLastModifiedTime(Time.valueOf(when));
-		response.setDateHeader("Expires", System.currentTimeMillis() + Duration.minutes(expires).getMilliseconds());
+		response.setDateHeader("Expires", Time.millis(System.currentTimeMillis() + Duration.minutes(expires).getMilliseconds()));
 	}
 
 	protected String getPageTitle(String repositoryName) {
@@ -353,7 +352,7 @@ public abstract class BasePage extends SessionPage {
 
 	protected String getServerName() {
 		ServletWebRequest servletWebRequest = (ServletWebRequest) getRequest();
-		HttpServletRequest req = servletWebRequest.getHttpServletRequest();
+		HttpServletRequest req = servletWebRequest.getContainerRequest();
 		return req.getServerName();
 	}
 
@@ -477,7 +476,7 @@ public abstract class BasePage extends SessionPage {
 	}
 
 	public void authenticationError(String message) {
-		logger().error(getRequest().getURL() + " for " + GitBlitWebSession.get().getUsername());
+		logger().error(getRequest().getUrl() + " for " + GitBlitWebSession.get().getUsername());
 		if (!GitBlitWebSession.get().isLoggedIn()) {
 			// cache the request if we have not authenticated.
 			// the request will continue after authentication.
