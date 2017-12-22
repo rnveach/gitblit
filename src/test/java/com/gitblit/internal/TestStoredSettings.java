@@ -8,8 +8,14 @@ import com.gitblit.IStoredSettings;
 public final class TestStoredSettings extends IStoredSettings {
 	private static final Properties properties = new Properties();
 
-	public TestStoredSettings() {
+	private static TestStoredSettings instance = new TestStoredSettings();
+
+	private TestStoredSettings() {
 		super(TestStoredSettings.class);
+	}
+
+	public static TestStoredSettings getInstance() {
+		return instance;
 	}
 
 	@Override
@@ -35,7 +41,7 @@ public final class TestStoredSettings extends IStoredSettings {
 		properties.put(name, value);
 	}
 
-	public static void clearProperties() {
+	public static void reset() {
 		properties.clear();
 	}
 }

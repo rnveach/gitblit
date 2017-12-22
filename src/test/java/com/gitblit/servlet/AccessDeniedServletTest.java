@@ -2,7 +2,6 @@ package com.gitblit.servlet;
 
 import static org.junit.Assert.assertEquals;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Test;

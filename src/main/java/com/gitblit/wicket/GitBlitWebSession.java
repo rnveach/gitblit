@@ -98,7 +98,7 @@ public final class GitBlitWebSession extends WebSession {
 	}
 
 	public boolean isLoggedIn() {
-		return user != null;
+		return user != null; // TODO: why are anonymous considered logged in?
 	}
 
 	public boolean canAdmin() {

@@ -22,8 +22,8 @@ public class BranchGraphServletTest extends AbstractServletTest {
 
 	@Override
 	protected BranchGraphServlet getTestClass() {
-		return new BranchGraphServlet(new TestStoredSettings(),
-				new TestRepositoryManager());
+		return new BranchGraphServlet(TestStoredSettings.getInstance(),
+				TestRepositoryManager.getInstance());
 	}
 
 	@Override

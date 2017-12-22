@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,15 @@ import com.gitblit.models.UserModel;
 
 public final class TestRepositoryManager implements IRepositoryManager {
 	private static final Map<String, Repository> repositoryList = new HashMap<>();
+
+	private static TestRepositoryManager instance = new TestRepositoryManager();
+
+	private TestRepositoryManager() {
+	}
+
+	public static TestRepositoryManager getInstance() {
+		return instance;
+	}
 
 	@Override
 	public IManager start() {
@@ -64,14 +74,14 @@ public final class TestRepositoryManager implements IRepositoryManager {
 	public List<RegistrantAccessPermission> getUserAccessPermissions(
 			UserModel user) {
 		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
 	public List<RegistrantAccessPermission> getUserAccessPermissions(
 			RepositoryModel repository) {
 		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -84,14 +94,14 @@ public final class TestRepositoryManager implements IRepositoryManager {
 	@Override
 	public List<String> getRepositoryUsers(RepositoryModel repository) {
 		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
 	public List<RegistrantAccessPermission> getTeamAccessPermissions(
 			RepositoryModel repository) {
 		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -104,7 +114,7 @@ public final class TestRepositoryManager implements IRepositoryManager {
 	@Override
 	public List<String> getRepositoryTeams(RepositoryModel repository) {
 		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -143,13 +153,13 @@ public final class TestRepositoryManager implements IRepositoryManager {
 	@Override
 	public List<RepositoryModel> getRepositoryModels() {
 		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
 	public List<RepositoryModel> getRepositoryModels(UserModel user) {
 		// TODO Auto-generated method stub
-		return null;
+		return Collections.emptyList();
 	}
 
 	@Override
