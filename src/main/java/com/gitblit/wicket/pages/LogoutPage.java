@@ -16,8 +16,7 @@
 package com.gitblit.wicket.pages;
 
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.http.WebRequest;
-import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.protocol.http.servlet.ServletWebResponse;
 
 import com.gitblit.models.UserModel;
 import com.gitblit.wicket.GitBlitWebSession;
@@ -29,7 +28,7 @@ public class LogoutPage extends BasePage {
 		GitBlitWebSession session = GitBlitWebSession.get();
 		UserModel user = session.getUser();
 		app().authentication().logout(((ServletWebRequest) getRequest()).getContainerRequest(),
-				((WebResponse) getResponse()).getHttpServletResponse(), user);
+				((ServletWebResponse) getResponse()).getContainerResponse(), user);
 		session.invalidate();
 
 		/*
@@ -43,7 +42,7 @@ public class LogoutPage extends BasePage {
 			setupPage(null, getString("gb.logout"));
 
 		} else {
-			setRedirect(true);
+			// setRedirect(true);
 			setResponsePage(getApplication().getHomePage());
 		} // not via WWW-Auth
 	} // LogoutPage

@@ -91,19 +91,19 @@ public class LuceneSearchPage extends RootPage {
 
 			page = WicketUtils.getPage(params);
 
-			if (params.containsKey("repositories")) {
-				String value = params.getString("repositories", "");
+			if (!params.get("repositories").isNull()) {
+				String value = params.get("repositories").toString("");
 				List<String> list = StringUtils.getStringsFromValue(value);
 				repositories.addAll(list);
 			}
 
-			allRepos = params.getAsBoolean("allrepos", false);
+			allRepos = params.get("allrepos").toBoolean(false);
 			if (allRepos) {
 				repositories.addAll(availableRepositories);
 			}
 
-			if (params.containsKey("query")) {
-				query = params.getString("query", "");
+			if (!params.get("query").isNull()) {
+				query = params.get("query").toString("");
 			} else {
 				String value = WicketUtils.getSearchString(params);
 				String type = WicketUtils.getSearchType(params);

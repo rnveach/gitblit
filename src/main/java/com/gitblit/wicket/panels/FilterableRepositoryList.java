@@ -29,6 +29,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import com.gitblit.Keys;
 import com.gitblit.models.RepositoryModel;
 import com.gitblit.utils.StringUtils;
+import com.gitblit.wicket.HeaderContributor;
 import com.gitblit.wicket.WicketUtils;
 import com.gitblit.wicket.freemarker.FreemarkerPanel;
 import com.gitblit.wicket.ng.NgController;

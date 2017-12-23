@@ -295,7 +295,7 @@ public class UserPage extends RootPage {
 				try {
 					app().gitblit().reviseUser(user.username, user);
 
-					setRedirect(true);
+					// setRedirect(true);
 					setResponsePage(UserPage.class, WicketUtils.newUsernameParameter(user.username));
 				} catch (GitBlitException e) {
 					// logger.error("Failed to update user " + user.username, e);

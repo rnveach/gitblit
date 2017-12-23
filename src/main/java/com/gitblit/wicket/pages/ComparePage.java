@@ -32,6 +32,8 @@ import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.RequestUtils;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.handler.RedirectRequestHandler;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
@@ -240,7 +242,8 @@ public class ComparePage extends RepositoryPage {
 				}
 
 				String relativeUrl = urlFor(ComparePage.class, params).toString();
-				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+				String absoluteUrl = RequestUtils.toAbsolutePath(((ServletWebRequest)RequestCycle.get().getRequest())
+						.getContainerRequest().getRequestURL().toString(), relativeUrl);
 				getRequestCycle().scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(absoluteUrl));
 			}
 		};
@@ -281,7 +284,8 @@ public class ComparePage extends RepositoryPage {
 					params.set("w", 1);
 				}
 				String relativeUrl = urlFor(ComparePage.class, params).toString();
-				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+				String absoluteUrl = RequestUtils.toAbsolutePath(((ServletWebRequest)RequestCycle.get().getRequest())
+						.getContainerRequest().getRequestURL().toString(), relativeUrl);
 				getRequestCycle().scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(absoluteUrl));
 			}
 		};

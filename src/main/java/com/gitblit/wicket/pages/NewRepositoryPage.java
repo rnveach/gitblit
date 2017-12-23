@@ -145,7 +145,7 @@ public class NewRepositoryPage extends RootSubPage {
 					error(e.getMessage());
 					return;
 				}
-				setRedirect(true);
+				// setRedirect(true);
 				setResponsePage(SummaryPage.class, WicketUtils.newRepositoryParameter(repositoryModel.name));
 			}
 		};

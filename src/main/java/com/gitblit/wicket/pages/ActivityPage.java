@@ -39,6 +39,7 @@ import com.gitblit.utils.ActivityUtils;
 import com.gitblit.utils.StringUtils;
 import com.gitblit.wicket.CacheControl;
 import com.gitblit.wicket.CacheControl.LastModified;
+import com.gitblit.wicket.HeaderContributor;
 import com.gitblit.wicket.WicketUtils;
 import com.gitblit.wicket.charting.Chart;
 import com.gitblit.wicket.charting.Charts;
@@ -140,7 +141,7 @@ public class ActivityPage extends RootPage {
 
 		PageParameters currentParameters = getPageParameters();
 		int daysBack = app().settings().getInteger(Keys.web.activityDuration, 7);
-		if (currentParameters != null && !currentParameters.containsKey("db")) {
+		if (currentParameters != null && currentParameters.get("db").isNull()) {
 			currentParameters.set("db", daysBack);
 		}
 

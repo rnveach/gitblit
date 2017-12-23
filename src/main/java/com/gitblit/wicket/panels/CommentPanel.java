@@ -22,6 +22,8 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.RequestUtils;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.handler.RedirectRequestHandler;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
@@ -104,7 +106,8 @@ public class CommentPanel extends BasePanel {
             private void redirectTo(Class<? extends BasePage> pageClass, PageParameters parameters)
             {
                 String relativeUrl = urlFor(pageClass, parameters).toString();
-                String canonicalUrl = RequestUtils.toAbsolutePath(relativeUrl);
+                String canonicalUrl = RequestUtils.toAbsolutePath(((ServletWebRequest)RequestCycle.get().getRequest())
+        				.getContainerRequest().getRequestURL().toString(), relativeUrl);
                 getRequestCycle().scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(canonicalUrl));
             }
 			

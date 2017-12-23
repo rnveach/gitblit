@@ -42,11 +42,13 @@ import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.protocol.http.RequestUtils;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.http.handler.RedirectRequestHandler;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.CssPackageResource;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 import org.apache.wicket.util.time.Duration;
 import org.apache.wicket.util.time.Time;
 import org.slf4j.Logger;
@@ -110,7 +112,8 @@ public abstract class BasePage extends SessionPage {
 
 	protected String getCanonicalUrl(Class<? extends BasePage> clazz, PageParameters params) {
 		String relativeUrl = urlFor(clazz, params).toString();
-		String canonicalUrl = RequestUtils.toAbsolutePath(relativeUrl);
+		String canonicalUrl = RequestUtils.toAbsolutePath(((ServletWebRequest)RequestCycle.get().getRequest())
+				.getContainerRequest().getRequestURL().toString(), relativeUrl);
 		return canonicalUrl;
 	}
 
@@ -370,7 +373,7 @@ public abstract class BasePage extends SessionPage {
 		boolean hasParameter = false;
 		String regex = WicketUtils.getRegEx(params);
 		String team = WicketUtils.getTeam(params);
-		int daysBack = params.getInt("db", 0);
+		int daysBack = params.get("db").toInt(0);
 		int maxDaysBack = app().settings().getInteger(Keys.web.activityDurationMaximum, 30);
 
 		List<ProjectModel> availableModels = getProjectModels();
@@ -468,7 +471,8 @@ public abstract class BasePage extends SessionPage {
 		if (toPage != null) {
 			GitBlitWebSession.get().cacheErrorMessage(message);
 			String relativeUrl = urlFor(toPage, params).toString();
-			String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+			String absoluteUrl = RequestUtils.toAbsolutePath(((ServletWebRequest)RequestCycle.get().getRequest())
+					.getContainerRequest().getRequestURL().toString(), relativeUrl);
 			throw new RedirectToUrlException(absoluteUrl);
 		} else {
 			super.error(message);
@@ -526,7 +530,7 @@ public abstract class BasePage extends SessionPage {
 	protected void addBottomScript(String scriptPath) {
 		RepeatingView bottomScripts = getBottomScriptContainer();
 		Label script = new Label(bottomScripts.newChildId(), "<script type='text/javascript' src='"
-				+ urlFor(new JavascriptResourceReference(this.getClass(), scriptPath)) + "'></script>\n");
+				+ urlFor(new JavaScriptResourceReference(this.getClass(), scriptPath)) + "'></script>\n");
 		bottomScripts.add(script.setEscapeModelStrings(false).setRenderBodyOnly(true));
 	}
 

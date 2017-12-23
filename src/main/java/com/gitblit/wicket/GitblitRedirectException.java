@@ -17,6 +17,7 @@ package com.gitblit.wicket;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.protocol.http.RequestUtils;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.handler.RedirectRequestHandler;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -41,8 +42,9 @@ public class GitblitRedirectException extends AbstractRestartResponseException {
 	public <C extends Page> GitblitRedirectException(Class<C> pageClass, PageParameters params) {
 		RequestCycle cycle = RequestCycle.get();
 		String relativeUrl = cycle.urlFor(pageClass, params).toString();
-		String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+		String absoluteUrl = RequestUtils.toAbsolutePath(((ServletWebRequest)RequestCycle.get().getRequest())
+				.getContainerRequest().getRequestURL().toString(), relativeUrl);
 		cycle.scheduleRequestHandlerAfterCurrent(new RedirectRequestHandler(absoluteUrl));
-		cycle.setRedirect(true);
+		// cycle.setRedirect(true);
 	}
 }

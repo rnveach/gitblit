@@ -108,8 +108,8 @@ public class Menu {
 				isSelected = false;
 			} else {
 				parameters = new PageParameters(params);
-				if (parameters.containsKey(parameter)) {
-					isSelected = params.getString(parameter).equals(value);
+				if (!parameters.get(parameter).isNull()) {
+					isSelected = params.get(parameter).toString().equals(value);
 					// set the new selection value
 					setParameter(parameter, value);
 				} else {

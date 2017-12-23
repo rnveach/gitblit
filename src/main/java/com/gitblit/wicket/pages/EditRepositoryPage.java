@@ -389,7 +389,7 @@ public class EditRepositoryPage extends RootSubPage {
 					error(e.getMessage());
 					return;
 				}
-				setRedirect(false);
+				// setRedirect(false);
 				setResponsePage(SummaryPage.class, WicketUtils.newRepositoryParameter(repositoryModel.name));
 			}
 		};

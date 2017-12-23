@@ -37,7 +37,7 @@ public class ExportTicketPage extends SessionPage {
 	public ExportTicketPage(final PageParameters params) {
 		super(params);
 
-		if (!params.containsKey("r")) {
+		if (params.get("r").isNull()) {
 			error(getString("gb.repositoryNotSpecified"));
 			redirectToInterceptPage(new RepositoriesPage());
 		}

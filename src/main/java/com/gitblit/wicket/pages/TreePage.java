@@ -26,6 +26,7 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.markup.repeater.data.ListDataProvider;
+import org.apache.wicket.request.Response;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.util.resource.AbstractResourceStreamWriter;
@@ -183,11 +184,11 @@ public class TreePage extends RepositoryPage {
 										private static final long serialVersionUID = 1L;
 
 										@Override 
-							    	      public void write(OutputStream output) {
+							    	      public void write(Response output) {
 							    	   		 UserModel user =  GitBlitWebSession.get().getUser();
 										     user = user == null ? UserModel.ANONYMOUS : user;
 										    	
-							    	        app().filestore().downloadBlob(entry.getFilestoreOid(), user, getRepositoryModel(), output);
+							    	        app().filestore().downloadBlob(entry.getFilestoreOid(), user, getRepositoryModel(), output.getOutputStream());
 							    	      }
 							    	  };
 							    	      
@@ -207,11 +208,11 @@ public class TreePage extends RepositoryPage {
 										private static final long serialVersionUID = 1L;
 
 										@Override 
-							    	      public void write(OutputStream output) {
+							    	      public void write(Response output) {
 							    	   		 UserModel user =  GitBlitWebSession.get().getUser();
 										     user = user == null ? UserModel.ANONYMOUS : user;
 										    	
-							    	        app().filestore().downloadBlob(entry.getFilestoreOid(), user, getRepositoryModel(), output);
+							    	        app().filestore().downloadBlob(entry.getFilestoreOid(), user, getRepositoryModel(), output.getOutputStream());
 							    	      }
 							    	  };
 							    	      
@@ -231,11 +232,11 @@ public class TreePage extends RepositoryPage {
 										private static final long serialVersionUID = 1L;
 
 										@Override 
-							    	      public void write(OutputStream output) {
+							    	      public void write(Response output) {
 							    	   		 UserModel user =  GitBlitWebSession.get().getUser();
 										     user = user == null ? UserModel.ANONYMOUS : user;
 										    	
-							    	        app().filestore().downloadBlob(entry.getFilestoreOid(), user, getRepositoryModel(), output);
+							    	        app().filestore().downloadBlob(entry.getFilestoreOid(), user, getRepositoryModel(), output.getOutputStream());
 							    	      }
 							    	  };
 							    	      

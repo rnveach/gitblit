@@ -47,8 +47,8 @@ import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.protocol.http.servlet.ServletWebResponse;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 import com.gitblit.Constants;
@@ -70,13 +70,13 @@ import com.gitblit.models.UserModel;
 import com.gitblit.utils.ModelUtils;
 import com.gitblit.utils.StringUtils;
 import com.gitblit.wicket.GitBlitWebSession;
+import com.gitblit.wicket.HeaderContributor;
 import com.gitblit.wicket.NonTrimmedPasswordTextField;
 import com.gitblit.wicket.SessionlessForm;
 import com.gitblit.wicket.WicketUtils;
 import com.gitblit.wicket.panels.AvatarImage;
 import com.gitblit.wicket.panels.LinkPanel;
 import com.gitblit.wicket.panels.NavigationPanel;
-
 /**
  * Root page is a topbar, navigable page like Repositories, Users, or
  * Federation.
@@ -265,7 +265,7 @@ public abstract class RootPage extends BasePage {
 				params.remove("user");
 
 				// remove days back parameter if it is the default value
-				if (params.containsKey("db") && (params.getInt("db") == app().settings()
+				if (!params.get("db").isNull() && (params.get("db").toInt() == app().settings()
 						.getInteger(Keys.web.activityDuration, 7))) {
 					params.remove("db");
 				}
@@ -282,7 +282,7 @@ public abstract class RootPage extends BasePage {
 	private void loginUser(UserModel user) {
 		if (user != null) {
 			HttpServletRequest request = ((ServletWebRequest) getRequest()).getContainerRequest();
-			HttpServletResponse response = ((WebResponse) getResponse()).getHttpServletResponse();
+			HttpServletResponse response = ((ServletWebResponse) getResponse()).getContainerResponse();
 
 			// Set the user into the session
 			GitBlitWebSession session = GitBlitWebSession.get();
@@ -292,7 +292,7 @@ public abstract class RootPage extends BasePage {
 			session.setUser(user);
 
 			request = ((ServletWebRequest) getRequest()).getContainerRequest();
-			response = ((WebResponse) getResponse()).getHttpServletResponse();
+			response = ((ServletWebResponse) getResponse()).getContainerResponse();
 			request.getSession().setAttribute(Constants.ATTRIB_AUTHTYPE, AuthenticationType.CREDENTIALS);
 
 			// Set Cookie
@@ -408,7 +408,7 @@ public abstract class RootPage extends BasePage {
 			clonedParams = new PageParameters(params);
 		}
 
-		if (!clonedParams.containsKey("db")) {
+		if (clonedParams.get("db").isNull()) {
 			clonedParams.set("db",  daysBack);
 		}
 
@@ -450,7 +450,7 @@ public abstract class RootPage extends BasePage {
 		String set = WicketUtils.getSet(params);
 		String regex = WicketUtils.getRegEx(params);
 		String team = WicketUtils.getTeam(params);
-		int daysBack = params.getInt("db", 0);
+		int daysBack = params.get("db").toInt(0);
 		int maxDaysBack = app().settings().getInteger(Keys.web.activityDurationMaximum, 30);
 
 		List<RepositoryModel> availableModels = getRepositoryModels();

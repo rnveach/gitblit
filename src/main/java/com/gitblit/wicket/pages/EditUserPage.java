@@ -244,7 +244,7 @@ public class EditUserPage extends RootSubPage {
 					error(e.getMessage());
 					return;
 				}
-				setRedirect(false);
+				// setRedirect(false);
 				if (isCreate) {
 					// create another user
 					info(MessageFormat.format(getString("gb.userCreated"),

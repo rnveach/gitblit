@@ -51,6 +51,7 @@ import org.apache.wicket.markup.repeater.data.ListDataProvider;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.RequestUtils;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.eclipse.jgit.diff.DiffEntry.ChangeType;
 import org.eclipse.jgit.lib.PersonIdent;
@@ -1724,7 +1725,8 @@ public class TicketPage extends RepositoryPage {
 				
 				//Force reload of the page to rebuild ticket change cache
 				String relativeUrl = urlFor(TicketsPage.class, getPageParameters()).toString();
-				String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+				String absoluteUrl = RequestUtils.toAbsolutePath(((ServletWebRequest)RequestCycle.get().getRequest())
+						.getContainerRequest().getRequestURL().toString(), relativeUrl);
 				setResponsePage(new RedirectPage(absoluteUrl));
 			}
 		};

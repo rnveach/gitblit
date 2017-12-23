@@ -481,9 +481,9 @@ public class GitBlitWebApp extends WebApplication implements GitblitWicketApp {
 	@Override
 	public final RuntimeConfigurationType getConfigurationType() {
 		if (runtimeManager.isDebugMode()) {
-			return Application.DEVELOPMENT;
+			return RuntimeConfigurationType.DEVELOPMENT;
 		}
-		return Application.DEPLOYMENT;
+		return RuntimeConfigurationType.DEPLOYMENT;
 	}
 
 	public static GitBlitWebApp get() {

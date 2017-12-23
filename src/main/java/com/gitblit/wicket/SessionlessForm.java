@@ -22,6 +22,8 @@ import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.form.StatelessForm;
 import org.apache.wicket.protocol.http.RequestUtils;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.util.string.AppendingStringBuffer;
 import org.apache.wicket.util.string.Strings;
@@ -119,7 +121,7 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 					log.warn(MessageFormat.format("Skipping page parameter \"{0}\" from sessionless form hidden fields because it collides with a form child wicket:id", key));
 					continue;
 				}
-				String value = pageParameters.getString(key);
+				String value = pageParameters.get(key).toString();
 				buffer.append("<input type=\"hidden\" name=\"")
 				.append(recode(key))
 				.append("\" value=\"")
@@ -151,7 +153,8 @@ public class SessionlessForm<T> extends StatelessForm<T> {
 
 	protected String getAbsoluteUrl(Class<? extends BasePage> pageClass, PageParameters pageParameters) {
 		String relativeUrl = urlFor(pageClass, pageParameters).toString();
-		String absoluteUrl = RequestUtils.toAbsolutePath(relativeUrl);
+		String absoluteUrl = RequestUtils.toAbsolutePath(((ServletWebRequest)RequestCycle.get().getRequest())
+				.getContainerRequest().getRequestURL().toString(), relativeUrl);
 		return absoluteUrl;
 	}
 }

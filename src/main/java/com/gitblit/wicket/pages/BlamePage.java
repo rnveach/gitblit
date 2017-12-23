@@ -90,7 +90,7 @@ public class BlamePage extends RepositoryPage {
 
 		final String blobPath = WicketUtils.getPath(params);
 
-		final String blameTypeParam = params.getString("blametype", BlameType.COMMIT.toString());
+		final String blameTypeParam = params.get("blametype").toString(BlameType.COMMIT.toString());
 		final BlameType activeBlameType = BlameType.get(blameTypeParam);
 
 		RevCommit commit = getCommit();

@@ -84,7 +84,7 @@ public abstract class ObjectContainer extends WebMarkupContainer {
 			parent = parent.getParent();
 		}
 		if (parent != null) {
-			PackageResourceReference resRef = new PackageResourceReference(parent.getClass(), src, false);
+			PackageResourceReference resRef = new PackageResourceReference(parent.getClass(), src);
 			return (urlFor(resRef).toString());
 		}
 
@@ -148,7 +148,7 @@ public abstract class ObjectContainer extends WebMarkupContainer {
 			ClientInfo clientInfo = WebSession.get().getClientInfo();
 
 			if (clientInfo == null || !(clientInfo instanceof WebClientInfo)) {
-				clientInfo = new WebClientInfo((WebRequestCycle) getRequestCycle());
+				clientInfo = new WebClientInfo(getRequestCycle());
 				WebSession.get().setClientInfo(clientInfo);
 			}
 
