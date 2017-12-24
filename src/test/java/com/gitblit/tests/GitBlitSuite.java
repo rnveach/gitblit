@@ -35,7 +35,6 @@ import org.junit.runners.Suite.SuiteClasses;
 
 import com.gitblit.GitBlitException;
 import com.gitblit.GitBlitServer;
-import com.gitblit.fanout.FanoutServiceTest;
 import com.gitblit.manager.AuthenticationManagerTest;
 import com.gitblit.manager.FilestoreManagerTest;
 import com.gitblit.manager.IRepositoryManager;
@@ -93,7 +92,7 @@ import com.gitblit.utils.X509UtilsTest;
 		DiffUtilsTest.class, MetricUtilsTest.class, X509UtilsTest.class,
 		GitBlitTest.class, FederationTests.class, RpcTests.class, GitServletTest.class, GitDaemonTest.class,
 		SshDaemonTest.class, GroovyScriptTest.class, LuceneExecutorTest.class, RepositoryModelTest.class,
-		FanoutServiceTest.class, Issue0259Test.class, Issue0271Test.class, HtpasswdAuthenticationTest.class,
+		Issue0259Test.class, Issue0271Test.class, HtpasswdAuthenticationTest.class,
 		ModelUtilsTest.class, JnaUtilsTest.class, LdapSyncServiceTest.class, FileTicketServiceTest.class,
 		BranchTicketServiceTest.class, RedisTicketServiceTest.class, AuthenticationManagerTest.class,
 		SshKeysDispatcherTest.class, UITicketTest.class, PathUtilsTest.class, SshKerberosAuthenticationTest.class,
